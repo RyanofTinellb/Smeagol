@@ -596,7 +596,7 @@ class Page:
         """change punctuation to paragraph marks, so that splitlines works"""
         content = re.sub(r'[!?.]', '\n', content)
         """remove bells, spaces at the beginnings and end of lines, and duplicate spaces and end-lines"""
-        content = re.sub(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|\x07', '', content)
+        content = re.sub(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[\x07,:]', '', content)
         """remove duplicate end-lines"""
         content = re.sub(r'\n+(?=\n)', '', content)
         """remove tags in square brackets"""
@@ -604,7 +604,7 @@ class Page:
         lines = content.splitlines()
         content = markdown.to_markdown(content).lower()
         """remove punctuation, and tags in square brackets"""
-        content = re.sub(r'\'"|[,.!?`"/{}\\():-]|\'($| )|\[.*?\]|&nbsp', ' ', content)
+        content = re.sub(r'\'"|[.!?`"/{}\\()-]|\'($| )|\[.*?\]|&nbsp', ' ', content)
         """make glottal stops lower case where appropriate"""
         content = re.sub(r"(?=[^ \n])''", "'", content)
         for number, line in enumerate(content.splitlines()):
