@@ -172,7 +172,7 @@ class Page:
     def __lt__(self, other):
         if self.generation() != other.generation():
             return self.generation() < other.generation()
-        alphabet = " aiu'pbtdcjkgmnqlrfsxheovwyz"
+        alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
         try:
             if self.name == other.name:
                 return False
@@ -410,9 +410,14 @@ class Page:
                 common = len(ancestor_list)
             # @variable (int) up: the number of levels the common ancestor is above the source
             # @variable (str) down: the hyperlink address from the common ancestor to the descendant
-            up = self.generation() + change - (destination.generation() if direct else common)
-            down = destination.url_form() if direct else \
-                "/".join([node.url_form() for node in destination_ancestors[common:]])
+            if destination == self.root():
+                up = self.generation() + change - 1
+                down = "index"
+                extension = ".html"
+            else:
+                up = self.generation() + change - (destination.generation() if direct else common)
+                down = destination.url_form() if direct else \
+                    "/".join([node.url_form() for node in destination_ancestors[common:]])
             href = 'href="{0}"'.format((up * '../') + down + extension)
             link = '<a {0}>{1}</a>'.format(href, template.format(destination.name))
         except AttributeError:  # destination is a string
