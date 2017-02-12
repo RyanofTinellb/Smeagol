@@ -2,7 +2,7 @@ import os
 import re
 import win32api
 
-import Translator
+import Translation
 
 
 class Site:
@@ -12,6 +12,7 @@ class Site:
         self.template_file = 'style.css'
         self.leaf_level = leaf_level
         self.current = None
+        self.name = name
         self.root = node = Page(name, leaf_level=self.leaf_level)
         self.previous = None
         split = r'\[(?=[' + "".join(map(lambda x: str(x + 1), range(leaf_level))) + r'])'
@@ -27,6 +28,9 @@ class Site:
             while level != node.generation() + 1:
                 node = node.parent
             node = self.add_node(heading, node, page)
+
+    def __str__(self):
+        return ''.join([str(page) for page in self if str(page)])[1:]
 
     def __len__(self):
         counter = 0
@@ -52,19 +56,22 @@ class Site:
             raise StopIteration
         return self.current
 
-    def __getitem__(self, item):
+    def reset(self):
+        self.current = None
+
+    def __getitem__(self, page):
         node = self.root
         try:
-            item = int(item)
-            for _ in range(item):
+            page = int(page)
+            for _ in range(page):
                 node = node.next_node()
         # 'item' is a string
         except ValueError:
-            while node.url_form() != item:
-                node = node.next_node()
-        # 'item' is a list of strings
-        except TypeError:
-            node = self.find_node(item)
+            while node.name != page:
+                try:
+                    node = node.next_node()
+                except IndexError:
+                    raise KeyError(page)
         return node
 
     def add_node(self, name, parent, content):
@@ -122,7 +129,7 @@ class Site:
 
     def analyse(self, markdown=None):
         if markdown is None:
-            markdown = Translator.Markdown()
+            markdown = Translation.Markdown()
         wordlist = {}
         lines = []
         pages = []
@@ -153,7 +160,7 @@ class Page:
         self.content = content
 
     def __str__(self):
-        return self.name
+        return '[' + self.content
 
     def __eq__(self, other):
         try:
@@ -170,8 +177,6 @@ class Page:
         return not self == other
 
     def __lt__(self, other):
-        if self.generation() != other.generation():
-            return self.generation() < other.generation()
         alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
         try:
             if self.name == other.name:
@@ -193,7 +198,7 @@ class Page:
         return not self <= other
 
     def __le__(self, other):
-        return self < other or self == other
+        return self < other or self.name == other.name
 
     def __ge__(self, other):
         return not self < other
@@ -211,7 +216,7 @@ class Page:
             score = 2
             double_letter = re.compile('([' + alphabet + r'])\1')
             self.score = 0
-            self.name = Translator.Markdown().to_markdown(name)
+            self.name = Translation.Markdown().to_markdown(name)
             if re.match(r'\\-[aiu]', self.name):
                 self.name = self.name.replace(r'\-', "'", 1)
                 self.score = score ** 15
@@ -226,8 +231,32 @@ class Page:
                 self.name = re.sub(double_letter, r'\1', self.name, 1)
                 self.score += score ** index
 
+    def __getitem__(self, entry):
+        try:
+            entry = int(entry)
+            return self.children[entry]
+        except ValueError:
+            for child in self.children:
+                if child.name == entry:
+                    return child
+            else:
+                raise KeyError('No such page ' + entry + 'in ' + self.name)
+
     def __hash__(self):
         return hash(self.name)
+
+    def insert(self, index=None):
+        try:
+            self.parent.children.insert(index, self)
+        except TypeError:
+            for index, page in enumerate(self.parent.children):
+                number = index
+                if self <= page:
+                    self.parent.children.insert(number, self)
+                    break
+            else:
+                self.parent.children.append(self)
+            return self
 
     def site(self):
         sites = {'Grammar': Grammar,
@@ -326,7 +355,10 @@ class Page:
         for child in node.children:
             cousin = child
             for index in indices:
-                cousin = cousin.children[index]
+                try:
+                    cousin = cousin.children[index]
+                except IndexError:
+                    cousin = Page(child.name + r' cousin')
             cousins.append(cousin)
         return cousins
 
@@ -462,13 +494,19 @@ class Page:
                 line = self.change_to_heading(heading)
                 line += '<p>{0}</p>'.format('</p><p>'.join(rest.splitlines())) if rest else ''
             else:
-                category, text = line.split(']', 1)
-                mode.set(category)
-                line = mode.replacements[category] + text
-                if not mode.table():
-                    line = line.replace('</tr><tr><td>', '<' + mode.delimiter() + '>')
-                line = re.sub('\n$', '</' + mode.delimiter() + '>', line)
-                line = '</d>\n<d>'.replace('d', mode.delimiter()).join(line.splitlines())
+                try:
+                    category, text = line.split(']', 1)
+                    mode.set(category)
+                    try:
+                        line = mode.replacements[category] + text
+                    except KeyError:
+                        raise KeyError('{0}]{1}'.format(category, line))
+                    if not mode.table():
+                        line = line.replace('</tr><tr><td>', '<' + mode.delimiter() + '>')
+                    line = re.sub('\n$', '</' + mode.delimiter() + '>', line)
+                    line = '</d>\n<d>'.replace('d', mode.delimiter()).join(line.splitlines())
+                except ValueError:
+                    raise ValueError(line + ': ' + self.name)
             output += line
         return output
 
@@ -586,10 +624,13 @@ class Page:
         with open(self.link(), "w") as f:
             f.write(page)
 
+    def remove(self):
+        os.remove(self.link())
+
     def analyse(self, markdown=None):
         wordlist = {}
         if markdown is None:
-            markdown = Translator.Markdown()
+            markdown = Translation.Markdown()
         content = self.content[2:]
         """remove tags, and items between some tags"""
         content = re.sub(r'\[\d\]|<(ipa|high-lulani)>.*?</\1>|<.*?>', ' ', content)
@@ -604,7 +645,7 @@ class Page:
         lines = content.splitlines()
         content = markdown.to_markdown(content).lower()
         """remove punctuation, and tags in square brackets"""
-        content = re.sub(r'\'"|[.!?`"/{}\\()-]|\'($| )|\[.*?\]|&nbsp', ' ', content)
+        content = re.sub(r'\'"|[.!?`"/{}\\();-]|\'($| )|\[.*?\]|&nbsp', ' ', content)
         """make glottal stops lower case where appropriate"""
         content = re.sub(r"(?=[^ \n])''", "'", content)
         for number, line in enumerate(content.splitlines()):
@@ -720,3 +761,7 @@ class Analysis:
         wordlist = '"terms": {0}'.format(wordlist)
 
         return '{{{0}}}'.format(',\n'.join([wordlist, lines, pages, names]))
+
+if __name__ == '__main__':
+    for site in Story, Grammar, Dictionary:
+        site().publish()
