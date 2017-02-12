@@ -114,16 +114,15 @@ class EditStory(Tk.Frame):
         event.widget.mark_set(Tk.INSERT, Tk.INSERT + '-1c')
 
     def publish(self, event=None):
-        content = self.chapter.publish(map(lambda x: self.windows[x].get('1.0', Tk.END), range(3)))
-        content = map(lambda x: re.sub(r'\n+', r'\n', x), content)
+        content = self.chapter.publish(map(lambda x: self.windows[x].get('1.0', Tk.END + '-1c'), range(3)))
         cousins = self.entry.cousins()
         for text, cousin in zip(content, cousins):
             cousin.content = text
-        page = str(self.story)
+        page = re.sub(r'\n+', '\n', str(self.story))
         if page:
             with open("data.txt", 'w') as data:
                 data.write(page)
-        self.story.publish()
+        Story.publish()
         return "break"
 
     def display(self):
@@ -136,7 +135,7 @@ class EditStory(Tk.Frame):
 class Chapter:
     def __init__(self, node):
         cousins = map(lambda x: x.content.splitlines(), node.cousins())     # Str[][]
-        count = max(map(len, cousins))
+        count = max(map(len, cousins)) + 1
         self.current_paragraph = min(map(len, cousins))
         cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
         cousins = zip(*cousins)    # Str()[]
@@ -173,10 +172,10 @@ class Paragraph:
     def __init__(self, paragraphs):
         self.replacements = '../StoryReplacements.txt'
         self.paragraph = paragraphs     # Str[]
-        self.paragraph[2] = self.paragraph[2].replace(chr(7), '-')
 
     def display(self):
         markdown = Markdown(self.replacements).to_markdown
+        self.paragraph[2] = self.paragraph[2].replace(chr(7), '-')
         return map(lambda x: markdown(self.paragraph[2 * x]), range(3))
 
     def publish(self, texts):

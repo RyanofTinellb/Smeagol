@@ -5,19 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="cf66610d-765c-4bac-96b2-1ea52445c3a6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/TranslateStory.py" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Replace Bold Links in Tables.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Scratch2.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Scratch3.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/edit_story.py" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Translator.py" afterPath="$PROJECT_DIR$/Translation.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/edit_dictionary.py" afterPath="$PROJECT_DIR$/EditDictionary.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/edit_grammar_story.py" afterPath="$PROJECT_DIR$/EditGrammarStory.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dictionaries/Ryan.xml" afterPath="$PROJECT_DIR$/.idea/dictionaries/Ryan.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Translate Story.exe" afterPath="$PROJECT_DIR$/Translate Story.exe" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Scratch.py" afterPath="$PROJECT_DIR$/Scratch.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Smeagol.py" afterPath="$PROJECT_DIR$/Smeagol.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/desktop.ini" afterPath="$PROJECT_DIR$/desktop.ini" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Scratch2.py" afterPath="$PROJECT_DIR$/Scratch2.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TranslateStory.py" afterPath="$PROJECT_DIR$/TranslateStory.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -44,11 +36,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="TranslateStory.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="TranslateStory.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TranslateStory.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="223">
-              <caret line="175" column="66" lean-forward="false" selection-start-line="175" selection-start-column="66" selection-end-line="175" selection-end-column="66" />
+            <state relative-caret-position="523">
+              <caret line="124" column="13" lean-forward="false" selection-start-line="124" selection-start-column="13" selection-end-line="124" selection-end-column="13" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
               </folding>
@@ -59,8 +51,8 @@
       <file leaf-file-name="EditDictionary.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/EditDictionary.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="253">
-              <caret line="178" column="32" lean-forward="false" selection-start-line="178" selection-start-column="24" selection-end-line="178" selection-end-column="32" />
+            <state relative-caret-position="354">
+              <caret line="211" column="29" lean-forward="false" selection-start-line="211" selection-start-column="22" selection-end-line="211" selection-end-column="29" />
               <folding />
             </state>
           </provider>
@@ -69,8 +61,18 @@
       <file leaf-file-name="Scratch.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Scratch.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="100">
-              <caret line="4" column="0" lean-forward="false" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+            <state relative-caret-position="225">
+              <caret line="9" column="29" lean-forward="false" selection-start-line="9" selection-start-column="29" selection-end-line="9" selection-end-column="29" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Scratch2.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Scratch2.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="75">
+              <caret line="3" column="0" lean-forward="false" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -79,18 +81,18 @@
       <file leaf-file-name="Smeagol.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Smeagol.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="223">
-              <caret line="14" column="24" lean-forward="false" selection-start-line="14" selection-start-column="24" selection-end-line="14" selection-end-column="24" />
+            <state relative-caret-position="450">
+              <caret line="22" column="16" lean-forward="false" selection-start-line="22" selection-start-column="16" selection-end-line="22" selection-end-column="16" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="EditGrammarStory.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="EditGrammarStory.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/EditGrammarStory.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="350">
-              <caret line="174" column="74" lean-forward="false" selection-start-line="174" selection-start-column="74" selection-end-line="174" selection-end-column="74" />
+            <state relative-caret-position="229">
+              <caret line="200" column="56" lean-forward="false" selection-start-line="200" selection-start-column="56" selection-end-line="200" selection-end-column="56" />
               <folding />
             </state>
           </provider>
@@ -107,10 +109,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>tk.text</find>
-      <find>font</find>
-      <find>headin</find>
-      <find>item</find>
       <find>self.gloss</find>
       <find>cousin</find>
       <find>self.sto</find>
@@ -131,12 +129,16 @@
       <find>delet</find>
       <find>control</find>
       <find>set</find>
-      <find>publish</find>
       <find>new</find>
       <find>name</find>
       <find>json</find>
       <find>Markdown</find>
       <find>Markdo</find>
+      <find>chr(7)</find>
+      <find>\n</find>
+      <find>count</find>
+      <find>publish</find>
+      <find>self.site</find>
     </findStrings>
     <replaceStrings>
       <replace>output</replace>
@@ -164,13 +166,13 @@
         <option value="$PROJECT_DIR$/edit_dictionary.py" />
         <option value="$PROJECT_DIR$/Translator.py" />
         <option value="$PROJECT_DIR$/edit_story.py" />
-        <option value="$PROJECT_DIR$/Scratch2.py" />
         <option value="$PROJECT_DIR$/EditStory.py" />
         <option value="$PROJECT_DIR$/Translation.py" />
-        <option value="$PROJECT_DIR$/Scratch.py" />
         <option value="$PROJECT_DIR$/EditDictionary.py" />
         <option value="$PROJECT_DIR$/Smeagol.py" />
         <option value="$PROJECT_DIR$/EditGrammarStory.py" />
+        <option value="$PROJECT_DIR$/Scratch2.py" />
+        <option value="$PROJECT_DIR$/Scratch.py" />
         <option value="$PROJECT_DIR$/TranslateStory.py" />
       </list>
     </option>
@@ -201,7 +203,7 @@
     </entry>
   </component>
   <component name="ProjectView">
-    <navigator currentView="Scope" currentSubView="Project Files" proportions="" version="1">
+    <navigator proportions="" version="1">
       <flattenPackages />
       <showMembers />
       <showModules />
@@ -214,37 +216,7 @@
       <manualOrder />
       <foldersAlwaysOnTop value="true" />
     </navigator>
-    <panes>
-      <pane id="Scope">
-        <subPane subId="Project Files">
-          <PATH>
-            <PATH_ELEMENT USER_OBJECT="Root">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT USER_OBJECT="creation">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-      </pane>
-      <pane id="ProjectPane">
-        <subPane>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="creation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="creation" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-      </pane>
-      <pane id="Scratches" />
-    </panes>
+    <panes />
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="$PROJECT_DIR$/.." />
@@ -265,23 +237,6 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="creation" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scratch.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="EditDictionary" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="creation" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/EditDictionary.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
@@ -333,6 +288,23 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="creation" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Smeagol.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Scratch2" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="creation" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scratch2.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
@@ -473,18 +445,18 @@
     </configuration>
     <list size="5">
       <item index="0" class="java.lang.String" itemvalue="Python.Scratch" />
-      <item index="1" class="java.lang.String" itemvalue="Python.EditDictionary" />
-      <item index="2" class="java.lang.String" itemvalue="Python.EditGrammarStory" />
-      <item index="3" class="java.lang.String" itemvalue="Python.TranslateStory" />
-      <item index="4" class="java.lang.String" itemvalue="Python.Smeagol" />
+      <item index="1" class="java.lang.String" itemvalue="Python.EditGrammarStory" />
+      <item index="2" class="java.lang.String" itemvalue="Python.TranslateStory" />
+      <item index="3" class="java.lang.String" itemvalue="Python.Smeagol" />
+      <item index="4" class="java.lang.String" itemvalue="Python.Scratch2" />
     </list>
     <recent_temporary>
       <list size="5">
         <item index="0" class="java.lang.String" itemvalue="Python.EditGrammarStory" />
-        <item index="1" class="java.lang.String" itemvalue="Python.TranslateStory" />
-        <item index="2" class="java.lang.String" itemvalue="Python.EditDictionary" />
-        <item index="3" class="java.lang.String" itemvalue="Python.Smeagol" />
-        <item index="4" class="java.lang.String" itemvalue="Python.Scratch" />
+        <item index="1" class="java.lang.String" itemvalue="Python.Scratch2" />
+        <item index="2" class="java.lang.String" itemvalue="Python.TranslateStory" />
+        <item index="3" class="java.lang.String" itemvalue="Python.Scratch" />
+        <item index="4" class="java.lang.String" itemvalue="Python.Smeagol" />
       </list>
     </recent_temporary>
   </component>
@@ -529,7 +501,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2497349" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39952436" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.66587394" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -570,7 +542,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="89" />
+      <option name="time" value="95" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
@@ -830,7 +802,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Scratch2.py" />
     <entry file="file://C:/Program Files (x86)/Pyth2/Lib/re.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="156">
@@ -845,6 +816,21 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/desktop.ini">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Smeagol.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="450">
+          <caret line="22" column="16" lean-forward="false" selection-start-line="22" selection-start-column="16" selection-end-line="22" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Translation.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2975">
@@ -855,52 +841,45 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Scratch2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="3" column="0" lean-forward="false" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Scratch.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="100">
-          <caret line="4" column="0" lean-forward="false" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/desktop.ini">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Smeagol.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="223">
-          <caret line="14" column="24" lean-forward="false" selection-start-line="14" selection-start-column="24" selection-end-line="14" selection-end-column="24" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/EditGrammarStory.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="350">
-          <caret line="174" column="74" lean-forward="false" selection-start-line="174" selection-start-column="74" selection-end-line="174" selection-end-column="74" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/EditDictionary.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="253">
-          <caret line="178" column="32" lean-forward="false" selection-start-line="178" selection-start-column="24" selection-end-line="178" selection-end-column="32" />
+        <state relative-caret-position="225">
+          <caret line="9" column="29" lean-forward="false" selection-start-line="9" selection-start-column="29" selection-end-line="9" selection-end-column="29" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/TranslateStory.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="223">
-          <caret line="175" column="66" lean-forward="false" selection-start-line="175" selection-start-column="66" selection-end-line="175" selection-end-column="66" />
+        <state relative-caret-position="523">
+          <caret line="124" column="13" lean-forward="false" selection-start-line="124" selection-start-column="13" selection-end-line="124" selection-end-column="13" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/EditDictionary.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="354">
+          <caret line="211" column="29" lean-forward="false" selection-start-line="211" selection-start-column="22" selection-end-line="211" selection-end-column="29" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/EditGrammarStory.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="229">
+          <caret line="200" column="56" lean-forward="false" selection-start-line="200" selection-start-column="56" selection-end-line="200" selection-end-column="56" />
+          <folding />
         </state>
       </provider>
     </entry>
