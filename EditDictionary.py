@@ -216,6 +216,10 @@ class EditDictionary(Tk.Frame):
         if page:
             with open("data.txt", 'w') as data:
                 data.write(page)
+        page = str(self.dictionary.analyse())
+        if page:
+            with open('searching.json', 'w') as data:
+                data.write(page)
         return "break"
 
 app = EditDictionary()

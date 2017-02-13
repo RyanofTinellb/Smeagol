@@ -122,7 +122,7 @@ class EditStory(Tk.Frame):
         if page:
             with open("data.txt", 'w') as data:
                 data.write(page)
-        Story.publish()
+        Story().publish()
         return "break"
 
     def display(self):
