@@ -5,11 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="cf66610d-765c-4bac-96b2-1ea52445c3a6" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Translate Story.exe" afterPath="$PROJECT_DIR$/Translate Story.exe" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Scratch.py" afterPath="$PROJECT_DIR$/Scratch.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Scratch2.py" afterPath="$PROJECT_DIR$/Scratch2.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TranslateStory.py" afterPath="$PROJECT_DIR$/TranslateStory.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Translation.py" afterPath="$PROJECT_DIR$/Translation.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -24,11 +21,11 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="450">
-      <file leaf-file-name="Translation.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Translation.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Translation.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2975">
-              <caret line="120" column="7" lean-forward="false" selection-start-line="120" selection-start-column="4" selection-end-line="120" selection-end-column="7" />
+            <state relative-caret-position="425">
+              <caret line="94" column="33" lean-forward="false" selection-start-line="94" selection-start-column="33" selection-end-line="94" selection-end-column="33" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -39,8 +36,8 @@
       <file leaf-file-name="TranslateStory.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TranslateStory.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="523">
-              <caret line="124" column="13" lean-forward="false" selection-start-line="124" selection-start-column="13" selection-end-line="124" selection-end-column="13" />
+            <state relative-caret-position="2000">
+              <caret line="110" column="17" lean-forward="true" selection-start-line="110" selection-start-column="17" selection-end-line="110" selection-end-column="17" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
               </folding>
@@ -51,9 +48,12 @@
       <file leaf-file-name="EditDictionary.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/EditDictionary.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="354">
+            <state relative-caret-position="5175">
               <caret line="211" column="29" lean-forward="false" selection-start-line="211" selection-start-column="22" selection-end-line="211" selection-end-column="29" />
-              <folding />
+              <folding>
+                <marker date="1486970473987" expanded="true" signature="129:8941" ph="..." />
+                <marker date="1486970473987" expanded="true" signature="7786:8941" ph="..." />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -88,10 +88,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="EditGrammarStory.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="EditGrammarStory.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/EditGrammarStory.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="229">
+            <state relative-caret-position="232">
               <caret line="200" column="56" lean-forward="false" selection-start-line="200" selection-start-column="56" selection-end-line="200" selection-end-column="56" />
               <folding />
             </state>
@@ -137,8 +137,8 @@
       <find>chr(7)</find>
       <find>\n</find>
       <find>count</find>
-      <find>publish</find>
       <find>self.site</find>
+      <find>publish</find>
     </findStrings>
     <replaceStrings>
       <replace>output</replace>
@@ -167,13 +167,13 @@
         <option value="$PROJECT_DIR$/Translator.py" />
         <option value="$PROJECT_DIR$/edit_story.py" />
         <option value="$PROJECT_DIR$/EditStory.py" />
-        <option value="$PROJECT_DIR$/Translation.py" />
         <option value="$PROJECT_DIR$/EditDictionary.py" />
         <option value="$PROJECT_DIR$/Smeagol.py" />
         <option value="$PROJECT_DIR$/EditGrammarStory.py" />
         <option value="$PROJECT_DIR$/Scratch2.py" />
         <option value="$PROJECT_DIR$/Scratch.py" />
         <option value="$PROJECT_DIR$/TranslateStory.py" />
+        <option value="$PROJECT_DIR$/Translation.py" />
       </list>
     </option>
   </component>
@@ -223,7 +223,7 @@
     <property name="SearchEverywhereHistoryKey" value="edit&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/EditDictionary.py&#10;dit&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/EditDictionary.py&#10;scra&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/Scratch.py&#10;smeagol&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/Smeagol.py&#10;ed&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/EditGrammarStory.py&#10;mark&#9;null&#9;null&#10;smea&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/Smeagol.py&#10;scrat&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/Scratch2.py&#10;page&#9;null&#9;null&#10;editdi&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/EditDictionary.py&#10;edit_g&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/edit_grammar_story.py&#10;add_no&#9;null&#9;null&#10;analyse&#9;null&#9;null&#10;scratc&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/Scratch3.py&#10;html&#9;null&#9;null&#10;link&#9;null&#9;null&#10;conte&#9;null&#9;null&#10;conten&#9;null&#9;null&#10;contents&#9;null&#9;null&#10;doc&#9;ACTION&#9;QuickJavaDoc&#10;first&#9;null&#9;null&#10;url_form&#9;null&#9;null&#10;cont&#9;null&#9;null&#10;sc&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/Scratch2.py&#10;scr&#9;FILE&#9;file://C:/Users/Ryan/Documents/TinellbianLanguages/creation/Scratch2.py&#10;edit_gr&#9;null&#9;null&#10;scratch2&#9;null&#9;null&#10;direc&#9;null&#9;null&#10;comment&#9;ACTION&#9;CommentGroup" />
     <property name="last.edited.regexp" value="Sample Text" />
   </component>
-  <component name="RunManager" selected="Python.EditGrammarStory">
+  <component name="RunManager" selected="Python.TranslateStory">
     <configuration default="false" name="Scratch" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -452,9 +452,9 @@
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.EditGrammarStory" />
-        <item index="1" class="java.lang.String" itemvalue="Python.Scratch2" />
-        <item index="2" class="java.lang.String" itemvalue="Python.TranslateStory" />
+        <item index="0" class="java.lang.String" itemvalue="Python.TranslateStory" />
+        <item index="1" class="java.lang.String" itemvalue="Python.EditGrammarStory" />
+        <item index="2" class="java.lang.String" itemvalue="Python.Scratch2" />
         <item index="3" class="java.lang.String" itemvalue="Python.Scratch" />
         <item index="4" class="java.lang.String" itemvalue="Python.Smeagol" />
       </list>
@@ -831,16 +831,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Translation.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2975">
-          <caret line="120" column="7" lean-forward="false" selection-start-line="120" selection-start-column="4" selection-end-line="120" selection-end-column="7" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Scratch2.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
@@ -857,29 +847,42 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/EditDictionary.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5175">
+          <caret line="211" column="29" lean-forward="false" selection-start-line="211" selection-start-column="22" selection-end-line="211" selection-end-column="29" />
+          <folding>
+            <marker date="1486970473987" expanded="true" signature="129:8941" ph="..." />
+            <marker date="1486970473987" expanded="true" signature="7786:8941" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/EditGrammarStory.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="232">
+          <caret line="200" column="56" lean-forward="false" selection-start-line="200" selection-start-column="56" selection-end-line="200" selection-end-column="56" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/TranslateStory.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="523">
-          <caret line="124" column="13" lean-forward="false" selection-start-line="124" selection-start-column="13" selection-end-line="124" selection-end-column="13" />
+        <state relative-caret-position="2000">
+          <caret line="110" column="17" lean-forward="true" selection-start-line="110" selection-start-column="17" selection-end-line="110" selection-end-column="17" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/EditDictionary.py">
+    <entry file="file://$PROJECT_DIR$/Translation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="354">
-          <caret line="211" column="29" lean-forward="false" selection-start-line="211" selection-start-column="22" selection-end-line="211" selection-end-column="29" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/EditGrammarStory.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="229">
-          <caret line="200" column="56" lean-forward="false" selection-start-line="200" selection-start-column="56" selection-end-line="200" selection-end-column="56" />
-          <folding />
+        <state relative-caret-position="425">
+          <caret line="94" column="33" lean-forward="false" selection-start-line="94" selection-start-column="33" selection-end-line="94" selection-end-column="33" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

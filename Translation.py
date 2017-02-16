@@ -91,8 +91,8 @@ class HighLulani:
         return output
 
     def convert_sentence(self, text):
-        if text == '* **\n':
-            return '[hl]* **[/hl]\n'.format(text)
+        if text == '* **':
+            return '[hl]* **[/hl]'.format(text)
         output = '[hl].{0}.[/hl]'.format(self.convert_text(text))
         return output
 

@@ -194,8 +194,8 @@ class Paragraph:
 
     def interlinear(self):
         italic = False
-        if self.paragraph[0] == "* **\n":
-            return "* **\n"
+        if self.paragraph[0] == "* **":
+            return "* **"
         literal = self.paragraph[4][self.paragraph[4].find(' |- -| '):]
         text = '[t]' + self.paragraph[0] + literal + ' | [r]'
         for transliteration, gloss in morpheme_split(self.paragraph[2], self.paragraph[4]):
