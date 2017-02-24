@@ -546,10 +546,11 @@ class Page:
                   '<li class="link">$out$</li>\n'
                   '<li class="link">$out$</li>\n'
                   '</ul>\n')
-        for item in ['Grammar', 'Dictionary', 'The Coelacanth Quartet']:
+        for item, link in (['Grammar', 'grammar'],
+                           ['Dictionary', 'dictionary'],
+                           ['The Coelacanth Quartet', 'coelacanthquartet']):
             if item != self.root().name:
-                output = output.replace('$out$', '<a href=\"http://{0}.tinellb.com\">{1}</a>'.format(
-                    item.lower().replace(' ', ''), item), 1)
+                output = output.replace('$out$', '<a href=\"http://{0}.tinellb.com\">{1}</a>'.format(link, item), 1)
         return output
 
     def family_links(self):
