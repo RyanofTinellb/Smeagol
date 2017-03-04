@@ -57,7 +57,7 @@ function orSearch(arr, terms) {
 		if (output[i][0] == output[i+1][0]) {
 			output[i][1] = output[i][1].concat(output[i+1][1]).sort(function (a,b) {
 				return a < b;}).filter(function(item, pos, ary) {
-			return !pos || !equal(item, ary[pos - 1]);
+			return !pos || item != ary[pos - 1];
 				})
 			output = output.filter(function(item, pos, ary) {return pos != i;});
 		} else {i++;}

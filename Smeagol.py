@@ -45,6 +45,9 @@ class Site:
     def __iter__(self):
         return self
 
+    def __next__(self):
+        self.next()
+
     def next(self):
         if self.current is None:
             self.current = self.root
@@ -623,7 +626,7 @@ class Page:
         except os.error:
             pass
         with open(self.link(), "w") as f:
-            f.write(page)
+            f.write(page.replace(chr(7), ''))
 
     def remove(self):
         os.remove(self.link())
