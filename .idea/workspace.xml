@@ -5,12 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="cf66610d-765c-4bac-96b2-1ea52445c3a6" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Edit Dictionary.exe" afterPath="$PROJECT_DIR$/Edit Dictionary.exe" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Edit Grammar and Story.exe" afterPath="$PROJECT_DIR$/Edit Grammar and Story.exe" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Translate Story.exe" afterPath="$PROJECT_DIR$/Translate Story.exe" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/creation.iml" afterPath="$PROJECT_DIR$/.idea/creation.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TranslateStory.py" afterPath="$PROJECT_DIR$/TranslateStory.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -37,11 +33,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="TranslateStory.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="TranslateStory.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/TranslateStory.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2700">
-              <caret line="110" column="17" lean-forward="false" selection-start-line="110" selection-start-column="17" selection-end-line="110" selection-end-column="17" />
+            <state relative-caret-position="125">
+              <caret line="125" column="22" lean-forward="true" selection-start-line="125" selection-start-column="22" selection-end-line="125" selection-end-column="22" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
               </folding>
@@ -79,11 +75,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Smeagol.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Smeagol.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Smeagol.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="175">
-              <caret line="126" column="0" lean-forward="false" selection-start-line="126" selection-start-column="0" selection-end-line="126" selection-end-column="0" />
+            <state relative-caret-position="2950">
+              <caret line="122" column="57" lean-forward="false" selection-start-line="122" selection-start-column="57" selection-end-line="122" selection-end-column="57" />
               <folding />
             </state>
           </provider>
@@ -171,10 +167,10 @@
         <option value="$PROJECT_DIR$/EditDictionary.py" />
         <option value="$PROJECT_DIR$/EditGrammarStory.py" />
         <option value="$PROJECT_DIR$/Scratch2.py" />
-        <option value="$PROJECT_DIR$/TranslateStory.py" />
         <option value="$PROJECT_DIR$/Translation.py" />
         <option value="$PROJECT_DIR$/Smeagol.py" />
         <option value="$PROJECT_DIR$/Scratch.py" />
+        <option value="$PROJECT_DIR$/TranslateStory.py" />
       </list>
     </option>
   </component>
@@ -225,7 +221,7 @@
     <property name="last.edited.regexp" value="Sample Text" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.Smeagol">
+  <component name="RunManager" selected="Python.TranslateStory">
     <configuration default="false" name="Scratch" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -454,9 +450,9 @@
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.Smeagol" />
-        <item index="1" class="java.lang.String" itemvalue="Python.Scratch" />
-        <item index="2" class="java.lang.String" itemvalue="Python.TranslateStory" />
+        <item index="0" class="java.lang.String" itemvalue="Python.TranslateStory" />
+        <item index="1" class="java.lang.String" itemvalue="Python.Smeagol" />
+        <item index="2" class="java.lang.String" itemvalue="Python.Scratch" />
         <item index="3" class="java.lang.String" itemvalue="Python.EditGrammarStory" />
         <item index="4" class="java.lang.String" itemvalue="Python.Scratch2" />
       </list>
@@ -840,16 +836,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/TranslateStory.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2700">
-          <caret line="110" column="17" lean-forward="false" selection-start-line="110" selection-start-column="17" selection-end-line="110" selection-end-column="17" />
-          <folding>
-            <element signature="e#0#20#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Translation.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2325">
@@ -868,13 +854,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://C:/Program Files (x86)/Python36-32/Lib/re.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="142">
-          <caret line="211" column="0" lean-forward="false" selection-start-line="211" selection-start-column="0" selection-end-line="211" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://C:/Program Files (x86)/Python36-32/Lib/re.py" />
     <entry file="file://$PROJECT_DIR$/Scratch.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
@@ -885,9 +865,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Smeagol.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="175">
-          <caret line="126" column="0" lean-forward="false" selection-start-line="126" selection-start-column="0" selection-end-line="126" selection-end-column="0" />
+        <state relative-caret-position="2950">
+          <caret line="122" column="57" lean-forward="false" selection-start-line="122" selection-start-column="57" selection-end-line="122" selection-end-column="57" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TranslateStory.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="125">
+          <caret line="125" column="22" lean-forward="true" selection-start-line="125" selection-start-column="22" selection-end-line="125" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#20#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

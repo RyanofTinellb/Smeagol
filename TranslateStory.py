@@ -136,7 +136,7 @@ class Chapter:
     def __init__(self, node):
         cousins = map(lambda x: x.content.splitlines(), node.cousins())     # Str[][]
         count = max(map(len, cousins)) + 1
-        self.current_paragraph = min(map(len, cousins))
+        self.current_paragraph = min(map(len, cousins)) - 1
         cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
         cousins = zip(*cousins)    # Str()[]
         self.paragraphs = map(lambda x: Paragraph(list(x)), cousins)     # Paragraph[]
@@ -175,8 +175,9 @@ class Paragraph:
 
     def display(self):
         markdown = Markdown(self.replacements).to_markdown
-        self.paragraph[2] = self.paragraph[2].replace(chr(7), '-')
-        return map(lambda x: markdown(self.paragraph[2 * x]), range(3))
+        display = map(lambda x: markdown(self.paragraph[2 * x]), range(3))
+        display[1] = display[1].replace(chr(7), '-')
+        return display
 
     def publish(self, texts):
         """
