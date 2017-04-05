@@ -30,7 +30,7 @@ class EditStory(Tk.Frame):
         self.up_button.grid(row=0, column=2)
         self.down_button.grid(row=0, column=3)
         self.publish_button.grid(row=0, column=4, sticky=Tk.W)
-        font = ('Calibri', 16)
+        font = ('Californian FB', 16)
         for i, window in enumerate(self.windows):
             window.configure(height=7, width=108, wrap=Tk.WORD, font=font)
             window.bind("<Control-b>", self.bold)

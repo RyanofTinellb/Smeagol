@@ -17,7 +17,7 @@ class EditPage(Tk.Frame):
         self.finish_button = None
         self.finish_text = Tk.StringVar()
         self.finish_text.set("Save")
-        self.edit_text = Tk.Text(self, height=25, width=95, font=('Courier New', '15'), wrap=Tk.WORD)
+        self.edit_text = Tk.Text(self, height=24, width=114, font=('Corbel', '14'), wrap=Tk.WORD)
         self.which_var = Tk.StringVar()
         self.is_bold = Tk.IntVar()
         self.is_italic = Tk.IntVar()
