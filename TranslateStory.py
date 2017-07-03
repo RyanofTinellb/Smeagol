@@ -32,7 +32,7 @@ class EditStory(Tk.Frame):
         self.publish_button.grid(row=0, column=4, sticky=Tk.W)
         font = ('Californian FB', 16)
         for i, window in enumerate(self.windows):
-            window.configure(height=7, width=108, wrap=Tk.WORD, font=font)
+            window.configure(height=9, width=108, wrap=Tk.WORD, font=font)
             window.bind("<Control-b>", self.bold)
             window.bind("<Control-i>", self.italic)
             window.bind("<Control-k>", self.small_cap)
@@ -114,7 +114,7 @@ class EditStory(Tk.Frame):
         event.widget.mark_set(Tk.INSERT, Tk.INSERT + '-1c')
 
     def publish(self, event=None):
-        content = self.chapter.publish(map(lambda x: self.windows[x].get('1.0', Tk.END + '-1c'), range(3)))
+        content = self.chapter.publish(map(self.get_text, range(3)))
         cousins = self.entry.cousins()
         for text, cousin in zip(content, cousins):
             cousin.content = text
@@ -124,6 +124,11 @@ class EditStory(Tk.Frame):
                 data.write(page)
         Story().publish()
         return "break"
+
+    def get_text(self, window):
+        text = self.windows[window].get('1.0', Tk.END + '-1c')
+        text = text.replace('\n', '|')
+        return text
 
     def display(self):
         for window, text in zip(self.windows, self.chapter.display()):
@@ -176,7 +181,14 @@ class Paragraph:
     def display(self):
         markdown = Markdown(self.replacements).to_markdown
         display = map(lambda x: markdown(self.paragraph[2 * x]), range(3))
-        display[1] = display[1].replace(chr(7), '-')
+        replacements = [['.(', '&middot;('],
+                        ['(', chr(5)],
+                        ['<', 2*chr(5)],
+                        [')', chr(6)],
+                        ['>', 2*chr(6)],
+                        ['-', chr(7)]]
+        for j, i in replacements[::-1]:
+            display[1] = display[1].replace(i, j)     # Transliteration
         return display
 
     def publish(self, texts):
@@ -188,10 +200,17 @@ class Paragraph:
         markup = Markdown(self.replacements).to_markup
         translate = Translator('HL').convert_sentence
         self.paragraph[0:5:2] = texts
-        self.paragraph[1] = translate(self.paragraph[2])
-        self.paragraph[3] = self.interlinear()
+        self.paragraph[1] = translate(self.paragraph[2])    # Tinellbian
+        self.paragraph[3] = self.interlinear()     # Interlinear
         self.paragraph = map(markup, self.paragraph)
-        self.paragraph[2] = self.paragraph[2].replace('-', chr(7))
+        replacements = [['.(', '&middot;('],
+                        ['(', chr(5)],
+                        ['<small-caps>', 2*chr(5)],
+                        [')', chr(6)],
+                        ['</small-caps>', 2*chr(6)],
+                        ['-', chr(7)]]
+        for i, j in replacements:
+            self.paragraph[2] = self.paragraph[2].replace(i, j)     # Transliteration
 
     def interlinear(self):
         italic = False
@@ -199,12 +218,14 @@ class Paragraph:
             return "* **"
         literal = self.paragraph[4][self.paragraph[4].find(' |- -| '):]
         text = '[t]' + self.paragraph[0] + literal + ' | [r]'
-        for transliteration, gloss in morpheme_split(self.paragraph[2], self.paragraph[4]):
-            if transliteration[0][:3] == '[i]':
-                transliteration[0] = transliteration[0][3:]
+        # remove middot, and replace angle brackets with parentheses
+        self.paragraph[3] = self.paragraph[2].replace('.(', '(').replace('<', '(').replace('>', ')')
+        for transliteration, gloss in morpheme_split(self.paragraph[3], self.paragraph[4]):
+            if transliteration[0][:2] == '((':
+                transliteration[0] = transliteration[0][2:]
                 italic = True
             text += inner_table(transliteration, gloss, italic)
-            if transliteration[-1][-4:] == '[/i]':
+            if transliteration[-1][-2:] == '))':
                 italic = False
         text += '[/t]'
         return text
@@ -219,7 +240,7 @@ def morpheme_split(*texts):
 
 def inner_table(top, bottom, italic=False):
     if italic:
-        output = '[t][i]{0}[/i] | [r](1) | [/t]'.format(r'[/i]- | [i]'.join(top), r'- | '.join(bottom))
+        output = '[t](({0})) | [r]{1} | [/t]'.format(r'))- | (('.join(top), r'- | '.join(bottom))
     else:
         output = '[t]{0} | [r]{1} | [/t]'.format(r'- | '.join(top), r'- | '.join(bottom))
     return output

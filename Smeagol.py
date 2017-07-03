@@ -626,6 +626,7 @@ class Page:
         except os.error:
             pass
         with open(self.link(), "w") as f:
+            page = re.sub('\x05.*?\x06', '', page)
             f.write(page.replace(chr(7), ''))
 
     def remove(self):

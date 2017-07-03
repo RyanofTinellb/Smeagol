@@ -56,8 +56,15 @@ class HighLulani:
     def convert_text(text):
         if text == '* **':
             return text
-        # removes markdown tags, hyphens and quote marks
-        text = re.sub("\[(|/)[bik]\]|-|'\\\"|\\\"", "", text)
+
+        # removes full stops if before a parenthesis
+        text = text.replace('.(', '(')
+
+        # removes markdown tags, hyphens, dollars, parentheses and quote marks
+        text = re.sub("\[(|/)[bik]\]|-|[$()]|'\\\"|\\\"", "", text)
+
+        # removes anything between angle brackets
+        text = re.sub(r'<.*?>', '', text)
 
         # replaces "upper case" glottal stop with "lower case" apostrophe
         text = re.sub("(\"| |^)''", r"\1'", text)

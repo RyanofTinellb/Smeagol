@@ -17,7 +17,9 @@ class EditPage(Tk.Frame):
         self.finish_button = None
         self.finish_text = Tk.StringVar()
         self.finish_text.set("Save")
+        self.number_of_words = Tk.StringVar()
         self.edit_text = Tk.Text(self, height=24, width=114, font=('Corbel', '14'), wrap=Tk.WORD)
+        self.word_count = Tk.Label(self, textvariable=self.number_of_words)
         self.which_var = Tk.StringVar()
         self.is_bold = Tk.IntVar()
         self.is_italic = Tk.IntVar()
@@ -53,6 +55,7 @@ class EditPage(Tk.Frame):
         self.finish_button = Tk.Button(self, textvariable=self.finish_text, width=10, command=self.finish)
         self.finish_button.grid(row=1, column=2, sticky=Tk.NW)
         self.which_var.set("grammar")
+        self.word_count.grid(row=2, column=6)
         self.bold_button.grid(row=1, column=3, sticky=Tk.W)
         self.italic_button.grid(row=1, column=4, sticky=Tk.W)
         self.small_cap_button.grid(row=1, column=5, sticky=Tk.W)
@@ -70,7 +73,10 @@ class EditPage(Tk.Frame):
         self.edit_text.bind("<Control-s>", self.finish)
         self.edit_text.bind("<Control-t>", self.table)
         self.edit_text.bind("<KeyPress-|>", self.insert_pipe)
+        self.edit_text.bind("<space>", self.update_wordcount)
+        self.edit_text.bind("<Return>", self.update_wordcount)
         self.edit_text.grid(column=2, columnspan=150)
+        self.number_of_words.set('')
 
     def scroll_headings(self, event, heading_number):
         heading = self.headings[heading_number]
@@ -162,11 +168,16 @@ class EditPage(Tk.Frame):
         return "break"
 
     def delete_word(self, event):
+        self.update_wordcount()
         if self.edit_text.get(Tk.INSERT + "-1c") in ".,;:?!":
             self.edit_text.delete(Tk.INSERT + "-1c wordstart", Tk.INSERT)
         else:
             self.edit_text.delete(Tk.INSERT + "-1c wordstart -1c", Tk.INSERT)
         return "break"
+
+    def update_wordcount(self, event=None):
+        text = self.edit_text.get(1.0, Tk.END)
+        self.number_of_words.set(str(text.count(' ') + text.count('\n')))
 
     def edit_text_changed(self, event=None):
         self.finish_text.set('*Save')
@@ -189,10 +200,12 @@ class EditPage(Tk.Frame):
             self.entry = self.site.root
             self.edit_text.insert(1.0, "That page does not exist. Create a new page by appending to an old one.")
             self.headings[1].focus_set()
+        self.update_wordcount()
         return 'break'
 
     def finish(self, event=None):
         self.finish_text.set('Save')
+        self.update_wordcount()
         self.is_bold.set(0)
         self.is_italic.set(0)
         self.is_small_caps.set(0)
