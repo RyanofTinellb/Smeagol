@@ -89,3 +89,8 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# Scratch files
+Scratch.py
+Scratch2.py
+Scratch3.py
