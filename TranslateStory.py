@@ -53,7 +53,7 @@ class EditStory(Tk.Frame):
             event.widget.insert(Tk.INSERT, "[b]")
         self.is_bold = not self.is_bold
         return "break"
-    
+
     def italic(self, event=None):
         if self.is_italic:
             event.widget.insert(Tk.INSERT, "[/i]")
@@ -61,7 +61,7 @@ class EditStory(Tk.Frame):
             event.widget.insert(Tk.INSERT, "[i]")
         self.is_italic = not self.is_italic
         return "break"
-    
+
     def small_cap(self, event=None):
         if self.is_small_cap:
             event.widget.insert(Tk.INSERT, "[/k]")
@@ -175,7 +175,7 @@ class Chapter:
 
 class Paragraph:
     def __init__(self, paragraphs):
-        self.replacements = '../StoryReplacements.txt'
+        self.replacements = '../StoryReplacements.html'
         self.paragraph = paragraphs     # Str[]
 
     def display(self):
@@ -217,7 +217,7 @@ class Paragraph:
         if self.paragraph[0] == "* **":
             return "* **"
         literal = self.paragraph[4][self.paragraph[4].find(' |- -| '):]
-        text = '[t]' + self.paragraph[0] + literal + ' | [r]'
+        text = '[t]' + self.paragraph[0] + literal + ' | -| &flex;'
         # remove middot, and replace angle brackets with parentheses
         self.paragraph[3] = self.paragraph[2].replace('.(', '(').replace('<', '(').replace('>', ')')
         for transliteration, gloss in morpheme_split(self.paragraph[3], self.paragraph[4]):
@@ -227,7 +227,7 @@ class Paragraph:
             text += inner_table(transliteration, gloss, italic)
             if transliteration[-1][-2:] == '))':
                 italic = False
-        text += '[/t]'
+        text += '}[/t]'
         return text
 
 

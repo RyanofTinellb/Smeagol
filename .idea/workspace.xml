@@ -5,15 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="cf66610d-765c-4bac-96b2-1ea52445c3a6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Scratch3.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dictionaries/Ryan.xml" afterPath="$PROJECT_DIR$/.idea/dictionaries/Ryan.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/EditGrammarStory.py" afterPath="$PROJECT_DIR$/EditGrammarStory.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Scratch.py" afterPath="$PROJECT_DIR$/Scratch.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Scratch2.py" afterPath="$PROJECT_DIR$/Scratch2.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Smeagol.py" afterPath="$PROJECT_DIR$/Smeagol.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TranslateStory.py" afterPath="$PROJECT_DIR$/TranslateStory.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Translation.py" afterPath="$PROJECT_DIR$/Translation.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -43,8 +39,8 @@
       <file leaf-file-name="TranslateStory.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/TranslateStory.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="561">
-              <caret line="228" column="30" lean-forward="true" selection-start-line="228" selection-start-column="30" selection-end-line="228" selection-end-column="30" />
+            <state relative-caret-position="225">
+              <caret line="78" column="0" lean-forward="false" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
               </folding>
@@ -75,8 +71,8 @@
       <file leaf-file-name="Scratch2.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Scratch2.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="132">
-              <caret line="4" column="40" lean-forward="false" selection-start-line="4" selection-start-column="40" selection-end-line="4" selection-end-column="40" />
+            <state relative-caret-position="33">
+              <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -85,8 +81,8 @@
       <file leaf-file-name="Smeagol.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Smeagol.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="20592">
-              <caret line="628" column="38" lean-forward="false" selection-start-line="628" selection-start-column="38" selection-end-line="628" selection-end-column="38" />
+            <state relative-caret-position="20559">
+              <caret line="627" column="41" lean-forward="true" selection-start-line="627" selection-start-column="41" selection-end-line="627" selection-end-column="41" />
               <folding />
             </state>
           </provider>
@@ -103,9 +99,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>Markdo</find>
-      <find>\n</find>
-      <find>count</find>
       <find>gramm</find>
       <find>Gramm</find>
       <find>publish</find>
@@ -133,6 +126,9 @@
       <find>5</find>
       <find>chr(7)</find>
       <find>[/i]</find>
+      <find>&lt;</find>
+      <find>x06</find>
+      <find>&lt;&lt;</find>
     </findStrings>
     <replaceStrings>
       <replace>output</replace>
@@ -165,10 +161,11 @@
         <option value="$PROJECT_DIR$/Scratch3.py" />
         <option value="$PROJECT_DIR$/Scratch.py" />
         <option value="$PROJECT_DIR$/EditGrammarStory.py" />
-        <option value="$PROJECT_DIR$/Smeagol.py" />
-        <option value="$PROJECT_DIR$/Scratch2.py" />
         <option value="$PROJECT_DIR$/Translation.py" />
         <option value="$PROJECT_DIR$/TranslateStory.py" />
+        <option value="$PROJECT_DIR$/Scratch2.py" />
+        <option value="$PROJECT_DIR$/Smeagol.py" />
+        <option value="$PROJECT_DIR$/Test.py" />
       </list>
     </option>
   </component>
@@ -231,7 +228,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.TranslateStory">
+  <component name="RunManager" selected="Python.Scratch2">
     <configuration default="false" name="Scratch" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -427,8 +424,8 @@
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.TranslateStory" />
-        <item index="1" class="java.lang.String" itemvalue="Python.Scratch2" />
+        <item index="0" class="java.lang.String" itemvalue="Python.Scratch2" />
+        <item index="1" class="java.lang.String" itemvalue="Python.TranslateStory" />
         <item index="2" class="java.lang.String" itemvalue="Python.EditDictionary" />
         <item index="3" class="java.lang.String" itemvalue="Python.EditGrammarStory" />
         <item index="4" class="java.lang.String" itemvalue="Python.Scratch" />
@@ -489,13 +486,13 @@
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25291622" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32936978" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.49923196" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32936978" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.49944505" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2497349" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.6230678" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -553,14 +550,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/EditDictionary.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6831">
-          <caret line="211" column="29" lean-forward="false" selection-start-line="211" selection-start-column="22" selection-end-line="211" selection-end-column="29" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Scratch.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="396">
@@ -921,34 +910,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/EditDictionary.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3234">
-          <caret line="102" column="22" lean-forward="false" selection-start-line="102" selection-start-column="22" selection-end-line="102" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Smeagol.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="20592">
-          <caret line="628" column="38" lean-forward="false" selection-start-line="628" selection-start-column="38" selection-end-line="628" selection-end-column="38" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/EditGrammarStory.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2376">
           <caret line="76" column="61" lean-forward="false" selection-start-line="76" selection-start-column="61" selection-end-line="76" selection-end-column="61" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Scratch2.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="132">
-          <caret line="4" column="40" lean-forward="false" selection-start-line="4" selection-start-column="40" selection-end-line="4" selection-end-column="40" />
           <folding />
         </state>
       </provider>
@@ -963,10 +928,35 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Scratch2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="33">
+          <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/EditDictionary.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3234">
+          <caret line="102" column="22" lean-forward="false" selection-start-line="102" selection-start-column="22" selection-end-line="102" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Smeagol.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="20559">
+          <caret line="627" column="41" lean-forward="true" selection-start-line="627" selection-start-column="41" selection-end-line="627" selection-end-column="41" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Test.py" />
     <entry file="file://$PROJECT_DIR$/TranslateStory.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="561">
-          <caret line="228" column="30" lean-forward="true" selection-start-line="228" selection-start-column="30" selection-end-line="228" selection-end-column="30" />
+        <state relative-caret-position="225">
+          <caret line="78" column="0" lean-forward="false" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
           </folding>

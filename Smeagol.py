@@ -118,9 +118,9 @@ class Site:
                                 'Unable to Create Directory')
             return
         if template is None:
-            template = Template('template.txt')
+            template = Template('template.html')
         if main_template is None:
-            main_template = Template('main_template.txt')
+            main_template = Template('main_template.html')
         self.root.publish(main_template)
         self.next()
         for entry in self:
@@ -603,7 +603,7 @@ class Page:
             if self.generation():
                 template = Template()
             else:
-                template = Template('main_template.txt')
+                template = Template('main_template.html')
         try:
             page = template.template
         except AttributeError:
@@ -626,6 +626,7 @@ class Page:
         except os.error:
             pass
         with open(self.link(), "w") as f:
+            page = re.sub('\x05\x05.*?\x06\x06', '', page)
             page = re.sub('\x05.*?\x06', '', page)
             f.write(page.replace(chr(7), ''))
 
@@ -641,6 +642,9 @@ class Page:
         content = re.sub(r'\[\d\]|<(ipa|high-lulani)>.*?</\1>|<.*?>', ' ', content)
         """change punctuation to paragraph marks, so that splitlines works"""
         content = re.sub(r'[!?.]', '\n', content)
+        """remove hidden text"""
+        content = re.sub(r'\x05.*?\x06\x06', '', content)
+        content = re.sub(r'\x05.*?\x06', '', content)
         """remove bells, spaces at the beginnings and end of lines, and duplicate spaces and end-lines"""
         content = re.sub(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[\x07,:]', '', content)
         """remove duplicate end-lines"""
@@ -652,7 +656,7 @@ class Page:
         """remove punctuation, and tags in square brackets"""
         content = re.sub(r'\'"|[.!?`"/{}\\();-]|\'($| )|\[.*?\]|&nbsp', ' ', content)
         """make glottal stops lower case where appropriate"""
-        content = re.sub(r"(?=[^ \n])''", "'", content)
+        content = re.sub(r"(?<=[ \n])''", "'", content)
         for number, line in enumerate(content.splitlines()):
             for word in line.split():
                 try:
@@ -664,7 +668,7 @@ class Page:
 
 
 class Template:
-    def __init__(self, filename='template.txt'):
+    def __init__(self, filename='template.html'):
         try:
             with open(filename) as f:
                 self.template = f.read()
