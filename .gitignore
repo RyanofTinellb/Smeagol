@@ -8,6 +8,12 @@ __pycache__/
 # C extensions
 *.so
 
+# Scratch files
+Scratch.py
+Scratch2.py
+Scratch3.py
+
+
 # Distribution / packaging
 .Python
 env/
@@ -89,8 +95,3 @@ ENV/
 
 # Rope project settings
 .ropeproject
-
-# Scratch files
-Scratch.py
-Scratch2.py
-Scratch3.py
