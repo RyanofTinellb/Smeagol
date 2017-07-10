@@ -168,4 +168,3 @@ class Markdown:
         for first, second in zip(self.source, self.destination):
             text = text.replace(first, second)
         return text
-

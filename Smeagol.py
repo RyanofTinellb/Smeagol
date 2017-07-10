@@ -264,7 +264,7 @@ class Page:
     def site(self):
         sites = {'Grammar': Grammar,
                  'Dictionary': Dictionary,
-                 'Story': Story}
+                 'The Coelacanth Quartet': Story}
         return sites[self.root().name]
 
     def delete(self):
@@ -542,10 +542,10 @@ class Page:
             return links
 
     def links(self):
-        output = ('<ul><li>' + self.hyperlink(self.root()) + '</li>\n'
+        output = ('<ul class="level-1"><li>' + self.hyperlink(self.root()) + '</li>\n'
                   '$links$\n'
                   '<li class="up-arrow">' + self.hyperlink(self.parent, 'Go up one level &uarr;') + '</li>\n'
-                  '<li class="link">' + self.hyperlink('Search.html', 'Search') + '</li>\n'
+                  '<li class="link">' + self.hyperlink('search.html', 'Search') + '</li>\n'
                   '<li class="link">$out$</li>\n'
                   '<li class="link">$out$</li>\n'
                   '</ul>\n')
@@ -573,13 +573,28 @@ class Page:
         return self.links().replace('$links$', links)
 
     def cousin_links(self):
-        links = '<ul>'
+        links = ''
+        level = 0
+        family = self.family()
+        for page in self.site()():
+            if page in family:
+                old_level = level
+                level = page.generation()
+                if level > old_level:
+                    links += '<ul class="level-{0}">'.format(str(level))
+                elif level < old_level:
+                    links += (old_level - level) * '</ul>\n'
+                if page == self:
+                    links += '<li class="normal">{0}</li>\n'.format(self.hyperlink(page))
+                else:
+                    links += '<li>{0}</li>\n'.format(self.hyperlink(page))
+        links += (level + 1) * '</ul>\n' + '<p>Other Versions:</p><ul class="level-1">'
         categories = [node.name for node in self.elders()]
         cousins = self.cousins()
         for cousin, category in zip(cousins, categories):
             if cousin is not self:
                 links += '<li>{0}</li>\n'.format(self.hyperlink(cousin, category))
-        links += '</ul>'
+        links += '</ul><ul>'
         return self.links().replace('$links$', links)
 
     def elder_links(self):
@@ -772,5 +787,5 @@ class Analysis:
         return '{{{0}}}'.format(',\n'.join([wordlist, lines, pages, names]))
 
 if __name__ == '__main__':
-    for site in Story, Grammar, Dictionary:
+    for site in Story, :# Grammar, Dictionary:
         site().publish()
