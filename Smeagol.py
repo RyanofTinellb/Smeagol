@@ -558,7 +558,7 @@ class Page:
 
     def family_links(self):
         links = ''
-        level = 1
+        level = 0
         family = self.family()
         for page in self.site()():
             if page in family:
@@ -568,8 +568,11 @@ class Page:
                     links += '<ul class=\"level-{0}\">'.format(str(level))
                 elif level < old_level:
                     links += (old_level - level) * '</ul>\n'
-                links += '<li>{0}</li>\n'.format(self.hyperlink(page))
-        links += (level - 1) * '</ul>\n'
+                if page == self:
+                    links += '<li class="normal">{0}</li>\n'.format(self.hyperlink(page))
+                else:
+                    links += '<li>{0}</li>\n'.format(self.hyperlink(page))
+        links += (level) * '</ul>\n'
         return self.links().replace('$links$', links)
 
     def cousin_links(self):
@@ -787,5 +790,5 @@ class Analysis:
         return '{{{0}}}'.format(',\n'.join([wordlist, lines, pages, names]))
 
 if __name__ == '__main__':
-    for site in Story, :# Grammar, Dictionary:
+    for site in Grammar, Story, Dictionary:
         site().publish()
