@@ -8,11 +8,16 @@ __pycache__/
 # C extensions
 *.so
 
+desktop.ini
+install_tinellbian_software.bat
+
 # Scratch files
 Scratch.py
 Scratch2.py
 Scratch3.py
 
+# Shortcuts
+*.lnk
 
 # Distribution / packaging
 .Python
