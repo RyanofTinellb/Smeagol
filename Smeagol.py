@@ -550,10 +550,12 @@ class Page:
                   '<li class="link">' + self.hyperlink('search.html', 'Search') + '</li>\n'
                   '<li class="link">$out$</li>\n'
                   '<li class="link">$out$</li>\n'
+                  '<li class="link">$out$</li>\n'
                   '</ul>\n')
-        for item, link in (['Grammar', 'grammar'],
-                           ['Dictionary', 'dictionary'],
-                           ['The Coelacanth Quartet', 'coelacanthquartet']):
+        for item, link in ( ['Tinellb', 'www'],
+                            ['Grammar', 'grammar'],
+                            ['Dictionary', 'dictionary'],
+                            ['The Coelacanth Quartet', 'coelacanthquartet']):
             if item != self.root().name:
                 output = output.replace('$out$', '<a href=\"http://{0}.tinellb.com\">{1}</a>'.format(link, item), 1)
         return output
@@ -795,5 +797,5 @@ class Analysis:
         return '{{{0}}}'.format(',\n'.join([wordlist, lines, pages, names]))
 
 if __name__ == '__main__':
-    for site in Grammar, Story :#, Dictionary:
+    for site in Grammar, Story, Dictionary:
         site().publish()
