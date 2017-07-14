@@ -14,12 +14,12 @@ class Site:
         self.current = None
         self.name = name
         self.root = node = Page(name, leaf_level=self.leaf_level)
-        self.previous = None
         split = r'\[(?=[' + "".join(map(lambda x: str(x + 1), range(leaf_level))) + r'])'
         with open(self.source_file, 'r') as source:
             source = source.read()
         source = re.split(split, source)
         for page in source:
+            previous = node
             try:
                 level, heading = re.split('[]\n]', page, 2)[:2]
                 level = int(level)
@@ -27,7 +27,7 @@ class Site:
                 continue
             while level != node.generation() + 1:
                 node = node.parent
-            node = self.add_node(heading, node, page)
+            node = self.add_node(heading, node, page, previous)
 
     def __str__(self):
         return ''.join([str(page) for page in self if str(page)])[1:]
@@ -77,8 +77,8 @@ class Site:
                     raise KeyError(page)
         return node
 
-    def add_node(self, name, parent, content):
-        child = Page(name, parent, content, self.leaf_level)
+    def add_node(self, name, parent, content, previous):
+        child = Page(name, parent, content, self.leaf_level, previous)
         if child not in parent.children:
             parent.children.append(child)
         else:
@@ -122,6 +122,7 @@ class Site:
         if main_template is None:
             main_template = Template('main_template.html')
         self.root.publish(main_template)
+        self.previous = self.current
         self.next()
         for entry in self:
             entry.publish(template)
@@ -155,12 +156,13 @@ class Site:
 
 
 class Page:
-    def __init__(self, name, parent=None, content="", leaf_level=3):
+    def __init__(self, name, parent=None, content="", leaf_level=3, previous=None):
         self.parent = parent
         self.name = name
         self.children = []
         self.leaf_level = leaf_level
         self.content = content
+        self.previous = previous
 
     def __str__(self):
         return '[' + self.content
@@ -542,7 +544,7 @@ class Page:
             return links
 
     def links(self):
-        output = ('<ul class="level-1"><li>' + self.hyperlink(self.root()) + '</li>\n'
+        output = ('<ul><li>' + self.hyperlink(self.root()) + '</li>\n'
                   '$links$\n'
                   '<li class="up-arrow">' + self.hyperlink(self.parent, 'Go up one level &uarr;') + '</li>\n'
                   '<li class="link">' + self.hyperlink('search.html', 'Search') + '</li>\n'
@@ -608,12 +610,15 @@ class Page:
         return self.links().replace('$links$', links + '</ul>')
 
     def nav_footer(self):
-        output = '<div class="right">'
+        output = ''
+        if self.previous:
+            output += '<div>\n{0}\n</div>\n'.format(self.hyperlink(self.previous, '&larr; Previous page'))
+        else:
+            output += '<div>\n{0}\n</div>\n'.format(self.hyperlink(self.root(), '&uarr; Return to Menu'))
         try:
-            output += self.hyperlink(self.next_node(), 'Next page &rarr;')
+            output += '<div>\n{0}\n</div>\n'.format(self.hyperlink(self.next_node(), 'Next page &rarr;'))
         except IndexError:
-            output += self.hyperlink(self.root(), 'Return to Menu &uarr;')
-        output += '</div>\n<div style="clear: both;"></div>\n'
+            output += '<div>\n{0}\n</div>\n'.format(self.hyperlink(self.root(), 'Return to Menu &uarr;'))
         return output
 
     def publish(self, template=None):
@@ -790,5 +795,5 @@ class Analysis:
         return '{{{0}}}'.format(',\n'.join([wordlist, lines, pages, names]))
 
 if __name__ == '__main__':
-    for site in Grammar, Story, Dictionary:
+    for site in Grammar, Story :#, Dictionary:
         site().publish()
