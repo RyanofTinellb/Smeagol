@@ -9,7 +9,6 @@ class Site:
     def __init__(self, name, leaf_level=3, directory='c:/users/ryan/documents/tinellbianlanguages/'):
         os.chdir(directory + Page(name).url_form())
         self.source_file = 'data.txt'
-        self.template_file = 'style.css'
         self.leaf_level = leaf_level
         self.current = None
         self.name = name
@@ -100,7 +99,7 @@ class Site:
                 raise IndexError('No such node "' + item[0].capitalize() + '" in ' + node.name)
             return self.find_node_iter(item[1:], node)
 
-    def publish(self, destination=None, template=None, main_template=None):
+    def publish(self, destination=None, template=None, main_template=None, search_template=None):
         if destination:
             if re.search(r'[/\\]$', destination) is not None:
                 destination += "/"
@@ -119,13 +118,20 @@ class Site:
             return
         if template is None:
             template = Template('template.html')
+
+        """Create main page"""
         if main_template is None:
             main_template = Template('main_template.html')
         self.root.publish(main_template)
+
+
+        """Create basic pages"""
         self.previous = self.current
         self.next()
         for entry in self:
             entry.publish(template)
+
+        """Create data for performing searches of the text"""
         analysis = self.analyse()
         string = str(analysis)
         with open('searching.json', 'w') as f:
@@ -415,7 +421,7 @@ class Page:
         else:
             return self.folder() + (self.url_form(False) if self.is_leaf() else 'index')
 
-    def hyperlink(self, destination, template="{0}", just_href=False):
+    def hyperlink(self, destination, template="{0}", anchor_tags=True):
         """
         Create a hyperlink
         Source and destination must be within the same website
@@ -432,8 +438,8 @@ class Page:
             return template.format(destination.name)
         # @variable (int) change: accounts for the fact that an internal node has one less level than expected
         change = int(not self.is_leaf())
-        # @variable (str) href: a hyperlink reference of the form '../../phonology/consonants/index.html'
-        # @variable (str) link: a hyperlink of the form '<a href="../../phonology/consonants/index.html>Consonants</a>'
+        # @variable (str) address: a hyperlink reference of the form '../../phonology/consonants/index.html'
+        # @variable (str) link: a hyperlink of the form '<a address="../../phonology/consonants/index.html>Consonants</a>'
         try:
             extension = ".html" if destination.is_leaf() else "/index.html"
             self_ancestors = self.ancestors() + [self]
@@ -455,13 +461,13 @@ class Page:
                 up = self.generation() + change - (destination.generation() if direct else common)
                 down = destination.url_form() if direct else \
                     "/".join([node.url_form() for node in destination_ancestors[common:]])
-            href = 'href="{0}"'.format((up * '../') + down + extension)
-            link = '<a {0}>{1}</a>'.format(href, template.format(destination.name))
+            address = (up * '../') + down + extension
+            link = '<a href="{0}">{1}</a>'.format(address, template.format(destination.name))
         except AttributeError:  # destination is a string
             up = self.generation() + change - 1
-            href = 'href="{0}"'.format((up * '../') + destination)
-            link = '<a {0}>{1}</a>'.format(href, template.format(destination))
-        return href if just_href else link
+            address = (up * '../') + destination
+            link = '<a {0}>{1}</a>'.format(address, template.format(destination))
+        return link if anchor_tags else address
 
     def change_to_heading(self, text):
         """
@@ -516,10 +522,19 @@ class Page:
         return output
 
     def stylesheet_and_icon(self):
-        output = ('<link rel="stylesheet" type="text/css" $style$>\n'
-                  '<link rel="icon" type="image/png" $icon$>\n')
-        output = output.replace('$style$', self.hyperlink('style.css', just_href=True))
-        output = output.replace('$icon$', self.hyperlink('favicon.png', just_href=True))
+        output = """<link rel="stylesheet" type="text/css" href="{0}">
+    <link rel="icon" type="image/png" href="{1}">""".format(
+            self.hyperlink('style.css', anchor_tags=False),
+            self.hyperlink('favicon.png', anchor_tags=False))
+        return output
+
+    def search_script(self):
+        output = """<script type="text/javascript">
+        if (window.location.href.indexOf("?") != -1) {{
+            window.location.href = "{0}" +
+            window.location.href.substring(window.location.href.indexOf("?")) + "&andOr=and";
+        }}
+    </script>""".format(self.hyperlink('search.html', anchor_tags=False))
         return output
 
     def toc(self):
@@ -544,20 +559,25 @@ class Page:
             return links
 
     def links(self):
-        output = ('<ul><li>' + self.hyperlink(self.root()) + '</li>\n'
-                  '$links$\n'
-                  '<li class="up-arrow">' + self.hyperlink(self.parent, 'Go up one level &uarr;') + '</li>\n'
-                  '<li class="link">' + self.hyperlink('search.html', 'Search') + '</li>\n'
-                  '<li class="link">$out$</li>\n'
-                  '<li class="link">$out$</li>\n'
-                  '<li class="link">$out$</li>\n'
-                  '</ul>\n')
-        for item, link in ( ['Tinellb', 'www'],
-                            ['Grammar', 'grammar'],
+        output = """<ul>
+                  <li class="link"><a href="http://www.tinellb.com">&uarr; Main Page</a></li>
+                  <li class="link">$out$</li>
+                  <li class="link">$out$</li>
+                </ul>
+                <ul><li{0}>{1}</li>
+                  <form id="search">
+                    <li class="search">
+                      <input type="text" name="term"></input> <button type="submit">Search</button>
+                    </li>
+                  </form>
+                $links$
+                </ul>""".format(' class="normal"' if self == self.root() else '',
+                                self.hyperlink(self.root()))
+        for item, link in ( ['Grammar', 'grammar'],
                             ['Dictionary', 'dictionary'],
                             ['The Coelacanth Quartet', 'coelacanthquartet']):
             if item != self.root().name:
-                output = output.replace('$out$', '<a href=\"http://{0}.tinellb.com\">{1}</a>'.format(link, item), 1)
+                output = output.replace('$out$', '<a href="http://{0}.tinellb.com">{1} &rarr;</a>'.format(link, item), 1)
         return output
 
     def family_links(self):
@@ -637,6 +657,7 @@ class Page:
         for (section, function) in [
             ('{title}', self.title),
             ('{stylesheet}', self.stylesheet_and_icon),
+            ('{search-script}', self.search_script),
             ('{content}', self.contents),
             ('{toc}', self.toc),
             ('{family-links}', self.family_links),
