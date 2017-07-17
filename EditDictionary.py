@@ -6,7 +6,7 @@ from Translation import *
 
 
 class EditDictionary(Tk.Frame):
-    def __init__(self, dir, outputfile, site, searchfile, master=None,):
+    def __init__(self, dir, outputfile, site, searchfile, number=1, master=None,):
         """
         :param dir (String): the path and filename of the top-level directory
         :param outputfile (String): the path, filename and extension of the output file, relative to dir
@@ -26,6 +26,7 @@ class EditDictionary(Tk.Frame):
         # initialise other useful classes. Default language is High Lulani
         self.markdown = Markdown()
         self.translator = Translator('hl')
+        self.words = RandomWords(number)
         # initialise textboxes and buttons
         self.heading = None
         self.go_button = None
@@ -133,9 +134,7 @@ class EditDictionary(Tk.Frame):
         """
         Show a certain number of random nonsense words using High Lulani phonotactics.
         """
-        number = 20
-        text = '\n'.join(Translation.make_words(number))
-        self.random_word.set(text)
+        self.random_word.set('\n'.join([x for x in self.words]))
         return 'break'
 
     def bold(self, event=None):
@@ -246,6 +245,7 @@ class EditDictionary(Tk.Frame):
 app = EditDictionary(dir='C:/Users/Ryan/Documents/TinellbianLanguages/dictionary',
                     outputfile='data.txt',
                     site=Dictionary(),
-                    searchfile='searching.json')
+                    searchfile='searching.json',
+                    number=20)
 app.master.title('Edit the Dictionary')
 app.mainloop()

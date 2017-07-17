@@ -1,4 +1,4 @@
-import random
+from random import randint
 import re
 import datetime
 
@@ -108,6 +108,20 @@ class HighLulani:
         output = r'[hl]\({0}\)[/hl]'.format(self.convert_text(text))
         return output
 
+class RandomWords():
+    def __init__(self, number):
+        self.total = 0
+        self.maximum = number
+
+    def next(self):
+        if self.total == self.maximum:
+            self.total = 0
+            raise StopIteration
+        self.total += 1
+        return self.word()
+
+    def __iter__(self):
+        return self
 
 def random_scaled_pick(from_list, scale):
     try:
