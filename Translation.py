@@ -1,5 +1,6 @@
 import random
 import re
+import datetime
 
 
 class Translator:
@@ -158,10 +159,12 @@ class Markdown:
 
     def to_markup(self, text):
         self.source, self.destination = self.markdown[::-1], self.markup[::-1]
+        text += datetime.datetime.strftime(datetime.datetime.today(), '\n&date=%Y%m%d')
         return self.convert(text)
 
     def to_markdown(self, text):
         self.source, self.destination = self.markup, self.markdown
+        text = re.sub(r'&date=\d{8}', '', text)
         return self.convert(text)
 
     def convert(self, text):
