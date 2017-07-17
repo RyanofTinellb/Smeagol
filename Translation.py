@@ -5,7 +5,7 @@ import datetime
 
 class Translator:
     def __init__(self, language):
-        self.language = language.upper()
+        self.language = language
         self.converter = None
         self.name = ''
         self.set_language(self.language)
@@ -20,10 +20,10 @@ class Translator:
         return self.converter.convert_sentence(text)
 
     def set_language(self, language):
-        self.language = language.upper()
-        if self.language == "HL":
+        self.language = language.lower()
+        if self.language == "hl":
             self.converter = HighLulani()
-        elif self.language == "EN":
+        elif self.language == "en":
             self.converter = English()
         else:
             raise NameError('No such language ' + language)
@@ -119,7 +119,7 @@ def random_scaled_pick(from_list, scale):
     return pick
 
 
-def make_word(number):
+def make_words(number):
     consonant_scale = [10, 10, 11, 12, 13, 14, 15, 16, 17, 19, 21, 24, 27, 32, 38, 47, 62, 82]
     consonants = ['b', 'g', 'j', 'f', 'h', 'd', 'p', 'r', 't', 'm', 'c', 'x', 'q', 'n', 'k', 'l', unichr(8217), 's']
     vowel_scale = [4, 2, 1]
@@ -145,10 +145,9 @@ class Markdown:
     def __init__(self, filename='c:/users/ryan/documents/tinellbianlanguages/replacements.html'):
         """
         Marking down proceeds down the Replacements page
-        :param filename:
+        :param filename (String): the path to the replacements file
         """
-        self.markup = []
-        self.markdown = []
+        self.markup, self.markdown = [], []
         with open(filename) as replacements:
             for line in replacements:
                 line = line.split(" ")
