@@ -40,7 +40,6 @@ class EditDictionary(Tk.Frame):
         self.heading = Tk.Text(self, height=1, width=20, wrap=Tk.NONE)
         self.heading.grid(sticky=Tk.NE)
         self.heading.bind("<Control-r>", self.refresh_random)
-        self.heading.bind("<Control-n>", self.locate_next)
         self.heading.bind("<Return>", self.bring_entry)
         self.go_button = Tk.Button(self, text="GO!", command=self.bring_entry)
         self.go_button.grid(row=1, column=1, sticky=Tk.NW)
@@ -81,22 +80,6 @@ class EditDictionary(Tk.Frame):
             self.edit_text.delete(Tk.INSERT + "-1c wordstart -1c", Tk.INSERT)
         return "break"
 
-    def locate_next(self, event=None):
-        with open("new.txt", "r") as f:
-            for _ in range(self.row_number):
-                __ = f.readline()
-            self.row_number = (self.row_number + 1) % 5
-            line = f.readline()
-        line = line[2:-3]
-        line = line.replace('"', "'")
-        line = line.split("', '")
-        self.heading.delete(1.0, Tk.END)
-        self.heading.insert(1.0, line[0])
-        self.bring_entry()
-        self.heading.delete(1.0, Tk.END)
-        self.heading.insert(1.0, line[1])
-        return "break"
-
     def go_to_heading(self, event=None):
         self.heading.focus_set()
         self.heading.tag_add('sel', '1.0', 'end-1c')
@@ -130,7 +113,7 @@ class EditDictionary(Tk.Frame):
             self.edit_text.insert(Tk.INSERT, "[/b]")
             self.is_bold = False
         return "break"
-    
+
     def italic(self, event):
         if not self.is_italic:
             self.edit_text.insert(Tk.INSERT, "[i]")
@@ -139,7 +122,7 @@ class EditDictionary(Tk.Frame):
             self.edit_text.insert(Tk.INSERT, "[/i]")
             self.is_italic = False
         return "break"
-            
+
     def small_caps(self, event):
         if not self.is_small_caps:
             self.edit_text.insert(Tk.INSERT, "[k]")
