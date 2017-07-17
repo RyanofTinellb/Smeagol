@@ -121,12 +121,13 @@ class EditDictionary(Tk.Frame):
         return 'break'
 
     def add_definition(self, event=None):
-        self.edit_text.insert(Tk.INSERT, "<div ==></div>")
-        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + "-6c")
         """
         Insert the markdown for entry definition, and move the insertion pointer to allow for immediate input of the definition.
         """
+        self.edit_text.insert(Tk.INSERT, '{{ ==}}')
+        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
         return 'break'
+
 
     def refresh_random(self, event=None):
         text = "\n".join(Translation.make_word(10))
