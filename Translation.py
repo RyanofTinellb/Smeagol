@@ -108,6 +108,7 @@ class HighLulani:
         output = r'[hl]\({0}\)[/hl]'.format(self.convert_text(text))
         return output
 
+
 class RandomWords():
     def __init__(self, number):
         self.total = 0
@@ -123,36 +124,43 @@ class RandomWords():
     def __iter__(self):
         return self
 
-def random_scaled_pick(from_list, scale):
-    try:
-        pick = map(lambda x: sum(scale[:x]), range(len(scale)))
-        pick = map(lambda x: x <= random.randint(1, sum(scale)), pick).index(False) - 1
-        pick = from_list[pick]
-    except ValueError:
-        pick = from_list[-1]
-    return pick
+    def consonant(self):
+        lst = ['b', 'g', 'j', 'f', 'h', 'd', 'p', 'r', 't', 'm', 'c', 'x', 'q', 'n', 'k', 'l', unichr(8217), 's']
+        scale = [10, 10, 11, 12, 13, 14, 15, 16, 17, 19, 21, 24, 27, 32, 38, 47, 62, 82]
+        return self.pick(lst, scale)
 
+    def vowel(self):
+        lst = ['a', 'i', 'u']
+        scale = [4, 2, 1]
+        return self.pick(lst, scale)
 
-def make_words(number):
-    consonant_scale = [10, 10, 11, 12, 13, 14, 15, 16, 17, 19, 21, 24, 27, 32, 38, 47, 62, 82]
-    consonants = ['b', 'g', 'j', 'f', 'h', 'd', 'p', 'r', 't', 'm', 'c', 'x', 'q', 'n', 'k', 'l', unichr(8217), 's']
-    vowel_scale = [4, 2, 1]
-    vowels = ['a', 'i', 'u']
-    syllable = [1, 2, 3, 4]
-    syllable_scale = [7, 18, 15, 2]
-    new_words = []
-    for _ in range(number):
-        num = random_scaled_pick(syllable, syllable_scale)
-        new_word = ""
-        for i in range(num):
-            new_word += random_scaled_pick(consonants, consonant_scale)
-            if random.random() > 0.9 and i > 0:
-                new_word += new_word[-1]
-                if new_word[-2:] == '**':
-                    new_word = new_word[:-2] + unichr(660)
-            new_word += random_scaled_pick(vowels, vowel_scale)
-        new_words.append(new_word)
-    return new_words
+    def numsyllables(self):
+        lst = [1, 2, 3, 4]
+        scale = [7, 18, 15, 2]
+        return self.pick(lst, scale)
+
+    @staticmethod
+    def pick(lst, scale):
+        try:
+            output = map(lambda x: sum(scale[:x]), range(len(scale)))
+            output = map(lambda x: x <= randint(1, sum(scale)), output).index(False) - 1
+            output = lst[output]
+        except ValueError:
+            output = lst[-1]
+        return output
+
+    def syllable(self):
+        return self.consonant() + self.vowel()
+
+    def word(self):
+        return ''.join([self.double(self.syllable(), i) for i in range(self.numsyllables())])
+
+    def double(self, syllable, num):
+        consonant, vowel = list(syllable)
+        if num and not randint(0, 10):
+            return consonant + syllable if consonant != unichr(8217) else unichr(660) + vowel
+        else:
+            return syllable
 
 
 class Markdown:
