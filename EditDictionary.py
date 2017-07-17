@@ -171,13 +171,6 @@ class EditDictionary(Tk.Frame):
         try:
             text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
         except Tk.TclError:
-
-    def collapse_table(self, event):
-        text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
-        text = text.replace('\n', ' | ')
-        text = text.replace(' | [r]', '\n[r]')
-        self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
-        self.edit_text.insert(Tk.INSERT, text)
             text = self.edit_text.get(Tk.INSERT + ' wordstart', Tk.INSERT + ' wordend')
         converter = self.translator.convert_sentence if '.' in text else self.translator.convert_word
         text = converter(text)
@@ -216,7 +209,6 @@ class EditDictionary(Tk.Frame):
         return 'break'
 
     def save(self, event=None):
-        self.is_bold = self.is_italic = self.is_small_caps = False
         self.page.content = self.markdown.to_markup(str(self.edit_text.get(1.0, Tk.END)))
         links = set(re.sub(r'.*?{(.*?)}.*?', r'\1}', self.page.content.replace('\n', '')).split(r'}')[:-1])
         """
