@@ -104,36 +104,33 @@ class EditDictionary(Tk.Frame):
     def refresh_random(self, event=None):
         text = "\n".join(Translation.make_word(10))
         self.random_word.set(text)
-
-    def bold(self, event):
-        if not self.is_bold:
-            self.edit_text.insert(Tk.INSERT, "[b]")
-            self.is_bold = True
-        else:
-            self.edit_text.insert(Tk.INSERT, "[/b]")
-            self.is_bold = False
-        return "break"
-
-    def italic(self, event):
-        if not self.is_italic:
-            self.edit_text.insert(Tk.INSERT, "[i]")
-            self.is_italic = True
-        else:
-            self.edit_text.insert(Tk.INSERT, "[/i]")
-            self.is_italic = False
-        return "break"
-
-    def small_caps(self, event):
-        if not self.is_small_caps:
-            self.edit_text.insert(Tk.INSERT, "[k]")
-            self.is_small_caps = True
-        else:
-            self.edit_text.insert(Tk.INSERT, "[/k]")
-            self.is_small_caps = False
-        return "break"
-
     def add_translation(self, event):
         enter = False
+        return 'break'
+
+    def bold(self, event=None):
+        """
+        Insert markdown for bold tags, and place insertion point between them.
+        """
+        self.edit_text.insert(Tk.INSERT, '[b][/b]')
+        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-4c')
+        return 'break'
+
+    def italic(self, event=None):
+        """
+        Insert markdown for italic tags, and place insertion point between them.
+        """
+        self.edit_text.insert(Tk.INSERT, '[i][/i]')
+        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-4c')
+        return 'break'
+
+    def small_caps(self, event=None):
+        """
+        Insert markdown for small-cap tags, and place insertion point between them.
+        """
+        self.edit_text.insert(Tk.INSERT, '[k][/k]')
+        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-4c')
+        return 'break'
         try:
             text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
         except Tk.TclError:
