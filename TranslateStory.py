@@ -180,7 +180,7 @@ class Paragraph:
 
     def display(self):
         markdown = Markdown(self.replacements).to_markdown
-        display = map(lambda x: markdown(self.paragraph[2 * x]), range(3))
+        displays = map(lambda x: markdown(self.paragraph[2 * x]), range(3))
         replacements = [['.(', '&middot;('],
                         ['(', chr(5)],
                         ['<', 2*chr(5)],
@@ -188,8 +188,8 @@ class Paragraph:
                         ['>', 2*chr(6)],
                         ['-', chr(7)]]
         for j, i in replacements[::-1]:
-            display[1] = display[1].replace(i, j)     # Transliteration
-        return display
+            displays[1] = display[1].replace(i, j)     # Transliteration
+        return displays
 
     def publish(self, texts):
         """
