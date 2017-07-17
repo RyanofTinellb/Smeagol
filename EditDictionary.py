@@ -86,15 +86,15 @@ class EditDictionary(Tk.Frame):
         self.edit_text.tag_add('sel', '1.0', 'end')
         return 'break'
 
-    def delete_word(self, event):
-        if self.edit_text.get(Tk.INSERT + "-1c") in '.,;:?!':
-            self.edit_text.delete(Tk.INSERT + "-1c wordstart", Tk.INSERT)
+    def delete_word(self, event=None):
         """
         Remove text backwards from the insertion counter to the end of the previous word
         """
+        if self.edit_text.get(Tk.INSERT + '-1c') in '.,;:?! ':
+            self.edit_text.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
         else:
-            self.edit_text.delete(Tk.INSERT + "-1c wordstart -1c", Tk.INSERT)
-        return "break"
+            self.edit_text.delete(Tk.INSERT + '-1c wordstart -1c', Tk.INSERT)
+        return 'break'
 
     def go_to_heading(self, event=None):
         """
