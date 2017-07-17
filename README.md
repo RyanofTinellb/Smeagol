@@ -32,7 +32,7 @@ This converts text to and from markdown, based on a given textfile. If the secon
 >>> marker = Markdown('c:/users/documents/replacements.txt')
 >>> markdown = marker.to_markdown()
 >>> markup = marker.to_markup()
->>> print(markdown('<em> &copy; &aacute; </em> &date=20170716'), True)
+>>> print(markdown('<em> &copy; &aacute; </em> &date=20170716'), False)
 '[b] (c) )a [/b]'
 >>> print(markup('[b] (c) )a [/b]'), True)
 '<em> &copy; &aacute; </em> &date=20170716'
