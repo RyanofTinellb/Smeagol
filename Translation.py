@@ -5,10 +5,14 @@ import datetime
 
 class Translator:
     def __init__(self, language):
-        self.language = language
-        self.converter = None
-        self.name = ''
-        self.set_language(self.language)
+        language = language.lower()
+        if language == "hl":
+            self.converter = HighLulani()
+        elif language == "en":
+            self.converter = English()
+        else:
+            raise NameError('No such language ' + language)
+        self.name = self.converter.name
 
     def convert_text(self, text):
         return self.converter.convert_text(text)
@@ -18,16 +22,6 @@ class Translator:
 
     def convert_sentence(self, text):
         return self.converter.convert_sentence(text)
-
-    def set_language(self, language):
-        self.language = language.lower()
-        if self.language == "hl":
-            self.converter = HighLulani()
-        elif self.language == "en":
-            self.converter = English()
-        else:
-            raise NameError('No such language ' + language)
-        self.name = self.converter.name
 
 
 class English:
