@@ -110,7 +110,7 @@ class EditDictionary(Tk.Frame):
                         '[5][p]//[/p]\n'
                         '[6]\n').format(self.entry, trans.name, trans.convert_word(self.entry))
         self.edit_text.insert(1.0, new_template)
-        self.edit_text.mark_set(Tk.INSERT, "3.7")
+        self.edit_text.mark_set(Tk.INSERT, "4.7")
         return "break"
 
     def add_definition(self, event=None):
