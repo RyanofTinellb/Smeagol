@@ -1,5 +1,6 @@
 import os
 import re
+import datetime
 import win32api
 
 import Translation
@@ -643,6 +644,15 @@ class Page:
             output += '<div>\n{0}\n</div>\n'.format(self.hyperlink(self.root(), 'Return to Menu &uarr;'))
         return output
 
+    def copyright(self):
+        try:
+            date = datetime.datetime.strptime(max(re.findall(r'(?<=&date=)\d{8}', self.content)), '%Y%m%d')
+        except ValueError:
+            return ''
+        suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else ["st", "nd", "rd"][date.day % 10 - 1]
+        output = datetime.datetime.strftime(date, '&copy;%Y Ryan Eakins. Last updated: %A, %B %#d' + suffix + ', %Y.')
+        return output
+
     def publish(self, template=None):
         if template is None:
             if self.generation():
@@ -663,7 +673,8 @@ class Page:
             ('{family-links}', self.family_links),
             ('{cousin-links}', self.cousin_links),
             ('{elder-links}', self.elder_links),
-            ('{nav-footer}', self.nav_footer)
+            ('{nav-footer}', self.nav_footer),
+            ('{copyright}', self.copyright)
         ]:
             if page.count(section):
                 page = page.replace(section, function())
@@ -674,6 +685,7 @@ class Page:
         with open(self.link(), "w") as f:
             page = re.sub('\x05\x05.*?\x06\x06', '', page)
             page = re.sub('\x05.*?\x06', '', page)
+            page = re.sub(r'&date=\d{8}', '', page)
             f.write(page.replace(chr(7), ''))
 
     def remove(self):
