@@ -134,6 +134,7 @@ class EditStory(Tk.Frame):
         for window, text in zip(self.windows, self.chapter.display()):
             window.delete('1.0', Tk.END)
             window.insert('1.0', text)
+            window.edit_modified(False)
         return "break"
 
 

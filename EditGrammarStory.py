@@ -8,6 +8,7 @@ import Translation
 class EditPage(Tk.Frame):
     def __init__(self, master=None):
         Tk.Frame.__init__(self, master)
+        os.chdir("C:/Users/Ryan/Documents/TinellbianLanguages/creation")
         self.site = None
         self.entry = None
         self.headings = []
@@ -180,7 +181,8 @@ class EditPage(Tk.Frame):
         self.number_of_words.set(str(text.count(' ') + text.count('\n')))
 
     def edit_text_changed(self, event=None):
-        self.finish_text.set('*Save')
+        if self.edit_text.edit_modified():
+            self.finish_text.set('*Save')
 
     def bring_entry(self, event=None):
         self.markdown = Translation.Markdown('../GrammarReplacements.txt')
@@ -195,6 +197,7 @@ class EditPage(Tk.Frame):
             entry = self.markdown.to_markdown(self.entry.content)
             self.edit_text.insert(1.0, entry)
             self.edit_text.focus_set()
+            self.edit_text.edit_modified(False)
             self.finish_text.set('Save')
         else:
             self.entry = self.site.root
