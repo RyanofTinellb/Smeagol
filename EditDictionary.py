@@ -6,10 +6,8 @@ from Translation import *
 
 
 class EditDictionary(Tk.Frame):
-    def __init__(self, master=None):
+    def __init__(self, dir, outputfile, site, searchfile, master=None,):
         Tk.Frame.__init__(self, master)
-        self.dictionary = Dictionary()
-        self.leaf_level = 2
         self.heading = None
         self.go_button = None
         self.publish_button = None
@@ -34,7 +32,6 @@ class EditDictionary(Tk.Frame):
         self.top = self.winfo_toplevel()
         self.top.state("zoomed")
         self.create_widgets()
-        os.chdir("C:/Users/Ryan/Documents/TinellbianLanguages/dictionary")
 
     def create_widgets(self):
         self.heading = Tk.Text(self, height=1, width=20, wrap=Tk.NONE)
@@ -160,10 +157,10 @@ class EditDictionary(Tk.Frame):
         self.entry = str(self.heading.get(1.0, Tk.END + "-1c"))
         entry = self.markdown.to_markup(self.entry)
         try:
-            self.page = self.dictionary[entry]
+            self.page = self.site[entry]
         except KeyError:
             initial = re.sub(r'.*?(\w).*', r'\1', self.entry).capitalize()
-            self.page = Page(entry, self.dictionary[initial], "", self.leaf_level).insert()
+            self.page = Page(entry, self.site[initial], '', self.site.leaf_level).insert()
             self.new_word()
         content = re.sub(r'<a href="(?<!=http).*?">(.*?)</a>', r'{\1}', self.page.content)
         content = self.markdown.to_markdown(content)
@@ -192,16 +189,24 @@ class EditDictionary(Tk.Frame):
             self.page.publish()
         self.page.parent.publish()
         self.page.root().publish()
-        page = str(self.dictionary)
+        page = str(self.site)
         if page:
-            with open("data.txt", 'w') as data:
+            with open(self.outputfile, 'w') as data:
                 data.write(page)
         page = str(self.dictionary.analyse())
         if page:
-            with open('searching.json', 'w') as data:
                 data.write(page)
         return "break"
+        text = str(self.site.analyse())
+        if text:
+            with open(self.searchfile, 'w') as data:
+                data.write(text)
+        return 'break'
 
-app = EditDictionary()
 app.master.title('Dictionary Edit')
+app = EditDictionary(dir='C:/Users/Ryan/Documents/TinellbianLanguages/dictionary',
+                    outputfile='data.txt',
+                    site=Dictionary(),
+                    searchfile='searching.json')
+app.master.title('Edit the Dictionary')
 app.mainloop()
