@@ -1,4 +1,7 @@
-from Smeagol import *
+import re
 
-k = Story()
+k = 'a'
+
+k = re.sub('aa+', 'a', k)
+
 print(k)
