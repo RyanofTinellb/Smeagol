@@ -234,7 +234,10 @@ class EditDictionary(Tk.Frame):
                 pass
         # remove duplicate linebreaks
         self.page.content = re.sub(r'\n\n+', '\n', self.page.content)
-        self.page.parent.publish()
+        # update datestamp and publish parent.
+        parent = self.page.parent
+        parent.content = self.markdown.to_markup(self.markdown.to_markdown(parent.content))
+        parent.publish()
         # delete and remove page if edit area is empty
         if empty:
             self.page.delete()
