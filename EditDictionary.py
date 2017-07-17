@@ -7,6 +7,12 @@ from Translation import *
 
 class EditDictionary(Tk.Frame):
     def __init__(self, dir, outputfile, site, searchfile, master=None,):
+        """
+        :param dir (String): the path and filename of the top-level directory
+        :param outputfile (String): the path, filename and extension of the output file, relative to dir
+        :param site (Site): the site being modified
+        :param searchfile (String): the path, filename and extension of the file wherein the json text for site searches will be placed, relative to dir
+        """
         Tk.Frame.__init__(self, master)
         self.heading = None
         self.go_button = None
@@ -64,25 +70,41 @@ class EditDictionary(Tk.Frame):
         self.heading.focus_set()
 
     def change_language(self, event=None):
+        """
+        Change the entry language to whatever is in the StringVar 'self.language'
+        """
         self.translator = Translator(self.language.get())
 
     def select_all(self, event=None):
+        """
+        Select all the text in the edit area
+        """
         self.edit_text.tag_add('sel', '1.0', 'end')
         return "break"
 
     def delete_word(self, event):
         if self.edit_text.get(Tk.INSERT + "-1c") in '.,;:?!':
             self.edit_text.delete(Tk.INSERT + "-1c wordstart", Tk.INSERT)
+        """
+        Remove text backwards from the insertion counter to the end of the previous word
+        """
         else:
             self.edit_text.delete(Tk.INSERT + "-1c wordstart -1c", Tk.INSERT)
         return "break"
 
     def go_to_heading(self, event=None):
+        """
+        Move focus to the heading textbox, and select all the text therein
+        """
         self.heading.focus_set()
         self.heading.tag_add('sel', '1.0', 'end-1c')
         return "break"
 
     def new_word(self, event=None):
+        """
+        Insert the appropriate template for a new entry, and move the insertion pointer to allow for immediate input of the pronunciation.
+        :precondition: The name of the entry, and its language, are already selected.
+        """
         trans = self.translator
         new_template = ('2]{0}\n'
                         '[3]{1}\n'
@@ -97,9 +119,15 @@ class EditDictionary(Tk.Frame):
         self.edit_text.insert(Tk.INSERT, "<div ==></div>")
         self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + "-6c")
         return "break"
+        """
+        Insert the markdown for entry definition, and move the insertion pointer to allow for immediate input of the definition.
+        """
 
     def refresh_random(self, event=None):
         text = "\n".join(Translation.make_word(10))
+        """
+        Show a certain number of random nonsense words using High Lulani phonotactics.
+        """
         self.random_word.set(text)
     def add_translation(self, event):
         enter = False
@@ -128,6 +156,11 @@ class EditDictionary(Tk.Frame):
         self.edit_text.insert(Tk.INSERT, '[k][/k]')
         self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-4c')
         return 'break'
+        """
+        Insert a transliteration of the selected text in the current language.
+        Do sentence conversion if there is a period in the text, and word conversion otherwise.
+        Insert an additional linebreak if the selection ends with a linebreak.
+        """
         try:
             text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
         except Tk.TclError:
@@ -153,6 +186,11 @@ class EditDictionary(Tk.Frame):
         return "break"
 
     def bring_entry(self, event=None):
+        """
+        Find the dictionary entry with the same name as the text in the heading box, and place its markedown text within the edit area.
+        If such an entry is not found, create one, and insert it into its correct parent folder.
+        Replace internal links with the name of the linked entry, surrounded by <>.
+        """
         self.markdown = Markdown()
         self.entry = str(self.heading.get(1.0, Tk.END + "-1c"))
         entry = self.markdown.to_markup(self.entry)
@@ -174,6 +212,9 @@ class EditDictionary(Tk.Frame):
         self.is_bold = self.is_italic = self.is_small_caps = False
         self.page.content = self.markdown.to_markup(str(self.edit_text.get(1.0, Tk.END)))
         links = set(re.sub(r'.*?{(.*?)}.*?', r'\1}', self.page.content.replace('\n', '')).split(r'}')[:-1])
+        """
+        Save the current entry into the output file, and create/update the webpage for itself and its parent.
+        """
         for link in links:
             try:
                 hyperlink = self.page.hyperlink(self.dictionary[link])
