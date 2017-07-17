@@ -110,13 +110,14 @@ class EditDictionary(Tk.Frame):
         :precondition: The name of the entry, and its language, are already selected.
         """
         trans = self.translator
-        new_template = ('2]{0}\n'
-                        '[3]{1}\n'
-                        '[4]{2}\n'
-                        '[5][p]//[/p]\n'
-                        '[6]\n').format(self.entry, trans.name, trans.convert_word(self.entry))
-        self.edit_text.insert(1.0, new_template)
-        self.edit_text.mark_set(Tk.INSERT, "4.7")
+        (location, script) = ('4.7', '[4]{0}\n'.format(trans.convert_word(self.entry))) if self.language.get() != 'en' else ('3.7', '')
+        template = ('2]{0}\n'
+                    '[3]{1}\n'
+                    '{2}'
+                    '[5][p]//[/p]\n'
+                    '[6]\n').format(self.entry, trans.name, script)
+        self.edit_text.insert(1.0, template)
+        self.edit_text.mark_set(Tk.INSERT, location)
         return 'break'
 
     def add_definition(self, event=None):
