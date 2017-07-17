@@ -830,5 +830,11 @@ class Analysis:
         return '{{{0}}}'.format(',\n'.join([wordlist, lines, pages, names]))
 
 if __name__ == '__main__':
+    oldtime = datetime.datetime.now()
     for site in Grammar, Story, Dictionary:
-        site().publish()
+        site = site()
+        print(site.name + ': ')
+        site.publish()
+        newtime = datetime.datetime.now()
+        print(newtime - oldtime)
+        oldtime = newtime
