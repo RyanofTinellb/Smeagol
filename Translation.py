@@ -180,7 +180,7 @@ class Markdown:
 
     def to_markdown(self, text, datestamp=False):
         self.source, self.destination = self.markup, self.markdown
-        text = re.sub(r'&date=\d{8}\n', '', text) if datestamp else text
+        text = re.sub(r'&date=\d{8}\n', '', text) if not datestamp else text
         return self.convert(text)
 
     def convert(self, text):
