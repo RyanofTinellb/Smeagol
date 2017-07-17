@@ -130,10 +130,11 @@ class EditDictionary(Tk.Frame):
 
 
     def refresh_random(self, event=None):
-        text = "\n".join(Translation.make_word(10))
         """
         Show a certain number of random nonsense words using High Lulani phonotactics.
         """
+        number = 20
+        text = '\n'.join(Translation.make_words(number))
         self.random_word.set(text)
     def add_translation(self, event):
         enter = False
