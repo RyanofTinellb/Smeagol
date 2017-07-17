@@ -136,8 +136,6 @@ class EditDictionary(Tk.Frame):
         number = 20
         text = '\n'.join(Translation.make_words(number))
         self.random_word.set(text)
-    def add_translation(self, event):
-        enter = False
         return 'break'
 
     def bold(self, event=None):
@@ -163,6 +161,8 @@ class EditDictionary(Tk.Frame):
         self.edit_text.insert(Tk.INSERT, '[k][/k]')
         self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-4c')
         return 'break'
+
+    def add_translation(self, event=None):
         """
         Insert a transliteration of the selected text in the current language.
         Do sentence conversion if there is a period in the text, and word conversion otherwise.
@@ -171,16 +171,6 @@ class EditDictionary(Tk.Frame):
         try:
             text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
         except Tk.TclError:
-        if self.edit_text.compare(Tk.SEL_LAST, "==", Tk.SEL_LAST + " lineend"):
-            enter = True
-        re.sub(r'(<|href).*?>|\[.*?\]', '', text)
-        if '.' in text:
-            text = self.translator.convert_sentence(text)
-        else:
-            text = self.translator.convert_word(text)
-        text += "\n" if enter else " "
-        self.edit_text.insert(Tk.SEL_LAST + "+1c", text)
-        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + "+" + str(len(text) + 1) + "c")
 
     def collapse_table(self, event):
         text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
@@ -188,7 +178,19 @@ class EditDictionary(Tk.Frame):
         text = text.replace(' | [r]', '\n[r]')
         self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
         self.edit_text.insert(Tk.INSERT, text)
+            text = self.edit_text.get(Tk.INSERT + ' wordstart', Tk.INSERT + ' wordend')
+        converter = self.translator.convert_sentence if '.' in text else self.translator.convert_word
+        text = converter(text)
+        try:
+            text += '\n' if self.edit_text.compare(Tk.SEL_LAST, '==', Tk.SEL_LAST + ' lineend') else ' '
+            self.edit_text.insert(Tk.SEL_LAST + '+1c', text)
+        except Tk.TclError:
+            text += ' '
+            self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
+            self.edit_text.insert(Tk.INSERT + '+1c', text)
+        self.edit_text.mark_set(Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + 1)))
         return 'break'
+
 
     def bring_entry(self, event=None):
         """
