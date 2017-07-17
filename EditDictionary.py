@@ -192,15 +192,16 @@ class EditDictionary(Tk.Frame):
         Replace internal links with the name of the linked entry, surrounded by <>.
         """
         self.markdown = Markdown()
-        self.entry = str(self.heading.get(1.0, Tk.END + "-1c"))
-        entry = self.markdown.to_markup(self.entry)
+        # use str() to suppress unicode string
+        self.entry = str(self.heading.get(1.0, Tk.END + '-1c'))
+        entry = self.markdown.to_markup(self.entry, datestamp=False)
         try:
             self.page = self.site[entry]
         except KeyError:
             initial = re.sub(r'.*?(\w).*', r'\1', self.entry).capitalize()
             self.page = Page(entry, self.site[initial], '', self.site.leaf_level).insert()
             self.new_word()
-        content = re.sub(r'<a href="(?<!=http).*?">(.*?)</a>', r'{\1}', self.page.content)
+        content = re.sub(r'<a href="(?!http).*?">(.*?)</a>', r'<\1>', self.page.content)
         content = self.markdown.to_markdown(content)
         self.edit_text.delete(1.0, Tk.END)
         self.edit_text.insert(1.0, content)
@@ -209,20 +210,25 @@ class EditDictionary(Tk.Frame):
         return 'break'
 
     def save(self, event=None):
-        self.page.content = self.markdown.to_markup(str(self.edit_text.get(1.0, Tk.END)))
-        links = set(re.sub(r'.*?{(.*?)}.*?', r'\1}', self.page.content.replace('\n', '')).split(r'}')[:-1])
         """
         Save the current entry into the output file, and create/update the webpage for itself and its parent.
         """
+        # use str() method to suppress unicode string
+        self.page.content = str(self.edit_text.get(1.0, Tk.END))
+        empty = self.page.content == '\n'
+        self.page.content = self.markdown.to_markup(self.page.content)
+        # Write links out in full form
+        links = set(re.sub(r'.*?<(.*?)>.*?', r'\1>', self.page.content.replace('\n', '')).split(r'>')[:-1])
         for link in links:
             try:
-                hyperlink = self.page.hyperlink(self.dictionary[link])
+                self.page.content = self.page.content.replace('<' + link + '>', self.page.hyperlink(self.site[link]))
             except KeyError:
-                hyperlink = link
-            self.page.content = self.page.content.replace('{' + link + '}', hyperlink)
-        while self.page.content[-2:] == "\n\n":
-            self.page.content = self.page.content[:-1]
-        if self.page.content == '\n':
+                pass
+        # remove duplicate linebreaks
+        self.page.content = re.sub(r'\n\n+', '\n', self.page.content)
+        self.page.parent.publish()
+        # delete and remove page if edit area is empty
+        if empty:
             self.page.delete()
             self.page.remove()
         else:
@@ -230,9 +236,6 @@ class EditDictionary(Tk.Frame):
         page = str(self.site)
         if page:
             with open(self.outputfile, 'w') as data:
-                data.write(page)
-        page = str(self.dictionary.analyse())
-        if page:
                 data.write(page)
         text = str(self.site.analyse())
         if text:
