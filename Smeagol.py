@@ -228,7 +228,7 @@ class Page:
             score = 2
             double_letter = re.compile('([' + alphabet + r'])\1')
             self.score = 0
-            self.name = Translation.Markdown().to_markdown(name)
+            self.name = Translation.Markdown().to_markdown(name, False)
             if re.match(r'\\-[aiu]', self.name):
                 self.name = self.name.replace(r'\-', "'", 1)
                 self.score = score ** 15
@@ -406,7 +406,7 @@ class Page:
         """
         Return the folder in which the Page should appear.
         If the Page is in the first generation,
-        :rtype: int
+        :rtype: String
         """
         if self.generation():
             text = "/".join([i.url_form() for i in self.ancestors()[1:]]) + '/'
