@@ -164,26 +164,27 @@ class RandomWords():
 
 
 class Markdown:
-    def __init__(self, filename='c:/users/ryan/documents/tinellbianlanguages/replacements.html'):
+    def __init__(self, filename):
         """
         Marking down proceeds down the Replacements page
         :param filename (String): the path to the replacements file
+        :raise IOError: filename does not exist
         """
         self.markup, self.markdown = [], []
+        self.source = None
+        self.destination = None
         with open(filename) as replacements:
             for line in replacements:
                 line = line.split(" ")
                 self.markup.append(line[0])
                 self.markdown.append(line[1])
-        self.source = None
-        self.destination = None
 
     def to_markup(self, text, datestamp=True):
         self.source, self.destination = self.markdown[::-1], self.markup[::-1]
         text += datetime.datetime.strftime(datetime.datetime.today(), '&date=%Y%m%d\n') if datestamp else ''
         return self.convert(text)
 
-    def to_markdown(self, text, datestamp=True):
+    def to_markdown(self, text, datestamp=False):
         self.source, self.destination = self.markup, self.markdown
         text = re.sub(r'&date=\d{8}\n', '', text) if datestamp else text
         return self.convert(text)

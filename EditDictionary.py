@@ -6,7 +6,7 @@ from Translation import *
 
 
 class EditDictionary(Tk.Frame):
-    def __init__(self, dir, outputfile, site, searchfile, number=1, master=None,):
+    def __init__(self, dir, outputfile, site, markdown, searchfile, randomwords=1, master=None,):
         """
         :param dir (String): the path and filename of the top-level directory
         :param outputfile (String): the path, filename and extension of the output file, relative to dir
@@ -24,9 +24,10 @@ class EditDictionary(Tk.Frame):
         self.entry = ''
         self.page = None
         # initialise other useful classes. Default language is High Lulani
-        self.markdown = Markdown()
+        self.markdownpath = markdown
+        self.markdown = Markdown(markdown)
         self.translator = Translator('hl')
-        self.words = RandomWords(number)
+        self.words = RandomWords(randomwords)
         # initialise textboxes and buttons
         self.heading = None
         self.go_button = None
@@ -129,7 +130,6 @@ class EditDictionary(Tk.Frame):
         self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
         return 'break'
 
-
     def refresh_random(self, event=None):
         """
         Show a certain number of random nonsense words using High Lulani phonotactics.
@@ -190,7 +190,7 @@ class EditDictionary(Tk.Frame):
         If such an entry is not found, create one, and insert it into its correct parent folder.
         Replace internal links with the name of the linked entry, surrounded by <>.
         """
-        self.markdown = Markdown()
+        self.markdown = Markdown(self.markdownpath)
         # use str() to suppress unicode string
         self.entry = str(self.heading.get(1.0, Tk.END + '-1c'))
         entry = self.markdown.to_markup(self.entry, datestamp=False)
@@ -242,10 +242,12 @@ class EditDictionary(Tk.Frame):
                 data.write(text)
         return 'break'
 
-app = EditDictionary(dir='C:/Users/Ryan/Documents/TinellbianLanguages/dictionary',
-                    outputfile='data.txt',
-                    site=Dictionary(),
-                    searchfile='searching.json',
-                    number=20)
-app.master.title('Edit the Dictionary')
-app.mainloop()
+if __name__ == '__main__':
+    app = EditDictionary(dir='C:/Users/Ryan/Documents/TinellbianLanguages/dictionary',
+                        outputfile='data.txt',
+                        site=Dictionary(),
+                        markdown='../replacements.html',
+                        searchfile='searching.json',
+                        randomwords=20)
+    app.master.title('Edit the Dictionary')
+    app.mainloop()

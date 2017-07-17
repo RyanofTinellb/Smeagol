@@ -13,7 +13,8 @@ class Site:
         self.leaf_level = leaf_level
         self.current = None
         self.name = name
-        self.root = node = Page(name, leaf_level=self.leaf_level)
+        self.markdown = Translation.Markdown('../Replacements.html')
+        self.root = node = Page(name, leaf_level=self.leaf_level, markdown=self.markdown)
         split = r'\[(?=[' + "".join(map(lambda x: str(x + 1), range(leaf_level))) + r'])'
         with open(self.source_file, 'r') as source:
             source = source.read()
@@ -78,7 +79,7 @@ class Site:
         return node
 
     def add_node(self, name, parent, content, previous):
-        child = Page(name, parent, content, self.leaf_level, previous)
+        child = Page(name, parent, content, self.leaf_level, previous, self.markdown)
         if child not in parent.children:
             parent.children.append(child)
         else:
@@ -163,13 +164,14 @@ class Site:
 
 
 class Page:
-    def __init__(self, name, parent=None, content="", leaf_level=3, previous=None):
+    def __init__(self, name, parent=None, content="", leaf_level=3, previous=None, markdown=None):
         self.parent = parent
         self.name = name
         self.children = []
         self.leaf_level = leaf_level
         self.content = content
         self.previous = previous
+        self.markdown = markdown
 
     def __str__(self):
         return '[' + self.content
@@ -216,19 +218,21 @@ class Page:
         return not self < other
 
     def flat_name(self):
-        return self.FlatName(self.name)
+        return self.FlatName(self.name, self.markdown)
+
 
     class FlatName:
         """
         'flattens' the name to only include letters aiu'pbtdcjkgmnqlrfsxh
         minigolf scoring rules: smallest number wins.
         """
-        def __init__(self, name):
+        def __init__(self, name, markdown=None):
             alphabet = "aiu'pbtdcjkgmnqlrfsxh"
             score = 2
             double_letter = re.compile('([' + alphabet + r'])\1')
             self.score = 0
-            self.name = Translation.Markdown().to_markdown(name, False)
+            self.name = markdown.to_markdown(name) if markdown else name
+            print(self.name)
             if re.match(r'\\-[aiu]', self.name):
                 self.name = self.name.replace(r'\-', "'", 1)
                 self.score = score ** 15
