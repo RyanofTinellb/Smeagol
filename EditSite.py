@@ -238,20 +238,23 @@ class EditPage(Tk.Frame):
     def save(self, event=None):
         self.save_text.set('Save')
         self.update_wordcount()
-        self.is_bold.set(0)
-        self.is_italic.set(0)
-        self.is_small_caps.set(0)
         self.entry.content = self.markdown.to_markup(str(self.edit_text.get(1.0, Tk.END)))
         while self.entry.content[-2:] == '\n\n':
             self.entry.content = self.entry.content[:-1]
+        # remove duplicate linebreaks
+        self.entry.content = re.sub(r'\n\n+', '\n', self.entry.content)
+        # update datestamp and publish.
+        self.entry.content = self.markdown.to_markup(self.markdown.to_markdown(self.entry.content))
+        if self.entry.content == '\n':
+            self.entry.delete()
+            self.entry.remove()
+        else:
+            self.entry.publish(self.site.template)
         entry = str(self.site)
         if entry:
             with open(self.datafile, 'w') as data:
                 data.write(str(self.site))
-        if self.entry.content == '\n':
-            self.entry.delete()
-            self.entry.remove()
-        self.site.publish()
+        self.site.update_json()
         return 'break'
 
 app = EditPage(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',

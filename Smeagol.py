@@ -167,7 +167,7 @@ class Site:
 
     def publish(self):
         """
-        Publish all webpages., and create search JSON file.
+        Publish all webpages, and create search JSON file.
         :class: Site
         """
         length = len(self)
