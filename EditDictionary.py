@@ -143,7 +143,7 @@ class EditDictionary(Tk.Frame):
         """
         Show a certain number of random nonsense words using High Lulani phonotactics.
         """
-        self.random_word.set('\n'.join([x for x in self.words]))
+        self.random_word.set('\n'.join(self.words()))
         return 'break'
 
     def bold(self, event=None):
