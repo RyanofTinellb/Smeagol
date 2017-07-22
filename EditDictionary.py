@@ -68,8 +68,6 @@ class EditDictionary(Tk.Frame):
         self.edit_text.bind('<Control-r>', self.refresh_random)
         self.edit_text.bind('<Control-s>', self.save)
         self.edit_text.bind('<Control-t>', self.add_translation)
-        #self.edit_text.bind('<Control-y>', self.redo)
-        #self.edit_text.bind('<Control-z>', self.undo)
         self.edit_text.bind('<Control-=>', self.add_definition)
         self.edit_text.bind('<Control-BackSpace>', self.delete_word)
         self.edit_text.bind('<Alt-d>', self.go_to_heading)
@@ -77,12 +75,6 @@ class EditDictionary(Tk.Frame):
         self.high_lulani.grid(row=2, column=0)
         self.english.grid(row=3, column=0)
 
-    def redo(self, event=None):
-        self.edit_text.redo()
-        return 'break'
-
-    def undo(self, event=None):
-        self.edit_text.undo()
     def refresh_markdown(self, event=None):
         """
         Reopen replacements file
