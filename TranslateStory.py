@@ -125,11 +125,13 @@ class EditStory(Tk.Frame):
             with open(self.datafile, 'w') as data:
                 data.write(page)
         self.entry.publish(self.site.template)
+        for cousin in cousins:
+            cousin.publish(self.site.template)
         return 'break'
 
     def get_text(self, window):
         text = self.windows[window].get('1.0', Tk.END + '-1c')
-        text = text.replace('\n', '|')
+        text = text.replace('\n', ' | ')
         return text
 
     def display(self):
@@ -182,7 +184,8 @@ class Paragraph:
 
     def display(self):
         markdown = self.markdown.to_markdown
-        displays = map(lambda x: markdown(self.paragraph[2 * x] + '\n'), range(3))
+        # have to add and subtract final '\n' because of how markdown works
+        displays = map(lambda x: markdown(self.paragraph[2 * x] + '\n').replace('\n', ''), range(3))
         replacements = [['.(', '&middot;('],
                         ['(', chr(5)],
                         ['<', 2*chr(5)],
