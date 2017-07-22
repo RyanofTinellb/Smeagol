@@ -8,24 +8,25 @@ from Translation import *
 class EditDictionary(Tk.Frame):
     def __init__(self, directory, datafile, site, markdown, randomwords, master=None):
         """
-        :param dir (String): the path and filename of the top-level directory
-        :param outputfile (String): the path, filename and extension of the output file, relative to dir
+        :param directory (String): the path and filename of the top-level directory
+        :param datafile (String): the path, filename and extension of the data file, relative to directory
         :param site (Site): the site being modified
+        :param markdown (String): the path, filename and extension of the replacements file, relative to directory
+        :param randomwords (int): the number of random words to appear when requested
         """
         Tk.Frame.__init__(self, master)
-        os.chdir(dir)
+        os.chdir(directory)
         # initialise instance variables
         self.site = site
-        self.outputfile = outputfile
+        self.datafile = datafile
         self.random_word = Tk.StringVar()
         self.language = Tk.StringVar()
         self.entry = ''
         self.page = None
         # initialise other useful classes. Default language is High Lulani
-        self.markdownpath = markdown
-        self.markdown = Markdown(markdown)
+        self.markdown = markdown
         self.translator = Translator('hl')
-        self.words = RandomWords(randomwords)
+        self.words = randomwords.words
         # initialise textboxes and buttons
         self.heading = None
         self.go_button = None
@@ -87,6 +88,7 @@ class EditDictionary(Tk.Frame):
         Change the entry language to whatever is in the StringVar 'self.language'
         """
         self.translator = Translator(self.language.get())
+        return 'break'
 
     def select_all(self, event=None):
         """
@@ -244,7 +246,7 @@ class EditDictionary(Tk.Frame):
             self.page.publish()
         page = str(self.site)
         if page:
-            with open(self.outputfile, 'w') as data:
+            with open(self.datafile, 'w') as data:
                 data.write(page)
         text = str(self.site.analyse())
         if text:
@@ -253,10 +255,10 @@ class EditDictionary(Tk.Frame):
         return 'break'
 
 if __name__ == '__main__':
-    app = EditDictionary(dir='C:/Users/Ryan/Documents/TinellbianLanguages/dictionary',
-                        outputfile='data.txt',
+    app = EditDictionary(directory='c:/users/ryan/documents/tinellbianlanguages/dictionary',
+                        datafile='data.txt',
                         site=Dictionary(),
-                        markdown='../replacements.html',
-                        randomwords=20)
+                        markdown=Markdown('c:/users/ryan/documents/tinellbianlanguages/dictionaryreplacements.html'),
+                        randomwords=RandomWords(20,3))
     app.master.title('Edit the Dictionary')
     app.mainloop()
