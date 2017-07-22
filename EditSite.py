@@ -60,7 +60,8 @@ class EditPage(Tk.Frame):
         self.story_button.grid(row=2, column=3, sticky=Tk.W)
         self.grammar_button.select()
         self.edit_text.bind('<KeyPress>', self.edit_text_changed)
-        self.edit_text.bind('<Control-BackSpace>', self.delete_word)
+        self.edit_text.bind('<Control-BackSpace>', self.backspace_word)
+        self.edit_text.bind('<Control-Delete>', self.delete_word)
         self.edit_text.bind('<Control-a>', self.select_all)
         self.edit_text.bind('<Control-b>', self.bold)
         self.edit_text.bind('<Control-i>', self.italic)
@@ -144,6 +145,9 @@ class EditPage(Tk.Frame):
         return 'break'
 
     def table(self, event=None):
+        """
+        Insert markdown for table, and place insertion point between them.
+        """
         self.edit_text.insert(Tk.INSERT, '[t]\n[/t]')
         self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-5c')
         return 'break'
@@ -180,12 +184,24 @@ class EditPage(Tk.Frame):
         self.headings[2].focus_set()
         return 'break'
 
-    def delete_word(self, event):
+    def delete_word(self, event=None):
+        if self.edit_text.get(Tk.INSERT + '-1c') in ' .,;:?!':
+            self.edit_text.delete(Tk.INSERT, Tk.INSERT + ' wordend +1c')
+        elif self.edit_text.get(Tk.INSERT) == ' ':
+            self.edit_text.delete(Tk.INSERT, Tk.INSERT + '+1c wordend')
+        elif self.edit_text.get(Tk.INSERT) in '.,;:?!':
+            self.edit_text.delete(Tk.INSERT, Tk.INSERT + '+1c')
+        else:
+            self.edit_text.delete(Tk.INSERT, Tk.INSERT + ' wordend')
         self.update_wordcount()
+        return 'break'
+
+    def backspace_word(self, event=None):
         if self.edit_text.get(Tk.INSERT + '-1c') in '.,;:?!':
             self.edit_text.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
         else:
             self.edit_text.delete(Tk.INSERT + '-1c wordstart -1c', Tk.INSERT)
+        self.update_wordcount()
         return 'break'
 
     def update_wordcount(self, event=None):
