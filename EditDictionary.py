@@ -207,7 +207,7 @@ class EditDictionary(Tk.Frame):
             self.page = self.site[entry]
         except KeyError:
             initial = re.sub(r'.*?(\w).*', r'\1', self.entry).capitalize()
-            self.page = Page(entry, self.site[initial], '', self.site.leaf_level).insert()
+            self.page = Page(entry, self.site[initial], '', self.site.leaf_level, None, self.site.markdown).insert()
             self.new_word()
         content = re.sub(r'<a href="(?!http).*?">(.*?)</a>', r'<\1>', self.page.content)
         content = self.markdown.to_markdown(content)
@@ -220,6 +220,7 @@ class EditDictionary(Tk.Frame):
     def save(self, event=None):
         """
         Save the current entry into the output file, and create/update the webpage for itself and its parent.
+        :keyboard shortcut: <Ctrl-S>
         """
         # use str() method to suppress unicode string
         self.page.content = str(self.edit_text.get(1.0, Tk.END))
@@ -237,13 +238,13 @@ class EditDictionary(Tk.Frame):
         # update datestamp and publish parent.
         parent = self.page.parent
         parent.content = self.markdown.to_markup(self.markdown.to_markdown(parent.content))
-        parent.publish()
+        parent.publish(self.site.template)
         # delete and remove page if edit area is empty
         if empty:
             self.page.delete()
             self.page.remove()
         else:
-            self.page.publish()
+            self.page.publish(self.site.template)
         page = str(self.site)
         if page:
             with open(self.datafile, 'w') as data:
