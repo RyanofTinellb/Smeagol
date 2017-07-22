@@ -68,8 +68,6 @@ class EditPage(Tk.Frame):
         self.edit_text.bind('<Control-s>', self.save)
         self.edit_text.bind('<Control-t>', self.table)
         self.edit_text.bind('<KeyPress-|>', self.insert_pipe)
-        self.edit_text.bind('<space>', self.update_wordcount)
-        self.edit_text.bind('<Return>', self.update_wordcount)
         self.edit_text.grid(column=2, columnspan=150)
         self.number_of_words.set('')
         self.headings[0].focus_set()
@@ -185,6 +183,7 @@ class EditPage(Tk.Frame):
         self.number_of_words.set(str(text.count(' ') + text.count('\n')))
 
     def edit_text_changed(self, event=None):
+        self.update_wordcount()
         if self.edit_text.edit_modified():
             self.save_text.set('*Save')
 
