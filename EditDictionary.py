@@ -6,19 +6,17 @@ from Translation import *
 
 
 class EditDictionary(Tk.Frame):
-    def __init__(self, dir, outputfile, site, markdown, searchfile, randomwords=1, master=None,):
+    def __init__(self, directory, datafile, site, markdown, randomwords, master=None):
         """
         :param dir (String): the path and filename of the top-level directory
         :param outputfile (String): the path, filename and extension of the output file, relative to dir
         :param site (Site): the site being modified
-        :param searchfile (String): the path, filename and extension of the file wherein the json text for site searches will be placed, relative to dir
         """
         Tk.Frame.__init__(self, master)
         os.chdir(dir)
         # initialise instance variables
         self.site = site
         self.outputfile = outputfile
-        self.searchfile = searchfile
         self.random_word = Tk.StringVar()
         self.language = Tk.StringVar()
         self.entry = ''
@@ -259,7 +257,6 @@ if __name__ == '__main__':
                         outputfile='data.txt',
                         site=Dictionary(),
                         markdown='../replacements.html',
-                        searchfile='searching.json',
                         randomwords=20)
     app.master.title('Edit the Dictionary')
     app.mainloop()
