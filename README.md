@@ -41,6 +41,9 @@ This converts text to and from markdown, based on a given textfile. If the secon
 
 *EditDictionary.py* - opens a GUI to allow for adding and modifying dictionary entries, catalogued and ordered. Select your language, input a headword into the textbox and press 'Return' on the keyboard. Press "Publish" to save to the datafile and create/modify the entry page and its alphabetical category page. Leave the edit area blank to delete that page.
 
+![An example of the EditDictionary main screen](
+https://raw.githubusercontent.com/RyanofTinellb/ConlangWebsiteCreation/master/EditDictionary.jpg "EditDictionary Example Screen")
+
 Keyboard shortcuts include:
 + Ctrl+S: Save/Publish
 + Ctrl+R: Refresh random words
