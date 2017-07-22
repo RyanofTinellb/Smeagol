@@ -88,6 +88,7 @@ class Site:
 
     def find_node(self, item):
         return self.find_node_iter(item, self.root)
+        self.update_json()
 
     def find_node_iter(self, item, node):
         if len(item) == 0:
@@ -132,13 +133,6 @@ class Site:
         self.next()
         for entry in self:
             entry.publish(template)
-
-        """Create data for performing searches of the text"""
-        analysis = self.analyse()
-        string = str(analysis)
-        with open('searching.json', 'w') as f:
-            f.write(string)
-
     def analyse(self, markdown=None):
         if markdown is None:
             markdown = Translation.Markdown()
@@ -151,6 +145,9 @@ class Site:
             words = analysis.wordlist
             line_number = len(lines)
             lines += analysis.lines
+    def update_json(self):
+        with open(self.searchjson, 'w') as f:
+            f.write(str(self.analyse()))
             names.append(entry.name)
             pages.append(entry.link(False))
             for word in words:

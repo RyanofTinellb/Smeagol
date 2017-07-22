@@ -249,10 +249,7 @@ class EditDictionary(Tk.Frame):
         if page:
             with open(self.datafile, 'w') as data:
                 data.write(page)
-        text = str(self.site.analyse())
-        if text:
-            with open(self.searchfile, 'w') as data:
-                data.write(text)
+        self.site.update_json()
         return 'break'
 
 if __name__ == '__main__':
