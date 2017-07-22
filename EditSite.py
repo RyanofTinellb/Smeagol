@@ -261,6 +261,6 @@ app = EditPage(directories={'grammar': 'c:/users/ryan/documents/tinellbianlangua
                             'story': 'c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet'},
                     datafiles='data.txt',
                     sites={'grammar': Grammar(), 'story': Story()},
-                    markdowns=Markdown('../grammarstoryreplacements.html'))
+                    markdowns=Markdown('c:/users/ryan/documents/tinellbianlanguages/grammarstoryreplacements.html'))
 app.master.title('Edit Page')
 app.mainloop()

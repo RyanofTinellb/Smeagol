@@ -1,16 +1,19 @@
 import Tkinter as Tk
 from Translation import *
 from Smeagol import *
-
+import os
 
 class EditStory(Tk.Frame):
-    def __init__(self, master=None):
+    def __init__(self, directory, datafile, site, markdown, master=None):
         Tk.Frame.__init__(self, master)
-        self.story = Story()
-        self.entry = self.story.root[0][0][0]       # first great-grandchild
-        self.chapter = Chapter(self.entry)
+        os.chdir(directory)
+        self.datafile = datafile
+        self.site = site
+        self.markdown = markdown
+        self.entry = self.site.root[0][0][0]       # first great-grandchild
+        self.chapter = Chapter(self.entry, self.markdown)
         self.windows = map(lambda x: Tk.Text(self), range(3))
-        self.publish_button = Tk.Button(self, text="Push", command=self.publish)
+        self.publish_button = Tk.Button(self, text='Push', command=self.publish)
         self.up_button = Tk.Button(self, text=unichr(8593), command=self.previous_chapter)
         self.down_button = Tk.Button(self, text=unichr(8595), command=self.next_chapter)
         self.left_button = Tk.Button(self, text=unichr(8592), command=self.previous_paragraph)
@@ -21,7 +24,7 @@ class EditStory(Tk.Frame):
         self.grid()
         self.create_window()
         self.top = self.winfo_toplevel()
-        self.top.state("zoomed")
+        self.top.state('zoomed')
         self.display()
 
     def create_window(self):
@@ -33,49 +36,48 @@ class EditStory(Tk.Frame):
         font = ('Californian FB', 16)
         for i, window in enumerate(self.windows):
             window.configure(height=9, width=108, wrap=Tk.WORD, font=font)
-            window.bind("<Control-b>", self.bold)
-            window.bind("<Control-i>", self.italic)
-            window.bind("<Control-k>", self.small_cap)
-            window.bind("<Control-r>", self.literal)
-            window.bind("<Control-s>", self.publish)
-            window.bind("<Next>", self.next_paragraph)
-            window.bind("<Prior>", self.previous_paragraph)
-            window.bind("<Control-Next>", self.next_chapter)
-            window.bind("<Control-Prior>", self.previous_chapter)
-            window.bind("<Control-BackSpace>", self.delete_word)
+            window.bind('<Control-b>', self.bold)
+            window.bind('<Control-i>', self.italic)
+            window.bind('<Control-k>', self.small_cap)
+            window.bind('<Control-r>', self.literal)
+            window.bind('<Control-s>', self.publish)
+            window.bind('<Next>', self.next_paragraph)
+            window.bind('<Prior>', self.previous_paragraph)
+            window.bind('<Control-Next>', self.next_chapter)
+            window.bind('<Control-Prior>', self.previous_chapter)
+            window.bind('<Control-BackSpace>', self.delete_word)
             window.grid(row=i+1, column=4, columnspan=5)
-        os.chdir('c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet')
 
     def bold(self, event=None):
         if self.is_bold:
-            event.widget.insert(Tk.INSERT, "[/b]")
+            event.widget.insert(Tk.INSERT, '[/b]')
         else:
-            event.widget.insert(Tk.INSERT, "[b]")
+            event.widget.insert(Tk.INSERT, '[b]')
         self.is_bold = not self.is_bold
-        return "break"
+        return 'break'
 
     def italic(self, event=None):
         if self.is_italic:
-            event.widget.insert(Tk.INSERT, "[/i]")
+            event.widget.insert(Tk.INSERT, '[/i]')
         else:
-            event.widget.insert(Tk.INSERT, "[i]")
+            event.widget.insert(Tk.INSERT, '[i]')
         self.is_italic = not self.is_italic
-        return "break"
+        return 'break'
 
     def small_cap(self, event=None):
         if self.is_small_cap:
-            event.widget.insert(Tk.INSERT, "[/k]")
+            event.widget.insert(Tk.INSERT, '[/k]')
         else:
-            event.widget.insert(Tk.INSERT, "[k]")
+            event.widget.insert(Tk.INSERT, '[k]')
         self.is_small_cap = not self.is_small_cap
-        return "break"
+        return 'break'
 
     def previous_chapter(self, event=None):
         if self.entry.generation() > 2:
             self.entry = self.entry.parent
-            self.chapter = Chapter(self.entry)
+            self.chapter = Chapter(self.entry, self.markdown)
             self.display()
-        return "break"
+        return 'break'
 
     def next_chapter(self, event=None):
         try:
@@ -84,29 +86,29 @@ class EditStory(Tk.Frame):
             if self.entry.next_node().generation() <= 1:
                 self.entry = old
             else:
-                self.chapter = Chapter(self.entry)
+                self.chapter = Chapter(self.entry, self.markdown)
             self.display()
         except ValueError:
             pass
-        return "break"
+        return 'break'
 
     def previous_paragraph(self, event=None):
         self.chapter.previous_paragraph()
         self.display()
-        return "break"
+        return 'break'
 
     def next_paragraph(self, event=None):
         self.chapter.next_paragraph()
         self.display()
-        return "break"
+        return 'break'
 
     @staticmethod
     def delete_word(event=None):
-        if event.widget.get(Tk.INSERT + "-1c") in ".,;:?!":
-            event.widget.delete(Tk.INSERT + "-1c wordstart", Tk.INSERT)
+        if event.widget.get(Tk.INSERT + '-1c') in '.,;:?!':
+            event.widget.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
         else:
-            event.widget.delete(Tk.INSERT + "-1c wordstart -1c", Tk.INSERT)
-        return "break"
+            event.widget.delete(Tk.INSERT + '-1c wordstart -1c', Tk.INSERT)
+        return 'break'
 
     @staticmethod
     def literal(event=None):
@@ -120,10 +122,10 @@ class EditStory(Tk.Frame):
             cousin.content = text
         page = re.sub(r'\n+', '\n', str(self.story))
         if page:
-            with open("data.txt", 'w') as data:
+            with open(self.filename, 'w') as data:
                 data.write(page)
-        Story().publish()
-        return "break"
+        self.entry.publish(self.site.template)
+        return 'break'
 
     def get_text(self, window):
         text = self.windows[window].get('1.0', Tk.END + '-1c')
@@ -135,17 +137,17 @@ class EditStory(Tk.Frame):
             window.delete('1.0', Tk.END)
             window.insert('1.0', text)
             window.edit_modified(False)
-        return "break"
+        return 'break'
 
 
 class Chapter:
-    def __init__(self, node):
+    def __init__(self, node, markdown):
         cousins = map(lambda x: x.content.splitlines(), node.cousins())     # Str[][]
         count = max(map(len, cousins)) + 1
         self.current_paragraph = min(map(len, cousins)) - 1
         cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
         cousins = zip(*cousins)    # Str()[]
-        self.paragraphs = map(lambda x: Paragraph(list(x)), cousins)     # Paragraph[]
+        self.paragraphs = map(lambda x: Paragraph(list(x), markdown), cousins)     # Paragraph[]
 
     def display(self):
         return self.paragraphs[self.current_paragraph].display()
@@ -154,7 +156,7 @@ class Chapter:
         """
         Cause the current paragraph to update itself
         :param texts:
-        :return: (nothing)
+        :return (nothing):
         """
         self.paragraphs[self.current_paragraph].publish(texts)
         return map(lambda x: str('\n'.join(x)), zip(*map(lambda x: x.paragraph, self.paragraphs)))
@@ -175,8 +177,8 @@ class Chapter:
 
 
 class Paragraph:
-    def __init__(self, paragraphs):
-        self.replacements = '../StoryReplacements.html'
+    def __init__(self, paragraphs, markdown):
+        self.markdown = markdown
         self.paragraph = paragraphs     # Str[]
 
     def display(self):
@@ -198,7 +200,7 @@ class Paragraph:
         :param texts:
         :return: (nothing)
         """
-        markup = Markdown(self.replacements).to_markup
+        markup = self.markdown.to_markup
         translate = Translator('HL').convert_sentence
         self.paragraph[0:5:2] = texts
         self.paragraph[1] = translate(self.paragraph[2])    # Tinellbian
@@ -215,8 +217,8 @@ class Paragraph:
 
     def interlinear(self):
         italic = False
-        if self.paragraph[0] == "* **":
-            return "* **"
+        if self.paragraph[0] == '* **':
+            return '* **'
         literal = self.paragraph[4][self.paragraph[4].find(' |- -| '):]
         text = '[t]' + self.paragraph[0] + literal + ' | -| &flex;'
         # remove middot, and replace angle brackets with parentheses
@@ -235,7 +237,7 @@ class Paragraph:
 def morpheme_split(*texts):
     output = []
     for text in texts:
-        output.append([word.split(r"-") for word in text.split(" ")])
+        output.append([word.split(r'-') for word in text.split(' ')])
     return zip(*output)
 
 
@@ -248,6 +250,9 @@ def inner_table(top, bottom, italic=False):
 
 
 if __name__ == '__main__':
-    app = EditStory()
-    app.master.title('Story Edit')
+    app = EditStory(directory='c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet',
+                    datafile='data.txt',
+                    site=Story(),
+                    markdown=Markdown('c:/users/ryan/documents/tinellbianlanguages/storyreplacements.html'))
+    app.master.title('Edit the Story')
     app.mainloop()
