@@ -1,7 +1,7 @@
 import Tkinter as Tk
 import os
 import thread
-from Smealoadl import *
+from Smeagol import *
 from Translation import *
 
 
@@ -27,7 +27,7 @@ class EditPage(Tk.Frame):
         self.save_text = Tk.StringVar()
         self.save_text.set('Save')
         self.number_of_words = Tk.StringVar()
-        self.edit_text = Tk.Text(self, height=24, width=114, font=('Corbel', '14'), wrap=Tk.WORD)
+        self.edit_text = Tk.Text(self, height=24, width=114, font=('Corbel', '14'), wrap=Tk.WORD, undo=True)
         self.word_count = Tk.Label(self, textvariable=self.number_of_words)
         self.grammar_button = Tk.Radiobutton(self, text='Grammar', variable=self.sitename, value='grammar',
                                              command=self.change_site)
@@ -65,6 +65,8 @@ class EditPage(Tk.Frame):
         self.edit_text.bind('<Control-b>', self.bold)
         self.edit_text.bind('<Control-i>', self.italic)
         self.edit_text.bind('<Control-k>', self.small_caps)
+        self.edit_text.bind('<Control-m>', self.refresh_markdown)
+        self.edit_text.bind('<Control-r>', self.load)
         self.edit_text.bind('<Control-s>', self.save)
         self.edit_text.bind('<Control-t>', self.table)
         self.edit_text.bind('<KeyPress-|>', self.insert_pipe)
@@ -77,6 +79,14 @@ class EditPage(Tk.Frame):
             return variable[self.sitename.get()]
         except (TypeError, AttributeError, ValueError):
             return variable
+
+    def refresh_markdown(self, event=None):
+        """
+        Re-open replacements page.
+        """
+        self.markdown.refresh()
+        self.number_of_words.set('Markdown Refreshed!')
+        return 'break'
 
     def scroll_headings(self, event, level):
         """

@@ -189,7 +189,7 @@ class Markdown:
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None
-        with open(filename) as replacements:
+        with open(self.filename) as replacements:
             for line in replacements:
                 line = line.split(" ")
                 self.markup.append(line[0])
