@@ -73,7 +73,7 @@ class EditStory(Tk.Frame):
         return 'break'
 
     def previous_chapter(self, event=None):
-        if self.entry.generation() > 2:
+        if self.entry.level > 2:
             self.entry = self.entry.parent
             self.chapter = Chapter(self.entry, self.markdown)
             self.display()
@@ -83,7 +83,7 @@ class EditStory(Tk.Frame):
         try:
             old = self.entry
             self.entry = self.entry.next_node()
-            if self.entry.next_node().generation() <= 1:
+            if self.entry.next_node().level <= 1:
                 self.entry = old
             else:
                 self.chapter = Chapter(self.entry, self.markdown)
