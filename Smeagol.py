@@ -7,28 +7,55 @@ import Translation
 
 
 class Site:
+    """
+    A hierarchy of Pages
+    """
     def __init__(self, destination, name, source, template, main_template, markdown, searchjson, leaf_level):
+        """
+        :param destination (str): the full path where the Site is to be located
+        :param name (str): human-readable name of the Site
+        :param source (str): filename and extension of the source file, relative to destination
+        :param template (str): filename and extension of the template for ordinary pages, relative to destination
+        :param main_template (str): filename and extension of the template for the top-level (root) page, relative to destination
+        :param markdown (str): filename and extension of the markdown file, relative to destination
+        :param leaf_level (int): the level of the lowermost pages in the hierarchy, where the root is at 0.
+
+        :attribute template (Template): the template for ordinary pages
+        :attribute main_template (Template): the template for the top-level page
+        :attribute markdown (Markdown): the conversion between markup and markdown
+        :attribute current (Page):
+        :attribute root (Page): the root of the hierarchy
+        """
+        self.choose_dir(destination)
+        # initialize attributes and utility classes
+        self.name = name
         self.template = Template(template)
         self.main_template = Template(main_template)
         self.markdown = Translation.Markdown(markdown)
         self.searchjson = searchjson
         self.leaf_level = leaf_level
         self.current = None
-        self.name = name
         self.length = 0
         node = self.root = Page(name, leaf_level=self.leaf_level, markdown=self.markdown)
+
+        # break source text into pages, with the splits on square brackets before numbers <= leaf_level
+        with open(source) as source:
             source = source.read()
-        source = re.split(split, source)
-        for page in source:
+        split = re.compile(r'\[(?=[{0}])'.format(''.join(map(lambda x: str(x + 1), range(self.leaf_level)))))
+        source = split.split(source)
+
+        # create page on appropriate level of hierarchy, with name taken from the source file
+        # ignore first (empty) page
+        for page in source[1:]:
             previous = node
-            try:
-                level, heading = re.split('[]\n]', page, 2)[:2]
-                level = int(level)
-            except ValueError:
-                continue
-            while level != node.generation() + 1:
+            level, name = re.split('[]\n]', page, 2)[:2]
+            level = int(level)
+            while level != node.level + 1:
+                # climb back up the hierarchy to the appropriate level
                 node = node.parent
-            node = self.add_node(heading, node, page, previous)
+            node = self.add_node(name, node, page, previous)
+            self.length += 1
+
     @staticmethod
     def choose_dir(destination):
         try:
@@ -43,7 +70,12 @@ class Site:
         os.chdir(destination)
 
     def __str__(self):
-        return ''.join([str(page) for page in self if str(page)])[1:]
+        """
+        Join each non-empty page, and remove the first character
+        :rtype: str
+        :class: Site
+        """
+        return ''.join([str(page) for page in self if str(page)])[1:] # apparently adds a [ to the beginning, which is why we remove it
 
     def __len__(self):
         """
@@ -54,9 +86,18 @@ class Site:
         return self.length
 
     def __iter__(self):
+        """
+        :class: Site
+        """
         return self
 
     def next(self):
+        """
+        Set the next Page as the current Page
+        :return: new current Page
+        :rtype: Page
+        :class: Site
+        """
         if self.current is None:
             self.current = self.root
             return self.root
@@ -67,10 +108,31 @@ class Site:
             raise StopIteration
         return self.current
 
+    def previous(self):
+        """
+        Set the previous Page as the current Page, assuming the old Page has an instance variable 'previous'
+        :return: new current Page
+        :rtype: Page
+        :class: Site
+        """
+        self.current = self.current.previous
+        return self.current
+
     def reset(self):
+        """
+        Reset the iterator
+        :class: Site
+        """
         self.current = None
 
     def __getitem__(self, page):
+        """
+        Search the Site for a particular page
+        :param page (str): the name of the page being searched for
+        :param page (int): the index number of the page being searched for, where 0 is the root
+        :rtype: Page
+        :class: Site
+        """
         node = self.root
         try:
             page = int(page)
@@ -86,15 +148,28 @@ class Site:
         return node
 
     def add_node(self, name, parent, content, previous):
+        """
+        Add a Page to the appropriate location in the Site, and return that Page
+        If another Page exists at the same point with the same name, a '2' is appended to the name
+        :param name (str): human-readable name of the Page
+        :param parent (Page): the parent node of the new Page
+        :param content (str): the content of the Page, including the header line
+        :param previous (Page): the previous Page in the Site
+        :return (Page): the Page that was added
+        :class: Site
+        """
         child = Page(name, parent, content, self.leaf_level, previous, self.markdown)
         if child not in parent.children:
             parent.children.append(child)
         else:
-            self.add_node(name + '2', parent, content)
+            return self.add_node(name + '2', parent, content, previous)
         return child
 
-    def find_node(self, item):
-        return self.find_node_iter(item, self.root)
+    def publish(self):
+        """
+        Publish all webpages., and create search JSON file.
+        :class: Site
+        """
         length = len(self)
         chunk = 3 if length > 1000 else 50
         progress = 1
@@ -107,65 +182,95 @@ class Site:
                 progress += 1
         self.update_json()
 
-    def find_node_iter(self, item, node):
-        if len(item) == 0:
-            return node
-        else:
-            for child in node.children:
-                if child.url_form() == item[0]:
-                    node = child
-                    break
-            else:
-                raise IndexError('No such node "' + item[0].capitalize() + '" in ' + node.name)
-            return self.find_node_iter(item[1:], node)
-
-        self.previous = self.current
-        self.next()
-        for entry in self:
-            entry.publish(template)
-    def analyse(self, markdown=None):
-        if markdown is None:
-            markdown = Translation.Markdown()
-        wordlist = {}
-        lines = []
-        pages = []
-        names = []
-        for number, entry in enumerate(self):
-            analysis = entry.analyse(markdown)
-            words = analysis.wordlist
-            line_number = len(lines)
-            lines += analysis.lines
     def update_json(self):
         with open(self.searchjson, 'w') as f:
             f.write(str(self.analyse()))
+
+    def analyse(self):
+        """
+        Analyse the Site for searchable content
+        :rtype: Analysis
+        :class: Site
+        """
+        words, sentences, urls, names = {}, [], [], []
+        for page_number, entry in enumerate(self):
+            # line numbers in each Page are incremented by the current total number of sentences
+            base = len(sentences)
+            # analyse the Page
+            analysis = entry.analyse(self.markdown)
+            # add results to appropriate lists and dictionaries
+            new_words = analysis.words
+            sentences += analysis.sentences
+            urls.append(entry.link(False))
             names.append(entry.name)
-            pages.append(entry.link(False))
-            for word in words:
-                line_numbers = map(lambda x: x + line_number, words[word])
-                locations = {str(number): line_numbers}
+            for word in new_words:
+                # increment line numbers by base
+                # use str(page_number) because search.js relies on that
+                locations = {str(page_number): map(lambda x: x + base, new_words[word])}
                 try:
-                    wordlist[word].update(locations)
+                    words[word].update(locations)
                 except KeyError:
-                    wordlist[word] = locations
-        return Analysis(wordlist, lines, pages, names)
+                    words[word] = locations
+        return Analysis(words, sentences, urls, names)
 
 
 class Page:
+    """
+    A node in the hierarchy
+    """
     def __init__(self, name, parent=None, content="", leaf_level=3, previous=None, markdown=None):
-        self.parent = parent
+        """
+        :param name (str): the name of the Page
+        :param parent (Page): the Page's immediate ancestor
+        :param content (str): text that will ultimately appear on the Page's webpage
+        :param leaf_level (int): the level number of the outermost branches of the hierarchy
+        :param previous (Page):
+        :param markdown (Markdown): the Markdown to be used when constructing the text of the webpage
+
+        :attribute children (list): the Pages beneath self
+        :attribute isLeaf (bool): is the Page at the lowest level of the hierarchy?
+        :attribute urlform (str): the name of the Page, in a form suitable for URLs
+        :attribute level (int): how low the Page is on the hierarchy
+        :attribute flatname (FlatName): the name and Tinellbian alphabetical order of the Page
+        """
         self.name = name
+        self.parent = parent
         self.children = []
-        self.leaf_level = leaf_level
+        self.level = self.generation() - 1
+        self.isLeaf = (leaf_level == self.level)
         self.content = content
         self.previous = previous
         self.markdown = markdown
+        self.urlform = self.simple()
+        self.flatname = FlatName(self.urlform)
+
+    def simple(self):
+        """
+        Simplify the name to make it more suitable for urls
+        Put the name in lower case, and remove tags
+        Allowed punctuation: -'.$_+!()
+        """
+        name = self.name.lower()
+        # remove safe punctuations that should only be used to encode non-ascii characters
+        name = re.sub(r'[\'.$_+!()]', '', name)
+        name = self.markdown.to_markdown(name)
+        # remove text within tags
+        name = re.sub(r'<(div|ipa).*?\1>', '', name)
+        # remove tags, spaces and punctuation
+        name = re.sub(r'<.*?>|[/*;: ]', '', name)
+        return name
 
     def __str__(self):
         return '[' + self.content
 
     def __eq__(self, other):
+        """
+        :param self (Page):
+        :param other (Page): the two Pages being compared
+        :return (bool): True iff both nodes have the same URL and the same parent
+        """
         try:
-            if self.name == other.name:
+            if self.urlform == other.urlform:
                 parent, other = self.parent, other.parent
                 while True:
                     return parent == other
@@ -178,11 +283,14 @@ class Page:
         return not self == other
 
     def __lt__(self, other):
+        """
+        :return (bool): True iff the self.name comes before self.other in Tinellbian alphabetical order
+        """
         alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
         try:
             if self.name == other.name:
                 return False
-        except AttributeError:
+        except AttributeError:  # self or other are None
             return self is None is not other
         if self.flatname.name == other.flatname.name:
             return self.flatname.score < other.flatname.score
@@ -204,24 +312,38 @@ class Page:
     def __ge__(self, other):
         return not self < other
 
-    def __getitem__(self, entry):
+    def __getitem__(self, item):
+        """
+        Search the children of the Page for a particular item
+        :param item (int): index number of the item to return
+        :param item (str): name of the item to return
+        :return (Page):
+        :raises KeyError: item cannot be found
+        """
         try:
-            entry = int(entry)
-            return self.children[entry]
-        except ValueError:
+            item = int(item)
+            return self.children[item]
+        except ValueError:  # item is a string
             for child in self.children:
-                if child.name == entry:
+                if child.name == item:
                     return child
             else:
-                raise KeyError('No such page ' + entry + 'in ' + self.name)
+                raise KeyError('No such page ' + item + 'in ' + self.name)
 
     def __hash__(self):
         return hash(self.name)
 
     def insert(self, index=None):
+        """
+        Insert self into the Site as a child of its parent
+        :pre: Self has a filled parent attribute
+        :param index (int): the index number to be inserted at
+        :param index (None): self is inserted in the correct Tinellbian alphabetical order
+        :return (Page): the Page just inserted
+        """
         try:
             self.parent.children.insert(index, self)
-        except TypeError:
+        except TypeError:   # index is None
             for index, page in enumerate(self.parent.children):
                 number = index
                 if self <= page:
@@ -231,32 +353,57 @@ class Page:
                 self.parent.children.append(self)
             return self
 
-    def site(self):
-        sites = {'Grammar': Grammar,
-                 'Dictionary': Dictionary,
-                 'The Coelacanth Quartet': Story}
-        return sites[self.root().name]
-
     def delete(self):
-        """Delete target node and all of its descendants"""
+        """
+        Delete self and all of its descendants
+        """
         self.parent.children.remove(self)
 
     def has_children(self):
+        """
+        :return (bool): True iff self has children
+        """
         return len(self.children) > 0
 
     def root(self):
+        """
+        Proceed up the Site
+        :return (Page): the top Page in the Site
+        """
         node = self
         while node.parent is not None:
             node = node.parent
         return node
 
+    def genealogy(self):
+        """
+        Generates for every Page in the Site sequentially
+        :yield (Page):
+        :raises StopIteration:
+        """
+        node = self.root()
+        yield node
+        while True:
+            try:
+                node = node.next_node()
+                yield node
+            except IndexError:
+                raise StopIteration
+
     def elders(self):
-        """Return the first generation of the current hierarchy"""
+        """
+        The first generation in the Site
+        :return (Page[]):
+        """
         return self.root().children
 
     def ancestors(self):
+        """
+        Self and the direct ancestors of self
+        :return (Page[]):
+        """
         node = self
-        ancestry = []
+        ancestry = [node]
         while node.parent is not None:
             node = node.parent
             ancestry.insert(0, node)
@@ -264,18 +411,9 @@ class Page:
 
     def generation(self):
         """
-        Gives the generation number of the Page, with the root at zero.
-        :rtype: int
+        :return (int): the generation number of the Page, with the root at one
         """
         return len(self.ancestors())
-
-    def is_leaf(self):
-        """
-        Return True iff this page has no sub-pages.
-        :return:
-        :rtype: bool
-        """
-        return self.generation() == self.leaf_level
 
     def sister(self, index):
         children = self.parent.children
@@ -286,12 +424,25 @@ class Page:
             raise IndexError('No such sister')
 
     def previous_sister(self):
+        """
+        :return (Page): the previous Page if it has the same parent as self
+        :raises IndexError: the previous Page does not exist
+        """
         return self.sister(-1)
 
     def next_sister(self):
+        """
+        :return (Page): the next Page if it has the same parent as self
+        :raises IndexError: the next Page does not exist
+        """
         return self.sister(1)
 
     def next_node(self):
+        """
+        Finds the next sister, or uses iteration to find the next Page
+        :return (Page): the next Page in sequence
+        :raises IndexError: the next Page does not exist
+        """
         if self.has_children():
             return self.children[0]
         else:
@@ -302,6 +453,11 @@ class Page:
         return next_node
 
     def next_node_iter(self, node):
+        """
+        Iterates over the Site to find the next Page
+        :return (Page): the next Page in sequence
+        :raises IndexError: the next Page does not exist
+        """
         if node.parent is None:
             raise IndexError('No more nodes')
         try:
@@ -312,12 +468,19 @@ class Page:
         return right
 
     def descendants(self):
+        """
+        All the descendants of self, using iteration
+        :return (Page{}):
+        """
         descendants = set(self.children)
         for child in self.children:
             descendants.update(child.descendants())
         return descendants
 
     def cousins(self):
+        """
+        Taking a sub-hierarchy as the descendants of a Page, cousins are Pages at the same point as self, but in different sub-hierarchies.
+        """
         node = self
         indices = []
         while node.parent is not None:
@@ -330,15 +493,15 @@ class Page:
             for index in indices:
                 try:
                     cousin = cousin.children[index]
-                except IndexError:
+                except (IndexError, AttributeError):
                     cousin = None
             cousins.append(cousin)
         return cousins
 
     def family(self):
         """
-        Return all ancestors (including self) and children of same.
-        :rtype: set(Page[])
+        Return all of self, descendants, sisters, ancestors, and sisters of ancestors
+        :rtype (Page{}):
         """
         family = set([])
         for ancestor in self.ancestors():
@@ -346,115 +509,98 @@ class Page:
         family.update(self.descendants())
         return family
 
-    def url_form(self, extend=False):
+    def fullUrlForm(self):
         """
-        Return the name of the Page in a form suitable for URLs.
-        :param extend: True iff '(/index).html' extension is required.
-        :type: bool
-
-        :return:
-        :rtype: str
+        :return (str): the name and extension of the Page in a form suitable for URLs
         """
-        name = self.name.lower()
-        name = re.sub(r'&#x294;', "''", name)
-        name = re.sub(r'&x2019;|&rsquo;', "'", name)
-        name = re.sub(r'<(div|ipa).*?\1>', '', name)
-        name = re.sub(r"<.*?>|[/.; ]", "", name)
-        extension = '.html' if self.is_leaf() else '/index.html'
-        return name + extension if extend else name
+        # extension = '/index' if not self.isLeaf else ''
+        return '{0}{1}.html'.format(self.urlform, '/index' if not self.isLeaf else '')
 
     def folder(self):
         """
-        Return the folder in which the Page should appear.
-        If the Page is in the first generation,
-        :rtype: String
+        :return (str): the folder in which the Page should appear, or an empty string if Page is the root
         """
-        if self.generation():
-            text = "/".join([i.url_form() for i in self.ancestors()[1:]]) + '/'
-            text += self.url_form() + '/' if not self.is_leaf() else ''
-            return text if self.generation() != 1 else self.url_form() + '/'
+        if self.level:
+            text = "/".join([i.urlform for i in self.ancestors()[1:-1]]) + '/'
+            text += self.urlform + '/' if not self.isLeaf else ''
+            return text if self.level != 1 else self.urlform + '/'
         else:
             return ''
 
     def link(self, extend=True):
-        """Return a link to this node of the form 'highlulani/morphology/index.html'"""
-        if extend:
-            return self.folder() + (self.url_form(True) if self.is_leaf() else 'index.html')
-        else:
-            return self.folder() + (self.url_form(False) if self.is_leaf() else 'index')
-
-    def hyperlink(self, destination, template="{0}", anchor_tags=True):
         """
-        Create a hyperlink
+        :return (str): a link to self of the form 'highlulani/morphology/index.html'
+        """
+        if extend:
+            return self.folder() + (self.fullUrlForm() if self.isLeaf else 'index.html')
+        else:
+            return self.folder() + (self.urlform if self.isLeaf else 'index')
+
+    def hyperlink(self, destination, template="{0}", needAnchorTags=True):
+        """
         Source and destination must be within the same website
-        :param just_href: Put anchor tags around the link?
-        :type: bool
-        :param template: The form of the hyperlink. Use $
-        :type: str
-        :param destination: the page being linked to
-        :type: Node
-        :return:
+        :param needAnchorTags (bool): Put anchor tags around the link?
+        :param template (str): The form of the hyperlink.
+        :param destination (Page): the Page being linked to
+        :return (str):
         """
         # returns plain text (i.e.: not a hyperlink) if source and destination are the same
-        if self == destination:
+        if destination is self:
             return template.format(destination.name)
-        # @variable (int) change: accounts for the fact that an internal node has one less level than expected
-        change = int(not self.is_leaf())
-        # @variable (str) address: a hyperlink reference of the form '../../phonology/consonants/index.html'
-        # @variable (str) link: a hyperlink of the form '<a address="../../phonology/consonants/index.html>Consonants</a>'
+        # :variable change (int): accounts for the fact that an internal node has one less level than expected
+        change = int(not self.isLeaf)
+        # :variable address (str): a hyperlink reference of the form '../../phonology/consonants/index.html'
+        # :variable link (str): a hyperlink of the form '<a href="../../phonology/consonants/index.html>Consonants</a>'
         try:
-            extension = ".html" if destination.is_leaf() else "/index.html"
-            self_ancestors = self.ancestors() + [self]
-            destination_ancestors = destination.ancestors() + [destination]
-            ancestor_list = zip(self_ancestors, destination_ancestors)
-            direct = destination in self_ancestors
-            # @variable (int) common: the number of nodes common to both source and destination ancestries
+            extension = ".html" if destination.isLeaf else "/index.html"
+            ancestors = {'self': self.ancestors(), 'destination': destination.ancestors()}
+            isDirect = destination in ancestors['self']
+            # :variable (int) common: the number of nodes common to both source and destination ancestries
             try:
-                common = [i != j for i, j in ancestor_list].index(True)
+                common = [i != j for i, j in zip(*[x for x in ancestors.values()])].index(True)
             except ValueError:
-                common = len(ancestor_list)
-            # @variable (int) up: the number of levels the common ancestor is above the source
-            # @variable (str) down: the hyperlink address from the common ancestor to the descendant
+                common = min(map(len, ancestors.values()))
+            # :variable (int) up: the number of levels the common ancestor is above the source
+            # :variable (str) down: the hyperlink address from the common ancestor to the descendant
             if destination == self.root():
-                up = self.generation() + change - 1
+                up = self.level + change - 1
                 down = "index"
                 extension = ".html"
             else:
-                up = self.generation() + change - (destination.generation() if direct else common)
-                down = destination.url_form() if direct else \
-                    "/".join([node.url_form() for node in destination_ancestors[common:]])
+                up = self.level + change - (destination.level if isDirect else common)
+                down = destination.urlform if isDirect else \
+                    "/".join([ancestor.urlform for ancestor in ancestors['destination'][common:]])
             address = (up * '../') + down + extension
             link = '<a href="{0}">{1}</a>'.format(address, template.format(destination.name))
         except AttributeError:  # destination is a string
-            up = self.generation() + change - 1
+            up = self.level + change - 1
             address = (up * '../') + destination
             link = '<a {0}>{1}</a>'.format(address, template.format(destination))
-        return link if anchor_tags else address
+        return link if needAnchorTags else address
 
     def change_to_heading(self, text):
         """
-        Transform '3]Blah' -->\n '<h2 id="blah">Blah</h2>
-        :param: text
-        :type: str
-        :return:
+        Transform '3]Blah' --> '<h2 id="blah">Blah</h2>'
+        :param text (str)
+        :return (str): an HTML heading with the id as the URL form of the name of the Page
         """
-        try:
-            level, name = text.split(']')
-        except ValueError:
-            return text[1:]
-        level = int(level) - self.generation() + 1
-        url_id = Page(name).url_form()
+        level, name = text.split(']')
+        level = int(level) - self.level + 1
+        url_id = Page(name, markdown=self.markdown).urlform
         return '<h{0} id="{1}">{2}</h{0}>\n'.format(str(level), url_id, name)
 
     def title(self):
-        ancestry = [re.sub(r'[[<].*?[]>]', '', ancestor.name) for ancestor in self.ancestors()]
-        ancestry.reverse()
-        return re.sub(r'[[<].*?[]>]', '', self.name) + " &lt; " + " &lt; ".join(ancestry)
+        """
+        :return (str): the ancestry of self, suitable for HTML titles
+        """
+        # remove tags from names
+        ancestry = map(lambda x: re.sub(r'[[<].*?[]>]', '', x.name), self.ancestors())
+        return ' &lt; '.join(ancestry[::-1])
 
     def contents(self):
         """
-        Construct the main contents of a page
-        :rtype: str
+        Markup tags in square brackets to HTML, including headings, paragraphs, tables and lists.
+        :return (str): the main contents of a Page
         """
         mode = ContentsMode()
         output = ''
@@ -466,52 +612,62 @@ class Page:
                 heading, rest = line.split('\n', 1)
                 line = self.change_to_heading(heading)
                 line += '<p>{0}</p>'.format('</p><p>'.join(rest.splitlines())) if rest else ''
-            else:
+            else: # tag is non-numeric, i.e.: represents something other than a heading
                 try:
                     category, text = line.split(']', 1)
                     mode.set(category)
                     try:
                         line = mode.replacements[category] + text
-                    except KeyError:
-                        raise KeyError('{0}]{1}'.format(category, line))
+                    except KeyError: # something's gone wrong
+                        raise KeyError('{0}]{1}. Please check source file'.format(category, line))
                     if not mode.table():
-                        line = line.replace('</tr><tr><td>', '<' + mode.delimiter() + '>')
-                    line = re.sub('\n$', '</' + mode.delimiter() + '>', line)
-                    line = '</d>\n<d>'.replace('d', mode.delimiter()).join(line.splitlines())
+                        line = line.replace('</tr><tr><td>', '<' + mode.delimiter + '>')
+                    line = re.sub('\n$', '</' + mode.delimiter + '>', line)
+                    line = '</d>\n<d>'.replace('d', mode.delimiter).join(line.splitlines())
                 except ValueError:
                     raise ValueError(line + ': ' + self.name)
             output += line
         return output
 
     def stylesheet_and_icon(self):
-        output = """<link rel="stylesheet" type="text/css" href="{0}">
-    <link rel="icon" type="image/png" href="{1}">""".format(
-            self.hyperlink('style.css', anchor_tags=False),
-            self.hyperlink('favicon.png', anchor_tags=False))
+        """
+        :return (str): relative HTML links to the stylesheet and icon for self.
+        :class: Page:
+        """
+        output = '''<link rel="stylesheet" type="text/css" href="{0}">
+    <link rel="icon" type="image/png" href="{1}">'''.format(
+            self.hyperlink('style.css', needAnchorTags=False),
+            self.hyperlink('favicon.png', needAnchorTags=False))
         return output
 
     def search_script(self):
-        output = """<script type="text/javascript">
+        """
+        :return (str): javascript function for moving to search page if required, using relative links
+        """
+        output = '''<script type="text/javascript">
         if (window.location.href.indexOf("?") != -1) {{
             window.location.href = "{0}" +
             window.location.href.substring(window.location.href.indexOf("?")) + "&andOr=and";
         }}
-    </script>""".format(self.hyperlink('search.html', anchor_tags=False))
+    </script>'''.format(self.hyperlink('search.html', needAnchorTags=False))
         return output
 
     def toc(self):
-        if self.is_leaf():
+        """
+        :return (str): a table of contents in HTML
+        """
+        if self.isLeaf:
             return ''
-        elif self.generation():
+        elif self.level: # self neither root nor leaf
             return "".join(['<p>{0}</p>'.format(self.hyperlink(child)) for child in self.children])
         else:  # self is root
             links = ''
             level = 0
-            for page in self.site()():
-                if not page.generation():
+            for page in self.genealogy():
+                if not page.level:
                     continue
                 old_level = level
-                level = page.generation()
+                level = page.level
                 if level > old_level:
                     links += '<ul class=\"level-{0}\">'.format(str(level))
                 elif level < old_level:
@@ -521,7 +677,10 @@ class Page:
             return links
 
     def links(self):
-        output = """<ul>
+        """
+        :return (str):
+        """
+        output = '''<ul>
                   <li class="link"><a href="http://www.tinellb.com">&uarr; Main Page</a></li>
                   <li class="link">$out$</li>
                   <li class="link">$out$</li>
@@ -533,7 +692,7 @@ class Page:
                     </li>
                   </form>
                 $links$
-                </ul>""".format(' class="normal"' if self == self.root() else '',
+                </ul>'''.format(' class="normal"' if self == self.root() else '',
                                 self.hyperlink(self.root()))
         for item, link in ( ['Grammar', 'grammar'],
                             ['Dictionary', 'dictionary'],
@@ -546,10 +705,10 @@ class Page:
         links = ''
         level = 0
         family = self.family()
-        for page in self.site()():
+        for page in self.genealogy():
             if page in family:
                 old_level = level
-                level = page.generation()
+                level = page.level
                 if level > old_level:
                     links += '<ul class=\"level-{0}\">'.format(str(level))
                 elif level < old_level:
@@ -565,10 +724,10 @@ class Page:
         links = ''
         level = 0
         family = self.family()
-        for page in self.site()():
+        for page in self.genealogy():
             if page in family:
                 old_level = level
-                level = page.generation()
+                level = page.level
                 if level > old_level:
                     links += '<ul class="level-{0}">'.format(str(level))
                 elif level < old_level:
@@ -594,15 +753,15 @@ class Page:
         return self.links().replace('$links$', links + '</ul>')
 
     def nav_footer(self):
-        output = ''
+        div = '<div>\n{0}\n</div>\n'
         if self.previous:
-            output += '<div>\n{0}\n</div>\n'.format(self.hyperlink(self.previous, '&larr; Previous page'))
+            output = div.format(self.hyperlink(self.previous, '&larr; Previous page'))
         else:
-            output += '<div>\n{0}\n</div>\n'.format(self.hyperlink(self.root(), '&uarr; Return to Menu'))
+            output = div.format(self.hyperlink(self.root(), '&uarr; Return to Menu'))
         try:
-            output += '<div>\n{0}\n</div>\n'.format(self.hyperlink(self.next_node(), 'Next page &rarr;'))
+            output += div.format(self.hyperlink(self.next_node(), 'Next page &rarr;'))
         except IndexError:
-            output += '<div>\n{0}\n</div>\n'.format(self.hyperlink(self.root(), 'Return to Menu &uarr;'))
+            output += div.format(self.hyperlink(self.root(), 'Return to Menu &uarr;'))
         return output
 
     def copyright(self):
@@ -614,12 +773,11 @@ class Page:
         output = datetime.datetime.strftime(date, '&copy;%Y&nbsp;Ryan&nbsp;Eakins. Last&nbsp;updated:&nbsp;%A,&nbsp;%B&nbsp;%#d' + suffix + ',&nbsp;%Y.')
         return output
 
-    def publish(self, template=None):
-        if template is None:
-            if self.generation():
-                template = Template()
-            else:
-                template = Template('main_template.html')
+    def publish(self, template):
+        """
+        :param template (Template): the basic template to be published against
+        :param template (str): the basic template to be published against
+        """
         try:
             page = template.template
         except AttributeError:
@@ -644,24 +802,25 @@ class Page:
         except os.error:
             pass
         with open(self.link(), "w") as f:
-            page = re.sub('\x05\x05.*?\x06\x06', '', page)
-            page = re.sub('\x05.*?\x06', '', page)
+            page = re.sub('\x05.*?(\x06\x06*)', '', page)
+            page = re.sub(r'\x07', '', page)
             page = re.sub(r'&date=\d{8}', '', page)
-            f.write(page.replace(chr(7), ''))
+            f.write(page)
 
     def remove(self):
         os.remove(self.link())
 
-    def analyse(self, markdown=None):
+    def analyse(self, markdown):
         wordlist = {}
         content = self.content[2:]
         """remove tags, and items between some tags"""
         content = re.sub(r'\[\d\]|<(ipa|high-lulani)>.*?</\1>|<.*?>', ' ', content)
         """change punctuation to paragraph marks, so that splitlines works"""
         content = re.sub(r'[!?.]', '\n', content)
+        """change punctuation to space"""
+        content = re.sub(r'[_()]', ' ', content)
         """remove hidden text"""
-        content = re.sub(r'\x05.*?\x06\x06', '', content)
-        content = re.sub(r'\x05.*?\x06', '', content)
+        content = re.sub(r'\x05.*?(\x06\x06*)', '', content)
         """remove bells, spaces at the beginnings and end of lines, and duplicate spaces and end-lines"""
         content = re.sub(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[\x07,:]', '', content)
         """remove duplicate end-lines"""
@@ -670,8 +829,8 @@ class Page:
         content = re.sub(r'\[.*?\]', '', content)
         lines = content.splitlines()
         content = markdown.to_markdown(content).lower()
-        """remove punctuation, and tags in square brackets"""
-        content = re.sub(r'\'"|[.!?`"/{}\\();-]|\'($| )|\[.*?\]|&nbsp', ' ', content)
+        """change punctuation, and tags in square brackets, into spaces"""
+        content = re.sub(r'\'\"|[!?`\"/{}\\();-]|\'($| )|\[.*?\]|&nbsp', ' ', content)
         """make glottal stops lower case where appropriate"""
         content = re.sub(r"(?<=[ \n])''", "'", content)
         for number, line in enumerate(content.splitlines()):
@@ -711,26 +870,14 @@ class FlatName:
 class Template:
     def __init__(self, filename):
         with open(filename) as f:
-class Dictionary(Site):
-    def __init__(self):
-        Site.__init__(self, "Dictionary", 2)
-
-
-class Grammar(Site):
-    def __init__(self):
-        Site.__init__(self, "Grammar")
-
-
-class Story(Site):
-    def __init__(self):
-        Site.__init__(self, "The Coelacanth Quartet")
+            self.template = f.read()
 
 
 class ContentsMode:
     def __init__(self):
         self.modes = []
         self.mode = 'n'
-
+        self.delimiter = 'p'
         self.replacements = {'t': '<table><tr><td>',
                              '/t': '</tr></table>',
                              'r': '</tr><tr><td>',
@@ -740,6 +887,10 @@ class ContentsMode:
                              '/l': '</ul>',
                              'e': '<p class="example_no_lines">',
                              'f': '<p class="example">'}
+        self.delimiters =   {'n': 'p',
+                             't': 'td',
+                             'l': 'li'}
+        self.delimiter = self.delimiters[self.mode]
 
     def normal(self):
         return self.mode == 'n'
@@ -762,6 +913,7 @@ class ContentsMode:
                 self.mode = self.modes.pop()
             except IndexError:
                 self.mode = 'n'
+        self.delimiter = self.delimiters[self.mode]
 
     def delimiter(self):
         if self.mode == 'n':
@@ -780,25 +932,59 @@ def normal_text(text):
 
 
 class Analysis:
-    def __init__(self, wordlist, lines, pages=None, names=None):
-        self.wordlist = wordlist
-        self.lines = lines
-        self.pages = pages if pages else []
-        self.names = names if pages else []
+    def __init__(self, words, sentences, urls=None, names=None):
+        """
+        :param words (dict): {term: locations}
+        """
+        self.words = words
+        self.sentences = sentences
+        self.urls = urls if urls else []
+        self.names = names if urls else []
 
     def __str__(self):
         """Returns string version of Analysis"""
-        """replace single quotes with double quotes to comply with json formatting"""
-        wordlist = str(self.wordlist)
-        wordlist = re.sub(r"(?<=[{ ])'|'(?=:)", '"', str(wordlist))
-        """insert line breaks"""
-        wordlist = re.sub(r'(?<=},) ', '\n', wordlist)
-        lines = '"sentences":["{0}"]'.format('",\n "'.join(self.lines))
-        pages = '"urls":["{0}"]'.format('",\n "'.join(self.pages))
+        # Replace single quotes with double quotes, and insert line breaks, to comply with JSON formatting
+        words = str(self.words)
+        words = re.sub(r"(?<=[{ ])'|'(?=:)", '"', str(words))
+        words = re.sub(r'(?<=},) ', '\n', words)
+        # Create each section of the JSON
+        words = '"terms": {0}'.format(words)
+        sentences = '"sentences":["{0}"]'.format('",\n "'.join(self.sentences))
+        urls = '"urls":["{0}"]'.format('",\n "'.join(self.urls))
         names = '"names":["{0}"]'.format('",\n "'.join(self.names))
-        wordlist = '"terms": {0}'.format(wordlist)
+        return '{{{0}}}'.format(',\n'.join([words, sentences, urls, names]))
 
-        return '{{{0}}}'.format(',\n'.join([wordlist, lines, pages, names]))
+class Dictionary(Site):
+    def __init__(self):
+        d = Default()
+        Site.__init__(self, d.destination + 'dictionary', 'Dictionary', d.source, d.template, d.main_template, d.markdown, d.searchjson, 2)
+
+
+class Grammar(Site):
+    def __init__(self):
+        d = Default()
+        Site.__init__(self, d.destination + 'grammar', 'Grammar', d.source, d.template, d.main_template, d.markdown, d.searchjson, 3)
+
+
+class Story(Site):
+    def __init__(self):
+        d = Default()
+        Site.__init__(self, d.destination + 'thecoelacanthquartet', 'The Coelacanth Quartet', d.source, d.template, d.main_template, d.markdown, d.searchjson, 3)
+
+class TheCoelacanthQuartet(Story):
+    def __init__(self):
+        Story.__init__(self)
+
+
+class Default():
+    def __init__(self):
+        self.destination = 'c:/users/ryan/documents/tinellbianlanguages/'
+        self.source = 'data.txt'
+        self.template = 'template.html'
+        self.main_template = 'main_template.html'
+        self.markdown = '../replacements.html'
+        self.searchjson = 'searching.json'
+
 
 if __name__ == '__main__':
     oldtime = datetime.datetime.now()
