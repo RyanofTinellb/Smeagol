@@ -18,7 +18,7 @@ class EditPage(Tk.Frame):
         self.site = self.decide(sites)
         self.markdowns = markdowns
         self.markdown = self.decide(markdowns)
-        self.entry = self.site.root[0]
+        self.entry = self.site.root
         self.headings = []
         self.grammar_button = None
         self.story_button = None
@@ -66,8 +66,8 @@ class EditPage(Tk.Frame):
         self.italic_button.grid(row=1, column=4, sticky=Tk.W)
         self.small_cap_button.grid(row=1, column=5, sticky=Tk.W)
         self.grammar_button.grid(row=2, column=2, sticky=Tk.W)
-        self.grammar_button.select()
         self.story_button.grid(row=2, column=3, columnspan=2, sticky=Tk.W)
+        self.grammar_button.select()
         self.edit_text.bind('<KeyPress>', self.edit_text_changed)
         self.edit_text.bind('<Control-BackSpace>', self.delete_word)
         self.edit_text.bind('<Control-a>', self.select_all)
@@ -81,6 +81,7 @@ class EditPage(Tk.Frame):
         self.edit_text.bind('<Return>', self.update_wordcount)
         self.edit_text.grid(column=2, columnspan=150)
         self.number_of_words.set('')
+        self.headings[0].focus_set()
 
     def decide(self, variable):
         try:
@@ -88,30 +89,35 @@ class EditPage(Tk.Frame):
         except (TypeError, AttributeError, ValueError):
             return variable
 
-    def scroll_headings(self, event, heading_number):
-        heading = self.headings[heading_number]
-        if event.keysym == 'Prior':
-            direction = -1
-        else:
-            direction = 1
-        if self.entry.generation() < heading_number + 1:
-            while self.entry.generation() < heading_number + 1:
-                try:
-                    self.entry = self.entry.children[0]
-                except IndexError:
-                    break
-        elif self.entry.generation() == heading_number + 1:
+    def scroll_headings(self, event, level):
+        """
+        Respond to PageUp / PageDown by changing headings, moving through the hierarchy.
+        :param event (Event): which entry box received the KeyPress
+        :param level (int): the level of the hierarchy that is being traversed.
+        """
+        heading = self.headings[level]
+        # bring
+        level += 1
+        direction = 1 if event.keysym == 'Next' else -1
+        # traverse hierarchy sideways
+        if self.entry.level == level:
             try:
                 self.entry = self.entry.sister(direction)
             except IndexError:
                 pass
-        elif self.entry.generation() > heading_number + 1:
-            while self.entry.generation() > heading_number + 1:
-                try:
-                    self.entry = self.entry.parent
-                except AttributeError:
-                    break
-        for k in range(heading_number, 3):
+        # ascend hierarchy until correct level
+        while self.entry.level > level:
+            try:
+                self.entry = self.entry.parent
+            except AttributeError:
+                break
+        # descend hierarchy until correct level
+        while self.entry.level < level:
+            try:
+                self.entry = self.entry.children[0]
+            except IndexError:
+                break
+        for k in range(level - 1, 3):
             self.headings[k].delete(0, Tk.END)
         heading.insert(Tk.INSERT, self.entry.name)
         return 'break'
@@ -130,7 +136,8 @@ class EditPage(Tk.Frame):
             self.datafile = self.decide(self.datafiles)
             self.site = self.decide(self.sites)
             self.markdown = self.decide(self.markdowns)
-            self.entry = self.site[0]
+            self.entry = self.site.root
+            self.headings[0].focus_set()
         return 'break'
 
     def insert_pipe(self, event=None):
