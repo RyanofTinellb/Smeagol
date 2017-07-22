@@ -48,6 +48,7 @@ class EditDictionary(Tk.Frame):
     def create_widgets(self):
         self.heading = Tk.Text(self, height=1, width=20, wrap=Tk.NONE)
         self.heading.grid(sticky=Tk.NE)
+        self.heading.bind('<Control-m>', self.refresh_markdown)
         self.heading.bind('<Control-r>', self.refresh_random)
         self.heading.bind('<Alt-d>', self.go_to_heading)
         self.heading.bind('<Return>', self.bring_entry)
@@ -62,6 +63,7 @@ class EditDictionary(Tk.Frame):
         self.edit_text.bind('<Control-b>', self.bold)
         self.edit_text.bind('<Control-i>', self.italic)
         self.edit_text.bind('<Control-k>', self.small_caps)
+        self.edit_text.bind('<Control-m>', self.refresh_markdown)
         self.edit_text.bind('<Control-n>', self.new_word)
         self.edit_text.bind('<Control-r>', self.refresh_random)
         self.edit_text.bind('<Control-s>', self.save)
@@ -81,6 +83,12 @@ class EditDictionary(Tk.Frame):
 
     def undo(self, event=None):
         self.edit_text.undo()
+    def refresh_markdown(self, event=None):
+        """
+        Reopen replacements file
+        """
+        self.markdown.refresh()
+        self.random_word.set('Markdown Refreshed!')
         return 'break'
 
     def change_language(self, event=None):
