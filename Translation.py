@@ -108,12 +108,8 @@ class RandomWords():
         self.maximum = number
         self.geminate = geminate
 
-    def next(self):
-        if self.total == self.maximum:
-            self.total = 0
-            raise StopIteration
-        self.total += 1
-        return self.word()
+    def words(self):
+        return [self.word() for x in range(self.maximum)]
 
     def __iter__(self):
         return self
