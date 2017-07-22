@@ -1,7 +1,7 @@
 import Tkinter as Tk
 import os
 import thread
-from Smeagol import *
+from Smealoadl import *
 from Translation import *
 
 
@@ -22,10 +22,10 @@ class EditPage(Tk.Frame):
         self.headings = []
         self.grammar_button = None
         self.story_button = None
-        self.go_button = None
-        self.finish_button = None
-        self.finish_text = Tk.StringVar()
-        self.finish_text.set('Save')
+        self.load_button = None
+        self.save_button = None
+        self.save_text = Tk.StringVar()
+        self.save_text.set('Save')
         self.number_of_words = Tk.StringVar()
         self.edit_text = Tk.Text(self, height=24, width=114, font=('Corbel', '14'), wrap=Tk.WORD)
         self.word_count = Tk.Label(self, textvariable=self.number_of_words)
@@ -51,13 +51,13 @@ class EditPage(Tk.Frame):
         self.headings[0].bind('<Return>', self.insert_chapter)
         self.headings[1].bind('<Return>', self.insert_heading)
         self.headings[2].bind('<Return>', self.bring_entry)
-        self.go_button = Tk.Button(self, text='Load', width=10, command=self.bring_entry)
-        self.go_button.grid(row=0, column=2, sticky=Tk.NW)
-        self.finish_button = Tk.Button(self, textvariable=self.finish_text, width=10, command=self.finish)
-        self.finish_button.grid(row=1, column=2, sticky=Tk.NW)
+        self.load_button = Tk.Button(self, text='Load', width=10, command=self.bring_entry)
+        self.load_button.grid(row=0, column=2, sticky=Tk.NW)
+        self.save_button = Tk.Button(self, textvariable=self.save_text, width=10, command=self.save)
+        self.save_button.grid(row=1, column=2, sticky=Tk.NW)
         self.word_count.grid(row=2, column=6)
         self.grammar_button.grid(row=2, column=2, sticky=Tk.W)
-        self.story_button.grid(row=2, column=3, columnspan=2, sticky=Tk.W)
+        self.story_button.grid(row=2, column=3, sticky=Tk.W)
         self.grammar_button.select()
         self.edit_text.bind('<KeyPress>', self.edit_text_changed)
         self.edit_text.bind('<Control-BackSpace>', self.delete_word)
@@ -65,7 +65,7 @@ class EditPage(Tk.Frame):
         self.edit_text.bind('<Control-b>', self.bold)
         self.edit_text.bind('<Control-i>', self.italic)
         self.edit_text.bind('<Control-k>', self.small_caps)
-        self.edit_text.bind('<Control-s>', self.finish)
+        self.edit_text.bind('<Control-s>', self.save)
         self.edit_text.bind('<Control-t>', self.table)
         self.edit_text.bind('<KeyPress-|>', self.insert_pipe)
         self.edit_text.bind('<space>', self.update_wordcount)
@@ -186,7 +186,7 @@ class EditPage(Tk.Frame):
 
     def edit_text_changed(self, event=None):
         if self.edit_text.edit_modified():
-            self.finish_text.set('*Save')
+            self.save_text.set('*Save')
 
     def bring_entry(self, event=None):
         # descend hierarchy in correct direction
@@ -202,7 +202,7 @@ class EditPage(Tk.Frame):
             self.edit_text.insert(1.0, entry)
             self.edit_text.focus_set()
             self.edit_text.edit_modified(False)
-            self.finish_text.set('Save')
+            self.save_text.set('Save')
         else:
             self.entry = self.site.root
             self.edit_text.insert(1.0, 'That page does not exist. Create a new page by appending to an old one.')
@@ -210,8 +210,8 @@ class EditPage(Tk.Frame):
         self.update_wordcount()
         return 'break'
 
-    def finish(self, event=None):
-        self.finish_text.set('Save')
+    def save(self, event=None):
+        self.save_text.set('Save')
         self.update_wordcount()
         self.is_bold.set(0)
         self.is_italic.set(0)
@@ -228,9 +228,6 @@ class EditPage(Tk.Frame):
             self.entry.remove()
         self.site.publish()
         return 'break'
-
-    def publish(self):
-        self.site.publish()
 
 app = EditPage(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',
                             'story': 'c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet'},
