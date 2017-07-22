@@ -164,6 +164,7 @@ class Markdown:
         :param filename (String): the path to the replacements file
         :raise IOError: filename does not exist
         """
+        self.filename = filename
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None
@@ -187,3 +188,13 @@ class Markdown:
         for first, second in zip(self.source, self.destination):
             text = text.replace(first, second)
         return text
+
+    def refresh(self):
+        self.markup, self.markdown = [], []
+        self.source = None
+        self.destination = None
+        with open(filename) as replacements:
+            for line in replacements:
+                line = line.split(" ")
+                self.markup.append(line[0])
+                self.markdown.append(line[1])
