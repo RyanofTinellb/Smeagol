@@ -7,16 +7,15 @@ import Translation
 
 
 class Site:
-    def __init__(self, name, leaf_level=3, directory='c:/users/ryan/documents/tinellbianlanguages/'):
-        os.chdir(directory + Page(name).url_form())
-        self.source_file = 'data.txt'
+    def __init__(self, destination, name, source, template, main_template, markdown, searchjson, leaf_level):
+        self.template = Template(template)
+        self.main_template = Template(main_template)
+        self.markdown = Translation.Markdown(markdown)
+        self.searchjson = searchjson
         self.leaf_level = leaf_level
         self.current = None
         self.name = name
-        self.markdown = Translation.Markdown('../Replacements.html')
-        self.root = node = Page(name, leaf_level=self.leaf_level, markdown=self.markdown)
-        split = r'\[(?=[' + "".join(map(lambda x: str(x + 1), range(leaf_level))) + r'])'
-        with open(self.source_file, 'r') as source:
+        node = self.root = Page(name, leaf_level=self.leaf_level, markdown=self.markdown)
             source = source.read()
         source = re.split(split, source)
         for page in source:
@@ -29,6 +28,18 @@ class Site:
             while level != node.generation() + 1:
                 node = node.parent
             node = self.add_node(heading, node, page, previous)
+    @staticmethod
+    def choose_dir(destination):
+        try:
+            os.makedirs(destination)
+        except os.error:
+            pass
+        try:
+            os.chdir(destination)
+        except os.error:
+            win32api.MessageBox(0, 'That does not seem to be a valid destination. Please try again.', 'Unable to Create destination')
+            return
+        os.chdir(destination)
 
     def __str__(self):
         return ''.join([str(page) for page in self if str(page)])[1:]
@@ -102,33 +113,6 @@ class Site:
                 raise IndexError('No such node "' + item[0].capitalize() + '" in ' + node.name)
             return self.find_node_iter(item[1:], node)
 
-    def publish(self, destination=None, template=None, main_template=None, search_template=None):
-        if destination:
-            if re.search(r'[/\\]$', destination) is not None:
-                destination += "/"
-            destination += self.root.url_form()
-        else:
-            destination = 'c:/users/ryan/documents/tinellbianlanguages/' + self.root.url_form()
-        try:
-            os.makedirs(destination)
-        except os.error:
-            pass
-        try:
-            os.chdir(destination)
-        except os.error:
-            win32api.MessageBox(0, 'That does not seem to be a valid directory. Please try again.',
-                                'Unable to Create Directory')
-            return
-        if template is None:
-            template = Template('template.html')
-
-        """Create main page"""
-        if main_template is None:
-            main_template = Template('main_template.html')
-        self.root.publish(main_template)
-
-
-        """Create basic pages"""
         self.previous = self.current
         self.next()
         for entry in self:
@@ -194,16 +178,16 @@ class Page:
                 return False
         except AttributeError:
             return self is None is not other
-        if self.flat_name().name == other.flat_name().name:
-            return self.flat_name().score < other.flat_name().score
-        for s, t in zip(self.flat_name().name, other.flat_name().name):
+        if self.flatname.name == other.flatname.name:
+            return self.flatname.score < other.flatname.score
+        for s, t in zip(self.flatname.name, other.flatname.name):
             if s != t:
                 try:
                     return alphabet.index(s) < alphabet.index(t)
                 except ValueError:
                     continue
         else:
-            return len(self.flat_name().name) < len(other.flat_name().name)
+            return len(self.flatname.name) < len(other.flatname.name)
 
     def __gt__(self, other):
         return not self <= other
@@ -213,36 +197,6 @@ class Page:
 
     def __ge__(self, other):
         return not self < other
-
-    def flat_name(self):
-        return self.FlatName(self.name, self.markdown)
-
-
-    class FlatName:
-        """
-        'flattens' the name to only include letters aiu'pbtdcjkgmnqlrfsxh
-        minigolf scoring rules: smallest number wins.
-        """
-        def __init__(self, name, markdown=None):
-            alphabet = "aiu'pbtdcjkgmnqlrfsxh"
-            score = 2
-            double_letter = re.compile('([' + alphabet + r'])\1')
-            self.score = 0
-            self.name = markdown.to_markdown(name) if markdown else name
-            print(self.name)
-            if re.match(r'\\-[aiu]', self.name):
-                self.name = self.name.replace(r'\-', "'", 1)
-                self.score = score ** 15
-            elif self.name.startswith(r'\-'):
-                self.name = self.name.replace(r'\-', "", 1)
-                self.score = score ** 15
-            while True:
-                try:
-                    index = re.search(double_letter, self.name).start()
-                except AttributeError:
-                    break
-                self.name = re.sub(double_letter, r'\1', self.name, 1)
-                self.score += score ** index
 
     def __getitem__(self, entry):
         try:
@@ -694,8 +648,6 @@ class Page:
 
     def analyse(self, markdown=None):
         wordlist = {}
-        if markdown is None:
-            markdown = Translation.Markdown()
         content = self.content[2:]
         """remove tags, and items between some tags"""
         content = re.sub(r'\[\d\]|<(ipa|high-lulani)>.*?</\1>|<.*?>', ' ', content)
@@ -725,22 +677,34 @@ class Page:
                     wordlist[word] = [number]
         return Analysis(wordlist, lines)
 
+class FlatName:
+    """
+    'flattens' the name to only include letters aiu'pbtdcjkgmnqlrfsxh
+    minigolf scoring rules: smallest number wins.
+    """
+    def __init__(self, name):
+        alphabet = "aiu'pbtdcjkgmnqlrfsxh"
+        score = 2
+        double_letter = re.compile(r'([{0}])\1'.format(alphabet))
+        self.score = 0
+        self.name = name
+        if re.match(r'\\-[aiu]', self.name):
+            self.name = self.name.replace(r'\-', "'", 1)
+            self.score = score ** 15
+        elif self.name.startswith(r'\-'):
+            self.name = self.name.replace(r'\-', "", 1)
+            self.score = score ** 15
+        while True:
+            try:
+                index = re.search(double_letter, self.name).start()
+            except AttributeError:
+                break
+            self.name = re.sub(double_letter, r'\1', self.name, 1)
+            self.score += score ** index
 
 class Template:
-    def __init__(self, filename='template.html'):
-        try:
-            with open(filename) as f:
-                self.template = f.read()
-        except IOError:
-            win32api.MessageBox(0, 'There does not appear to be a template here at ' + os.getcwd(), 'Template Missing')
-
-
-class MainPage:
     def __init__(self, filename):
         with open(filename) as f:
-            self.main_page = f.read()
-
-
 class Dictionary(Site):
     def __init__(self):
         Site.__init__(self, "Dictionary", 2)
