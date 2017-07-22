@@ -611,7 +611,7 @@ class Page:
             if re.match(r'\d\]', line):
                 heading, rest = line.split('\n', 1)
                 line = self.change_to_heading(heading)
-                line += '<p>{0}</p>'.format('</p><p>'.join(rest.splitlines())) if rest else ''
+                line += '<p>{0}</p>\n'.format('</p>\n<p>'.join(rest.splitlines())) if rest else ''
             else: # tag is non-numeric, i.e.: represents something other than a heading
                 try:
                     category, text = line.split(']', 1)
@@ -659,7 +659,7 @@ class Page:
         if self.isLeaf:
             return ''
         elif self.level: # self neither root nor leaf
-            return "".join(['<p>{0}</p>'.format(self.hyperlink(child)) for child in self.children])
+            return "".join(['<p>{0}</p>\n'.format(self.hyperlink(child)) for child in self.children])
         else:  # self is root
             links = ''
             level = 0
@@ -736,7 +736,7 @@ class Page:
                     links += '<li class="normal">{0}</li>\n'.format(self.hyperlink(page))
                 else:
                     links += '<li>{0}</li>\n'.format(self.hyperlink(page))
-        links += (level + 1) * '</ul>\n' + '<p>Other Versions:</p><ul class="level-1">'
+        links += (level + 1) * '</ul>\n' + '<p>Other Versions:</p>\n<ul class="level-1">'
         categories = [node.name for node in self.elders()]
         cousins = self.cousins()
         for cousin, category in zip(cousins, categories):
@@ -928,7 +928,7 @@ def normal_text(text):
     """puts html paragraph tags around carriage-return delimited texts
     @param (string) text: the text to be modified
     @return (string) text: the modified string"""
-    return '<p>{0}</p>'.format('</p><p>'.join(text.splitlines())) if text else ''
+    return '<p>{0}</p>\n'.format('</p>\n<p>'.join(text.splitlines())) if text else ''
 
 
 class Analysis:
