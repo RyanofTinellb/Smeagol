@@ -50,8 +50,8 @@ class EditPage(Tk.Frame):
             self.headings.append(heading)
         self.headings[0].bind('<Return>', self.insert_chapter)
         self.headings[1].bind('<Return>', self.insert_heading)
-        self.headings[2].bind('<Return>', self.bring_entry)
-        self.load_button = Tk.Button(self, text='Load', width=10, command=self.bring_entry)
+        self.headings[2].bind('<Return>', self.load)
+        self.load_button = Tk.Button(self, text='Load', width=10, command=self.load)
         self.load_button.grid(row=0, column=2, sticky=Tk.NW)
         self.save_button = Tk.Button(self, textvariable=self.save_text, width=10, command=self.save)
         self.save_button.grid(row=1, column=2, sticky=Tk.NW)
@@ -187,7 +187,7 @@ class EditPage(Tk.Frame):
         if self.edit_text.edit_modified():
             self.save_text.set('*Save')
 
-    def bring_entry(self, event=None):
+    def load(self, event=None):
         # descend hierarchy in correct direction
         self.entry = self.site
         for heading in self.headings:
