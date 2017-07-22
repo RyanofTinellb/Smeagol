@@ -15,6 +15,7 @@ class Site:
         self.leaf_level = leaf_level
         self.current = None
         self.name = name
+        self.length = 0
         node = self.root = Page(name, leaf_level=self.leaf_level, markdown=self.markdown)
             source = source.read()
         source = re.split(split, source)
@@ -45,20 +46,15 @@ class Site:
         return ''.join([str(page) for page in self if str(page)])[1:]
 
     def __len__(self):
-        counter = 0
-        node = self.root
-        while True:
-            try:
-                node = node.next_node()
-                counter += 1
-            except IndexError:
-                return counter
+        """
+        :return: the number of pages in the Site
+        :rtype: int
+        :class: Site
+        """
+        return self.length
 
     def __iter__(self):
         return self
-
-    def __next__(self):
-        self.next()
 
     def next(self):
         if self.current is None:
@@ -99,6 +95,16 @@ class Site:
 
     def find_node(self, item):
         return self.find_node_iter(item, self.root)
+        length = len(self)
+        chunk = 3 if length > 1000 else 50
+        progress = 1
+        self.root.publish(self.main_template)
+        self.reset(); self.next()
+        for i, page in enumerate(self):
+            page.publish(self.template)
+            if i == int(progress * chunk * length / 100):
+                yield str(progress * chunk) + '% Done'
+                progress += 1
         self.update_json()
 
     def find_node_iter(self, item, node):
@@ -796,10 +802,10 @@ class Analysis:
 
 if __name__ == '__main__':
     oldtime = datetime.datetime.now()
-    for site in Grammar, Story, Dictionary:
+    for site in Story, Grammar, Dictionary:
         site = site()
         print(site.name + ': ')
-        site.publish()
+        for x in site.publish(): print(x)
         newtime = datetime.datetime.now()
-        print(newtime - oldtime)
+        print('100% Done: ' + str(newtime - oldtime))
         oldtime = newtime
