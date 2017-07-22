@@ -29,12 +29,6 @@ class EditPage(Tk.Frame):
         self.number_of_words = Tk.StringVar()
         self.edit_text = Tk.Text(self, height=24, width=114, font=('Corbel', '14'), wrap=Tk.WORD)
         self.word_count = Tk.Label(self, textvariable=self.number_of_words)
-        self.is_bold = Tk.IntVar()
-        self.is_italic = Tk.IntVar()
-        self.is_small_caps = Tk.IntVar()
-        self.bold_button = Tk.Checkbutton(self, text='B', variable=self.is_bold)
-        self.italic_button = Tk.Checkbutton(self, text='I', variable=self.is_italic)
-        self.small_cap_button = Tk.Checkbutton(self, text='K', variable=self.is_small_caps)
         self.grammar_button = Tk.Radiobutton(self, text='Grammar', variable=self.sitename, value='grammar',
                                              command=self.change_site)
         self.story_button = Tk.Radiobutton(self, text='Story', variable=self.sitename, value='story',
@@ -62,9 +56,6 @@ class EditPage(Tk.Frame):
         self.finish_button = Tk.Button(self, textvariable=self.finish_text, width=10, command=self.finish)
         self.finish_button.grid(row=1, column=2, sticky=Tk.NW)
         self.word_count.grid(row=2, column=6)
-        self.bold_button.grid(row=1, column=3, sticky=Tk.W)
-        self.italic_button.grid(row=1, column=4, sticky=Tk.W)
-        self.small_cap_button.grid(row=1, column=5, sticky=Tk.W)
         self.grammar_button.grid(row=2, column=2, sticky=Tk.W)
         self.story_button.grid(row=2, column=3, columnspan=2, sticky=Tk.W)
         self.grammar_button.select()
@@ -149,31 +140,28 @@ class EditPage(Tk.Frame):
         self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-5c')
         return 'break'
 
-    def small_caps(self, event=None):
-        if event:
-            self.is_small_caps.set(1 - self.is_small_caps.get())
-        if self.is_small_caps.get():
-            self.edit_text.insert(Tk.INSERT, '[k]')
-        else:
-            self.edit_text.insert(Tk.INSERT, '[/k]')
-        return 'break'
-
     def bold(self, event=None):
-        if event:
-            self.is_bold.set(1 - self.is_bold.get())
-        if self.is_bold.get():
-            self.edit_text.insert(Tk.INSERT, '[b]')
-        else:
-            self.edit_text.insert(Tk.INSERT, '[/b]')
+        """
+        Insert markdown for bold tags, and place insertion point between them.
+        """
+        self.edit_text.insert(Tk.INSERT, '[[]]')
+        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
         return 'break'
 
     def italic(self, event=None):
-        if event:
-            self.is_italic.set(1 - self.is_italic.get())
-        if self.is_italic.get():
-            self.edit_text.insert(Tk.INSERT, '[i]')
-        else:
-            self.edit_text.insert(Tk.INSERT, '[/i]')
+        """
+        Insert markdown for italic tags, and place insertion point between them.
+        """
+        self.edit_text.insert(Tk.INSERT, '(())')
+        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
+        return 'break'
+
+    def small_caps(self, event=None):
+        """
+        Insert markdown for small-cap tags, and place insertion point between them.
+        """
+        self.edit_text.insert(Tk.INSERT, '<<>>')
+        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
         return 'break'
 
     def insert_chapter(self, event):
