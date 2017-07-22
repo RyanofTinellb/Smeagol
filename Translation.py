@@ -104,9 +104,9 @@ class HighLulani:
 
 
 class RandomWords():
-    def __init__(self, number):
-        self.total = 0
+    def __init__(self, number, geminate):
         self.maximum = number
+        self.geminate = geminate
 
     def next(self):
         if self.total == self.maximum:
@@ -151,7 +151,7 @@ class RandomWords():
 
     def double(self, syllable, num):
         consonant, vowel = list(syllable)
-        if num and not randint(0, 10):
+        if num and not randint(0, self.geminate):
             return consonant + syllable if consonant != unichr(8217) else unichr(660) + vowel
         else:
             return syllable
