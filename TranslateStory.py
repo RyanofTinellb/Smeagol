@@ -136,7 +136,6 @@ class EditStory(Tk.Frame):
         for window, text in zip(self.windows, self.chapter.display()):
             window.delete('1.0', Tk.END)
             window.insert('1.0', text)
-            window.edit_modified(False)
         return 'break'
 
 
@@ -182,7 +181,7 @@ class Paragraph:
         self.paragraph = paragraphs     # Str[]
 
     def display(self):
-        markdown = Markdown(self.replacements).to_markdown
+        markdown = self.markdown.to_markdown
         displays = map(lambda x: markdown(self.paragraph[2 * x]), range(3))
         replacements = [['.(', '&middot;('],
                         ['(', chr(5)],
@@ -191,7 +190,7 @@ class Paragraph:
                         ['>', 2*chr(6)],
                         ['-', chr(7)]]
         for j, i in replacements[::-1]:
-            displays[1] = display[1].replace(i, j)     # Transliteration
+            displays[1] = displays[1].replace(i, j)     # Transliteration
         return displays
 
     def publish(self, texts):
