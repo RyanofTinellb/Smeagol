@@ -120,9 +120,9 @@ class EditStory(Tk.Frame):
         cousins = self.entry.cousins()
         for text, cousin in zip(content, cousins):
             cousin.content = text
-        page = re.sub(r'\n+', '\n', str(self.story))
+        page = re.sub(r'\n+', '\n', str(self.site))
         if page:
-            with open(self.filename, 'w') as data:
+            with open(self.datafile, 'w') as data:
                 data.write(page)
         self.entry.publish(self.site.template)
         return 'break'
@@ -182,7 +182,7 @@ class Paragraph:
 
     def display(self):
         markdown = self.markdown.to_markdown
-        displays = map(lambda x: markdown(self.paragraph[2 * x]), range(3))
+        displays = map(lambda x: markdown(self.paragraph[2 * x] + '\n'), range(3))
         replacements = [['.(', '&middot;('],
                         ['(', chr(5)],
                         ['<', 2*chr(5)],
