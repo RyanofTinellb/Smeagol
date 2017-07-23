@@ -13,7 +13,7 @@ class EditStory(Tk.Frame):
         self.entry = self.site.root[0][0][0]       # first great-grandchild
         self.chapter = Chapter(self.entry, self.markdown)
         self.windows = map(lambda x: Tk.Text(self), range(3))
-        self.publish_button = Tk.Button(self, text='Push', command=self.publish)
+        self.save_button = Tk.Button(self, text='Save', command=self.save)
         self.up_button = Tk.Button(self, text=unichr(8593), command=self.previous_chapter)
         self.down_button = Tk.Button(self, text=unichr(8595), command=self.next_chapter)
         self.left_button = Tk.Button(self, text=unichr(8592), command=self.previous_paragraph)
@@ -29,12 +29,12 @@ class EditStory(Tk.Frame):
         self.right_button.grid(row=0, column=1)
         self.up_button.grid(row=0, column=2)
         self.down_button.grid(row=0, column=3)
-        self.publish_button.grid(row=0, column=4, sticky=Tk.W)
+        self.save_button.grid(row=0, column=4, sticky=Tk.W)
         font = ('Californian FB', 16)
         for i, window in enumerate(self.windows):
             window.configure(height=9, width=108, wrap=Tk.WORD, font=font)
             window.bind('<Control-r>', self.literal)
-            window.bind('<Control-s>', self.publish)
+            window.bind('<Control-s>', self.save)
             window.bind('<Next>', self.next_paragraph)
             window.bind('<Prior>', self.previous_paragraph)
             window.bind('<Control-Next>', self.next_chapter)
@@ -85,8 +85,8 @@ class EditStory(Tk.Frame):
         event.widget.insert(Tk.INSERT, '|- -| {}')
         event.widget.mark_set(Tk.INSERT, Tk.INSERT + '-1c')
 
-    def publish(self, event=None):
-        content = self.chapter.publish(map(self.get_text, range(3)))
+    def save(self, event=None):
+        content = self.chapter.save(map(self.get_text, range(3)))
         cousins = self.entry.cousins()
         for text, cousin in zip(content, cousins):
             cousin.content = text
@@ -123,13 +123,13 @@ class Chapter:
     def display(self):
         return self.paragraphs[self.current_paragraph].display()
 
-    def publish(self, texts):
+    def save(self, texts):
         """
         Cause the current paragraph to update itself
         :param texts:
         :return (nothing):
         """
-        self.paragraphs[self.current_paragraph].publish(texts)
+        self.paragraphs[self.current_paragraph].save(texts)
         return map(lambda x: str('\n'.join(x)), zip(*map(lambda x: x.paragraph, self.paragraphs)))
 
     def next_paragraph(self):
@@ -166,7 +166,7 @@ class Paragraph:
             displays[1] = displays[1].replace(i, j)     # Transliteration
         return displays
 
-    def publish(self, texts):
+    def save(self, texts):
         """
         Update this paragraph
         :param texts:
