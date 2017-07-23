@@ -536,12 +536,13 @@ class Page:
         else:
             return self.folder() + (self.urlform if self.isLeaf else 'index')
 
-    def hyperlink(self, destination, template="{0}", needAnchorTags=True):
+    def hyperlink(self, destination, template="{0}", needAnchorTags=True, fragment=''):
         """
         Source and destination must be within the same website
         :param needAnchorTags (bool): Put anchor tags around the link?
-        :param template (str): The form of the hyperlink.
+        :param template (str): The form of the hyperlink
         :param destination (Page): the Page being linked to
+        :param fragment (str): allows for a # fragment. Must include the hash sign.
         :return (str):
         """
         # returns plain text (i.e.: not a hyperlink) if source and destination are the same
@@ -570,11 +571,11 @@ class Page:
                 up = self.level + change - (destination.level if isDirect else common)
                 down = destination.urlform if isDirect else \
                     "/".join([ancestor.urlform for ancestor in ancestors['destination'][common:]])
-            address = (up * '../') + down + extension
+            address = (up * '../') + down + extension + fragment
             link = '<a href="{0}">{1}</a>'.format(address, template.format(destination.name))
         except AttributeError:  # destination is a string
             up = self.level + change - 1
-            address = (up * '../') + destination
+            address = (up * '../') + destination + fragment
             link = '<a {0}>{1}</a>'.format(address, template.format(destination))
         return link if needAnchorTags else address
 

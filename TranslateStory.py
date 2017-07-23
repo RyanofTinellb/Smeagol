@@ -2,6 +2,8 @@ import Tkinter as Tk
 from Translation import *
 from Smeagol import *
 import os
+from random import choice
+from string import printable
 
 class EditStory(Tk.Frame):
     def __init__(self, directory, datafile, site, markdown, master=None):
@@ -119,7 +121,7 @@ class EditStory(Tk.Frame):
         return 'break'
 
     def save(self, event=None):
-        content = self.chapter.save(map(self.get_text, range(3)))
+        content = self.chapter.save(map(self.get_text, range(3)), self.entry)
         cousins = self.entry.cousins()
         for text, cousin in zip(content, cousins):
             cousin.content = text
@@ -149,8 +151,8 @@ class EditStory(Tk.Frame):
 class Chapter:
     def __init__(self, node, markdown):
         cousins = map(lambda x: x.content.splitlines(), node.cousins())     # Str[][]
-        count = max(map(len, cousins)) + 1
-        self.current_paragraph = min(map(len, cousins)) - 1
+        count = max(map(len, cousins)) + 1      # int
+        self.current_paragraph = min(map(len, cousins)) - 1     # int
         cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
         cousins = zip(*cousins)    # Str()[]
         self.paragraphs = map(lambda x: Paragraph(list(x), markdown), cousins)     # Paragraph[]
@@ -158,13 +160,13 @@ class Chapter:
     def display(self):
         return self.paragraphs[self.current_paragraph].display()
 
-    def save(self, texts):
+    def save(self, texts, entry):
         """
         Cause the current paragraph to update itself
         :param texts:
         :return (nothing):
         """
-        self.paragraphs[self.current_paragraph].save(texts)
+        self.paragraphs[self.current_paragraph].save(texts, entry)
         return map(lambda x: str('\n'.join(x)), zip(*map(lambda x: x.paragraph, self.paragraphs)))
 
     def next_paragraph(self):
@@ -189,8 +191,9 @@ class Paragraph:
 
     def display(self):
         markdown = self.markdown.to_markdown
+        displays = map(lambda x: self.remove_version_links(self.paragraph[2 * x]), range(3))
         # have to add and subtract final '\n' because of how markdown works
-        displays = map(lambda x: markdown(self.paragraph[2 * x] + '\n').replace('\n', ''), range(3))
+        displays = map(lambda x: markdown(x + '\n').replace('\n', ''), displays)
         replacements = [['.(', '&middot;('],
                         ['(', chr(5)],
                         ['<', 2*chr(5)],
@@ -201,7 +204,16 @@ class Paragraph:
             displays[1] = displays[1].replace(i, j)     # Transliteration
         return displays
 
-    def save(self, texts):
+    @staticmethod
+    def remove_version_links(text):
+        """
+        Remove the version link information from a paragraph.
+        :param text (str): the paragraph to be cleaned.
+        :return (str):
+        """
+        return re.sub(r'<span class="version-links".*?</span>', '', text)
+
+    def save(self, texts, entry):
         """
         Update this paragraph
         :param texts:
@@ -221,6 +233,27 @@ class Paragraph:
                         ['-', chr(7)]]
         for i, j in replacements:
             self.paragraph[2] = self.paragraph[2].replace(i, j)     # Transliteration
+        uuid = uid()
+        for index, paragraph in enumerate(self.paragraph):
+            self.paragraph[index] = self.add_version_links(paragraph, index, entry, uuid)
+
+    def add_version_links(self, paragraph, index, entry, uuid):
+        """
+        Adds version link information to a paragraph and its cousins
+        :param paragraph (Paragraph):
+        :param index (int):
+        :param entry (Page):
+        :return (nothing):
+        """
+        links = ''
+        anchor = '<span class="version-anchor" id="{0}"></span>'.format(uuid)
+        categories = [node.name for node in entry.elders()]
+        cousins = entry.cousins()
+        for i, (cousin, category) in enumerate(zip(cousins, categories)):
+            if index != i:
+                links += cousins[index].hyperlink(cousin, category, fragment='#'+uuid) + '&nbsp;'
+        links = '<span class="version-links">{0}</span>'.format(links)
+        return anchor + paragraph[:-1] + links
 
     def interlinear(self):
         italic = False
@@ -254,6 +287,14 @@ def inner_table(top, bottom, italic=False):
     else:
         output = '[t]{0} | [r]{1} | [/t]'.format(r'- | '.join(top), r'- | '.join(bottom))
     return output
+
+
+def uid(length=8):
+    """
+    Creates a unique alphanumeric identification number
+    :param length (int): length of the uid
+    """
+    return ''.join([choice(printable[:62]) for i in range(length)])
 
 
 if __name__ == '__main__':
