@@ -46,7 +46,8 @@ class EditStory(Tk.Frame):
             window.bind('<Prior>', self.previous_paragraph)
             window.bind('<Control-Next>', self.next_chapter)
             window.bind('<Control-Prior>', self.previous_chapter)
-            window.bind('<Control-BackSpace>', self.delete_word)
+            window.bind('<Control-BackSpace>', self.backspace_word)
+            window.bind('<Control-Delete>', self.delete_word)
             window.grid(row=i+1, column=4, columnspan=5)
 
     def next_window(self, event):
@@ -88,6 +89,18 @@ class EditStory(Tk.Frame):
 
     @staticmethod
     def delete_word(event=None):
+        if event.widget.get(Tk.INSERT + '-1c') in ' .,;:?!':
+            event.widget.delete(Tk.INSERT, Tk.INSERT + ' wordend +1c')
+        elif event.widget.get(Tk.INSERT) == ' ':
+            event.widget.delete(Tk.INSERT, Tk.INSERT + '+1c wordend')
+        elif event.widget.get(Tk.INSERT) in '.,;:?!':
+            event.widget.delete(Tk.INSERT, Tk.INSERT + '+1c')
+        else:
+            event.widget.delete(Tk.INSERT, Tk.INSERT + ' wordend')
+        return 'break'
+
+    @staticmethod
+    def backspace_word(event=None):
         if event.widget.get(Tk.INSERT + '-1c') in '.,;:?!':
             event.widget.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
         else:
