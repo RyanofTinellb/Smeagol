@@ -18,9 +18,6 @@ class EditStory(Tk.Frame):
         self.down_button = Tk.Button(self, text=unichr(8595), command=self.next_chapter)
         self.left_button = Tk.Button(self, text=unichr(8592), command=self.previous_paragraph)
         self.right_button = Tk.Button(self, text=unichr(8594), command=self.next_paragraph)
-        self.is_bold = False
-        self.is_italic = False
-        self.is_small_cap = False
         self.grid()
         self.create_window()
         self.top = self.winfo_toplevel()
@@ -36,9 +33,6 @@ class EditStory(Tk.Frame):
         font = ('Californian FB', 16)
         for i, window in enumerate(self.windows):
             window.configure(height=9, width=108, wrap=Tk.WORD, font=font)
-            window.bind('<Control-b>', self.bold)
-            window.bind('<Control-i>', self.italic)
-            window.bind('<Control-k>', self.small_cap)
             window.bind('<Control-r>', self.literal)
             window.bind('<Control-s>', self.publish)
             window.bind('<Next>', self.next_paragraph)
@@ -47,30 +41,6 @@ class EditStory(Tk.Frame):
             window.bind('<Control-Prior>', self.previous_chapter)
             window.bind('<Control-BackSpace>', self.delete_word)
             window.grid(row=i+1, column=4, columnspan=5)
-
-    def bold(self, event=None):
-        if self.is_bold:
-            event.widget.insert(Tk.INSERT, '[/b]')
-        else:
-            event.widget.insert(Tk.INSERT, '[b]')
-        self.is_bold = not self.is_bold
-        return 'break'
-
-    def italic(self, event=None):
-        if self.is_italic:
-            event.widget.insert(Tk.INSERT, '[/i]')
-        else:
-            event.widget.insert(Tk.INSERT, '[i]')
-        self.is_italic = not self.is_italic
-        return 'break'
-
-    def small_cap(self, event=None):
-        if self.is_small_cap:
-            event.widget.insert(Tk.INSERT, '[/k]')
-        else:
-            event.widget.insert(Tk.INSERT, '[k]')
-        self.is_small_cap = not self.is_small_cap
-        return 'break'
 
     def previous_chapter(self, event=None):
         if self.entry.level > 2:
