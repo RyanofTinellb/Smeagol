@@ -215,7 +215,7 @@ class Paragraph:
         :param text (str): the paragraph to be cleaned.
         :return (str):
         """
-        return re.sub(r'<span class="version-links".*?</span>', '', text)
+        return re.sub(r'<span class="version.*?</span>', '', text)
 
     def save(self, texts, entry):
         """
@@ -228,6 +228,8 @@ class Paragraph:
         self.paragraph[0:5:2] = texts
         self.paragraph[1] = translate(self.paragraph[2])    # Tinellbian
         self.paragraph[3] = self.interlinear()     # Interlinear
+        for i in range(3):
+            self.paragraph[i] = '&id={0}&vlinks='.format(self.paragraph[i])
         self.paragraph = map(markup, self.paragraph)
         replacements = [['.(', '&middot;('],
                         ['(', chr(5)],
@@ -237,6 +239,7 @@ class Paragraph:
                         ['-', chr(7)]]
         for i, j in replacements:
             self.paragraph[2] = self.paragraph[2].replace(i, j)     # Transliteration
+        self.paragraph[4] = '&id=' + self.paragraph[4].replace(' | [r]', '&vlinks= | [r]')
         uuid = uid()
         for index, paragraph in enumerate(self.paragraph):
             self.paragraph[index] = self.add_version_links(paragraph, index, entry, uuid)
@@ -257,14 +260,14 @@ class Paragraph:
             if index != i:
                 links += cousins[index].hyperlink(cousin, category, fragment='#'+uuid) + '&nbsp;'
         links = '<span class="version-links">{0}</span>'.format(links)
-        return anchor + paragraph[:-1] + links
+        return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
 
     def interlinear(self):
         italic = False
         if self.paragraph[0] == '* **':
-            return '* **'
+            return '&id=* **&vlinks='
         literal = self.paragraph[4][self.paragraph[4].find(' |- -| '):]
-        text = '[t]' + self.paragraph[0] + literal + ' | -| &flex;'
+        text = '[t]&id={0}&vlinks={1} | -| &flex;'.format(self.paragraph[0], literal)
         # remove middot, and replace angle brackets with parentheses
         self.paragraph[3] = self.paragraph[2].replace('.(', '(').replace('<', '(').replace('>', ')')
         for transliteration, gloss in morpheme_split(self.paragraph[3], self.paragraph[4]):
