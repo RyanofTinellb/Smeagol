@@ -18,6 +18,8 @@ class EditStory(Tk.Frame):
         self.down_button = Tk.Button(self, text=unichr(8595), command=self.next_chapter)
         self.left_button = Tk.Button(self, text=unichr(8592), command=self.previous_paragraph)
         self.right_button = Tk.Button(self, text=unichr(8594), command=self.next_paragraph)
+        self.information = Tk.StringVar()
+        self.infolabel = Tk.Label(self, textvariable=self.information)
         self.grid()
         self.create_window()
         self.top = self.winfo_toplevel()
@@ -30,9 +32,12 @@ class EditStory(Tk.Frame):
         self.up_button.grid(row=0, column=2)
         self.down_button.grid(row=0, column=3)
         self.save_button.grid(row=0, column=4, sticky=Tk.W)
+        self.infolabel.grid(row=0, column=5, sticky=Tk.W)
         font = ('Californian FB', 16)
         for i, window in enumerate(self.windows):
             window.configure(height=9, width=108, wrap=Tk.WORD, font=font)
+            window.bind('<KeyPress>', self.unloadinfo)
+            window.bind('<Control-m>', self.refresh_markdown)
             window.bind('<Control-r>', self.literal)
             window.bind('<Control-s>', self.save)
             window.bind('<Next>', self.next_paragraph)
@@ -41,6 +46,9 @@ class EditStory(Tk.Frame):
             window.bind('<Control-Prior>', self.previous_chapter)
             window.bind('<Control-BackSpace>', self.delete_word)
             window.grid(row=i+1, column=4, columnspan=5)
+
+    def unloadinfo(self, event=None):
+        self.information.set('')
 
     def previous_chapter(self, event=None):
         if self.entry.level > 2:
@@ -84,6 +92,12 @@ class EditStory(Tk.Frame):
     def literal(event=None):
         event.widget.insert(Tk.INSERT, '|- -| {}')
         event.widget.mark_set(Tk.INSERT, Tk.INSERT + '-1c')
+        return 'break'
+
+    def refresh_markdown(self, event=None):
+        self.markdown.refresh()
+        self.information.set('Markdown Refreshed!')
+        return 'break'
 
     def save(self, event=None):
         content = self.chapter.save(map(self.get_text, range(3)))
@@ -98,6 +112,7 @@ class EditStory(Tk.Frame):
         for cousin in cousins:
             cousin.publish(self.site.template)
         self.site.update_json()
+        self.information.set('Saved!')
         return 'break'
 
     def get_text(self, window):
