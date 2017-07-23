@@ -97,6 +97,7 @@ class EditStory(Tk.Frame):
         self.entry.publish(self.site.template)
         for cousin in cousins:
             cousin.publish(self.site.template)
+        self.site.update_json()
         return 'break'
 
     def get_text(self, window):
