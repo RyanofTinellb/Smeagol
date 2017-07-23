@@ -64,6 +64,7 @@ class EditStory(Tk.Frame):
             self.entry = self.entry.parent
             self.chapter = Chapter(self.entry, self.markdown)
             self.display()
+            self.information.set('')
         return 'break'
 
     def next_chapter(self, event=None):
@@ -75,6 +76,7 @@ class EditStory(Tk.Frame):
             else:
                 self.chapter = Chapter(self.entry, self.markdown)
             self.display()
+            self.information.set('')
         except ValueError:
             pass
         return 'break'
@@ -82,11 +84,13 @@ class EditStory(Tk.Frame):
     def previous_paragraph(self, event=None):
         self.chapter.previous_paragraph()
         self.display()
+        self.information.set('')
         return 'break'
 
     def next_paragraph(self, event=None):
         self.chapter.next_paragraph()
         self.display()
+        self.information.set('')
         return 'break'
 
     @staticmethod
