@@ -25,6 +25,7 @@ class EditStory(Tk.Frame):
         self.top = self.winfo_toplevel()
         self.top.state('zoomed')
         self.display()
+        self.windows[0].focus_set()
 
     def create_window(self):
         self.left_button.grid(row=0, column=0)
@@ -37,6 +38,7 @@ class EditStory(Tk.Frame):
         for i, window in enumerate(self.windows):
             window.configure(height=9, width=108, wrap=Tk.WORD, font=font)
             window.bind('<KeyPress>', self.unloadinfo)
+            window.bind('<Tab>', self.next_window)
             window.bind('<Control-m>', self.refresh_markdown)
             window.bind('<Control-r>', self.literal)
             window.bind('<Control-s>', self.save)
@@ -46,6 +48,10 @@ class EditStory(Tk.Frame):
             window.bind('<Control-Prior>', self.previous_chapter)
             window.bind('<Control-BackSpace>', self.delete_word)
             window.grid(row=i+1, column=4, columnspan=5)
+
+    def next_window(self, event):
+        self.windows[(self.windows.index(event.widget) + 1) % 3].focus_set()
+        return 'break'
 
     def unloadinfo(self, event=None):
         self.information.set('')
