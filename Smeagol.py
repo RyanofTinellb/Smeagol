@@ -815,7 +815,7 @@ class Page:
         wordlist = {}
         content = self.content[2:]
         """remove tags, and items between some tags"""
-        content = re.sub(r'\[\d\]|<(ipa|high-lulani)>.*?</\1>|<.*?>', ' ', content)
+        content = re.sub(r'\[\d\]|<(ipa|high-lulani|span)>.*?</\1>|<.*?>', ' ', content)
         """change punctuation to paragraph marks, so that splitlines works"""
         content = re.sub(r'[!?.]', '\n', content)
         """change punctuation to space"""
