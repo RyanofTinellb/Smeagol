@@ -1,9 +1,8 @@
 import Tkinter as Tk
 import os
-import threading
 from Smeagol import *
 from Translation import *
-
+from ReplaceLinks import ReplaceLinks
 
 class EditDictionary(Tk.Frame):
     def __init__(self, directory, datafile, site, markdown, randomwords, master=None):
@@ -27,6 +26,7 @@ class EditDictionary(Tk.Frame):
         self.markdown = markdown
         self.translator = Translator('hl')
         self.words = randomwords.words
+        self.replacelinks = ReplaceLinks(datafile)
         # initialise textboxes and buttons
         self.heading = None
         self.go_button = None
@@ -209,6 +209,7 @@ class EditDictionary(Tk.Frame):
             self.page = Page(entry, self.site[initial], '', self.site.leaf_level, None, self.site.markdown).insert()
             self.new_word()
         content = re.sub(r'<a href="(?!http).*?">(.*?)</a>', r'<\1>', self.page.content)
+        content = re.sub(r'<a href="http.*?">(.*?)</a>', r'\1', content)
         content = self.markdown.to_markdown(content)
         self.edit_text.delete(1.0, Tk.END)
         self.edit_text.insert(1.0, content)
@@ -224,25 +225,26 @@ class EditDictionary(Tk.Frame):
         # use str() method to suppress unicode string
         self.page.content = str(self.edit_text.get(1.0, Tk.END))
         empty = self.page.content == '\n'
-        self.page.content = self.markdown.to_markup(self.page.content)
-        # Write links out in full form
-        links = set(re.sub(r'.*?<(.*?)>.*?', r'\1>', self.page.content.replace('\n', '')).split(r'>')[:-1])
-        for link in links:
-            try:
-                self.page.content = self.page.content.replace('<' + link + '>', self.page.hyperlink(self.site[link]))
-            except KeyError:
-                pass
-        # remove duplicate linebreaks
-        self.page.content = re.sub(r'\n\n+', '\n', self.page.content)
-        # update datestamp and publish parent.
-        parent = self.page.parent
-        parent.content = self.markdown.to_markup(self.markdown.to_markdown(parent.content))
-        parent.publish(self.site.template)
         # delete and remove page if edit area is empty
         if empty:
             self.page.delete()
             self.page.remove()
         else:
+            self.page.content = self.replacelinks.replace(self.page.content)
+            self.page.content = self.markdown.to_markup(self.page.content)
+            # Write links out in full form
+            links = set(re.sub(r'.*?<(.*?)>.*?', r'\1>', self.page.content.replace('\n', '')).split(r'>')[:-1])
+            for link in links:
+                try:
+                    self.page.content = self.page.content.replace('<' + link + '>', self.page.hyperlink(self.site[link]))
+                except KeyError:
+                    pass
+            # remove duplicate linebreaks
+            self.page.content = re.sub(r'\n\n+', '\n', self.page.content)
+            # update datestamp and publish parent.
+            parent = self.page.parent
+            parent.content = self.markdown.to_markup(self.markdown.to_markdown(parent.content))
+            parent.publish(self.site.template)
             self.page.publish(self.site.template)
         page = str(self.site)
         if page:
