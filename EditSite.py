@@ -162,24 +162,39 @@ class EditPage(Tk.Frame):
         """
         Insert markdown for bold tags, and place insertion point between them.
         """
-        self.edit_text.insert(Tk.INSERT, '[[]]')
-        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
+        try:
+            text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
+            self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
+            self.edit_text.insert(Tk.INSERT, '[[' + text + ']]')
+        except Tk.TclError:
+            self.edit_text.insert(Tk.INSERT, '[[]]')
+            self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
         return 'break'
 
     def italic(self, event=None):
         """
         Insert markdown for italic tags, and place insertion point between them.
         """
-        self.edit_text.insert(Tk.INSERT, '(())')
-        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
+        try:
+            text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
+            self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
+            self.edit_text.insert(Tk.INSERT, '((' + text + '))')
+        except Tk.TclError:
+            self.edit_text.insert(Tk.INSERT, '(())')
+            self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
         return 'break'
 
     def small_caps(self, event=None):
         """
         Insert markdown for small-cap tags, and place insertion point between them.
         """
-        self.edit_text.insert(Tk.INSERT, '<<>>')
-        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
+        try:
+            text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
+            self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
+            self.edit_text.insert(Tk.INSERT, '<<' + text + '>>')
+        except Tk.TclError:
+            self.edit_text.insert(Tk.INSERT, '<<>>')
+            self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
         return 'break'
 
     def insert_chapter(self, event):
@@ -205,8 +220,10 @@ class EditPage(Tk.Frame):
     def backspace_word(self, event=None):
         if self.edit_text.get(Tk.INSERT + '-1c') in '.,;:?!':
             self.edit_text.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
+        elif self.edit_text.get(Tk.INSERT + '-1c') in ' ':
+            self.edit_text.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
         else:
-            self.edit_text.delete(Tk.INSERT + '-1c wordstart -1c', Tk.INSERT)
+            self.edit_text.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
         self.update_wordcount()
         return 'break'
 
