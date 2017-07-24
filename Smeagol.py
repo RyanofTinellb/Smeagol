@@ -29,6 +29,7 @@ class Site:
         self.choose_dir(destination)
         # initialize attributes and utility classes
         self.name = name
+        self.source = source
         self.template = Template(template)
         self.main_template = Template(main_template)
         self.markdown = Translation.Markdown(markdown)
@@ -45,6 +46,29 @@ class Site:
         source = split.split(source)
 
         # create page on appropriate level of hierarchy, with name taken from the source file
+        # ignore first (empty) page
+        for page in source[1:]:
+            previous = node
+            level, name = re.split('[]\n]', page, 2)[:2]
+            level = int(level)
+            while level != node.level + 1:
+                # climb back up the hierarchy to the appropriate level
+                node = node.parent
+            node = self.add_node(name, node, page, previous)
+            self.length += 1
+
+    def refresh(self):
+        self.current = None
+        self.length = 0
+        node = self.root = Page(name, leaf_level=self.leaf_level, markdown=self.markdown)
+
+        # break source text into pages, with the splits on square brackets before numbers <= leaf_level
+        with open(self.source) as source:
+            source = source.read()
+        split = re.compile(r'\[(?=[{0}])'.format(''.join(map(lambda x: str(x + 1), range(self.leaf_level)))))
+        source = split.split(source)
+
+        # create page on appropriate level of hierarchy, with name taken from the self.source file
         # ignore first (empty) page
         for page in source[1:]:
             previous = node

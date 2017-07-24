@@ -67,6 +67,7 @@ class EditPage(Tk.Frame):
         self.edit_text.bind('<Control-i>', self.italic)
         self.edit_text.bind('<Control-k>', self.small_caps)
         self.edit_text.bind('<Control-m>', self.refresh_markdown)
+        self.edit_text.bind('<Control-o>', self.refresh_site)
         self.edit_text.bind('<Control-r>', self.load)
         self.edit_text.bind('<Control-s>', self.save)
         self.edit_text.bind('<Control-t>', self.table)
@@ -80,6 +81,11 @@ class EditPage(Tk.Frame):
             return variable[self.sitename.get()]
         except (TypeError, AttributeError, ValueError):
             return variable
+
+    def refresh_site(self, event=None):
+        self.site.refresh()
+        self.load()
+        self.number_of_words.set('Site Refreshed!')
 
     def refresh_markdown(self, event=None):
         """
@@ -255,6 +261,7 @@ class EditPage(Tk.Frame):
             with open(self.datafile, 'w') as data:
                 data.write(str(self.site))
         self.site.update_json()
+        self.edit_text.edit_modified(False)
         return 'break'
 
 app = EditPage(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',
