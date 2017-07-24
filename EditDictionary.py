@@ -199,7 +199,6 @@ class EditDictionary(Tk.Frame):
         If such an entry is not found, create one, and insert it into its correct parent folder.
         Replace internal links with the name of the linked entry, surrounded by <>.
         """
-        self.markdown = Markdown(self.markdownpath)
         # use str() to suppress unicode string
         self.entry = str(self.heading.get(1.0, Tk.END + '-1c'))
         entry = self.markdown.to_markup(self.entry, datestamp=False)
