@@ -23,8 +23,14 @@ class ReplaceLinks():
         with open(filename, 'w') as text:
             text.write(page)
 
-
-ReplaceLinks('c:/users/ryan/documents/tinellbianlanguages/dictionary/data.txt',
-             'High Lulani',
-             'noun',
-             'http://grammar.tinellb.com/highlulani/morphology/nouns.html')
+if __name__ == '__main__':
+    data = 'c:/users/ryan/documents/tinellbianlanguages/dictionary/data.txt'
+    for language in ['High Lulani']:
+        for word, link in [
+                ('noun', 'http://grammar.tinellb.com/highlulani/morphology/nouns.html'),
+                ('verb', 'http://grammar.tinellb.com/highlulani/morphology/verbs.html'),
+                ('adverb', 'http://grammar.tinellb.com/highlulani/morphology/adverbs.html'),
+                ('adposition', 'http://grammar.tinellb.com/highlulani/morphology/adpositions.html'),
+                ('element', 'http://grammar.tinellb.com/highlulani/apocrypha/elements.html')
+                ]:
+            ReplaceLinks(data, language, word, link)
