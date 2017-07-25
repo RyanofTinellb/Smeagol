@@ -22,7 +22,7 @@ class Site:
 
         :attribute template (Template): the template for ordinary pages
         :attribute main_template (Template): the template for the top-level page
-        :attribute markdown (Markdown): the conversion between markup and markdown
+        :attribute markdown (Markdown): the conversion between markup and markdown for Page names.
         :attribute current (Page):
         :attribute root (Page): the root of the hierarchy
         """
@@ -249,7 +249,7 @@ class Page:
         :param content (str): text that will ultimately appear on the Page's webpage
         :param leaf_level (int): the level number of the outermost branches of the hierarchy
         :param previous (Page):
-        :param markdown (Markdown): the Markdown to be used when constructing the text of the webpage
+        :param markdown (Markdown): the Markdown to be used when creating the url of the Page
 
         :attribute children (list): the Pages beneath self
         :attribute isLeaf (bool): is the Page at the lowest level of the hierarchy?
@@ -278,6 +278,8 @@ class Page:
         # remove safe punctuations that should only be used to encode non-ascii characters
         name = re.sub(r'[\'.$_+!()]', '', name)
         name = self.markdown.to_markdown(name)
+        # remove extraneous initial apostrophes
+        name = re.sub(r"^''+", "'", name)
         # remove text within tags
         name = re.sub(r'<(div|ipa).*?\1>', '', name)
         # remove tags, spaces and punctuation
@@ -611,8 +613,11 @@ class Page:
         """
         level, name = text.split(']')
         level = int(level) - self.level + 1
-        url_id = Page(name, markdown=self.markdown).urlform
-        return '<h{0} id="{1}">{2}</h{0}>\n'.format(str(level), url_id, name)
+        url_id = Page(re.sub(r'\(.*?\)', '', name), markdown=self.markdown).urlform
+        if url_id:
+            return '<h{0} id="{1}">{2}</h{0}>\n'.format(str(level), url_id, name)
+        else:
+            return '<h{0}>{1}</h{0}>\n'.format(str(level), name)
 
     def title(self):
         """

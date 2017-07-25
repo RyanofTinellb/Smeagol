@@ -2,7 +2,7 @@ import Tkinter as Tk
 import os
 from Smeagol import *
 from Translation import *
-from ReplaceLinks import ReplaceLinks
+from ReplaceLinks import *
 
 class EditDictionary(Tk.Frame):
     def __init__(self, directory, datafile, site, markdown, randomwords, master=None):
@@ -26,7 +26,7 @@ class EditDictionary(Tk.Frame):
         self.markdown = markdown
         self.translator = Translator('hl')
         self.words = randomwords.words
-        self.replacelinks = ReplaceLinks(datafile)
+        self.replacelinks = d2gReplace(datafile)
         # initialise textboxes and buttons
         self.heading = None
         self.go_button = None
