@@ -27,7 +27,7 @@ class EditPage(Tk.Frame):
         self.save_text = Tk.StringVar()
         self.save_text.set('Save')
         self.number_of_words = Tk.StringVar()
-        self.edit_text = Tk.Text(self, height=24, width=114, font=('Corbel', '14'), wrap=Tk.WORD, undo=True)
+        self.edit_text = Tk.Text(self, height=30, width=115, font=('Corbel', '14'), wrap=Tk.WORD, undo=True)
         self.word_count = Tk.Label(self, textvariable=self.number_of_words)
         self.grammar_button = Tk.Radiobutton(self, text='Grammar', variable=self.sitename, value='grammar',
                                              command=self.change_site)
@@ -40,8 +40,7 @@ class EditPage(Tk.Frame):
 
     def create_widgets(self):
         for i in range(3):
-            heading = Tk.Entry(self, width=20)
-            heading.grid(sticky=Tk.NE, row=i, column=1)
+            heading = Tk.Entry(self)
 
             def handler(event, self=self, i=i):
                 return self.scroll_headings(event, i)
@@ -51,13 +50,8 @@ class EditPage(Tk.Frame):
         self.headings[0].bind('<Return>', self.insert_chapter)
         self.headings[1].bind('<Return>', self.insert_heading)
         self.headings[2].bind('<Return>', self.load)
-        self.load_button = Tk.Button(self, text='Load', width=10, command=self.load)
-        self.load_button.grid(row=0, column=2, sticky=Tk.NW)
-        self.save_button = Tk.Button(self, textvariable=self.save_text, width=10, command=self.save)
-        self.save_button.grid(row=1, column=2, sticky=Tk.NW)
-        self.word_count.grid(row=2, column=6)
-        self.grammar_button.grid(row=2, column=2, sticky=Tk.W)
-        self.story_button.grid(row=2, column=3, sticky=Tk.W)
+        self.load_button = Tk.Button(self, text='Load', command=self.load)
+        self.save_button = Tk.Button(self, textvariable=self.save_text, command=self.save)
         self.grammar_button.select()
         self.edit_text.bind('<KeyPress>', self.edit_text_changed)
         self.edit_text.bind('<Control-BackSpace>', self.backspace_word)
@@ -72,8 +66,15 @@ class EditPage(Tk.Frame):
         self.edit_text.bind('<Control-s>', self.save)
         self.edit_text.bind('<Control-t>', self.table)
         self.edit_text.bind('<KeyPress-|>', self.insert_pipe)
-        self.edit_text.grid(column=2, columnspan=150)
         self.number_of_words.set('')
+        for i, heading in enumerate(self.headings):
+            heading.grid(row=i, column=0, columnspan=2)
+        self.load_button.grid(row=3, column=0)
+        self.save_button.grid(row=3, column=1)
+        self.word_count.grid(row=4, column=0, columnspan=2)
+        self.grammar_button.grid(row=5, column=0, columnspan=2)
+        self.story_button.grid(row=6, column=0, columnspan=2)
+        self.edit_text.grid(row=0, column=2, rowspan=150)
         self.headings[0].focus_set()
 
     def decide(self, variable):

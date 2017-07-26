@@ -45,18 +45,15 @@ class EditDictionary(Tk.Frame):
         self.heading.focus_set()
 
     def create_widgets(self):
-        self.heading = Tk.Text(self, height=1, width=20, wrap=Tk.NONE)
-        self.heading.grid(sticky=Tk.NE)
+        self.heading = Tk.Entry(self)
         self.heading.bind('<Control-m>', self.refresh_markdown)
         self.heading.bind('<Control-r>', self.refresh_random)
         self.heading.bind('<Alt-d>', self.go_to_heading)
         self.heading.bind('<Return>', self.load)
-        self.go_button = Tk.Button(self, text='GO!', command=self.load)
-        self.go_button.grid(row=1, column=1, sticky=Tk.NW)
+        self.go_button = Tk.Button(self, text='Load', command=self.load)
         self.save_button = Tk.Button(self, textvariable=self.save_text, command=self.save)
         self.random_words = Tk.Label(self, textvariable=self.random_word)
-        self.random_words.grid(row=1, column=0)
-        self.edit_text = Tk.Text(self, height=27, width=88, font=('Courier New', '15'), undo=True)
+        self.edit_text = Tk.Text(self, font=('Courier New', '15'), undo=True, height=31, width=95)
         self.edit_text.bind('<KeyPress>', self.edit_text_changed)
         self.edit_text.bind('<Control-a>', self.select_all)
         self.edit_text.bind('<Control-b>', self.bold)
@@ -70,9 +67,17 @@ class EditDictionary(Tk.Frame):
         self.edit_text.bind('<Control-=>', self.add_definition)
         self.edit_text.bind('<Control-BackSpace>', self.delete_word)
         self.edit_text.bind('<Alt-d>', self.go_to_heading)
-        self.edit_text.grid(row=1, rowspan=200, column=1)
-        self.high_lulani.grid(row=2, column=0)
-        self.english.grid(row=3, column=0)
+        self.heading.grid(row=0, column=0, columnspan=2, sticky=Tk.N)
+        self.go_button.grid(row=1, column=0)
+        self.save_button.grid(row=1, column=1)
+        self.random_words.grid(row=2, column=0, columnspan=2)
+        self.high_lulani.grid(row=3, column=0, columnspan=2)
+        self.english.grid(row=4, column=0, columnspan=2)
+        self.edit_text.grid(row=0, rowspan=260, column=2)
+
+    def edit_text_changed(self, event=None):
+        if self.edit_text.edit_modified():
+            self.save_text.set('*Save')
 
     def refresh_markdown(self, event=None):
         """
@@ -197,7 +202,7 @@ class EditDictionary(Tk.Frame):
         Replace internal links with the name of the linked entry, surrounded by <>.
         """
         # use str() to suppress unicode string
-        self.entry = str(self.heading.get(1.0, Tk.END + '-1c'))
+        self.entry = str(self.heading.get())
         entry = self.markdown.to_markup(self.entry, datestamp=False)
         try:
             self.page = self.site[entry]
