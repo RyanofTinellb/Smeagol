@@ -425,7 +425,7 @@ class Page:
 
     def ancestors(self):
         """
-        Self and the direct ancestors of self
+        Self and the direct ancestors of self, in order down from the root.
         :return (Page[]):
         """
         node = self
@@ -621,11 +621,23 @@ class Page:
 
     def title(self):
         """
-        :return (str): the ancestry of self, suitable for HTML titles
+        :return (str): its own name, suitable for HTML titles
         """
         # remove tags from names
-        ancestry = map(lambda x: re.sub(r'[[<].*?[]>]', '', x.name), self.ancestors())
-        return ' &lt; '.join(ancestry[::-1])
+        return re.sub(r'[[<].*?[]>]', '', self.name)
+
+    def category_title(self):
+        """
+        :return (str): A title of the form 'High Lulani Verbs'
+        """
+        if self.level < 2:
+            return self.title()
+        else:
+            matriarch = self.ancestors()[1]
+            if matriarch.name in ('Introduction', 'Appendices'):
+                return self.title()
+            else:
+                return matriarch.title() + ' ' + self.title()
 
     def contents(self):
         """
@@ -823,7 +835,8 @@ class Page:
             ('{cousin-links}', self.cousin_links),
             ('{elder-links}', self.elder_links),
             ('{nav-footer}', self.nav_footer),
-            ('{copyright}', self.copyright)
+            ('{copyright}', self.copyright),
+            ('{category-title}', self.category_title)
         ]:
             if page.count(section):
                 page = page.replace(section, function())
