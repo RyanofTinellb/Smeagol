@@ -291,12 +291,13 @@ class EditPage(Tk.Frame):
         :precondition: text is a grammar page with text in Smeagol markup.
         """
         links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', self.entry.content.replace('\n', '')).split(r'@')[:-1])
+        matriarch = self.entry.ancestors()[1].urlform
         for link in links:
             url = Page(link, markdown=self.site.markdown).urlform
             initial = re.sub(r'.*?(\w).*', r'\1', url)
             try:
                 self.entry.content = self.entry.content.replace('<link>' + link + '</link>',
-                '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html">' + link + '</a>')
+                '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html' + matriarch + '">' + link + '</a>')
             except KeyError:
                 pass
 
