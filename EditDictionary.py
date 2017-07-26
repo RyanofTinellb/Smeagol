@@ -2,10 +2,9 @@ import Tkinter as Tk
 import os
 from Smeagol import *
 from Translation import *
-from ReplaceLinks import *
 
 class EditDictionary(Tk.Frame):
-    def __init__(self, directory, datafile, site, markdown, randomwords, master=None):
+    def __init__(self, directory, datafile, site, markdown, replacelinks, randomwords, master=None):
         """
         :param directory (String): the path and filename of the top-level directory
         :param datafile (String): the path, filename and extension of the data file, relative to directory
@@ -26,17 +25,15 @@ class EditDictionary(Tk.Frame):
         self.markdown = markdown
         self.translator = Translator('hl')
         self.words = randomwords.words
-        self.replacelinks = d2gReplace(datafile)
+        self.replacelinks = replacelinks
         # initialise textboxes and buttons
         self.heading = None
         self.go_button = None
         self.publish_button = None
         self.edit_text = None
         self.random_words = None
-        self.high_lulani = Tk.Radiobutton(self, text='High Lulani', value='hl', variable=self.language,
-                                          command=self.change_language)
-        self.english = Tk.Radiobutton(self, text='English', value='en', variable=self.language,
-                                      command=self.change_language, anchor=Tk.N)
+        self.high_lulani = Tk.Radiobutton(self, text='High Lulani', value='hl', variable=self.language, command=self.change_language)
+        self.english = Tk.Radiobutton(self, text='English', value='en', variable=self.language, command=self.change_language, anchor=Tk.N)
         self.high_lulani.select()
         # open window
         self.grid()
@@ -255,9 +252,12 @@ class EditDictionary(Tk.Frame):
 
 if __name__ == '__main__':
     app = EditDictionary(directory='c:/users/ryan/documents/tinellbianlanguages/dictionary',
-                        datafile='data.txt',
-                        site=Dictionary(),
-                        markdown=Markdown('c:/users/ryan/documents/tinellbianlanguages/dictionaryreplacements.html'),
-                        randomwords=RandomWords(20,3))
+    datafile='data.txt',
+    site=Dictionary(),
+    markdown=Markdown(
+    'c:/users/ryan/documents/tinellbianlanguages/dictionaryreplacements.html'),
+    replacelinks=d2gReplace(
+    'c:/users/ryan/documents/tinellbianlanguages/dictionarylinkreplacements.txt'),
+    randomwords=RandomWords(20,3))
     app.master.title('Edit the Dictionary')
     app.mainloop()

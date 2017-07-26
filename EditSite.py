@@ -246,7 +246,9 @@ class EditPage(Tk.Frame):
                 pass
         self.edit_text.delete(1.0, Tk.END)
         if self.entry is not self.site:
-            entry = self.markdown.to_markdown(self.entry.content)
+            entry = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>',
+                                        r'<link>\1</link>', self.entry.content)
+            entry = self.markdown.to_markdown(entry)
             self.edit_text.insert(1.0, entry)
             self.edit_text.focus_set()
             self.edit_text.edit_modified(False)
@@ -272,6 +274,7 @@ class EditPage(Tk.Frame):
             self.entry.delete()
             self.entry.remove()
         else:
+            self.replace_links()
             self.entry.publish(self.site.template)
         entry = str(self.site)
         if entry:
@@ -280,6 +283,21 @@ class EditPage(Tk.Frame):
         self.site.update_json()
         self.edit_text.edit_modified(False)
         return 'break'
+
+    def replace_links(self):
+        """
+        Replaces appropriate words in text with links to dictionary.tinellb.com.
+        :precondition: text is a grammar page with text in Smeagol markup.
+        """
+        links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', self.entry.content.replace('\n', '')).split(r'@')[:-1])
+        for link in links:
+            url = Page(link, markdown=self.site.markdown).urlform
+            initial = re.sub(r'.*?(\w).*', r'\1', url)
+            try:
+                self.entry.content = self.entry.content.replace('<link>' + link + '</link>',
+                '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html">' + link + '</a>')
+            except KeyError:
+                pass
 
 app = EditPage(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',
                             'story': 'c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet'},

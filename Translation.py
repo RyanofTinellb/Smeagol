@@ -194,3 +194,38 @@ class Markdown:
                 line = line.split(" ")
                 self.markup.append(line[0])
                 self.markdown.append(line[1])
+
+class d2gReplace():
+    """
+    Replace given words in parts of speech with URLs.
+    :param filename (str): filename to get replacements from.
+    """
+    def __init__(self, filename):
+        self.languages, self.words, self.urls = [], [], []
+        with open(filename) as replacements:
+            replacements = replacements.read()
+        for line in replacements.splitlines():
+            if line.startswith('#'):
+                language = line[1:]
+            else:
+                word, url = line.split()
+                self.languages.append(language)
+                self.words.append(word)
+                self.urls.append('http://grammar.tinellb.com/' + url)
+
+    def replace(self, text):
+        """
+        Replaces appropriate words with links in text.
+        :precondition: text is a dictionary entry in Dictionary markdown.
+        """
+        for language, word, url in zip(self.languages, self.words, self.urls):
+            page = ''
+            url = r'<a href=\"{0}\">{1}</a>'.format(url, word)
+            for line in text.splitlines():
+                if line.startswith('[3]'):
+                    current_language = line[len('[3]'):]
+                elif word in line and url not in line and current_language == language:
+                    line = re.sub(r'(\[6\].*?)\b' + word + r'\b(.*?{{)', r'\1' + url + r'\2', line)
+                page += line + '\n'
+            text = page
+        return text
