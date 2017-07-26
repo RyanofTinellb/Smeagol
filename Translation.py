@@ -13,6 +13,7 @@ class Translator:
         else:
             raise NameError('No such language ' + language)
         self.name = self.converter.name
+        self.code = language
 
     def convert_text(self, text):
         return self.converter.convert_text(text)

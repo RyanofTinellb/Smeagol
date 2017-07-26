@@ -118,11 +118,10 @@ class EditDictionary(Tk.Frame):
         :precondition: The name of the entry, and its language, are already selected.
         """
         trans = self.translator
-        (location, script) = ('4.7', '[4]{0}\n'.format(trans.convert_word(self.entry))) if self.language.get() != 'en' else ('3.7', '')
+        (location, script) = ('4.10', '[4]{0}\n[5][p {1}]//[/p]\n'.format(trans.convert_word(self.entry), trans.code)) if self.language.get() != 'en' else ('3.4', '[5]//\n')
         template = ('2]{0}\n'
                     '[3]{1}\n'
                     '{2}'
-                    '[5][p]//[/p]\n'
                     '[6]\n').format(self.entry, trans.name, script)
         self.edit_text.insert(1.0, template)
         self.edit_text.mark_set(Tk.INSERT, location)
