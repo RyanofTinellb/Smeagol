@@ -51,8 +51,8 @@ class EditDictionary(Tk.Frame):
         self.heading.bind('<Control-m>', self.refresh_markdown)
         self.heading.bind('<Control-r>', self.refresh_random)
         self.heading.bind('<Alt-d>', self.go_to_heading)
-        self.heading.bind('<Return>', self.bring_entry)
-        self.go_button = Tk.Button(self, text='GO!', command=self.bring_entry)
+        self.heading.bind('<Return>', self.load)
+        self.go_button = Tk.Button(self, text='GO!', command=self.load)
         self.go_button.grid(row=1, column=1, sticky=Tk.NW)
         self.publish_button = Tk.Button(text='Publish', command=self.save)
         self.publish_button.grid(row=1, column=2, sticky=Tk.NW)
@@ -193,7 +193,7 @@ class EditDictionary(Tk.Frame):
         return 'break'
 
 
-    def bring_entry(self, event=None):
+    def load(self, event=None):
         """
         Find the dictionary entry with the same name as the text in the heading box, and place its markedown text within the edit area.
         If such an entry is not found, create one, and insert it into its correct parent folder.
