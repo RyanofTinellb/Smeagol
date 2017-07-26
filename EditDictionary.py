@@ -29,7 +29,9 @@ class EditDictionary(Tk.Frame):
         # initialise textboxes and buttons
         self.heading = None
         self.go_button = None
-        self.publish_button = None
+        self.save_button = None
+        self.save_text = Tk.StringVar()
+        self.save_text.set('Save')
         self.edit_text = None
         self.random_words = None
         self.high_lulani = Tk.Radiobutton(self, text='High Lulani', value='hl', variable=self.language, command=self.change_language)
@@ -51,11 +53,11 @@ class EditDictionary(Tk.Frame):
         self.heading.bind('<Return>', self.load)
         self.go_button = Tk.Button(self, text='GO!', command=self.load)
         self.go_button.grid(row=1, column=1, sticky=Tk.NW)
-        self.publish_button = Tk.Button(text='Publish', command=self.save)
-        self.publish_button.grid(row=1, column=2, sticky=Tk.NW)
+        self.save_button = Tk.Button(self, textvariable=self.save_text, command=self.save)
         self.random_words = Tk.Label(self, textvariable=self.random_word)
         self.random_words.grid(row=1, column=0)
         self.edit_text = Tk.Text(self, height=27, width=88, font=('Courier New', '15'), undo=True)
+        self.edit_text.bind('<KeyPress>', self.edit_text_changed)
         self.edit_text.bind('<Control-a>', self.select_all)
         self.edit_text.bind('<Control-b>', self.bold)
         self.edit_text.bind('<Control-i>', self.italic)
@@ -188,7 +190,6 @@ class EditDictionary(Tk.Frame):
         self.edit_text.mark_set(Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + 1)))
         return 'break'
 
-
     def load(self, event=None):
         """
         Find the dictionary entry with the same name as the text in the heading box, and place its markedown text within the edit area.
@@ -247,6 +248,8 @@ class EditDictionary(Tk.Frame):
             with open(self.datafile, 'w') as data:
                 data.write(page)
         self.site.update_json()
+        self.save_text.set('Save')
+        self.edit_text.edit_modified(False)
         return 'break'
 
 if __name__ == '__main__':
