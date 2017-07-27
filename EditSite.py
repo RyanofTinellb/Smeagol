@@ -222,7 +222,7 @@ class EditPage(Tk.Frame):
         if self.edit_text.get(Tk.INSERT + '-1c') in '.,;:?!':
             self.edit_text.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
         elif self.edit_text.get(Tk.INSERT + '-1c') in ' ':
-            self.edit_text.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
+            self.edit_text.delete(Tk.INSERT + '-2c wordstart', Tk.INSERT)
         else:
             self.edit_text.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
         self.update_wordcount()
