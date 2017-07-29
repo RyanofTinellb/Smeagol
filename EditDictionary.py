@@ -55,6 +55,7 @@ class EditDictionary(Tk.Frame):
         self.random_words = Tk.Label(self, textvariable=self.random_word)
         self.edit_text = Tk.Text(self, font=('Courier New', '15'), undo=True, height=31, width=95)
         self.edit_text.bind('<KeyPress>', self.edit_text_changed)
+        self.edit_text.bind('<KeyPress-|>', self.insert_pipe)
         self.edit_text.bind('<Control-a>', self.select_all)
         self.edit_text.bind('<Control-b>', self.bold)
         self.edit_text.bind('<Control-i>', self.italic)
@@ -74,6 +75,10 @@ class EditDictionary(Tk.Frame):
         self.high_lulani.grid(row=3, column=0, columnspan=2)
         self.english.grid(row=4, column=0, columnspan=2)
         self.edit_text.grid(row=0, rowspan=260, column=2)
+
+    def insert_pipe(self, event=None):
+        self.edit_text.insert(Tk.INSERT, ' | ')
+        return 'break'
 
     def edit_text_changed(self, event=None):
         if self.edit_text.edit_modified():
@@ -116,7 +121,7 @@ class EditDictionary(Tk.Frame):
         Move focus to the heading textbox, and select all the text therein
         """
         self.heading.focus_set()
-        self.heading.tag_add('sel', '1.0', 'end-1c')
+        self.heading.select_range(0, 'end')
         return 'break'
 
     def new_word(self, event=None):
@@ -149,28 +154,49 @@ class EditDictionary(Tk.Frame):
         self.random_word.set('\n'.join(self.words()))
         return 'break'
 
+    def find_formatting(self, keyword):
+        """
+        Find markdown for specific formatting.
+        :param keyword (str): the formatting type, in html, e.g.: strong, em, &c.
+        :return (tuple): the opening and closing tags, in markdown, e.g.: ([[, ]]), (<<, >>)
+        """
+        start = self.markdown.markdown[self.markdown.markup.index('<' + keyword + '>')]
+        end = self.markdown.markdown[self.markdown.markup.index('</' + keyword + '>')]
+        return start, end
+
+    def insert_tags(self, keyword):
+        """
+        Insert markdown for specific tags, and place insertion point between them.
+        """
+        start, end = self.find_formatting(keyword)
+        try:
+            text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
+            self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
+            self.edit_text.insert(Tk.INSERT, start + text + end)
+        except Tk.TclError:
+            self.edit_text.insert(Tk.INSERT, start + end)
+            self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(end)))
+        return 'break'
+
     def bold(self, event=None):
         """
         Insert markdown for bold tags, and place insertion point between them.
         """
-        self.edit_text.insert(Tk.INSERT, '[b][/b]')
-        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-4c')
+        self.insert_tags('strong')
         return 'break'
 
     def italic(self, event=None):
         """
         Insert markdown for italic tags, and place insertion point between them.
         """
-        self.edit_text.insert(Tk.INSERT, '[i][/i]')
-        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-4c')
+        self.insert_tags('em')
         return 'break'
 
     def small_caps(self, event=None):
         """
         Insert markdown for small-cap tags, and place insertion point between them.
         """
-        self.edit_text.insert(Tk.INSERT, '[k][/k]')
-        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-4c')
+        self.insert_tags('small-caps')
         return 'break'
 
     def add_translation(self, event=None):

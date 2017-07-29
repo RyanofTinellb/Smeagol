@@ -159,43 +159,49 @@ class EditPage(Tk.Frame):
         self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-5c')
         return 'break'
 
+    def find_formatting(self, keyword):
+        """
+        Find markdown for specific formatting.
+        :param keyword (str): the formatting type, in html, e.g.: strong, em, &c.
+        :return (tuple): the opening and closing tags, in markdown, e.g.: ([[, ]]), (<<, >>)
+        """
+        start = self.markdown[self.markup.index('<' + keyword + '>')]
+        end = self.markdown[self.markup.index('</' + keyword + '>')]
+        return start, end
+
+    def insert_tags(self, keyword):
+        """
+        Insert markdown for specific tags, and place insertion point between them.
+        """
+        start, end = self.find_formatting(keyword)
+        try:
+            text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
+            self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
+            self.edit_text.insert(Tk.INSERT, 'start' + text + 'end')
+        except Tk.TclError:
+            self.edit_text.insert(Tk.INSERT, start + end)
+            self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(end)))
+        return 'break'
+
     def bold(self, event=None):
         """
         Insert markdown for bold tags, and place insertion point between them.
         """
-        try:
-            text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
-            self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
-            self.edit_text.insert(Tk.INSERT, '[[' + text + ']]')
-        except Tk.TclError:
-            self.edit_text.insert(Tk.INSERT, '[[]]')
-            self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
+        self.insert_tags('strong')
         return 'break'
 
     def italic(self, event=None):
         """
         Insert markdown for italic tags, and place insertion point between them.
         """
-        try:
-            text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
-            self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
-            self.edit_text.insert(Tk.INSERT, '((' + text + '))')
-        except Tk.TclError:
-            self.edit_text.insert(Tk.INSERT, '(())')
-            self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
+        self.insert_tags('em')
         return 'break'
 
     def small_caps(self, event=None):
         """
         Insert markdown for small-cap tags, and place insertion point between them.
         """
-        try:
-            text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
-            self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
-            self.edit_text.insert(Tk.INSERT, '<<' + text + '>>')
-        except Tk.TclError:
-            self.edit_text.insert(Tk.INSERT, '<<>>')
-            self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
+        self.insert_tags('small-caps')
         return 'break'
 
     def insert_chapter(self, event):
