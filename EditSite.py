@@ -297,7 +297,7 @@ class EditPage(Tk.Frame):
             initial = re.sub(r'.*?(\w).*', r'\1', url)
             try:
                 self.entry.content = self.entry.content.replace('<link>' + link + '</link>',
-                '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html' + matriarch + '">' + link + '</a>')
+                '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html#' + matriarch + '">' + link + '</a>')
             except KeyError:
                 pass
 
