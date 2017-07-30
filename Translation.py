@@ -221,7 +221,7 @@ class d2gReplace():
         """
         for language, word, url in zip(self.languages, self.words, self.urls):
             page = ''
-            url = r'<a href=\"{0}\">{1}</a>'.format(url, word)
+            url = r'\\<a href=\\"{0}\\"\\>{1}\\</a\\>'.format(url, word)
             for line in text.splitlines():
                 if line.startswith('[3]'):
                     current_language = line[len('[3]'):]

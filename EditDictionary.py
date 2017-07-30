@@ -236,9 +236,10 @@ class EditDictionary(Tk.Frame):
             initial = re.sub(r'.*?(\w).*', r'\1', self.entry).capitalize()
             self.page = Page(entry, self.site[initial], '', self.site.leaf_level, None, self.site.markdown).insert()
             self.new_word()
-        content = self.markdown.to_markdown(self.page.content)
-        content = re.sub(r'<a href=\\"(?!http).*?\\">(.*?)</a>', r'<\1>', content)
-        content = re.sub(r'<a href=\\"http.*?\\">(.*?)</a>', r'\1', content)
+        content = self.page.content # for code maintenance: so that next steps can be permuted easily.
+        content = self.markdown.to_markdown(content)
+        content = re.sub(r'\\<a href=\\"(?!http).*?\\"\\>(.*?)\\</a\\>', r'<\1>', content)
+        content = re.sub(r'\\<a href=\\"http.*?\\"\\>(.*?)\\</a\\>', r'\1', content)
         self.edit_text.delete(1.0, Tk.END)
         self.edit_text.insert(1.0, content)
         self.edit_text.focus_set()
@@ -262,13 +263,13 @@ class EditDictionary(Tk.Frame):
             self.page.content = self.replacelinks.replace(self.page.content)
             self.page.content = self.markdown.to_markup(self.page.content)
             # Write links out in full form
-            links = set(re.sub(r'.*?<(.*?)>.*?', r'\1>', self.page.content.replace('\n', '')).split(r'>')[:-1])
+            links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1>', self.page.content.replace('\n', '')).split(r'>')[:-1])
             for link in links:
                 try:
-                    self.page.content = self.page.content.replace('<' + link + '>', self.page.hyperlink(self.site[link]))
+                    self.page.content = self.page.content.replace('<link>' + link + '</link>', self.page.hyperlink(self.site[link]))
                 except KeyError:
                     try:
-                        self.page.content = self.page.content.replace('<' + link + '>', self.page.hyperlink(self.site[self.lowercase(link)], link))
+                        self.page.content = self.page.content.replace('<link>' + link + '</link>', self.page.hyperlink(self.site[self.lowercase(link)], link))
                     except KeyError:
                         pass
             # remove duplicate linebreaks
