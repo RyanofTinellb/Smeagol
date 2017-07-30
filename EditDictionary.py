@@ -258,6 +258,7 @@ class EditDictionary(Tk.Frame):
             self.page.delete()
             self.page.remove()
         else:
+            # replace particular words in parts of speech with links to grammar.tinellb.com
             self.page.content = self.replacelinks.replace(self.page.content)
             self.page.content = self.markdown.to_markup(self.page.content)
             # Write links out in full form
@@ -266,7 +267,10 @@ class EditDictionary(Tk.Frame):
                 try:
                     self.page.content = self.page.content.replace('<' + link + '>', self.page.hyperlink(self.site[link]))
                 except KeyError:
-                    pass
+                    try:
+                        self.page.content = self.page.content.replace('<' + link + '>', self.page.hyperlink(self.site[self.lowercase(link)], link))
+                    except KeyError:
+                        pass
             # remove duplicate linebreaks
             self.page.content = re.sub(r'\n\n+', '\n', self.page.content)
             # update datestamp and publish parent.
@@ -282,6 +286,14 @@ class EditDictionary(Tk.Frame):
         self.save_text.set('Save')
         self.edit_text.edit_modified(False)
         return 'break'
+
+    @staticmethod
+    def lowercase(text):
+        if text.startswith('&#x294'):
+            return text.replace('&#x294;', '&rsquo;', 1)
+        else:
+            return text[0].lower() + text[1:]
+
 
 if __name__ == '__main__':
     app = EditDictionary(directory='c:/users/ryan/documents/tinellbianlanguages/dictionary',

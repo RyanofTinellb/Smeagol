@@ -878,7 +878,7 @@ class Page:
         lines = content.splitlines()
         content = markdown.to_markdown(content).lower()
         """change punctuation, and tags in square brackets, into spaces"""
-        content = re.sub(r'\'\"|[!?`\"/{}\\();-]|\'($| )|\[.*?\]|&nbsp', ' ', content)
+        content = re.sub(r'\'\"|[!?`\"/{}\\;-]|\'($| )|\[.*?\]|&nbsp', ' ', content)
         """make glottal stops lower case where appropriate"""
         content = re.sub(r"(?<=[ \n])''", "'", content)
         for number, line in enumerate(content.splitlines()):
