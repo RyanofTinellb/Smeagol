@@ -54,6 +54,7 @@ class EditPage(Tk.Frame):
         self.save_button = Tk.Button(self, textvariable=self.save_text, command=self.save)
         self.grammar_button.select()
         self.edit_text.bind('<KeyPress>', self.edit_text_changed)
+        self.edit_text.bind('<KeyPress-|>', self.insert_pipe)
         self.edit_text.bind('<Control-BackSpace>', self.backspace_word)
         self.edit_text.bind('<Control-Delete>', self.delete_word)
         self.edit_text.bind('<Control-a>', self.select_all)
@@ -65,7 +66,7 @@ class EditPage(Tk.Frame):
         self.edit_text.bind('<Control-r>', self.load)
         self.edit_text.bind('<Control-s>', self.save)
         self.edit_text.bind('<Control-t>', self.table)
-        self.edit_text.bind('<KeyPress-|>', self.insert_pipe)
+        self.edit_text.bind('<Shift-Tab>', self.go_to_heading)
         self.number_of_words.set('')
         for i, heading in enumerate(self.headings):
             heading.grid(row=i, column=0, columnspan=2)
@@ -76,6 +77,10 @@ class EditPage(Tk.Frame):
         self.story_button.grid(row=6, column=0, columnspan=2)
         self.edit_text.grid(row=0, column=2, rowspan=150)
         self.headings[0].focus_set()
+
+    def go_to_heading(self, event=None):
+        self.headings[2].focus_set()
+        return 'break'
 
     def decide(self, variable):
         try:
