@@ -76,11 +76,32 @@ class EditDictionary(Tk.Frame):
         self.english.grid(row=4, column=0, columnspan=2)
         self.edit_text.grid(row=0, rowspan=260, column=2)
 
+    @staticmethod
+    def insert_characters(textbox, before, after=''):
+        """
+        Insert given text into a Text textbox, either around an insertion cursor or selected text, and move the cursor to the appropriate place.
+        :param textbox (Tkinter Text): The Text into which the given text is to be inserted.
+        :param before (str): The text to be inserted before the insertion counter, or before the selected text.
+        :param after (str): The text to be inserted after the insertion cursor, or after the selected text.
+        """
+        try:
+            text = textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
+            textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
+            textbox.insert(Tk.INSERT, before + text + after)
+        except Tk.TclError:
+            textbox.insert(Tk.INSERT, before + after)
+            textbox.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(after)))
+
     def insert_pipe(self, event=None):
-        self.edit_text.insert(Tk.INSERT, ' | ')
+        self.insert_characters(self.edit_text, ' | ')
         return 'break'
 
     def edit_text_changed(self, event=None):
+        """
+        Notify the user that the edittext has been changed.
+        Activates after each keypress.
+        Deactivates after a save or a load action.
+        """
         if self.edit_text.edit_modified():
             self.save_text.set('*Save')
 
@@ -99,11 +120,17 @@ class EditDictionary(Tk.Frame):
         self.translator = Translator(self.language.get())
         return 'break'
 
-    def select_all(self, event=None):
+    def select_all(self, event=None, widget=None):
         """
         Select all the text in the edit area
         """
-        self.edit_text.tag_add('sel', '1.0', 'end')
+        try:
+            event.widget.tag_add('sel', '1.0', 'end')
+        except AttributeError:
+            try:
+                widget.tag_add('sel', '1.0', 'end')
+            except AttributeError:
+                pass
         return 'break'
 
     def delete_word(self, event=None):
@@ -244,6 +271,8 @@ class EditDictionary(Tk.Frame):
         self.edit_text.insert(1.0, content)
         self.edit_text.focus_set()
         self.edit_text.mark_set(Tk.INSERT, '1.0')
+        self.save_text.set('Save')
+        self.edit_text.edit_modified(False)
         return 'break'
 
     def save(self, event=None):
