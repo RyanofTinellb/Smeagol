@@ -2,8 +2,9 @@ import Tkinter as Tk
 import os
 from Smeagol import *
 from Translation import *
+from Edit import *
 
-class EditDictionary(Tk.Frame):
+class EditDictionary(Edit):
     def __init__(self, directory, datafile, site, markdown, replacelinks, randomwords, master=None):
         """
         :param directory (String): the path and filename of the top-level directory
@@ -12,13 +13,15 @@ class EditDictionary(Tk.Frame):
         :param markdown (String): the path, filename and extension of the replacements file, relative to directory
         :param randomwords (int): the number of random words to appear when requested
         """
-        Tk.Frame.__init__(self, master)
-        os.chdir(directory)
+        widgets = Widgets(1, 1, 2)
+        Edit.__init__(self, 'dictionary', directory, datafile, site, markdown, widgets)
         # initialise instance variables
         self.site = site
         self.datafile = datafile
         self.random_word = Tk.StringVar()
         self.language = Tk.StringVar()
+        self.heading = self.headings[0]
+        self.edit_text = self.textboxes[0]
         self.entry = ''
         self.page = None
         # initialise other useful classes. Default language is High Lulani
@@ -27,39 +30,24 @@ class EditDictionary(Tk.Frame):
         self.words = randomwords.words
         self.replacelinks = replacelinks
         # initialise textboxes and buttons
-        self.heading = None
-        self.go_button = None
-        self.save_button = None
-        self.save_text = Tk.StringVar()
-        self.save_text.set('Save')
-        self.edit_text = None
-        self.random_words = None
-        self.high_lulani = Tk.Radiobutton(self, text='High Lulani', value='hl', variable=self.language, command=self.change_language)
-        self.english = Tk.Radiobutton(self, text='English', value='en', variable=self.language, command=self.change_language, anchor=Tk.N)
-        self.high_lulani.select()
-        # open window
-        self.grid()
-        self.top = self.winfo_toplevel()
-        self.top.state('zoomed')
-        self.create_widgets()
+        self.configure_widgets()
         self.heading.focus_set()
 
-    def create_widgets(self):
-        self.heading = Tk.Entry(self)
+    def configure_widgets(self):
+        for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
+            radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
         self.heading.bind('<Control-m>', self.refresh_markdown)
         self.heading.bind('<Control-r>', self.refresh_random)
         self.heading.bind('<Alt-d>', self.go_to_heading)
         self.heading.bind('<Return>', self.load)
-        self.go_button = Tk.Button(self, text='Load', command=self.load)
-        self.save_button = Tk.Button(self, textvariable=self.save_text, command=self.save)
-        self.random_words = Tk.Label(self, textvariable=self.random_word)
-        self.edit_text = Tk.Text(self, font=('Courier New', '15'), undo=True, height=31, width=95)
+        self.go_button = self.buttons[0]
+        self.save_button = self.buttons[1]
+        self.random_words = self.infolabel
+        self.random_words.configure(textvariable=self.random_word)
         self.edit_text.bind('<KeyPress>', self.edit_text_changed)
         self.edit_text.bind('<KeyPress-|>', self.insert_pipe)
         self.edit_text.bind('<Control-a>', self.select_all)
-        self.edit_text.bind('<Control-b>', self.bold)
-        self.edit_text.bind('<Control-i>', self.italic)
-        self.edit_text.bind('<Control-k>', self.small_caps)
+        self.edit_text.bind('<Control-l>', self.load)
         self.edit_text.bind('<Control-m>', self.refresh_markdown)
         self.edit_text.bind('<Control-n>', self.new_word)
         self.edit_text.bind('<Control-r>', self.refresh_random)
@@ -68,33 +56,8 @@ class EditDictionary(Tk.Frame):
         self.edit_text.bind('<Control-=>', self.add_definition)
         self.edit_text.bind('<Control-BackSpace>', self.delete_word)
         self.edit_text.bind('<Alt-d>', self.go_to_heading)
-        self.heading.grid(row=0, column=0, columnspan=2, sticky=Tk.N)
-        self.go_button.grid(row=1, column=0)
-        self.save_button.grid(row=1, column=1)
-        self.random_words.grid(row=2, column=0, columnspan=2)
-        self.high_lulani.grid(row=3, column=0, columnspan=2)
-        self.english.grid(row=4, column=0, columnspan=2)
-        self.edit_text.grid(row=0, rowspan=260, column=2)
-
-    @staticmethod
-    def insert_characters(textbox, before, after=''):
-        """
-        Insert given text into a Text textbox, either around an insertion cursor or selected text, and move the cursor to the appropriate place.
-        :param textbox (Tkinter Text): The Text into which the given text is to be inserted.
-        :param before (str): The text to be inserted before the insertion counter, or before the selected text.
-        :param after (str): The text to be inserted after the insertion cursor, or after the selected text.
-        """
-        try:
-            text = textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
-            textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
-            textbox.insert(Tk.INSERT, before + text + after)
-        except Tk.TclError:
-            textbox.insert(Tk.INSERT, before + after)
-            textbox.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(after)))
-
-    def insert_pipe(self, event=None):
-        self.insert_characters(self.edit_text, ' | ')
-        return 'break'
+        self.edit_text.configure(font=('Courier New', '15'))
+        self.radios[1].select()
 
     def edit_text_changed(self, event=None):
         """
@@ -179,51 +142,6 @@ class EditDictionary(Tk.Frame):
         Show a certain number of random nonsense words using High Lulani phonotactics.
         """
         self.random_word.set('\n'.join(self.words()))
-        return 'break'
-
-    def find_formatting(self, keyword):
-        """
-        Find markdown for specific formatting.
-        :param keyword (str): the formatting type, in html, e.g.: strong, em, &c.
-        :return (tuple): the opening and closing tags, in markdown, e.g.: ([[, ]]), (<<, >>)
-        """
-        start = self.markdown.markdown[self.markdown.markup.index('<' + keyword + '>')]
-        end = self.markdown.markdown[self.markdown.markup.index('</' + keyword + '>')]
-        return start, end
-
-    def insert_tags(self, keyword):
-        """
-        Insert markdown for specific tags, and place insertion point between them.
-        """
-        start, end = self.find_formatting(keyword)
-        try:
-            text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
-            self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
-            self.edit_text.insert(Tk.INSERT, start + text + end)
-        except Tk.TclError:
-            self.edit_text.insert(Tk.INSERT, start + end)
-            self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(end)))
-        return 'break'
-
-    def bold(self, event=None):
-        """
-        Insert markdown for bold tags, and place insertion point between them.
-        """
-        self.insert_tags('strong')
-        return 'break'
-
-    def italic(self, event=None):
-        """
-        Insert markdown for italic tags, and place insertion point between them.
-        """
-        self.insert_tags('em')
-        return 'break'
-
-    def small_caps(self, event=None):
-        """
-        Insert markdown for small-cap tags, and place insertion point between them.
-        """
-        self.insert_tags('small-caps')
         return 'break'
 
     def add_translation(self, event=None):

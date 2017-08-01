@@ -1,61 +1,51 @@
 import Tkinter as Tk
 from Translation import *
 from Smeagol import *
+from Edit import *
 import os
 from random import choice
 from string import printable
-From
 
 class EditStory(Edit):
     def __init__(self, directory, datafile, site, markdown, master=None):
-        widgets = Widgets(3, 1, 2)
-        Edit.__init__(self, 'dictionary', directory, datafile, site, markdown, widgets)
         os.chdir(directory)
         self.datafile = datafile
         self.site = site
         self.markdown = markdown
+        self.translator = Translator()
+        widgets = Widgets(3, 3, self.translator.number)
+        Edit.__init__(self, 'story', directory, datafile, site, markdown, widgets)
+        self.language = Tk.StringVar()
         self.entry = self.site.root[0][0][0]       # first great-grandchild
         self.chapter = Chapter(self.entry, self.markdown)
-        self.windows = map(lambda x: Tk.Text(self), range(3))
-        self.save_button = Tk.Button(self, text='Save', command=self.save)
-        self.up_button = Tk.Button(self, text=unichr(8593), command=self.previous_chapter)
-        self.down_button = Tk.Button(self, text=unichr(8595), command=self.next_chapter)
-        self.left_button = Tk.Button(self, text=unichr(8592), command=self.previous_paragraph)
-        self.right_button = Tk.Button(self, text=unichr(8594), command=self.next_paragraph)
+        self.textboxes[0].focus_set()
         self.information = Tk.StringVar()
-        self.infolabel = Tk.Label(self, textvariable=self.information)
-        self.grid()
-        self.create_window()
-        self.top = self.winfo_toplevel()
-        self.top.state('zoomed')
-        self.display()
-        self.windows[0].focus_set()
+        self.configure_widgets()
 
-    def create_window(self):
-        self.left_button.grid(row=0, column=0)
-        self.right_button.grid(row=0, column=1)
-        self.up_button.grid(row=0, column=2)
-        self.down_button.grid(row=0, column=3)
-        self.save_button.grid(row=0, column=4, sticky=Tk.W)
-        self.infolabel.grid(row=0, column=5, sticky=Tk.W)
+    def configure_widgets(self):
         font = ('Californian FB', 16)
-        for i, window in enumerate(self.windows):
-            window.configure(height=9, width=108, wrap=Tk.WORD, font=font)
-            window.bind('<KeyPress>', self.unloadinfo)
-            window.bind('<Tab>', self.next_window)
-            window.bind('<Control-m>', self.refresh_markdown)
-            window.bind('<Control-r>', self.literal)
-            window.bind('<Control-s>', self.save)
-            window.bind('<Next>', self.next_paragraph)
-            window.bind('<Prior>', self.previous_paragraph)
-            window.bind('<Control-Next>', self.next_chapter)
-            window.bind('<Control-Prior>', self.previous_chapter)
-            window.bind('<Control-BackSpace>', self.backspace_word)
-            window.bind('<Control-Delete>', self.delete_word)
-            window.grid(row=i+1, column=4, columnspan=5)
+        for textbox in self.textboxes:
+            textbox.configure(font=font)
+            textbox.bind('<KeyPress>', self.unloadinfo)
+            textbox.bind('<Tab>', self.next_window)
+            textbox.bind('<Control-m>', self.refresh_markdown)
+            textbox.bind('<Control-r>', self.literal)
+            textbox.bind('<Control-s>', self.save)
+            textbox.bind('<Next>', self.next_paragraph)
+            textbox.bind('<Prior>', self.previous_paragraph)
+            textbox.bind('<Control-Next>', self.next_chapter)
+            textbox.bind('<Control-Prior>', self.previous_chapter)
+            textbox.bind('<Control-BackSpace>', self.backspace_word)
+            textbox.bind('<Control-Delete>', self.delete_word)
+        for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
+            radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
+        self.infolabel.configure(textvariable=self.information)
+
+    def change_language(self, event=None):
+        self.translator = translator(self.language.get())
 
     def next_window(self, event):
-        self.windows[(self.windows.index(event.widget) + 1) % 3].focus_set()
+        self.textboxes[(self.textboxes.index(event.widget) + 1) % 3].focus_set()
         return 'break'
 
     def unloadinfo(self, event=None):
@@ -143,12 +133,12 @@ class EditStory(Edit):
         return 'break'
 
     def get_text(self, window):
-        text = self.windows[window].get('1.0', Tk.END + '-1c')
+        text = self.textboxes[window].get('1.0', Tk.END + '-1c')
         text = text.replace('\n', ' | ')
         return text
 
     def display(self):
-        for window, text in zip(self.windows, self.chapter.display()):
+        for window, text in zip(self.textboxes, self.chapter.display()):
             window.delete('1.0', Tk.END)
             window.insert('1.0', text)
         return 'break'

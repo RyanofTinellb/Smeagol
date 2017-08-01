@@ -3,90 +3,58 @@ import os
 import thread
 from Smeagol import *
 from Translation import *
+from Edit import *
 
 
-class EditPage(Tk.Frame):
+class EditPage(Edit):
     def __init__(self, directories, datafiles, sites, markdowns, master=None):
-        Tk.Frame.__init__(self, master)
+        widgets = Widgets(3, 1, 2)
+        Edit.__init__(self, 'grammar', directories, datafiles, sites, markdowns, widgets)
         self.sitename = Tk.StringVar()
         self.sitename.set('grammar')
-        self.directories = directories
-        os.chdir(self.decide(directories))
         self.datafiles = datafiles
-        self.datafile = self.decide(datafiles)
+        self.datafile = self.choose(self.sitename.get(), datafiles)
         self.sites = sites
-        self.site = self.decide(sites)
+        self.site = self.choose(self.sitename.get(), sites)
         self.markdowns = markdowns
-        self.markdown = self.decide(markdowns)
-        self.entry = self.site.root
-        self.headings = []
-        self.grammar_button = None
-        self.story_button = None
-        self.load_button = None
-        self.save_button = None
-        self.save_text = Tk.StringVar()
-        self.save_text.set('Save')
+        self.markdown = self.choose(self.sitename.get(), markdowns)
+        self.directories = directories
+        os.chdir(self.choose(self.sitename.get(), directories))
         self.number_of_words = Tk.StringVar()
-        self.edit_text = Tk.Text(self, height=30, width=115, font=('Corbel', '14'), wrap=Tk.WORD, undo=True)
-        self.word_count = Tk.Label(self, textvariable=self.number_of_words)
-        self.grammar_button = Tk.Radiobutton(self, text='Grammar', variable=self.sitename, value='grammar',
-                                             command=self.change_site)
-        self.story_button = Tk.Radiobutton(self, text='Story', variable=self.sitename, value='story',
-                                           command=self.change_site)
-        self.grid()
-        self.top = self.winfo_toplevel()
-        self.top.state('zoomed')
-        self.create_widgets()
+        self.number_of_words.set('')
+        self.entry = self.site.root
+        self.configure_widgets()
 
-    def create_widgets(self):
-        for i in range(3):
-            heading = Tk.Entry(self)
+    def configure_widgets(self):
+        for i, heading in enumerate(self.headings):
 
             def handler(event, self=self, i=i):
                 return self.scroll_headings(event, i)
             heading.bind('<Prior>', handler)
             heading.bind('<Next>', handler)
-            self.headings.append(heading)
         self.headings[0].bind('<Return>', self.insert_chapter)
         self.headings[1].bind('<Return>', self.insert_heading)
         self.headings[2].bind('<Return>', self.load)
-        self.load_button = Tk.Button(self, text='Load', command=self.load)
-        self.save_button = Tk.Button(self, textvariable=self.save_text, command=self.save)
-        self.grammar_button.select()
-        self.edit_text.bind('<KeyPress>', self.edit_text_changed)
-        self.edit_text.bind('<KeyPress-|>', self.insert_pipe)
-        self.edit_text.bind('<Control-BackSpace>', self.backspace_word)
-        self.edit_text.bind('<Control-Delete>', self.delete_word)
-        self.edit_text.bind('<Control-a>', self.select_all)
-        self.edit_text.bind('<Control-b>', self.bold)
-        self.edit_text.bind('<Control-i>', self.italic)
-        self.edit_text.bind('<Control-k>', self.small_caps)
-        self.edit_text.bind('<Control-m>', self.refresh_markdown)
-        self.edit_text.bind('<Control-o>', self.refresh_site)
-        self.edit_text.bind('<Control-r>', self.load)
-        self.edit_text.bind('<Control-s>', self.save)
-        self.edit_text.bind('<Control-t>', self.table)
-        self.edit_text.bind('<Shift-Tab>', self.go_to_heading)
-        self.number_of_words.set('')
-        for i, heading in enumerate(self.headings):
-            heading.grid(row=i, column=0, columnspan=2)
-        self.load_button.grid(row=3, column=0)
-        self.save_button.grid(row=3, column=1)
-        self.word_count.grid(row=4, column=0, columnspan=2)
-        self.grammar_button.grid(row=5, column=0, columnspan=2)
-        self.story_button.grid(row=6, column=0, columnspan=2)
-        self.edit_text.grid(row=0, column=2, rowspan=150)
+        self.textboxes[0].bind('<KeyPress>', self.textbox_changed)
+        self.textboxes[0].bind('<Control-BackSpace>', self.backspace_word)
+        self.textboxes[0].bind('<Control-Delete>', self.delete_word)
+        self.textboxes[0].bind('<Control-a>', self.select_all)
+        self.textboxes[0].bind('<Control-m>', self.refresh_markdown)
+        self.textboxes[0].bind('<Control-o>', self.refresh_site)
+        self.textboxes[0].bind('<Control-r>', self.load)
+        self.textboxes[0].bind('<Control-s>', self.save)
+        self.textboxes[0].bind('<Control-t>', self.table)
+        self.textboxes[0].bind('<Shift-Tab>', self.go_to_heading)
+        self.textboxes[0].configure(font=('Corbel', '14'))
+        self.infolabel.configure(textvariable=self.number_of_words)
+        self.radios[0].configure(text='Grammar', variable=self.sitename, value='grammar', command=self.change_site)
+        self.radios[1].configure(text='Story', variable=self.sitename, value='story', command=self.change_site)
+        self.radios[0].select()
         self.headings[0].focus_set()
 
     def go_to_heading(self, event=None):
         self.headings[2].focus_set()
         return 'break'
-
-    def decide(self, variable):
-        try:
-            return variable[self.sitename.get()]
-        except (TypeError, AttributeError, ValueError):
-            return variable
 
     def refresh_site(self, event=None):
         self.site.refresh()
@@ -135,7 +103,7 @@ class EditPage(Tk.Frame):
         return 'break'
 
     def select_all(self, event=None):
-        self.edit_text.tag_add('sel', '1.0', 'end')
+        self.textboxes[0].tag_add('sel', '1.0', 'end')
         return 'break'
 
     def change_site(self, event=None):
@@ -143,70 +111,21 @@ class EditPage(Tk.Frame):
         if self.site is None or site != self.sitename:
             for heading in self.headings:
                 heading.delete(0, Tk.END)
-            self.edit_text.delete(1.0, Tk.END)
-            os.chdir(self.decide(self.directories))
-            self.datafile = self.decide(self.datafiles)
-            self.site = self.decide(self.sites)
-            self.markdown = self.decide(self.markdowns)
+            self.textboxes[0].delete(1.0, Tk.END)
+            os.chdir(self.choose(site, self.directories))
+            self.datafile = self.choose(site, self.datafiles)
+            self.site = self.choose(site, self.sites)
+            self.markdown = self.choose(site, self.markdowns)
             self.entry = self.site.root
             self.headings[0].focus_set()
-        return 'break'
-
-    def insert_pipe(self, event=None):
-        self.edit_text.insert(Tk.INSERT, ' | ')
         return 'break'
 
     def table(self, event=None):
         """
         Insert markdown for table, and place insertion point between them.
         """
-        self.edit_text.insert(Tk.INSERT, '[t]\n[/t]')
-        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-5c')
-        return 'break'
-
-    def find_formatting(self, keyword):
-        """
-        Find markdown for specific formatting.
-        :param keyword (str): the formatting type, in html, e.g.: strong, em, &c.
-        :return (tuple): the opening and closing tags, in markdown, e.g.: ([[, ]]), (<<, >>)
-        """
-        start = self.markdown[self.markup.index('<' + keyword + '>')]
-        end = self.markdown[self.markup.index('</' + keyword + '>')]
-        return start, end
-
-    def insert_tags(self, keyword):
-        """
-        Insert markdown for specific tags, and place insertion point between them.
-        """
-        start, end = self.find_formatting(keyword)
-        try:
-            text = self.edit_text.get(Tk.SEL_FIRST, Tk.SEL_LAST)
-            self.edit_text.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
-            self.edit_text.insert(Tk.INSERT, 'start' + text + 'end')
-        except Tk.TclError:
-            self.edit_text.insert(Tk.INSERT, start + end)
-            self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(end)))
-        return 'break'
-
-    def bold(self, event=None):
-        """
-        Insert markdown for bold tags, and place insertion point between them.
-        """
-        self.insert_tags('strong')
-        return 'break'
-
-    def italic(self, event=None):
-        """
-        Insert markdown for italic tags, and place insertion point between them.
-        """
-        self.insert_tags('em')
-        return 'break'
-
-    def small_caps(self, event=None):
-        """
-        Insert markdown for small-cap tags, and place insertion point between them.
-        """
-        self.insert_tags('small-caps')
+        self.textboxes[0].insert(Tk.INSERT, '[t]\n[/t]')
+        self.textboxes[0].mark_set(Tk.INSERT, Tk.INSERT + '-5c')
         return 'break'
 
     def insert_chapter(self, event):
@@ -218,34 +137,34 @@ class EditPage(Tk.Frame):
         return 'break'
 
     def delete_word(self, event=None):
-        if self.edit_text.get(Tk.INSERT + '-1c') in ' .,;:?!':
-            self.edit_text.delete(Tk.INSERT, Tk.INSERT + ' wordend +1c')
-        elif self.edit_text.get(Tk.INSERT) == ' ':
-            self.edit_text.delete(Tk.INSERT, Tk.INSERT + '+1c wordend')
-        elif self.edit_text.get(Tk.INSERT) in '.,;:?!':
-            self.edit_text.delete(Tk.INSERT, Tk.INSERT + '+1c')
+        if self.textboxes[0].get(Tk.INSERT + '-1c') in ' .,;:?!':
+            self.textboxes[0].delete(Tk.INSERT, Tk.INSERT + ' wordend +1c')
+        elif self.textboxes[0].get(Tk.INSERT) == ' ':
+            self.textboxes[0].delete(Tk.INSERT, Tk.INSERT + '+1c wordend')
+        elif self.textboxes[0].get(Tk.INSERT) in '.,;:?!':
+            self.textboxes[0].delete(Tk.INSERT, Tk.INSERT + '+1c')
         else:
-            self.edit_text.delete(Tk.INSERT, Tk.INSERT + ' wordend')
+            self.textboxes[0].delete(Tk.INSERT, Tk.INSERT + ' wordend')
         self.update_wordcount()
         return 'break'
 
     def backspace_word(self, event=None):
-        if self.edit_text.get(Tk.INSERT + '-1c') in '.,;:?!':
-            self.edit_text.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
-        elif self.edit_text.get(Tk.INSERT + '-1c') in ' ':
-            self.edit_text.delete(Tk.INSERT + '-2c wordstart', Tk.INSERT)
+        if self.textboxes[0].get(Tk.INSERT + '-1c') in '.,;:?!':
+            self.textboxes[0].delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
+        elif self.textboxes[0].get(Tk.INSERT + '-1c') in ' ':
+            self.textboxes[0].delete(Tk.INSERT + '-2c wordstart', Tk.INSERT)
         else:
-            self.edit_text.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
+            self.textboxes[0].delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
         self.update_wordcount()
         return 'break'
 
     def update_wordcount(self, event=None):
-        text = self.edit_text.get(1.0, Tk.END)
+        text = self.textboxes[0].get(1.0, Tk.END)
         self.number_of_words.set(str(text.count(' ') + text.count('\n')))
 
-    def edit_text_changed(self, event=None):
+    def textbox_changed(self, event=None):
         self.update_wordcount()
-        if self.edit_text.edit_modified():
+        if self.textboxes[0].edit_modified():
             self.save_text.set('*Save')
 
     def load(self, event=None):
@@ -256,18 +175,18 @@ class EditPage(Tk.Frame):
                 self.entry = self.entry[heading.get()]
             except KeyError:
                 pass
-        self.edit_text.delete(1.0, Tk.END)
+        self.textboxes[0].delete(1.0, Tk.END)
         if self.entry is not self.site:
             entry = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>',
                                         r'<link>\1</link>', self.entry.content)
             entry = self.markdown.to_markdown(entry)
-            self.edit_text.insert(1.0, entry)
-            self.edit_text.focus_set()
-            self.edit_text.edit_modified(False)
+            self.textboxes[0].insert(1.0, entry)
+            self.textboxes[0].focus_set()
+            self.textboxes[0].edit_modified(False)
             self.save_text.set('Save')
         else:
             self.entry = self.site.root
-            self.edit_text.insert(1.0, 'That page does not exist. Create a new page by appending to an old one.')
+            self.textboxes[0].insert(1.0, 'That page does not exist. Create a new page by appending to an old one.')
             self.headings[1].focus_set()
         self.update_wordcount()
         return 'break'
@@ -275,7 +194,7 @@ class EditPage(Tk.Frame):
     def save(self, event=None):
         self.save_text.set('Save')
         self.update_wordcount()
-        self.entry.content = self.markdown.to_markup(str(self.edit_text.get(1.0, Tk.END)))
+        self.entry.content = self.markdown.to_markup(str(self.textboxes[0].get(1.0, Tk.END)))
         while self.entry.content[-2:] == '\n\n':
             self.entry.content = self.entry.content[:-1]
         # remove duplicate linebreaks
@@ -293,7 +212,7 @@ class EditPage(Tk.Frame):
             with open(self.datafile, 'w') as data:
                 data.write(str(self.site))
         self.site.update_json()
-        self.edit_text.edit_modified(False)
+        self.textboxes[0].edit_modified(False)
         return 'break'
 
     def replace_links(self):

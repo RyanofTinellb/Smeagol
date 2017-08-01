@@ -42,17 +42,12 @@ class Edit(Tk.Frame):
         self.blanklabel = Tk.Label(self.buttonframe, height=1000) # enough height to push all other widgets to the top of the window.
         self.infolabel = self.create_label(self.buttonframe)
         self.buttons = self.create_buttons(self.buttonframe)
+        self.buttons[1].configure(textvariable=self.save_text)
         commands = self.textbox_commands()
         self.textboxes = self.create_textboxes(self.textframe, widgets.number_of_textboxes, commands)
         self.create_window()
         self.top = self.winfo_toplevel()
         self.top.state('zoomed')
-
-    def textbox_commands(self):
-        return [('<Control-b>', self.bold),
-        ('<Control-i>', self.italic),
-        ('<Control-k>', self.small_caps),
-        ('<KeyPress-|>', self.insert_pipe)]
 
     def create_window(self):
         """
@@ -80,6 +75,12 @@ class Edit(Tk.Frame):
         self.infolabel.grid(row=row, column=0, columnspan=2)
         self.blanklabel.grid(row=row+1, column=0, columnspan=2)
 
+    def textbox_commands(self):
+        return [('<Control-b>', self.bold),
+        ('<Control-i>', self.italic),
+        ('<Control-k>', self.small_caps),
+        ('<KeyPress-|>', self.insert_pipe)]
+
     @staticmethod
     def create_headings(master, number, commands=None):
         if not commands:
@@ -94,7 +95,7 @@ class Edit(Tk.Frame):
 
     @staticmethod
     def create_buttons(master):
-        return [Tk.Button(master), Tk.Button(master)]
+        return [Tk.Button(master, text='Load'), Tk.Button(master)]
 
     @staticmethod
     def create_label(master):
@@ -114,7 +115,7 @@ class Edit(Tk.Frame):
             commands = []
         textboxes = []
         for _ in range(number):
-            textbox = Tk.Text(master, height=1, width=1)
+            textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD, undo=True)
             for (key, command) in commands:
                 textbox.bind(key, command)
             textboxes.append(textbox)
@@ -228,6 +229,5 @@ class Widgets():
 
 if __name__ == '__main__':
     widgets = Widgets(3, 3,  3)
-    markdown = Translation.Markdown('c:/users/ryan/documents/tinellbianlanguages/dictionaryreplacements.html')
-    app = Edit(widgets=widgets, markdowns=markdown)
+    app = Edit(widgets=widgets)
     app.mainloop()
