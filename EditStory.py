@@ -4,10 +4,12 @@ from Smeagol import *
 import os
 from random import choice
 from string import printable
+From
 
-class EditStory(Tk.Frame):
+class EditStory(Edit):
     def __init__(self, directory, datafile, site, markdown, master=None):
-        Tk.Frame.__init__(self, master)
+        widgets = Widgets(3, 1, 2)
+        Edit.__init__(self, 'dictionary', directory, datafile, site, markdown, widgets)
         os.chdir(directory)
         self.datafile = datafile
         self.site = site
