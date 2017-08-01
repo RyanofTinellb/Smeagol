@@ -83,15 +83,25 @@ class Edit(Tk.Frame):
         ('<Control-i>', self.italic),
         ('<Control-k>', self.small_caps),
         ('<Control-m>', self.refresh_markdown),
-        ('<Tab>', self.next_window),
-        ('<Shift-Tab>', self.previous_window),
         ('<Control-BackSpace>', self.backspace_word),
         ('<Control-Delete>', self.delete_word),
+        ('<Alt-d>', self.go_to_heading),
+        ('<Tab>', self.next_window),
+        ('<Shift-Tab>', self.previous_window),
         ('<KeyPress-|>', self.insert_pipe)]
 
     @staticmethod
-    def select_all(self, event):
+    def select_all(event):
         event.widget.tag_add('sel', '1.0', 'end')
+        return 'break'
+
+    def go_to_heading(self, event=None):
+        """
+        Move focus to the heading textbox, and select all the text therein
+        """
+        heading = self.headings[0]
+        heading.focus_set()
+        heading.select_range(0, Tk.END)
         return 'break'
 
     @staticmethod

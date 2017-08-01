@@ -36,7 +36,6 @@ class EditDictionary(Edit):
         for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
             radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
         self.heading.bind('<Control-r>', self.refresh_random)
-        self.heading.bind('<Alt-d>', self.go_to_heading)
         self.heading.bind('<Return>', self.load)
         self.go_button = self.buttons[0]
         self.save_button = self.buttons[1]
@@ -46,7 +45,6 @@ class EditDictionary(Edit):
         self.edit_text.bind('<Control-s>', self.save)
         self.edit_text.bind('<Control-t>', self.add_translation)
         self.edit_text.bind('<Control-=>', self.add_definition)
-        self.edit_text.bind('<Alt-d>', self.go_to_heading)
         self.edit_text.configure(font=('Courier New', '15'))
         self.radios[1].select()
 
@@ -56,14 +54,7 @@ class EditDictionary(Edit):
         """
         self.translator = Translator(self.language.get())
         return 'break'
-        
-    def go_to_heading(self, event=None):
-        """
-        Move focus to the heading textbox, and select all the text therein
-        """
-        self.heading.focus_set()
-        self.heading.select_range(0, 'end')
-        return 'break'
+
 
     def new_word(self, event=None):
         """

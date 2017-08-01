@@ -38,16 +38,11 @@ class EditPage(Edit):
         self.textbox.bind('<Control-r>', self.load)
         self.textbox.bind('<Control-s>', self.save)
         self.textbox.bind('<Control-t>', self.table)
-        self.textbox.bind('<Shift-Tab>', self.go_to_heading)
         self.textbox.configure(font=('Corbel', '14'))
         self.radios[0].configure(text='Grammar', variable=self.sitename, value='grammar', command=self.change_site)
         self.radios[1].configure(text='Story', variable=self.sitename, value='story', command=self.change_site)
         self.radios[0].select()
         self.headings[0].focus_set()
-
-    def go_to_heading(self, event=None):
-        self.headings[2].focus_set()
-        return 'break'
 
     def refresh_site(self, event=None):
         self.site.refresh()
@@ -137,7 +132,7 @@ class EditPage(Edit):
         else:
             self.entry = self.site.root
             self.textboxes[0].insert(1.0, 'That page does not exist. Create a new page by appending to an old one.')
-            self.headings[1].focus_set()
+            self.headings[0].focus_set()
         self.update_wordcount(widget=self.textboxes[0])
         return 'break'
 
