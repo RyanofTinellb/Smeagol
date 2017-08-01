@@ -190,6 +190,28 @@ class Markdown:
             text = text.replace(first, second)
         return text
 
+    def find_formatting(self, keyword):
+        """
+        Find markdown for specific formatting.
+        :param keyword (str): the formatting type, in html, e.g.: strong, em, &c, &c.
+        :return (tuple): the opening and closing tags, in markdown, e.g.: ([[, ]]), (<<, >>)
+        """
+        start = self.find('<' + keyword + '>')
+        if start == '':
+            start = self.find('<' + keyword)
+        end = self.find('</' + keyword + '>')
+        return start, end
+
+    def find(self, text):
+        """
+        Find markdown for particular formatting.
+        :param text (str):
+        """
+        try:
+            return self.markdown[self.markup.index(text)]
+        except ValueError:
+            return ''
+
     def refresh(self):
         self.markup, self.markdown = [], []
         self.source = None

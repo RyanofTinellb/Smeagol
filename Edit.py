@@ -166,39 +166,26 @@ class Edit(Tk.Frame):
         """
         Insert markdown for bold tags, and place insertion point between them.
         """
-        self.insert_characters(event, *self.find_formatting('strong'))
+        self.insert_characters(event, *self.markdown.find_formatting('strong'))
         return 'break'
 
     def italic(self, event=None):
         """
         Insert markdown for italic tags, and place insertion point between them.
         """
-        self.insert_characters(event, *self.find_formatting('em'))
+        self.insert_characters(event, *self.markdown.find_formatting('em'))
         return 'break'
 
     def small_caps(self, event=None):
         """
         Insert markdown for small-caps tags, and place insertion point between them.
         """
-        self.insert_characters(event, *self.find_formatting('small-caps'))
+        self.insert_characters(event, *self.markdown.find_formatting('small-caps'))
         return 'break'
 
     def insert_pipe(self, event=None):
         self.insert_characters(event, ' | ')
         return 'break'
-
-    def find_formatting(self, keyword):
-        """
-        Find markdown for specific formatting.
-        :param keyword (str): the formatting type, in html, e.g.: strong, em, &c, &c.
-        :return (tuple): the opening and closing tags, in markdown, e.g.: ([[, ]]), (<<, >>)
-        """
-        if self.markdown:
-            start = self.markdown.markdown[self.markdown.markup.index('<' + keyword + '>')]
-            end = self.markdown.markdown[self.markdown.markup.index('</' + keyword + '>')]
-            return start, end
-        else:
-            return '', ''
 
     @staticmethod
     def delete_word(event=None):
@@ -213,6 +200,7 @@ class Edit(Tk.Frame):
             delete(Tk.INSERT, Tk.INSERT + '+1c')
         else:
             delete(Tk.INSERT, Tk.INSERT + ' wordend')
+        self.update_wordcount(event)
         return 'break'
 
     @staticmethod
@@ -226,6 +214,7 @@ class Edit(Tk.Frame):
             delete(Tk.INSERT + '-1c wordstart -1c', Tk.INSERT)
         else:
             delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
+        self.update_wordcount(event)
         return 'break'
 
     def load(self):
@@ -257,7 +246,7 @@ class Edit(Tk.Frame):
         if event is not None:
             widget = event.widget
         text = widget.get(1.0, Tk.END)
-        self.information.set(str(text.count(' ') + text.count('\n')))
+        self.information.set(str(text.count(' ') + text.count('\n') - text.count('|')))
 
     def next_window(self, event):
         try:

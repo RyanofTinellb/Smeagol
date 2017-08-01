@@ -98,8 +98,8 @@ class EditDictionary(Edit):
         """
         Insert the markdown for entry definition, and move the insertion pointer to allow for immediate input of the definition.
         """
-        self.edit_text.insert(Tk.INSERT, '{{ ==}}')
-        self.edit_text.mark_set(Tk.INSERT, Tk.INSERT + '-2c')
+        self.insert_characters(event, *self.markdown.find_formatting('div'))
+        self.insert_characters(event, ' ' + self.markdown.find('class="definition">'))
         return 'break'
 
     def refresh_random(self, event=None):
