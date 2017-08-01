@@ -1,19 +1,23 @@
+from collections import OrderedDict as Odict
 from random import randint
 import re
 import datetime
 
 
 class Translator:
-    def __init__(self, language):
-        language = language.lower()
-        if language == "hl":
-            self.converter = HighLulani()
-        elif language == "en":
+    def __init__(self, language=None):
+        languages = Odict()
+        languages['en'] = English
+        languages['hl'] = HighLulani
+        self.languages = languages
+        try:
+            language = language.lower()
+            self.converter = languages[language]()
+        except (IndexError, AttributeError):
             self.converter = English()
-        else:
-            raise NameError('No such language ' + language)
         self.name = self.converter.name
         self.code = language
+        self.number = len(languages)
 
     def convert_text(self, text):
         return self.converter.convert_text(text)
