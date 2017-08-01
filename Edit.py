@@ -78,6 +78,7 @@ class Edit(Tk.Frame):
     def textbox_commands(self):
         return [
         ('<KeyPress>', self.edit_text_changed),
+        ('<Control-a>', self.select_all),
         ('<Control-b>', self.bold),
         ('<Control-i>', self.italic),
         ('<Control-k>', self.small_caps),
@@ -87,6 +88,11 @@ class Edit(Tk.Frame):
         ('<Control-BackSpace>', self.backspace_word),
         ('<Control-Delete>', self.delete_word),
         ('<KeyPress-|>', self.insert_pipe)]
+
+    @staticmethod
+    def select_all(self, event):
+        event.widget.tag_add('sel', '1.0', 'end')
+        return 'break'
 
     @staticmethod
     def create_headings(master, number, commands=None):

@@ -40,7 +40,6 @@ class EditDictionary(Edit):
         self.heading.bind('<Return>', self.load)
         self.go_button = self.buttons[0]
         self.save_button = self.buttons[1]
-        self.edit_text.bind('<Control-a>', self.select_all)
         self.edit_text.bind('<Control-l>', self.load)
         self.edit_text.bind('<Control-n>', self.new_word)
         self.edit_text.bind('<Control-r>', self.refresh_random)
@@ -57,20 +56,7 @@ class EditDictionary(Edit):
         """
         self.translator = Translator(self.language.get())
         return 'break'
-
-    def select_all(self, event=None, widget=None):
-        """
-        Select all the text in the edit area
-        """
-        try:
-            event.widget.tag_add('sel', '1.0', 'end')
-        except AttributeError:
-            try:
-                widget.tag_add('sel', '1.0', 'end')
-            except AttributeError:
-                pass
-        return 'break'
-
+        
     def go_to_heading(self, event=None):
         """
         Move focus to the heading textbox, and select all the text therein

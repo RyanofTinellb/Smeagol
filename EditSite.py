@@ -34,7 +34,6 @@ class EditPage(Edit):
         self.headings[0].bind('<Return>', self.insert_chapter)
         self.headings[1].bind('<Return>', self.insert_heading)
         self.headings[2].bind('<Return>', self.load)
-        self.textbox.bind('<Control-a>', self.select_all)
         self.textbox.bind('<Control-o>', self.refresh_site)
         self.textbox.bind('<Control-r>', self.load)
         self.textbox.bind('<Control-s>', self.save)
@@ -86,10 +85,6 @@ class EditPage(Edit):
         for k in range(level - 1, 3):
             self.headings[k].delete(0, Tk.END)
         heading.insert(Tk.INSERT, self.entry.name)
-        return 'break'
-
-    def select_all(self, event=None):
-        self.textboxes[0].tag_add('sel', '1.0', 'end')
         return 'break'
 
     def change_site(self, event=None):
