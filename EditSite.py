@@ -20,8 +20,6 @@ class EditPage(Edit):
         self.markdown = self.choose(self.sitename.get(), markdowns)
         self.directories = directories
         os.chdir(self.choose(self.sitename.get(), directories))
-        self.number_of_words = Tk.StringVar()
-        self.number_of_words.set('')
         self.entry = self.site.root
         self.configure_widgets()
 
@@ -37,14 +35,13 @@ class EditPage(Edit):
         self.headings[2].bind('<Return>', self.load)
         self.textboxes[0].bind('<KeyPress>', self.textbox_changed)
         self.textboxes[0].bind('<Control-a>', self.select_all)
-        self.textboxes[0].bind('<Control-m>', self.refresh_markdown)
         self.textboxes[0].bind('<Control-o>', self.refresh_site)
         self.textboxes[0].bind('<Control-r>', self.load)
         self.textboxes[0].bind('<Control-s>', self.save)
         self.textboxes[0].bind('<Control-t>', self.table)
         self.textboxes[0].bind('<Shift-Tab>', self.go_to_heading)
         self.textboxes[0].configure(font=('Corbel', '14'))
-        self.infolabel.configure(textvariable=self.number_of_words)
+        self.infolabel.configure(textvariable=self.information)
         self.radios[0].configure(text='Grammar', variable=self.sitename, value='grammar', command=self.change_site)
         self.radios[1].configure(text='Story', variable=self.sitename, value='story', command=self.change_site)
         self.radios[0].select()
@@ -57,15 +54,7 @@ class EditPage(Edit):
     def refresh_site(self, event=None):
         self.site.refresh()
         self.load()
-        self.number_of_words.set('Site Refreshed!')
-
-    def refresh_markdown(self, event=None):
-        """
-        Re-open replacements page.
-        """
-        self.markdown.refresh()
-        self.number_of_words.set('Markdown Refreshed!')
-        return 'break'
+        self.information.set('Site Refreshed!')
 
     def scroll_headings(self, event, level):
         """
@@ -136,7 +125,7 @@ class EditPage(Edit):
 
     def update_wordcount(self, event=None):
         text = self.textboxes[0].get(1.0, Tk.END)
-        self.number_of_words.set(str(text.count(' ') + text.count('\n')))
+        self.information.set(str(text.count(' ') + text.count('\n')))
 
     def textbox_changed(self, event=None):
         self.update_wordcount()

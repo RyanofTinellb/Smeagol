@@ -40,7 +40,7 @@ class Edit(Tk.Frame):
         self.headings = self.create_headings(self.buttonframe, widgets.number_of_headings)
         self.radios = self.create_radios(self.buttonframe, widgets.number_of_radios)
         self.blanklabel = Tk.Label(self.buttonframe, height=1000) # enough height to push all other widgets to the top of the window.
-        self.infolabel = self.create_label(self.buttonframe)
+        self.infolabel, self.information = self.create_label(self.buttonframe)
         self.buttons = self.create_buttons(self.buttonframe)
         self.buttons[1].configure(textvariable=self.save_text)
         commands = self.textbox_commands()
@@ -80,6 +80,7 @@ class Edit(Tk.Frame):
         ('<Control-b>', self.bold),
         ('<Control-i>', self.italic),
         ('<Control-k>', self.small_caps),
+        ('<Control-m>', self.refresh_markdown),
         ('<Tab>', self.next_window),
         ('<Shift-Tab>', self.previous_window),
         ('<Control-BackSpace>', self.backspace_word),
@@ -104,7 +105,8 @@ class Edit(Tk.Frame):
 
     @staticmethod
     def create_label(master):
-        return Tk.Label(master)
+        textvariable = Tk.StringVar()
+        return Tk.Label(master, textvariable=textvariable), textvariable
 
     @staticmethod
     def create_radios(master, number):
@@ -257,9 +259,17 @@ class Edit(Tk.Frame):
     def manipulate_entry_for_textbox(text):
         return text
 
+    @staticmethod
     def manipulate_entry_for_datafile(text):
         return text
 
+    def refresh_markdown(self, event=None):
+        try:
+            self.markdown.refresh()
+            self.information.set('Markdown Refreshed!')
+        except AttributeError:
+            self.information.set('No Markdown Found')
+        return 'break'
 
 class Widgets():
     def __init__(self, number_of_headings=0, number_of_textboxes=0, number_of_radios=0):

@@ -18,7 +18,6 @@ class EditDictionary(Edit):
         # initialise instance variables
         self.site = site
         self.datafile = datafile
-        self.random_word = Tk.StringVar()
         self.language = Tk.StringVar()
         self.heading = self.headings[0]
         self.edit_text = self.textboxes[0]
@@ -36,18 +35,14 @@ class EditDictionary(Edit):
     def configure_widgets(self):
         for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
             radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
-        self.heading.bind('<Control-m>', self.refresh_markdown)
         self.heading.bind('<Control-r>', self.refresh_random)
         self.heading.bind('<Alt-d>', self.go_to_heading)
         self.heading.bind('<Return>', self.load)
         self.go_button = self.buttons[0]
         self.save_button = self.buttons[1]
-        self.random_words = self.infolabel
-        self.random_words.configure(textvariable=self.random_word)
         self.edit_text.bind('<KeyPress>', self.edit_text_changed)
         self.edit_text.bind('<Control-a>', self.select_all)
         self.edit_text.bind('<Control-l>', self.load)
-        self.edit_text.bind('<Control-m>', self.refresh_markdown)
         self.edit_text.bind('<Control-n>', self.new_word)
         self.edit_text.bind('<Control-r>', self.refresh_random)
         self.edit_text.bind('<Control-s>', self.save)
@@ -65,14 +60,6 @@ class EditDictionary(Edit):
         """
         if self.edit_text.edit_modified():
             self.save_text.set('*Save')
-
-    def refresh_markdown(self, event=None):
-        """
-        Reopen replacements file
-        """
-        self.markdown.refresh()
-        self.random_word.set('Markdown Refreshed!')
-        return 'break'
 
     def change_language(self, event=None):
         """
@@ -129,7 +116,7 @@ class EditDictionary(Edit):
         """
         Show a certain number of random nonsense words using High Lulani phonotactics.
         """
-        self.random_word.set('\n'.join(self.words()))
+        self.information.set('\n'.join(self.words()))
         return 'break'
 
     def add_translation(self, event=None):

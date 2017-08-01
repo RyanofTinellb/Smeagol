@@ -27,7 +27,6 @@ class EditStory(Edit):
         for textbox in self.textboxes:
             textbox.configure(font=font)
             textbox.bind('<KeyPress>', self.unloadinfo)
-            textbox.bind('<Control-m>', self.refresh_markdown)
             textbox.bind('<Control-r>', self.literal)
             textbox.bind('<Control-s>', self.save)
             textbox.bind('<Next>', self.next_paragraph)
@@ -84,11 +83,6 @@ class EditStory(Edit):
     def literal(event=None):
         event.widget.insert(Tk.INSERT, '|- -| {}')
         event.widget.mark_set(Tk.INSERT, Tk.INSERT + '-1c')
-        return 'break'
-
-    def refresh_markdown(self, event=None):
-        self.markdown.refresh()
-        self.information.set('Markdown Refreshed!')
         return 'break'
 
     def save(self, event=None):
