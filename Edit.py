@@ -82,6 +82,8 @@ class Edit(Tk.Frame):
         ('<Control-k>', self.small_caps),
         ('<Tab>', self.next_window),
         ('<Shift-Tab>', self.previous_window),
+        ('<Control-BackSpace>', self.backspace_word),
+        ('<Control-Delete>', self.delete_word),
         ('<KeyPress-|>', self.insert_pipe)]
 
     @staticmethod
@@ -194,6 +196,34 @@ class Edit(Tk.Frame):
             return start, end
         else:
             return '', ''
+
+    @staticmethod
+    def delete_word(event=None):
+        widget = event.widget
+        get = widget.get
+        delete = widget.delete
+        if get(Tk.INSERT + '-1c') in ' .,;:?!\n' or widget.compare(Tk.INSERT, '==', '1.0'):
+            delete(Tk.INSERT, Tk.INSERT + ' wordend +1c')
+        elif get(Tk.INSERT) == ' ':
+            delete(Tk.INSERT, Tk.INSERT + '+1c wordend')
+        elif get(Tk.INSERT) in '.,;:?!':
+            delete(Tk.INSERT, Tk.INSERT + '+1c')
+        else:
+            delete(Tk.INSERT, Tk.INSERT + ' wordend')
+        return 'break'
+
+    @staticmethod
+    def backspace_word(event=None):
+        widget = event.widget
+        get = widget.get
+        delete = widget.delete
+        if get(Tk.INSERT + '-1c') in '.,;:?! ':
+            delete(Tk.INSERT + '-2c wordstart', Tk.INSERT)
+        elif get(Tk.INSERT) in ' ':
+            delete(Tk.INSERT + '-1c wordstart -1c', Tk.INSERT)
+        else:
+            delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
+        return 'break'
 
     def load(self):
         """

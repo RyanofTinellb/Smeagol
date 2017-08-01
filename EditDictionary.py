@@ -45,7 +45,6 @@ class EditDictionary(Edit):
         self.random_words = self.infolabel
         self.random_words.configure(textvariable=self.random_word)
         self.edit_text.bind('<KeyPress>', self.edit_text_changed)
-        self.edit_text.bind('<KeyPress-|>', self.insert_pipe)
         self.edit_text.bind('<Control-a>', self.select_all)
         self.edit_text.bind('<Control-l>', self.load)
         self.edit_text.bind('<Control-m>', self.refresh_markdown)
@@ -54,7 +53,6 @@ class EditDictionary(Edit):
         self.edit_text.bind('<Control-s>', self.save)
         self.edit_text.bind('<Control-t>', self.add_translation)
         self.edit_text.bind('<Control-=>', self.add_definition)
-        self.edit_text.bind('<Control-BackSpace>', self.delete_word)
         self.edit_text.bind('<Alt-d>', self.go_to_heading)
         self.edit_text.configure(font=('Courier New', '15'))
         self.radios[1].select()
@@ -94,16 +92,6 @@ class EditDictionary(Edit):
                 widget.tag_add('sel', '1.0', 'end')
             except AttributeError:
                 pass
-        return 'break'
-
-    def delete_word(self, event=None):
-        """
-        Remove text backwards from the insertion counter to the end of the previous word
-        """
-        if self.edit_text.get(Tk.INSERT + '-1c') in '.,;:?! ':
-            self.edit_text.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
-        else:
-            self.edit_text.delete(Tk.INSERT + '-1c wordstart -1c', Tk.INSERT)
         return 'break'
 
     def go_to_heading(self, event=None):

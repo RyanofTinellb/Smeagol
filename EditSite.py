@@ -36,8 +36,6 @@ class EditPage(Edit):
         self.headings[1].bind('<Return>', self.insert_heading)
         self.headings[2].bind('<Return>', self.load)
         self.textboxes[0].bind('<KeyPress>', self.textbox_changed)
-        self.textboxes[0].bind('<Control-BackSpace>', self.backspace_word)
-        self.textboxes[0].bind('<Control-Delete>', self.delete_word)
         self.textboxes[0].bind('<Control-a>', self.select_all)
         self.textboxes[0].bind('<Control-m>', self.refresh_markdown)
         self.textboxes[0].bind('<Control-o>', self.refresh_site)
@@ -134,28 +132,6 @@ class EditPage(Edit):
 
     def insert_heading(self, event=None):
         self.headings[2].focus_set()
-        return 'break'
-
-    def delete_word(self, event=None):
-        if self.textboxes[0].get(Tk.INSERT + '-1c') in ' .,;:?!':
-            self.textboxes[0].delete(Tk.INSERT, Tk.INSERT + ' wordend +1c')
-        elif self.textboxes[0].get(Tk.INSERT) == ' ':
-            self.textboxes[0].delete(Tk.INSERT, Tk.INSERT + '+1c wordend')
-        elif self.textboxes[0].get(Tk.INSERT) in '.,;:?!':
-            self.textboxes[0].delete(Tk.INSERT, Tk.INSERT + '+1c')
-        else:
-            self.textboxes[0].delete(Tk.INSERT, Tk.INSERT + ' wordend')
-        self.update_wordcount()
-        return 'break'
-
-    def backspace_word(self, event=None):
-        if self.textboxes[0].get(Tk.INSERT + '-1c') in '.,;:?!':
-            self.textboxes[0].delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
-        elif self.textboxes[0].get(Tk.INSERT + '-1c') in ' ':
-            self.textboxes[0].delete(Tk.INSERT + '-2c wordstart', Tk.INSERT)
-        else:
-            self.textboxes[0].delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
-        self.update_wordcount()
         return 'break'
 
     def update_wordcount(self, event=None):

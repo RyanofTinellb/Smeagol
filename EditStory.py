@@ -34,8 +34,7 @@ class EditStory(Edit):
             textbox.bind('<Prior>', self.previous_paragraph)
             textbox.bind('<Control-Next>', self.next_chapter)
             textbox.bind('<Control-Prior>', self.previous_chapter)
-            textbox.bind('<Control-BackSpace>', self.backspace_word)
-            textbox.bind('<Control-Delete>', self.delete_word)
+
         for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
             radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
         self.language.set(self.translator.languages.keys()[0])
@@ -79,26 +78,6 @@ class EditStory(Edit):
         self.chapter.next_paragraph()
         self.display()
         self.information.set('')
-        return 'break'
-
-    @staticmethod
-    def delete_word(event=None):
-        if event.widget.get(Tk.INSERT + '-1c') in ' .,;:?!':
-            event.widget.delete(Tk.INSERT, Tk.INSERT + ' wordend +1c')
-        elif event.widget.get(Tk.INSERT) == ' ':
-            event.widget.delete(Tk.INSERT, Tk.INSERT + '+1c wordend')
-        elif event.widget.get(Tk.INSERT) in '.,;:?!':
-            event.widget.delete(Tk.INSERT, Tk.INSERT + '+1c')
-        else:
-            event.widget.delete(Tk.INSERT, Tk.INSERT + ' wordend')
-        return 'break'
-
-    @staticmethod
-    def backspace_word(event=None):
-        if event.widget.get(Tk.INSERT + '-1c') in '.,;:?!':
-            event.widget.delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
-        else:
-            event.widget.delete(Tk.INSERT + '-1c wordstart -1c', Tk.INSERT)
         return 'break'
 
     @staticmethod
