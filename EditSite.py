@@ -21,6 +21,7 @@ class EditPage(Edit):
         self.directories = directories
         os.chdir(self.choose(self.sitename.get(), directories))
         self.entry = self.site.root
+        self.textbox = self.textboxes[0]
         self.configure_widgets()
 
     def configure_widgets(self):
@@ -33,13 +34,13 @@ class EditPage(Edit):
         self.headings[0].bind('<Return>', self.insert_chapter)
         self.headings[1].bind('<Return>', self.insert_heading)
         self.headings[2].bind('<Return>', self.load)
-        self.textboxes[0].bind('<Control-a>', self.select_all)
-        self.textboxes[0].bind('<Control-o>', self.refresh_site)
-        self.textboxes[0].bind('<Control-r>', self.load)
-        self.textboxes[0].bind('<Control-s>', self.save)
-        self.textboxes[0].bind('<Control-t>', self.table)
-        self.textboxes[0].bind('<Shift-Tab>', self.go_to_heading)
-        self.textboxes[0].configure(font=('Corbel', '14'))
+        self.textbox.bind('<Control-a>', self.select_all)
+        self.textbox.bind('<Control-o>', self.refresh_site)
+        self.textbox.bind('<Control-r>', self.load)
+        self.textbox.bind('<Control-s>', self.save)
+        self.textbox.bind('<Control-t>', self.table)
+        self.textbox.bind('<Shift-Tab>', self.go_to_heading)
+        self.textbox.configure(font=('Corbel', '14'))
         self.radios[0].configure(text='Grammar', variable=self.sitename, value='grammar', command=self.change_site)
         self.radios[1].configure(text='Story', variable=self.sitename, value='story', command=self.change_site)
         self.radios[0].select()
