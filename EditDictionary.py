@@ -1,5 +1,4 @@
 import Tkinter as Tk
-import os
 from Smeagol import *
 from Translation import *
 from Edit import *
@@ -13,28 +12,20 @@ class EditDictionary(Edit):
         :param markdown (String): the path, filename and extension of the replacements file, relative to directory
         :param randomwords (int): the number of random words to appear when requested
         """
-        widgets = Widgets(1, 1, 2)
+        widgets = Widgets(1, 1, 'languages')
         Edit.__init__(self, 'dictionary', directory, datafile, site, markdown, widgets)
         # initialise instance variables
-        self.site = site
-        self.datafile = datafile
-        self.language = Tk.StringVar()
         self.heading = self.headings[0]
         self.edit_text = self.textboxes[0]
         self.entry = ''
         self.page = None
-        # initialise other useful classes. Default language is High Lulani
-        self.markdown = markdown
-        self.translator = Translator('hl')
         self.words = randomwords.words
         self.replacelinks = replacelinks
         # initialise textboxes and buttons
         self.configure_widgets()
-        self.heading.focus_set()
 
     def configure_widgets(self):
-        for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
-            radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
+        self.configure_language_radios()
         self.heading.bind('<Control-r>', self.refresh_random)
         self.heading.bind('<Return>', self.load)
         self.go_button = self.buttons[0]
@@ -46,15 +37,6 @@ class EditDictionary(Edit):
         self.edit_text.bind('<Control-t>', self.add_translation)
         self.edit_text.bind('<Control-=>', self.add_definition)
         self.edit_text.configure(font=('Courier New', '15'))
-        self.radios[1].select()
-
-    def change_language(self, event=None):
-        """
-        Change the entry language to whatever is in the StringVar 'self.language'
-        """
-        self.translator = Translator(self.language.get())
-        return 'break'
-
 
     def new_word(self, event=None):
         """

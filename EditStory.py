@@ -2,24 +2,16 @@ import Tkinter as Tk
 from Translation import *
 from Smeagol import *
 from Edit import *
-import os
 from random import choice
 from string import printable
 
 class EditStory(Edit):
     def __init__(self, directory, datafile, site, markdown, master=None):
         os.chdir(directory)
-        self.datafile = datafile
-        self.site = site
-        self.markdown = markdown
-        self.translator = Translator()
-        widgets = Widgets(3, 3, self.translator.number)
+        widgets = Widgets(3, 3, 'languages')
         Edit.__init__(self, 'story', directory, datafile, site, markdown, widgets)
-        self.language = Tk.StringVar()
         self.entry = self.site.root[0][0][0]       # first great-grandchild
         self.chapter = Chapter(self.entry, self.markdown)
-        self.textboxes[0].focus_set()
-        self.information = Tk.StringVar()
         self.configure_widgets()
 
     def configure_widgets(self):
@@ -33,11 +25,7 @@ class EditStory(Edit):
             textbox.bind('<Prior>', self.previous_paragraph)
             textbox.bind('<Control-Next>', self.next_chapter)
             textbox.bind('<Control-Prior>', self.previous_chapter)
-
-        for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
-            radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
-        self.language.set(self.translator.languages.keys()[0])
-        self.infolabel.configure(textvariable=self.information)
+        self.configure_language_radios()
 
     def change_language(self, event=None):
         self.translator = translator(self.language.get())

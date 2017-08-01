@@ -1,8 +1,8 @@
+from Smeagol import *
+from Translation import *
 import Tkinter as Tk
-import Translation
 import os
 import re
-from Smeagol import *
 
 class Edit(Tk.Frame):
     """
@@ -28,6 +28,8 @@ class Edit(Tk.Frame):
         self.load_button = self.save_button = self.label = None
         self.save_text = Tk.StringVar()
         self.save_text.set('Save')
+        self.translator = Translator()
+        self.language = Tk.StringVar()
         # open correct directory
         try:
             os.chdir(self.choose(kind, directories))
@@ -38,6 +40,8 @@ class Edit(Tk.Frame):
         self.markdown = self.choose(kind, markdowns)
         # create widgets and window
         self.headings = self.create_headings(self.buttonframe, widgets.number_of_headings)
+        if widgets.number_of_radios == 'languages':
+            widgets.number_of_radios = self.translator.number
         self.radios = self.create_radios(self.buttonframe, widgets.number_of_radios)
         self.blanklabel = Tk.Label(self.buttonframe, height=1000) # enough height to push all other widgets to the top of the window.
         self.infolabel, self.information = self.create_label(self.buttonframe)
@@ -46,6 +50,7 @@ class Edit(Tk.Frame):
         commands = self.textbox_commands()
         self.textboxes = self.create_textboxes(self.textframe, widgets.number_of_textboxes, commands)
         self.create_window()
+        self.headings[0].focus_set()
         self.top = self.winfo_toplevel()
         self.top.state('zoomed')
 
@@ -89,6 +94,18 @@ class Edit(Tk.Frame):
         ('<Tab>', self.next_window),
         ('<Shift-Tab>', self.previous_window),
         ('<KeyPress-|>', self.insert_pipe)]
+
+    def configure_language_radios(self):
+        for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
+            radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
+        self.language.set(self.translator.languages.keys()[0])
+
+    def change_language(self, event=None):
+        """
+        Change the entry language to whatever is in the StringVar 'self.language'
+        """
+        self.translator = Translator(self.language.get())
+        return 'break'
 
     @staticmethod
     def select_all(event):

@@ -1,6 +1,4 @@
 import Tkinter as Tk
-import os
-import thread
 from Smeagol import *
 from Translation import *
 from Edit import *
@@ -12,14 +10,6 @@ class EditPage(Edit):
         Edit.__init__(self, 'grammar', directories, datafiles, sites, markdowns, widgets)
         self.sitename = Tk.StringVar()
         self.sitename.set('grammar')
-        self.datafiles = datafiles
-        self.datafile = self.choose(self.sitename.get(), datafiles)
-        self.sites = sites
-        self.site = self.choose(self.sitename.get(), sites)
-        self.markdowns = markdowns
-        self.markdown = self.choose(self.sitename.get(), markdowns)
-        self.directories = directories
-        os.chdir(self.choose(self.sitename.get(), directories))
         self.entry = self.site.root
         self.textbox = self.textboxes[0]
         self.configure_widgets()
@@ -41,8 +31,7 @@ class EditPage(Edit):
         self.textbox.configure(font=('Corbel', '14'))
         self.radios[0].configure(text='Grammar', variable=self.sitename, value='grammar', command=self.change_site)
         self.radios[1].configure(text='Story', variable=self.sitename, value='story', command=self.change_site)
-        self.radios[0].select()
-        self.headings[0].focus_set()
+        self.sitename.set('grammar')
 
     def refresh_site(self, event=None):
         self.site.refresh()
