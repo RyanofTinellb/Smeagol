@@ -39,6 +39,7 @@ class Edit(Tk.Frame):
         # create widgets
         self.headings = self.create_headings(self.buttonframe, widgets.number_of_headings)
         self.radios = self.create_radios(self.buttonframe, widgets.number_of_radios)
+        self.blanklabel = Tk.Label(self.buttonframe, height=1000) # enough height to push all other widgets to the top of the window.
         self.infolabel = self.create_label(self.buttonframe)
         self.buttons = self.create_buttons(self.buttonframe)
         self.textboxes = self.create_textboxes(self.textframe, widgets.number_of_textboxes)
@@ -65,6 +66,7 @@ class Edit(Tk.Frame):
             textbox.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
             row += 1
         self.infolabel.grid(row=row, column=0, columnspan=2)
+        self.blanklabel.grid(row=row+1, column=0, columnspan=2)
 
     @staticmethod
     def create_headings(master, number):
@@ -80,7 +82,7 @@ class Edit(Tk.Frame):
 
     @staticmethod
     def create_label(master):
-        return Tk.Label(master, height=160)
+        return Tk.Label(master)
 
     @staticmethod
     def create_radios(master, number):
@@ -97,7 +99,6 @@ class Edit(Tk.Frame):
             textbox = Tk.Text(master, height=1, width=1)
             textboxes.append(textbox)
         return textboxes
-
 
     @staticmethod
     def change_directory(directory):
