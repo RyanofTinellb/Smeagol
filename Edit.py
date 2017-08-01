@@ -76,9 +76,12 @@ class Edit(Tk.Frame):
         self.blanklabel.grid(row=row+1, column=0, columnspan=2)
 
     def textbox_commands(self):
-        return [('<Control-b>', self.bold),
+        return [
+        ('<Control-b>', self.bold),
         ('<Control-i>', self.italic),
         ('<Control-k>', self.small_caps),
+        ('<Tab>', self.next_window),
+        ('<Shift-Tab>', self.previous_window),
         ('<KeyPress-|>', self.insert_pipe)]
 
     @staticmethod
@@ -206,6 +209,19 @@ class Edit(Tk.Frame):
         """
         text = self.edit_text.get(1.0, Tk.END + '-1c')
         self.entry.content = manipulate_entry_for_datafile(text)
+
+    def next_window(self, event):
+        try:
+            self.textboxes[(self.textboxes.index(event.widget) + 1)].focus_set()
+        except IndexError:
+            self.textboxes[0].focus_set()
+        return 'break'
+
+    def previous_window(self, event):
+        try:
+            self.textboxes[(self.textboxes.index(event.widget) - 1)].focus_set()
+        except IndexError:
+            self.textboxes[-1].focus_set()
 
     @staticmethod
     def manipulate_entry_for_textbox(text):

@@ -27,7 +27,7 @@ class EditStory(Edit):
         for textbox in self.textboxes:
             textbox.configure(font=font)
             textbox.bind('<KeyPress>', self.unloadinfo)
-            textbox.bind('<Tab>', self.next_window)
+
             textbox.bind('<Control-m>', self.refresh_markdown)
             textbox.bind('<Control-r>', self.literal)
             textbox.bind('<Control-s>', self.save)
@@ -43,10 +43,6 @@ class EditStory(Edit):
 
     def change_language(self, event=None):
         self.translator = translator(self.language.get())
-
-    def next_window(self, event):
-        self.textboxes[(self.textboxes.index(event.widget) + 1) % 3].focus_set()
-        return 'break'
 
     def unloadinfo(self, event=None):
         self.information.set('')
