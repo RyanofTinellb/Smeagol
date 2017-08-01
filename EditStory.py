@@ -27,7 +27,6 @@ class EditStory(Edit):
         for textbox in self.textboxes:
             textbox.configure(font=font)
             textbox.bind('<KeyPress>', self.unloadinfo)
-
             textbox.bind('<Control-m>', self.refresh_markdown)
             textbox.bind('<Control-r>', self.literal)
             textbox.bind('<Control-s>', self.save)
@@ -39,6 +38,7 @@ class EditStory(Edit):
             textbox.bind('<Control-Delete>', self.delete_word)
         for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
             radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
+        self.language.set(self.translator.languages.keys()[0])
         self.infolabel.configure(textvariable=self.information)
 
     def change_language(self, event=None):
