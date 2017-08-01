@@ -21,24 +21,20 @@ class Edit(Tk.Frame):
         self.datafiles = datafiles
         self.sites = sites
         self.markdowns = markdowns
+
         # initialise instance variables
-        self.buttonframe = Tk.Frame(self)
-        self.textframe = Tk.Frame(self)
+        self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
         self.headings, self.radios, self.texts = [], [], []
-        self.load_button = self.save_button = self.label = None
-        self.save_text = Tk.StringVar()
+        self.buttons = self.load_button = self.save_button = self.label = None
+        self.save_text, self.language = Tk.StringVar(), Tk.StringVar()
         self.save_text.set('Save')
         self.translator = Translator()
-        self.language = Tk.StringVar()
-        # open correct directory
-        try:
-            os.chdir(self.choose(kind, directories))
-        except TypeError:
-            pass
-        self.datafile = self.choose(kind, datafiles)
-        self.site = self.choose(kind, sites)
-        self.markdown = self.choose(kind, markdowns)
+
+        # open site
+        self.opensite(self.kind)
+
         # create widgets and window
+        widgets = self.widgets
         self.headings = self.create_headings(self.buttonframe, widgets.number_of_headings)
         if widgets.number_of_radios == 'languages':
             widgets.number_of_radios = self.translator.number
@@ -46,13 +42,16 @@ class Edit(Tk.Frame):
         self.blanklabel = Tk.Label(self.buttonframe, height=1000) # enough height to push all other widgets to the top of the window.
         self.infolabel, self.information = self.create_label(self.buttonframe)
         self.buttons = self.create_buttons(self.buttonframe)
-        self.buttons[1].configure(textvariable=self.save_text)
+        self.load_button, self.save_button = self.buttons
+        self.save_button.configure(textvariable=self.save_text)
         commands = self.textbox_commands()
-        self.textboxes = self.create_textboxes(self.textframe, widgets.number_of_textboxes, commands)
+        self.textboxes = self.create_textboxes(self.textframe, widgets.number_of_textboxes, commands, self.font)
         self.create_window()
-        self.headings[0].focus_set()
+
+        # prepare window to begin
         self.top = self.winfo_toplevel()
         self.top.state('zoomed')
+        self.headings[0].focus_set()
 
     def create_window(self):
         """
@@ -151,12 +150,14 @@ class Edit(Tk.Frame):
         return radios
 
     @staticmethod
-    def create_textboxes(master, number, commands=None):
+    def create_textboxes(master, number, commands=None, font=None):
         if not commands:
             commands = []
+        if not font:
+            font = ('Courier New', '15')
         textboxes = []
         for _ in range(number):
-            textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD, undo=True)
+            textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD, undo=True, font=font)
             for (key, command) in commands:
                 textbox.bind(key, command)
             textboxes.append(textbox)

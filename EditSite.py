@@ -6,8 +6,9 @@ from Edit import *
 
 class EditPage(Edit):
     def __init__(self, directories, datafiles, sites, markdowns, master=None):
-        widgets = Widgets(3, 1, 2)
-        Edit.__init__(self, 'grammar', directories, datafiles, sites, markdowns, widgets)
+        self.font = ('Corbel', '14')
+        self.widgets = Widgets(3, 1, 2)
+        Edit.__init__(self, 'grammar', directories, datafiles, sites, markdowns)
         self.sitename = Tk.StringVar()
         self.sitename.set('grammar')
         self.entry = self.site.root
@@ -28,7 +29,7 @@ class EditPage(Edit):
         self.textbox.bind('<Control-r>', self.load)
         self.textbox.bind('<Control-s>', self.save)
         self.textbox.bind('<Control-t>', self.table)
-        self.textbox.configure(font=('Corbel', '14'))
+
         self.radios[0].configure(text='Grammar', variable=self.sitename, value='grammar', command=self.change_site)
         self.radios[1].configure(text='Story', variable=self.sitename, value='story', command=self.change_site)
         self.sitename.set('grammar')

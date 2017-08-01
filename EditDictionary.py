@@ -12,8 +12,9 @@ class EditDictionary(Edit):
         :param markdown (String): the path, filename and extension of the replacements file, relative to directory
         :param randomwords (int): the number of random words to appear when requested
         """
-        widgets = Widgets(1, 1, 'languages')
-        Edit.__init__(self, 'dictionary', directory, datafile, site, markdown, widgets)
+        self.font = ('Courier New', '15')
+        self.widgets = Widgets(1, 1, 'languages')
+        Edit.__init__(self, 'dictionary', directory, datafile, site, markdown)
         # initialise instance variables
         self.heading = self.headings[0]
         self.edit_text = self.textboxes[0]
@@ -28,15 +29,12 @@ class EditDictionary(Edit):
         self.configure_language_radios()
         self.heading.bind('<Control-r>', self.refresh_random)
         self.heading.bind('<Return>', self.load)
-        self.go_button = self.buttons[0]
-        self.save_button = self.buttons[1]
         self.edit_text.bind('<Control-l>', self.load)
         self.edit_text.bind('<Control-n>', self.new_word)
         self.edit_text.bind('<Control-r>', self.refresh_random)
         self.edit_text.bind('<Control-s>', self.save)
         self.edit_text.bind('<Control-t>', self.add_translation)
         self.edit_text.bind('<Control-=>', self.add_definition)
-        self.edit_text.configure(font=('Courier New', '15'))
 
     def new_word(self, event=None):
         """

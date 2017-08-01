@@ -7,17 +7,15 @@ from string import printable
 
 class EditStory(Edit):
     def __init__(self, directory, datafile, site, markdown, master=None):
-        os.chdir(directory)
-        widgets = Widgets(3, 3, 'languages')
-        Edit.__init__(self, 'story', directory, datafile, site, markdown, widgets)
+        self.font = ('Californian FB', 16)
+        self.widgets = Widgets(3, 3, 'languages')
+        Edit.__init__(self, 'story', directory, datafile, site, markdown)
         self.entry = self.site.root[0][0][0]       # first great-grandchild
         self.chapter = Chapter(self.entry, self.markdown)
         self.configure_widgets()
 
     def configure_widgets(self):
-        font = ('Californian FB', 16)
         for textbox in self.textboxes:
-            textbox.configure(font=font)
             textbox.bind('<KeyPress>', self.unloadinfo)
             textbox.bind('<Control-r>', self.literal)
             textbox.bind('<Control-s>', self.save)
