@@ -77,6 +77,7 @@ class Edit(Tk.Frame):
 
     def textbox_commands(self):
         return [
+        ('<KeyPress>', self.edit_text_changed),
         ('<Control-b>', self.bold),
         ('<Control-i>', self.italic),
         ('<Control-k>', self.small_caps),
@@ -242,18 +243,39 @@ class Edit(Tk.Frame):
         text = self.edit_text.get(1.0, Tk.END + '-1c')
         self.entry.content = manipulate_entry_for_datafile(text)
 
+    def edit_text_changed(self, event=None):
+        """
+        Notify the user that the edittext has been changed.
+        Activates after each keypress.
+        Deactivates after a save or a load action.
+        """
+        self.update_wordcount(event)
+        if event.widget.edit_modified():
+            self.save_text.set('*Save')
+
+    def update_wordcount(self, event=None, widget=None):
+        if event is not None:
+            widget = event.widget
+        text = widget.get(1.0, Tk.END)
+        self.information.set(str(text.count(' ') + text.count('\n')))
+
     def next_window(self, event):
         try:
-            self.textboxes[(self.textboxes.index(event.widget) + 1)].focus_set()
+            textbox = self.textboxes[(self.textboxes.index(event.widget) + 1)]
         except IndexError:
-            self.textboxes[0].focus_set()
+            textbox = self.textboxes[0]
+        textbox.focus_set()
+        self.update_wordcount(widget=textbox)
         return 'break'
 
     def previous_window(self, event):
         try:
-            self.textboxes[(self.textboxes.index(event.widget) - 1)].focus_set()
+            textbox = self.textboxes[(self.textboxes.index(event.widget) - 1)]
         except IndexError:
-            self.textboxes[-1].focus_set()
+            textbox = self.textboxes[-1]
+        textbox.focus_set()
+        self.update_wordcount(widget=textbox)
+        return 'break'
 
     @staticmethod
     def manipulate_entry_for_textbox(text):

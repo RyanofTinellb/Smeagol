@@ -40,7 +40,6 @@ class EditDictionary(Edit):
         self.heading.bind('<Return>', self.load)
         self.go_button = self.buttons[0]
         self.save_button = self.buttons[1]
-        self.edit_text.bind('<KeyPress>', self.edit_text_changed)
         self.edit_text.bind('<Control-a>', self.select_all)
         self.edit_text.bind('<Control-l>', self.load)
         self.edit_text.bind('<Control-n>', self.new_word)
@@ -51,15 +50,6 @@ class EditDictionary(Edit):
         self.edit_text.bind('<Alt-d>', self.go_to_heading)
         self.edit_text.configure(font=('Courier New', '15'))
         self.radios[1].select()
-
-    def edit_text_changed(self, event=None):
-        """
-        Notify the user that the edittext has been changed.
-        Activates after each keypress.
-        Deactivates after a save or a load action.
-        """
-        if self.edit_text.edit_modified():
-            self.save_text.set('*Save')
 
     def change_language(self, event=None):
         """

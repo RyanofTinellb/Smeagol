@@ -33,7 +33,6 @@ class EditPage(Edit):
         self.headings[0].bind('<Return>', self.insert_chapter)
         self.headings[1].bind('<Return>', self.insert_heading)
         self.headings[2].bind('<Return>', self.load)
-        self.textboxes[0].bind('<KeyPress>', self.textbox_changed)
         self.textboxes[0].bind('<Control-a>', self.select_all)
         self.textboxes[0].bind('<Control-o>', self.refresh_site)
         self.textboxes[0].bind('<Control-r>', self.load)
@@ -41,7 +40,6 @@ class EditPage(Edit):
         self.textboxes[0].bind('<Control-t>', self.table)
         self.textboxes[0].bind('<Shift-Tab>', self.go_to_heading)
         self.textboxes[0].configure(font=('Corbel', '14'))
-        self.infolabel.configure(textvariable=self.information)
         self.radios[0].configure(text='Grammar', variable=self.sitename, value='grammar', command=self.change_site)
         self.radios[1].configure(text='Story', variable=self.sitename, value='story', command=self.change_site)
         self.radios[0].select()
@@ -123,15 +121,6 @@ class EditPage(Edit):
         self.headings[2].focus_set()
         return 'break'
 
-    def update_wordcount(self, event=None):
-        text = self.textboxes[0].get(1.0, Tk.END)
-        self.information.set(str(text.count(' ') + text.count('\n')))
-
-    def textbox_changed(self, event=None):
-        self.update_wordcount()
-        if self.textboxes[0].edit_modified():
-            self.save_text.set('*Save')
-
     def load(self, event=None):
         # descend hierarchy in correct direction
         self.entry = self.site
@@ -153,12 +142,12 @@ class EditPage(Edit):
             self.entry = self.site.root
             self.textboxes[0].insert(1.0, 'That page does not exist. Create a new page by appending to an old one.')
             self.headings[1].focus_set()
-        self.update_wordcount()
+        self.update_wordcount(widget=self.textboxes[0])
         return 'break'
 
     def save(self, event=None):
         self.save_text.set('Save')
-        self.update_wordcount()
+        self.update_wordcount(widget=self.textboxes[0])
         self.entry.content = self.markdown.to_markup(str(self.textboxes[0].get(1.0, Tk.END)))
         while self.entry.content[-2:] == '\n\n':
             self.entry.content = self.entry.content[:-1]
