@@ -286,9 +286,9 @@ class Edit(Tk.Frame):
         """
         Find entry, manipulate entry to fit boxes, place in boxes.
         """
-        self.entry = self.find_entry(map(get, self.headings))
+        self.entry = self.find_entry(map(lambda x: x.get(), self.headings))
         markdown = self.choose(self.kind, self.markdowns)
-        texts = prepare_entry(self.entry, markdown)
+        texts = self.prepare_entry(self.entry, markdown)
         for text, textbox in zip(texts, self.textboxes):
             textbox.delete(1.0, Tk.END)
             textbox.insert(1.0, text)
@@ -298,16 +298,17 @@ class Edit(Tk.Frame):
         """
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages, update json.
         """
-        texts = map(lambda x: x.get(1.0, Tk.END + '-1c'), x.edit_modified(False) , self.textboxes)
+        texts = map(lambda x: (x.get(1.0, Tk.END + '-1c'), x.edit_modified(False)), self.textboxes)
         markdown = self.choose(self.kind, self.markdowns)
-        self.prepare_texts(self.entry, texts, markdown)
+        if self.entry:
+            self.prepare_texts(self.entry, texts, markdown)
         self.publish()
 
     def find_entry(self, headings):
         """
         Find the current entry based on what is in the heading boxes.
         This is the default method - other Edit programs will override this.
-        Subroutine of self.load()
+        Subroutine of self.load().
         :param headings (str[]): the texts from the heading boxes
         """
         entry = site = self.choose(self.kind, self.sites)
@@ -316,7 +317,7 @@ class Edit(Tk.Frame):
                 entry = entry[heading]
         except KeyError: # unable to find entry in Site.
             pass
-        return entry if entry is not site else site.root
+        return entry if entry is not site else (site.root if site else None)
 
     def publish(self):
         """
@@ -324,10 +325,12 @@ class Edit(Tk.Frame):
         This is the default method - other Edit programs will override this.
         Subroutine of self.save()
         """
-        self.entry.publish()
-        site = self.choose(kind, self.sites)
-        site.modify_source()
-        site.update_json()
+        if self.entry:
+            self.entry.publish()
+        site = self.choose(self.kind, self.sites)
+        if site:
+            site.modify_source()
+            site.update_json()
 
     def edit_text_changed(self, event=None):
         """
@@ -363,21 +366,23 @@ class Edit(Tk.Frame):
     @staticmethod
     def prepare_entry(entry, markdown=None):
         """
-        Manipulate datafile content to suit textboxes.
+        Manipulate entry content to suit textboxes.
+        Subroutine of self.load()
         This is the default method - other Edit programs will override this.
         :param entry (Page): A Page instance carrying text. Other Pages relative to this entry may also be accessed.
         :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
         :param return (str[]):
         """
         try:
-            return markdown.to_markdown(entry.content)
+            return [markdown.to_markdown(entry.content)]
         except AttributeError:  # no markdown
-            return entry.content
+            return [entry.content] if entry else ['']
 
     @staticmethod
     def prepare_texts(entry, texts, markdown=None):
         """
-        Modify entry with manipulated texts
+        Modify entry with manipulated texts.
+        Subroutine of self.save().
         This is the default method - other Edit programs will override this.
         :param entry (Page): the entry in the datafile to be modified.
         :param texts (str[]): the texts to be manipulated and inserted.
