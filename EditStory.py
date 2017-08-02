@@ -19,7 +19,6 @@ class EditStory(Edit):
     def configure_widgets(self):
         for textbox in self.textboxes:
             textbox.bind('<Control-r>', self.literal)
-            textbox.bind('<Control-s>', self.save)
             textbox.bind('<Next>', self.next_paragraph)
             textbox.bind('<Prior>', self.previous_paragraph)
             textbox.bind('<Control-Next>', self.next_chapter)

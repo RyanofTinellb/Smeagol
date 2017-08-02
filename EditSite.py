@@ -26,8 +26,6 @@ class EditPage(Edit):
         self.headings[1].bind('<Return>', self.insert_heading)
         self.headings[2].bind('<Return>', self.load)
         self.textbox.bind('<Control-o>', self.refresh_site)
-        self.textbox.bind('<Control-r>', self.load)
-        self.textbox.bind('<Control-s>', self.save)
         self.textbox.bind('<Control-t>', self.table)
         self.radios[0].configure(text='Grammar', variable=self.kind, value='grammar', command=self.clear_interface)
         self.radios[1].configure(text='Story', variable=self.kind, value='story', command=self.clear_interface)

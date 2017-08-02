@@ -31,10 +31,8 @@ class EditDictionary(Edit):
         self.configure_language_radios()
         self.heading.bind('<Control-r>', self.refresh_random)
         self.heading.bind('<Return>', self.load)
-        self.edit_text.bind('<Control-l>', self.load)
         self.edit_text.bind('<Control-n>', self.new_word)
         self.edit_text.bind('<Control-r>', self.refresh_random)
-        self.edit_text.bind('<Control-s>', self.save)
         self.edit_text.bind('<Control-t>', self.add_translation)
         self.edit_text.bind('<Control-=>', self.add_definition)
 
