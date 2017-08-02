@@ -62,9 +62,6 @@ class Edit(Tk.Frame):
                 self.font = ('Calibri', 17)
         self.create_window()
 
-        # open site
-        self.opensite(self.kind)
-
         # prepare window to begin
         self.top = self.winfo_toplevel()
         self.top.state('zoomed')
@@ -94,13 +91,7 @@ class Edit(Tk.Frame):
         self.infolabel.grid(row=row, column=0, columnspan=2)
         self.blanklabel.grid(row=row+1, column=0, columnspan=2)
 
-    def opensite(self, kind):
-        try:
-            os.chdir(self.choose(kind, self.directories))
-        except TypeError:   # if self.directories is None, remain in initial directory
-            pass
-        self.site = self.choose(kind, self.sites)
-        self.markdown = self.choose(kind, self.markdowns)
+    def clear_interface(self):
         for heading in self.headings:
             heading.delete(0, Tk.END)
         for textbox in self.textboxes:

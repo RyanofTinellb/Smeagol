@@ -29,9 +29,8 @@ class EditPage(Edit):
         self.textbox.bind('<Control-r>', self.load)
         self.textbox.bind('<Control-s>', self.save)
         self.textbox.bind('<Control-t>', self.table)
-        self.radios[0].configure(text='Grammar', variable=self.sitename, value='grammar', command=self.change_site)
-        self.radios[1].configure(text='Story', variable=self.sitename, value='story', command=self.change_site)
-        self.sitename.set('grammar')
+        self.radios[0].configure(text='Grammar', variable=self.kind, value='grammar', command=self.clear_interface)
+        self.radios[1].configure(text='Story', variable=self.kind, value='story', command=self.clear_interface)
 
     def refresh_site(self, event=None):
         self.site.refresh()
@@ -69,11 +68,6 @@ class EditPage(Edit):
         for k in range(level - 1, 3):
             self.headings[k].delete(0, Tk.END)
         heading.insert(Tk.INSERT, self.entry.name)
-        return 'break'
-
-    def change_site(self, event=None):
-        self.opensite(self.sitename.get())
-        self.entry = self.site.root
         return 'break'
 
     def table(self, event=None):
