@@ -25,7 +25,7 @@ class Edit(Tk.Frame):
         # initialise instance variables
         self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
         self.headings, self.radios, self.texts = [], [], []
-        self.buttons = self.load_button = self.save_button = self.label = None
+        self.buttons = self.load_button = self.save_button = self.label = self.entry = None
         self.save_text, self.language = Tk.StringVar(), Tk.StringVar()
         self.save_text.set('Save')
         self.translator = Translator()
@@ -99,10 +99,7 @@ class Edit(Tk.Frame):
         for textbox in self.textboxes:
             textbox.delete(1.0, Tk.END)
         self.information.set('')
-        try:
-            self.headings[0].focus_set()
-        except IndexError:  # no headings
-            pass
+        self.go_to_heading()
 
     def textbox_commands(self):
         return [
@@ -110,8 +107,10 @@ class Edit(Tk.Frame):
         ('<Control-a>', self.select_all),
         ('<Control-b>', self.bold),
         ('<Control-i>', self.italic),
+        ('<Control-l>', self.load),
         ('<Control-k>', self.small_caps),
         ('<Control-m>', self.refresh_markdown),
+        ('<Control-s>', self.save),
         ('<Control-BackSpace>', self.backspace_word),
         ('<Control-Delete>', self.delete_word),
         ('<Alt-d>', self.go_to_heading),
@@ -140,9 +139,12 @@ class Edit(Tk.Frame):
         """
         Move focus to the heading textbox, and select all the text therein
         """
-        heading = self.headings[0]
-        heading.focus_set()
-        heading.select_range(0, Tk.END)
+        try:
+            heading = self.headings[0]
+            heading.focus_set()
+            heading.select_range(0, Tk.END)
+        except IndexError:  # no headings
+            pass
         return 'break'
 
     @staticmethod
@@ -205,7 +207,8 @@ class Edit(Tk.Frame):
         except (TypeError, AttributeError, ValueError, KeyError):
             return variables
 
-    def insert_characters(self, event, before, after=''):
+    @staticmethod
+    def insert_characters(event, before, after=''):
         """
         Insert given text into a Text textbox, either around an insertion cursor or selected text, and move the cursor to the appropriate place.
         :param textbox (Tkinter Text): The Text into which the given text is to be inserted.
@@ -246,8 +249,7 @@ class Edit(Tk.Frame):
         self.insert_characters(event, ' | ')
         return 'break'
 
-    @staticmethod
-    def delete_word(event=None):
+    def delete_word(self, event=None):
         widget = event.widget
         get = widget.get
         delete = widget.delete
@@ -262,8 +264,7 @@ class Edit(Tk.Frame):
         self.update_wordcount(event)
         return 'break'
 
-    @staticmethod
-    def backspace_word(event=None):
+    def backspace_word(self, event=None):
         widget = event.widget
         get = widget.get
         delete = widget.delete
@@ -278,18 +279,50 @@ class Edit(Tk.Frame):
 
     def load(self):
         """
-        Find entry, manipulate entry to fit box, place in box.
+        Find entry, manipulate entry to fit boxes, place in boxes.
         """
-        text = manipulate_entry_for_textbox(self.entry.content)
-        self.edit_text.delete(1.0, Tk.END)
-        self.edit_text.insert(1.0, text)
+        self.entry = self.find_entry(map(get, self.headings))
+        markdown = self.choose(self.kind, self.markdowns)
+        texts = prepare_entry(self.entry, markdown)
+        for text, textbox in zip(texts, self.textboxes):
+            textbox.delete(1.0, Tk.END)
+            textbox.insert(1.0, text)
+            textbox.edit_modified(False)
 
     def save(self):
         """
-        Take text from box, manipulate to fit datafile, put in datafile, publish self, update json.
+        Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages, update json.
         """
-        text = self.edit_text.get(1.0, Tk.END + '-1c')
-        self.entry.content = manipulate_entry_for_datafile(text)
+        texts = map(lambda x: x.get(1.0, Tk.END + '-1c'), x.edit_modified(False) , self.textboxes)
+        markdown = self.choose(self.kind, self.markdowns)
+        self.prepare_texts(self.entry, texts, markdown)
+        self.publish()
+
+    def find_entry(self, headings):
+        """
+        Find the current entry based on what is in the heading boxes.
+        This is the default method - other Edit programs will override this.
+        Subroutine of self.load()
+        :param headings (str[]): the texts from the heading boxes
+        """
+        entry = site = self.choose(self.kind, self.sites)
+        try:
+            for heading in headings:
+                entry = entry[heading]
+        except KeyError: # unable to find entry in Site.
+            pass
+        return entry if entry is not site else site.root
+
+    def publish(self):
+        """
+        Put entry contents into datafile, publish appropriate Pages.
+        This is the default method - other Edit programs will override this.
+        Subroutine of self.save()
+        """
+        self.entry.publish()
+        site = self.choose(kind, self.sites)
+        site.modify_source()
+        site.update_json()
 
     def edit_text_changed(self, event=None):
         """
@@ -317,21 +350,39 @@ class Edit(Tk.Frame):
         return 'break'
 
     def previous_window(self, event):
-        try:
-            textbox = self.textboxes[(self.textboxes.index(event.widget) - 1)]
-        except IndexError:
-            textbox = self.textboxes[-1]
+        textbox = self.textboxes[(self.textboxes.index(event.widget) - 1)]
         textbox.focus_set()
         self.update_wordcount(widget=textbox)
         return 'break'
 
     @staticmethod
-    def manipulate_entry_for_textbox(text):
-        return text
+    def prepare_entry(entry, markdown=None):
+        """
+        Manipulate datafile content to suit textboxes.
+        This is the default method - other Edit programs will override this.
+        :param entry (Page): A Page instance carrying text. Other Pages relative to this entry may also be accessed.
+        :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
+        :param return (str[]):
+        """
+        try:
+            return markdown.to_markdown(entry.content)
+        except AttributeError:  # no markdown
+            return entry.content
 
     @staticmethod
-    def manipulate_entry_for_datafile(text):
-        return text
+    def prepare_texts(entry, texts, markdown=None):
+        """
+        Modify entry with manipulated texts
+        This is the default method - other Edit programs will override this.
+        :param entry (Page): the entry in the datafile to be modified.
+        :param texts (str[]): the texts to be manipulated and inserted.
+        :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
+        :param return (Nothing):
+        """
+        try:
+            entry.content = str(map(markdown.to_markup, texts))
+        except AttributeError:  # no markdown
+            entry.content = str(texts)
 
     def refresh_markdown(self, event=None):
         try:
