@@ -29,7 +29,6 @@ class EditPage(Edit):
         self.textbox.bind('<Control-r>', self.load)
         self.textbox.bind('<Control-s>', self.save)
         self.textbox.bind('<Control-t>', self.table)
-
         self.radios[0].configure(text='Grammar', variable=self.sitename, value='grammar', command=self.change_site)
         self.radios[1].configure(text='Story', variable=self.sitename, value='story', command=self.change_site)
         self.sitename.set('grammar')
@@ -73,17 +72,8 @@ class EditPage(Edit):
         return 'break'
 
     def change_site(self, event=None):
-        site = self.sitename.get()
-        if self.site is None or site != self.sitename:
-            for heading in self.headings:
-                heading.delete(0, Tk.END)
-            self.textboxes[0].delete(1.0, Tk.END)
-            os.chdir(self.choose(site, self.directories))
-            self.datafile = self.choose(site, self.datafiles)
-            self.site = self.choose(site, self.sites)
-            self.markdown = self.choose(site, self.markdowns)
-            self.entry = self.site.root
-            self.headings[0].focus_set()
+        self.opensite(self.sitename.get())
+        self.entry = self.site.root
         return 'break'
 
     def table(self, event=None):

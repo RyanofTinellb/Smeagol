@@ -16,7 +16,6 @@ class EditStory(Edit):
 
     def configure_widgets(self):
         for textbox in self.textboxes:
-            textbox.bind('<KeyPress>', self.unloadinfo)
             textbox.bind('<Control-r>', self.literal)
             textbox.bind('<Control-s>', self.save)
             textbox.bind('<Next>', self.next_paragraph)
@@ -24,12 +23,6 @@ class EditStory(Edit):
             textbox.bind('<Control-Next>', self.next_chapter)
             textbox.bind('<Control-Prior>', self.previous_chapter)
         self.configure_language_radios()
-
-    def change_language(self, event=None):
-        self.translator = translator(self.language.get())
-
-    def unloadinfo(self, event=None):
-        self.information.set('')
 
     def previous_chapter(self, event=None):
         if self.entry.level > 2:
