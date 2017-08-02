@@ -50,9 +50,9 @@ class Edit(Tk.Frame):
         self.radios = self.create_radios(self.buttonframe, widgets.number_of_radios)
         self.blanklabel = Tk.Label(self.buttonframe, height=1000) # enough height to push all other widgets to the top of the window.
         self.infolabel, self.information = self.create_label(self.buttonframe)
-        self.buttons = self.create_buttons(self.buttonframe)
+        commands = self.load, self.save
+        self.buttons = self.create_buttons(self.buttonframe, commands, self.save_text)
         self.load_button, self.save_button = self.buttons
-        self.save_button.configure(textvariable=self.save_text)
         commands = self.textbox_commands()
         while True:
             try:
@@ -158,8 +158,15 @@ class Edit(Tk.Frame):
         return headings
 
     @staticmethod
-    def create_buttons(master):
-        return [Tk.Button(master, text='Load'), Tk.Button(master)]
+    def create_buttons(master, commands, save_variable):
+        """
+        Create a Load and a Save button.
+        :param master (widget): which widget window to place the buttons in.
+        :param commands (function(,)): pointer to the 'load' and 'save' methods.
+        :param save_variable (Tk.StringVar): the textvariable for the 'save' button.
+        """
+        return [Tk.Button(master, text='Load', command=commands[0]),
+        Tk.Button(master, command=commands[1], textvariable=save_variable)]
 
     @staticmethod
     def create_label(master):
