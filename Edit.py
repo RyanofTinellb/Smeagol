@@ -8,7 +8,7 @@ class Edit(Tk.Frame):
     """
     Base class for EditDictionary, EditSite, TranslateStory.
     """
-    def __init__(self, directories=None, datafiles=None, sites=None, markdowns=None, kind=None, widgets=None):
+    def __init__(self, directories=None, datafiles=None, sites=None, markdowns=None, replacelinks=None, kind=None, widgets=None):
         """
         Initialise an instance of the Edit class.
         :param kind (str): i.e.: 'grammar', 'dictionary', 'story'.
@@ -20,6 +20,7 @@ class Edit(Tk.Frame):
         self.datafiles = datafiles
         self.sites = sites
         self.markdowns = markdowns
+        self.replacelinks = replacelinks
         self.kind = Tk.StringVar()
         self.kind.set(kind)
 
@@ -306,17 +307,6 @@ class Edit(Tk.Frame):
             pass
         return 'break'
 
-    def save(self, event=None):
-        """
-        Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages, update json.
-        """
-        texts = map(lambda x: (x.get(1.0, Tk.END + '-1c'), x.edit_modified(False)), self.textboxes)
-        markdown = self.choose(self.kind, self.markdowns)
-        if self.entry:
-            self.prepare_texts(self.entry, texts, markdown)
-        self.publish()
-        return 'break'
-
     def find_entry(self, headings):
         """
         Find the current entry based on what is in the heading boxes.
@@ -333,15 +323,48 @@ class Edit(Tk.Frame):
             pass
         return entry if entry is not site else (site.root if site else None)
 
-    def publish(self):
+    def save(self, event=None):
+        """
+        Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages, update json.
+        """
+        texts = map(lambda x: str(x.get(1.0, Tk.END + '-1c')), self.textboxes)
+        markdown = self.choose(self.kind, self.markdowns)
+        site = self.choose(self.kind, self.sites)
+        if self.entry:
+            self.prepare_texts(self.entry, site, texts, markdown, self.replacelinks)
+        self.publish(self.entry, site)
+        for textbox in self.textboxes:
+            textbox.edit_modified(False)
+        self.save_text.set('Save')
+        return 'break'
+
+    @staticmethod
+    def prepare_texts(entry, texts, markdown=None, replacelinks=None):
+        """
+        Modify entry with manipulated texts.
+        Subroutine of self.save().
+        This is the default method - other Edit programs will override this.
+        :param entry (Page): the entry in the datafile to be modified.
+        :param texts (str[]): the texts to be manipulated and inserted.
+        :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
+        :param return (Nothing):
+        """
+        try:
+            entry.content = str(map(markdown.to_markup, texts))
+        except AttributeError:  # no markdown
+            entry.content = str(texts)
+
+    @staticmethod
+    def publish(entry, site):
         """
         Put entry contents into datafile, publish appropriate Pages.
         This is the default method - other Edit programs will override this.
         Subroutine of self.save()
+        :param entry (Page):
+        :return (nothing):
         """
-        if self.entry:
-            self.entry.publish()
-        site = self.choose(self.kind, self.sites)
+        if entry:
+            entry.publish()
         if site:
             site.modify_source()
             site.update_json()
@@ -391,22 +414,6 @@ class Edit(Tk.Frame):
             return [markdown.to_markdown(entry.content)]
         except AttributeError:  # no markdown
             return [entry.content] if entry else ['']
-
-    @staticmethod
-    def prepare_texts(entry, texts, markdown=None):
-        """
-        Modify entry with manipulated texts.
-        Subroutine of self.save().
-        This is the default method - other Edit programs will override this.
-        :param entry (Page): the entry in the datafile to be modified.
-        :param texts (str[]): the texts to be manipulated and inserted.
-        :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
-        :param return (Nothing):
-        """
-        try:
-            entry.content = str(map(markdown.to_markup, texts))
-        except AttributeError:  # no markdown
-            entry.content = str(texts)
 
     def refresh_markdown(self, event=None):
         try:

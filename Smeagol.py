@@ -214,7 +214,6 @@ class Site:
         with open(self.source, 'w') as source:
             source.write(str(self))
 
-
     def update_json(self):
         with open(self.searchjson, 'w') as f:
             f.write(str(self.analyse()))
@@ -388,9 +387,9 @@ class Page:
                 self.parent.children.append(self)
             return self
 
-    def delete(self):
+    def remove_from_hierarchy(self):
         """
-        Delete self and all of its descendants
+        Remove self and all of its descendants from the hierarchy
         """
         self.parent.children.remove(self)
 
@@ -863,7 +862,7 @@ class Page:
             page = re.sub(r'&date=\d{8}', '', page)
             f.write(page)
 
-    def remove(self):
+    def delete_htmlfile(self):
         os.remove(self.link())
 
     def analyse(self, markdown):

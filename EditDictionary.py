@@ -1,4 +1,5 @@
 from Edit import *
+import re
 
 
 class EditDictionary(Edit):
@@ -12,7 +13,7 @@ class EditDictionary(Edit):
         """
         self.font = ('Courier New', '15')
         self.widgets = Widgets(1, 1, 'languages')
-        Edit.__init__(self, directory, datafile, site, markdown)
+        Edit.__init__(self, directory, datafile, site, markdown, replacelinks)
         # initialise instance variables
         self.heading = self.headings[0]
         self.edit_text = self.textboxes[0]
@@ -22,7 +23,6 @@ class EditDictionary(Edit):
         self.site = self.sites
         self.datafile = self.datafiles
         self.words = randomwords.words
-        self.replacelinks = replacelinks
         # initialise textboxes and buttons
         self.configure_widgets()
 
@@ -105,7 +105,7 @@ class EditDictionary(Edit):
     def find_entry(self, headings):
         """
         Find the current entry based on what is in the heading boxes.
-        This is the default method - other Edit programs will override this.
+        Overrides Edit.find_entry.
         Subroutine of self.load().
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
@@ -120,55 +120,59 @@ class EditDictionary(Edit):
             initial = re.sub(r'.*?(\w).*', r'\1', heading).capitalize()
             return Page(heading, site[initial], '', site.leaf_level, None, site.markdown).insert()
 
-    def save(self, event=None):
+    @staticmethod
+    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None):
         """
-        Save the current entry into the output file, and create/update the webpage for itself and its parent.
-        :keyboard shortcut: <Ctrl-S>
+        Modify entry with manipulated texts.
+        Subroutine of self.save().
+        Overrides Edit.prepare_texts()
+        :param entry (Page): the entry in the datafile to be modified.
+        :param texts (str[]): the texts to be manipulated and inserted.
+        :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
+        :param return (Nothing):
         """
-        # use str() method to suppress unicode string
-        self.page.content = str(self.edit_text.get(1.0, Tk.END))
-        empty = self.page.content == '\n'
+        text = ''.join(texts)
         # delete and remove page if edit area is empty
-        if empty:
-            self.page.delete()
-            self.page.remove()
+        if not text:
+            entry.delete_htmlfile()
+            entry.remove_from_hierarchy()
         else:
-            # replace particular words in parts of speech with links to grammar.tinellb.com
-            self.page.content = self.replacelinks.replace(self.page.content)
-            self.page.content = self.markdown.to_markup(self.page.content)
+            try:
+                # replace particular words in parts of speech with links to grammar.tinellb.com
+                text = replacelinks.replace(text)
+            except AttributeError:  # replacelinks is None
+                pass
+            try:
+                text = markdown.to_markup(text)
+            except AttributeError:  # markdown is None
+                pass
             # Write links out in full form
-            links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1>', self.page.content.replace('\n', '')).split(r'>')[:-1])
+            links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1>', text.replace('\n', '')).split(r'>')[:-1])
             for link in links:
                 try:
-                    self.page.content = self.page.content.replace('<link>' + link + '</link>', self.page.hyperlink(self.site[link]))
-                except KeyError:
-                    try:
-                        self.page.content = self.page.content.replace('<link>' + link + '</link>', self.page.hyperlink(self.site[self.lowercase(link)], link))
-                    except KeyError:
-                        pass
+                    lower_link = re.sub(r'^&#x294;', r'&rsquo;', link).lower()
+                    text = text.replace('<link>' + link + '</link>', entry.hyperlink(site[lower_link], link))
+                except KeyError:    # link not found
+                    pass
             # remove duplicate linebreaks
-            self.page.content = re.sub(r'\n\n+', '\n', self.page.content)
-            # update datestamp and publish parent.
-            parent = self.page.parent
-            parent.content = self.markdown.to_markup(self.markdown.to_markdown(parent.content))
-            parent.publish(self.site.template)
-            self.page.publish(self.site.template)
-        page = str(self.site)
-        if page:
-            with open(self.datafile, 'w') as data:
-                data.write(page)
-        self.site.update_json()
-        self.save_text.set('Save')
-        self.edit_text.edit_modified(False)
-        return 'break'
+            text = re.sub(r'\n\n+', '\n', text)
+            # update datestamp of parent
+            entry.parent.content = markdown.to_markup(markdown.to_markdown(entry.parent.content))
+        # place text into entry
+        entry.content = text
 
     @staticmethod
-    def lowercase(text):
-        if text.startswith('&#x294'):
-            return text.replace('&#x294;', '&rsquo;', 1)
-        else:
-            return text[0].lower() + text[1:]
-
+    def publish(entry, site):
+        """
+        Put entry contents into datafile, publish appropriate Pages.
+        Overrides Edit.publish()
+        Subroutine of self.save()
+        """
+        if entry.content:
+            entry.publish(site.template)
+        entry.parent.publish(site.template)
+        site.modify_source()
+        site.update_json()
 
 if __name__ == '__main__':
     app = EditDictionary(directory='c:/users/ryan/documents/tinellbianlanguages/dictionary',
