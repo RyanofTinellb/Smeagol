@@ -218,14 +218,13 @@ class Edit(Tk.Frame):
             return variables
 
     @staticmethod
-    def insert_characters(event, before, after=''):
+    def insert_characters(textbox, before, after=''):
         """
         Insert given text into a Text textbox, either around an insertion cursor or selected text, and move the cursor to the appropriate place.
         :param textbox (Tkinter Text): The Text into which the given text is to be inserted.
         :param before (str): The text to be inserted before the insertion counter, or before the selected text.
         :param after (str): The text to be inserted after the insertion cursor, or after the selected text.
         """
-        textbox = event.widget
         try:
             text = textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
             textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
@@ -238,25 +237,25 @@ class Edit(Tk.Frame):
         """
         Insert markdown for bold tags, and place insertion point between them.
         """
-        self.insert_characters(event, *self.markdown.find_formatting('strong'))
+        self.insert_characters(event.widget, *self.markdown.find_formatting('strong'))
         return 'break'
 
     def italic(self, event=None):
         """
         Insert markdown for italic tags, and place insertion point between them.
         """
-        self.insert_characters(event, *self.markdown.find_formatting('em'))
+        self.insert_characters(event.widget, *self.markdown.find_formatting('em'))
         return 'break'
 
     def small_caps(self, event=None):
         """
         Insert markdown for small-caps tags, and place insertion point between them.
         """
-        self.insert_characters(event, *self.markdown.find_formatting('small-caps'))
+        self.insert_characters(event.widget, *self.markdown.find_formatting('small-caps'))
         return 'break'
 
     def insert_pipe(self, event=None):
-        self.insert_characters(event, ' | ')
+        self.insert_characters(event.widget, ' | ')
         return 'break'
 
     def delete_word(self, event=None):
