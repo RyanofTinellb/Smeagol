@@ -9,9 +9,10 @@ class EditStory(Edit):
     def __init__(self, directory, datafile, site, markdown, master=None):
         self.font = ('Californian FB', 16)
         self.widgets = Widgets(3, 3, 'languages')
-        self.kind = Tk.StringVar()
-        self.kind.set('story')
         Edit.__init__(self, directory, datafile, site, markdown)
+        self.site = site
+        self.markdown = markdown
+        self.datafile = datafile
         self.entry = self.site.root[0][0][0]       # first great-grandchild
         self.chapter = Chapter(self.entry, self.markdown)
         self.configure_widgets()

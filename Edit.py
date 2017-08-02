@@ -8,10 +8,10 @@ class Edit(Tk.Frame):
     """
     Base class for EditDictionary, EditSite, TranslateStory.
     """
-    def __init__(self, kind=None, directories=None, datafiles=None, sites=None, markdowns=None, widgets=None):
+    def __init__(self, directories=None, datafiles=None, sites=None, markdowns=None, kind=None, widgets=None):
         """
         Initialise an instance of the Edit class.
-        :param kind (Tk.StringVar): i.e.: 'grammar', 'dictionary', 'story'.
+        :param kind (str): i.e.: 'grammar', 'dictionary', 'story'.
         :param directory (str):
         """
         Tk.Frame.__init__(self, None)
@@ -20,6 +20,8 @@ class Edit(Tk.Frame):
         self.datafiles = datafiles
         self.sites = sites
         self.markdowns = markdowns
+        self.kind = Tk.StringVar()
+        self.kind.set(kind)
 
         # initialise instance variables
         self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
@@ -28,14 +30,6 @@ class Edit(Tk.Frame):
         self.save_text, self.language = Tk.StringVar(), Tk.StringVar()
         self.save_text.set('Save')
         self.translator = Translator()
-
-        # check kind
-        try:
-            kind = self.kind
-        except AttributeError:  # kind not initialised by any Edit program
-            self.kind = kind    # check if kind was passed as an initial argument
-            if kind is None:
-                self.kind = Tk.StringVar()  # default to self.kind = ''
 
         # create widgets and window
         try:
@@ -65,6 +59,7 @@ class Edit(Tk.Frame):
         # prepare window to begin
         self.top = self.winfo_toplevel()
         self.top.state('zoomed')
+        self.clear_interface()
 
     def create_window(self):
         """
