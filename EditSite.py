@@ -7,7 +7,7 @@ from Edit import *
 class EditPage(Edit):
     def __init__(self, directories, datafiles, sites, markdowns, master=None):
         self.font = ('Corbel', '14')
-        self.widgets = Widgets(3, 1, 2)
+        self.widgets = [3, 1, 2]
         Edit.__init__(self, directories, datafiles, sites, markdowns, 'grammar')
         self.site = sites['grammar']
         self.markdown = markdowns

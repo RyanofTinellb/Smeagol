@@ -38,15 +38,15 @@ class Edit(Tk.Frame):
         except AttributeError:
             self.widgets = widgets  # check if widgets were passed as an initial argument
             if widgets is None:
-                widgets = self.widgets = Widgets(0, 0, 0)
+                widgets = self.widgets = [0, 0, 0]
 
         # headings
-        self.headings = self.create_headings(self.buttonframe, widgets.number_of_headings)
+        self.headings = self.create_headings(self.buttonframe, widgets[0])
 
         # radio buttons
-        if widgets.number_of_radios == 'languages':
-            widgets.number_of_radios = self.translator.number
-        self.radios = self.create_radios(self.buttonframe, widgets.number_of_radios)
+        if widgets[2] == 'languages':
+            widgets[2] = self.translator.number
+        self.radios = self.create_radios(self.buttonframe, widgets[2])
 
         # labels
         self.blanklabel = Tk.Label(self.buttonframe, height=1000) # enough height to push all other widgets to the top of the window.
@@ -61,7 +61,7 @@ class Edit(Tk.Frame):
         commands = self.textbox_commands()
         while True:
             try:
-                self.textboxes = self.create_textboxes(self.textframe, widgets.number_of_textboxes, commands, self.font)
+                self.textboxes = self.create_textboxes(self.textframe, widgets[1], commands, self.font)
                 break
             except AttributeError:  # font missing
                 self.font = ('Calibri', 17)
@@ -422,17 +422,6 @@ class Edit(Tk.Frame):
         except AttributeError:
             self.information.set('No Markdown Found')
         return 'break'
-
-class Widgets():
-    def __init__(self, number_of_headings=0, number_of_textboxes=0, number_of_radios=0):
-        """
-        :param number_of_headings (int):
-        :param number_of_textboxes (int):
-        :param radio_names (str[]):
-        """
-        self.number_of_headings = number_of_headings
-        self.number_of_textboxes = number_of_textboxes
-        self.number_of_radios = number_of_radios
 
 
 if __name__ == '__main__':

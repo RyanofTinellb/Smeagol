@@ -12,7 +12,7 @@ class EditDictionary(Edit):
         :param randomwords (int): the number of random words to appear when requested
         """
         self.font = ('Courier New', '15')
-        self.widgets = Widgets(1, 1, 'languages')
+        self.widgets = [1, 1, 'languages']
         Edit.__init__(self, directory, datafile, site, markdown, replacelinks)
         # initialise instance variables
         self.heading = self.headings[0]
