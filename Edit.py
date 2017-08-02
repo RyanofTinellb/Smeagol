@@ -38,15 +38,25 @@ class Edit(Tk.Frame):
             self.widgets = widgets  # check if widgets were passed as an initial argument
             if widgets is None:
                 widgets = self.widgets = Widgets(0, 0, 0)
+
+        # headings
         self.headings = self.create_headings(self.buttonframe, widgets.number_of_headings)
+
+        # radio buttons
         if widgets.number_of_radios == 'languages':
             widgets.number_of_radios = self.translator.number
         self.radios = self.create_radios(self.buttonframe, widgets.number_of_radios)
+
+        # labels
         self.blanklabel = Tk.Label(self.buttonframe, height=1000) # enough height to push all other widgets to the top of the window.
         self.infolabel, self.information = self.create_label(self.buttonframe)
+
+        # load and save buttons
         commands = self.load, self.save
         self.buttons = self.create_buttons(self.buttonframe, commands, self.save_text)
         self.load_button, self.save_button = self.buttons
+
+        # textboxes
         commands = self.textbox_commands()
         while True:
             try:
@@ -54,9 +64,9 @@ class Edit(Tk.Frame):
                 break
             except AttributeError:  # font missing
                 self.font = ('Calibri', 17)
-        self.create_window()
 
-        # prepare window to begin
+        # window
+        self.create_window()
         self.top = self.winfo_toplevel()
         self.top.state('zoomed')
         self.clear_interface()
