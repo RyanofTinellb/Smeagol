@@ -14,7 +14,9 @@ class EditDictionary(Edit):
         """
         self.font = ('Courier New', '15')
         self.widgets = Widgets(1, 1, 'languages')
-        Edit.__init__(self, 'dictionary', directory, datafile, site, markdown)
+        self.kind = Tk.StringVar()
+        self.kind.set('dictionary')
+        Edit.__init__(self, directory, datafile, site, markdown)
         # initialise instance variables
         self.heading = self.headings[0]
         self.edit_text = self.textboxes[0]

@@ -11,12 +11,11 @@ class Edit(Tk.Frame):
     def __init__(self, kind=None, directories=None, datafiles=None, sites=None, markdowns=None, widgets=None):
         """
         Initialise an instance of the Edit class.
-        :param kind (str): i.e.: 'grammar', 'dictionary', 'story'.
+        :param kind (Tk.StringVar): i.e.: 'grammar', 'dictionary', 'story'.
         :param directory (str):
         """
         Tk.Frame.__init__(self, None)
         # initialise initial variables
-        self.kind = kind
         self.directories = directories
         self.datafiles = datafiles
         self.sites = sites
@@ -29,6 +28,14 @@ class Edit(Tk.Frame):
         self.save_text, self.language = Tk.StringVar(), Tk.StringVar()
         self.save_text.set('Save')
         self.translator = Translator()
+
+        # check kind
+        try:
+            kind = self.kind
+        except AttributeError:  # kind not initialised by any Edit program
+            self.kind = kind    # check if kind was passed as an initial argument
+            if kind is None:
+                self.kind = Tk.StringVar()  # default to self.kind = ''
 
         # create widgets and window
         try:
@@ -198,12 +205,12 @@ class Edit(Tk.Frame):
     def choose(kind, variables):
         """
         Return appropriate variable from a dictionary, or returns the variable itself if its not a dictionary.
-        :param kind (str): which variable to return.
-        :param variables (Object{,}): a dictionary of {kind, variable} pairs.
+        :param kind (Tk.StringVar): which variable to return.
+        :param variables (Object{str, various}): a dictionary of {kind, variable} pairs.
         :param variables (Object): a single variable.
         """
         try:
-            return variables[kind]
+            return variables[kind.get()]
         except (TypeError, AttributeError, ValueError, KeyError):
             return variables
 
@@ -405,6 +412,5 @@ class Widgets():
 
 
 if __name__ == '__main__':
-    widgets = Widgets(3, 3,  3)
     app = Edit()
     app.mainloop()

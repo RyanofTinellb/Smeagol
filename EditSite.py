@@ -8,9 +8,9 @@ class EditPage(Edit):
     def __init__(self, directories, datafiles, sites, markdowns, master=None):
         self.font = ('Corbel', '14')
         self.widgets = Widgets(3, 1, 2)
-        Edit.__init__(self, 'grammar', directories, datafiles, sites, markdowns)
-        self.sitename = Tk.StringVar()
-        self.sitename.set('grammar')
+        self.kind = Tk.StringVar()
+        self.kind.set('grammar')
+        Edit.__init__(self, self.kind, directories, datafiles, sites, markdowns)
         self.entry = self.site.root
         self.textbox = self.textboxes[0]
         self.configure_widgets()
