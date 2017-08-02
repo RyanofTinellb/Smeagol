@@ -1,7 +1,5 @@
-import Tkinter as Tk
-from Smeagol import *
-from Translation import *
 from Edit import *
+
 
 class EditDictionary(Edit):
     def __init__(self, directory, datafile, site, markdown, replacelinks, randomwords, master=None):
@@ -32,25 +30,24 @@ class EditDictionary(Edit):
         self.configure_language_radios()
         self.heading.bind('<Control-r>', self.refresh_random)
         self.heading.bind('<Return>', self.load)
-        self.edit_text.bind('<Control-n>', self.new_word)
+        self.edit_text.bind('<Control-n>', self.initial_content)
         self.edit_text.bind('<Control-r>', self.refresh_random)
         self.edit_text.bind('<Control-t>', self.add_translation)
         self.edit_text.bind('<Control-=>', self.add_definition)
 
-    def new_word(self, event=None):
+    def initial_content(self):
         """
         Insert the appropriate template for a new entry, and move the insertion pointer to allow for immediate input of the pronunciation.
         :precondition: The name of the entry, and its language, are already selected.
         """
+        name = self.headings[0].get()
         trans = self.translator
-        (location, script) = ('4.10', '[4]{0}\n[5][p {1}]//[/p]\n'.format(trans.convert_word(self.entry), trans.code)) if self.language.get() != 'en' else ('3.4', '[5]//\n')
-        template = ('2]{0}\n'
-                    '[3]{1}\n'
-                    '{2}'
-                    '[6]\n').format(self.entry, trans.name, script)
-        self.edit_text.insert(1.0, template)
-        self.edit_text.mark_set(Tk.INSERT, location)
-        return 'break'
+        before = ('2]{0}\n[3]{1}\n').format(name, trans.name)
+        before += '' if self.language.get() == 'en' else '[4]{0}\n'.format(trans.convert_word(name))
+        before += '[5][p {0}]/'.format(trans.code)
+        after = '/[/p]\n[6]\n'
+        self.insert_characters(self.textboxes[0], before, after)
+        self.textboxes[0].focus_set()
 
     def add_definition(self, event=None):
         """
@@ -89,32 +86,39 @@ class EditDictionary(Edit):
         self.edit_text.mark_set(Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + 1)))
         return 'break'
 
-    def load(self, event=None):
+    @staticmethod
+    def prepare_entry(entry, markdown=None):
         """
-        Find the dictionary entry with the same name as the text in the heading box, and place its markedown text within the edit area.
-        If such an entry is not found, create one, and insert it into its correct parent folder.
-        Replace internal links with the name of the linked entry, surrounded by <>.
+        Manipulate entry content to suit textboxes.
+        Subroutine of self.load()
+        Overrides method in Edit.py.
+        :param entry (Page): A Page instance carrying text. Other Pages relative to this entry may also be accessed.
+        :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
+        :param return (str[]):
         """
-        # use str() to suppress unicode string
-        self.entry = str(self.heading.get())
-        entry = self.markdown.to_markup(self.entry, datestamp=False)
-        try:
-            self.page = self.site[entry]
-        except KeyError:
-            initial = re.sub(r'.*?(\w).*', r'\1', self.entry).capitalize()
-            self.page = Page(entry, self.site[initial], '', self.site.leaf_level, None, self.site.markdown).insert()
-            self.new_word()
-        content = self.page.content # for code maintenance: so that next steps can be permuted easily.
-        content = self.markdown.to_markdown(content)
+        content = entry.content # for code maintenance: so that next steps can be permuted easily.
+        content = markdown.to_markdown(content)
         content = re.sub(r'\\<a href=\\"(?!http).*?\\"\\>(.*?)\\</a\\>', r'<\1>', content)
         content = re.sub(r'\\<a href=\\"http.*?\\"\\>(.*?)\\</a\\>', r'\1', content)
-        self.edit_text.delete(1.0, Tk.END)
-        self.edit_text.insert(1.0, content)
-        self.edit_text.focus_set()
-        self.edit_text.mark_set(Tk.INSERT, '1.0')
-        self.save_text.set('Save')
-        self.edit_text.edit_modified(False)
-        return 'break'
+        return [content]
+
+    def find_entry(self, headings):
+        """
+        Find the current entry based on what is in the heading boxes.
+        This is the default method - other Edit programs will override this.
+        Subroutine of self.load().
+        :param headings (str[]): the texts from the heading boxes
+        :return (Page):
+        """
+        heading = headings[0]
+        site = self.sites
+        # use str() to suppress unicode string
+        heading = self.markdowns.to_markup(heading, datestamp=False)
+        try:
+            return site[heading]
+        except KeyError:
+            initial = re.sub(r'.*?(\w).*', r'\1', heading).capitalize()
+            return Page(heading, site[initial], '', site.leaf_level, None, site.markdown).insert()
 
     def save(self, event=None):
         """

@@ -125,6 +125,7 @@ class Edit(Tk.Frame):
         for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
             radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
         self.language.set(self.translator.languages.keys()[0])
+        self.translator = Translator(self.language.get())
 
     def change_language(self, event=None):
         """
@@ -286,7 +287,7 @@ class Edit(Tk.Frame):
         self.update_wordcount(event)
         return 'break'
 
-    def load(self):
+    def load(self, event=None):
         """
         Find entry, manipulate entry to fit boxes, place in boxes.
         """
@@ -297,8 +298,15 @@ class Edit(Tk.Frame):
             textbox.delete(1.0, Tk.END)
             textbox.insert(1.0, text)
             textbox.edit_modified(False)
+            textbox.focus_set()
+        try:
+            if self.entry.content == '':
+                self.initial_content()
+        except AttributeError:
+            pass
+        return 'break'
 
-    def save(self):
+    def save(self, event=None):
         """
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages, update json.
         """
@@ -307,6 +315,7 @@ class Edit(Tk.Frame):
         if self.entry:
             self.prepare_texts(self.entry, texts, markdown)
         self.publish()
+        return 'break'
 
     def find_entry(self, headings):
         """
@@ -314,6 +323,7 @@ class Edit(Tk.Frame):
         This is the default method - other Edit programs will override this.
         Subroutine of self.load().
         :param headings (str[]): the texts from the heading boxes
+        :return (Page):
         """
         entry = site = self.choose(self.kind, self.sites)
         try:
