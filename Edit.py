@@ -30,11 +30,13 @@ class Edit(Tk.Frame):
         self.save_text.set('Save')
         self.translator = Translator()
 
-        # open site
-        self.opensite(self.kind)
-
         # create widgets and window
-        widgets = self.widgets
+        try:
+            widgets = self.widgets
+        except AttributeError:
+            self.widgets = widgets  # check if widgets were passed as an initial argument
+            if widgets is None:
+                widgets = self.widgets = Widgets(0, 0, 0)
         self.headings = self.create_headings(self.buttonframe, widgets.number_of_headings)
         if widgets.number_of_radios == 'languages':
             widgets.number_of_radios = self.translator.number
@@ -45,13 +47,20 @@ class Edit(Tk.Frame):
         self.load_button, self.save_button = self.buttons
         self.save_button.configure(textvariable=self.save_text)
         commands = self.textbox_commands()
-        self.textboxes = self.create_textboxes(self.textframe, widgets.number_of_textboxes, commands, self.font)
+        while True:
+            try:
+                self.textboxes = self.create_textboxes(self.textframe, widgets.number_of_textboxes, commands, self.font)
+                break
+            except AttributeError:  # font missing
+                self.font = ('Calibri', 17)
         self.create_window()
+
+        # open site
+        self.opensite(self.kind)
 
         # prepare window to begin
         self.top = self.winfo_toplevel()
         self.top.state('zoomed')
-        self.headings[0].focus_set()
 
     def create_window(self):
         """
@@ -69,7 +78,6 @@ class Edit(Tk.Frame):
         for i, button in enumerate(self.buttons):
             button.grid(row=row, column=i)
         row += 1
-        row += 1
         for radio in self.radios:
             radio.grid(row=row, column=0, columnspan=2)
             row += 1
@@ -78,6 +86,23 @@ class Edit(Tk.Frame):
             row += 1
         self.infolabel.grid(row=row, column=0, columnspan=2)
         self.blanklabel.grid(row=row+1, column=0, columnspan=2)
+
+    def opensite(self, kind):
+        try:
+            os.chdir(self.choose(kind, self.directories))
+        except TypeError:   # if self.directories is None, remain in initial directory
+            pass
+        self.site = self.choose(kind, self.sites)
+        self.markdown = self.choose(kind, self.markdowns)
+        for heading in self.headings:
+            heading.delete(0, Tk.END)
+        for textbox in self.textboxes:
+            textbox.delete(1.0, Tk.END)
+        self.information.set('')
+        try:
+            self.headings[0].focus_set()
+        except IndexError:  # no headings
+            pass
 
     def textbox_commands(self):
         return [
@@ -330,5 +355,5 @@ class Widgets():
 
 if __name__ == '__main__':
     widgets = Widgets(3, 3,  3)
-    app = Edit(widgets=widgets)
+    app = Edit()
     app.mainloop()
