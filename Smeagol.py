@@ -191,7 +191,7 @@ class Site:
 
     def publish(self):
         """
-        Publish all webpages, and create search JSON file.
+        Create / modify all .html files, and create search JSON file.
         :class: Site
         """
         length = len(self)
@@ -205,6 +205,15 @@ class Site:
                 yield str(progress * chunk) + '% Done'
                 progress += 1
         self.update_json()
+        self.modify_source()
+
+    def modify_source(self):
+        """
+        Write the Site's contents to the sourcefile.
+        """
+        with open(self.source, 'w') as source:
+            source.write(str(self))
+
 
     def update_json(self):
         with open(self.searchjson, 'w') as f:
@@ -820,6 +829,7 @@ class Page:
 
     def publish(self, template):
         """
+        Create / modify an .html file.
         :param template (Template): the basic template to be published against
         :param template (str): the basic template to be published against
         """
