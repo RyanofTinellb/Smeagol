@@ -28,8 +28,12 @@ class EditPage(Edit):
         self.headings[2].bind('<Return>', self.load)
         self.textbox.bind('<Control-o>', self.refresh_site)
         self.textbox.bind('<Control-t>', self.table)
-        self.radios[0].configure(text='Grammar', variable=self.kind, value='grammar', command=self.clear_interface)
-        self.radios[1].configure(text='Story', variable=self.kind, value='story', command=self.clear_interface)
+        self.radios[0].configure(text='Grammar', variable=self.kind, value='grammar', command=self.change_site)
+        self.radios[1].configure(text='Story', variable=self.kind, value='story', command=self.change_site)
+
+    def change_site(self, event=None):
+        self.change_directory(self.choose(self.kind, self.directories))
+        self.clear_interface()
 
     def refresh_site(self, event=None):
         self.site.refresh()
@@ -102,9 +106,8 @@ class EditPage(Edit):
         except AttributeError:  # no markdown
             return [text] if text else ['']
 
-    def save(self, event=None):
-        self.save_text.set('Save')
-        self.update_wordcount(widget=self.textboxes[0])
+    # superceded by parent method
+    def save2(self, event=None):
         self.entry.content = self.markdown.to_markup(str(self.textboxes[0].get(1.0, Tk.END)))
         while self.entry.content[-2:] == '\n\n':
             self.entry.content = self.entry.content[:-1]
@@ -116,7 +119,7 @@ class EditPage(Edit):
             self.entry.delete()
             self.entry.remove()
         else:
-            self.replace_links()
+
             self.entry.publish(self.site.template)
         entry = str(self.site)
         if entry:
@@ -126,21 +129,32 @@ class EditPage(Edit):
         self.textboxes[0].edit_modified(False)
         return 'break'
 
-    def replace_links(self):
+    @staticmethod
+    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None):
         """
-        Replaces appropriate words in text with links to dictionary.tinellb.com.
-        :precondition: text is a grammar page with text in Smeagol markup.
+        Modify entry with manipulated texts.
+        Subroutine of self.save().
+        Overrides
+        :param entry (Page): the entry in the datafile to be modified.
+        :param texts (str[]): the texts to be manipulated and inserted.
+        :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
+        :param return (Nothing):
         """
-        links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', self.entry.content.replace('\n', '')).split(r'@')[:-1])
-        matriarch = self.entry.ancestors()[1].urlform
+        try:
+            text = ''.join(map(markdown.to_markup, texts))
+        except AttributeError:  # no markdown
+            text = ''.join(texts)
+        links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', text.replace('\n', '')).split(r'@')[:-1])
+        matriarch = entry.ancestors()[1].urlform
         for link in links:
-            url = Page(link, markdown=self.site.markdown).urlform
+            url = Page(link, markdown=site.markdown).urlform
             initial = re.sub(r'.*?(\w).*', r'\1', url)
             try:
-                self.entry.content = self.entry.content.replace('<link>' + link + '</link>',
+                text = text.replace('<link>' + link + '</link>',
                 '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html#' + matriarch + '">' + link + '</a>')
             except KeyError:
                 pass
+        entry.content = text
 
 app = EditPage(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',
                             'story': 'c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet'},

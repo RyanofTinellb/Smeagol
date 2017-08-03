@@ -23,6 +23,7 @@ class Edit(Tk.Frame):
         self.replacelinks = replacelinks
         self.kind = Tk.StringVar()
         self.kind.set(kind)
+        self.change_directory(self.choose(self.kind, self.directories))
 
         # initialise instance variables
         self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
@@ -104,6 +105,7 @@ class Edit(Tk.Frame):
             textbox.delete(1.0, Tk.END)
         self.information.set('')
         self.go_to_heading()
+        os.chdir(self.choose(self.kind, self.directories))
 
     def textbox_commands(self):
         return [
@@ -299,7 +301,9 @@ class Edit(Tk.Frame):
             textbox.delete(1.0, Tk.END)
             textbox.insert(1.0, text)
             textbox.edit_modified(False)
+        else:   # set focus on final textbox
             textbox.focus_set()
+            self.update_wordcount(widget=textbox)
         try:
             if self.entry.content == '':
                 self.initial_content()
@@ -339,7 +343,7 @@ class Edit(Tk.Frame):
         return 'break'
 
     @staticmethod
-    def prepare_texts(entry, texts, markdown=None, replacelinks=None):
+    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None):
         """
         Modify entry with manipulated texts.
         Subroutine of self.save().
@@ -358,13 +362,13 @@ class Edit(Tk.Frame):
     def publish(entry, site):
         """
         Put entry contents into datafile, publish appropriate Pages.
-        This is the default method - other Edit programs will override this.
+        This is the default method - other Edit programs may override this.
         Subroutine of self.save()
         :param entry (Page):
         :return (nothing):
         """
         if entry:
-            entry.publish()
+            entry.publish(site.template)
         if site:
             site.modify_source()
             site.update_json()
