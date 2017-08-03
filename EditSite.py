@@ -8,7 +8,7 @@ class EditPage(Edit):
     def __init__(self, directories, datafiles, sites, markdowns, master=None):
         self.font = ('Corbel', '14')
         self.widgets = [3, 1, 2]
-        Edit.__init__(self, directories, datafiles, sites, markdowns, 'grammar')
+        Edit.__init__(self, directories=directories, datafiles=datafiles, sites=sites, markdowns=markdowns, kind='grammar')
         self.site = sites['grammar']
         self.markdown = markdowns
         self.datafile = datafiles
@@ -36,6 +36,7 @@ class EditPage(Edit):
         self.load()
         self.information.set('Site Refreshed!')
 
+        # TODO: Ensure headings scroll correct site when site is changed.
     def scroll_headings(self, event, level):
         """
         Respond to PageUp / PageDown by changing headings, moving through the hierarchy.
@@ -85,29 +86,21 @@ class EditPage(Edit):
         self.headings[2].focus_set()
         return 'break'
 
-    def load(self, event=None):
-        # descend hierarchy in correct direction
-        self.entry = self.site
-        for heading in self.headings:
-            try:
-                self.entry = self.entry[heading.get()]
-            except KeyError:
-                pass
-        self.textboxes[0].delete(1.0, Tk.END)
-        if self.entry is not self.site:
-            entry = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>',
-                                        r'<link>\1</link>', self.entry.content)
-            entry = self.markdown.to_markdown(entry)
-            self.textboxes[0].insert(1.0, entry)
-            self.textboxes[0].focus_set()
-            self.textboxes[0].edit_modified(False)
-            self.save_text.set('Save')
-        else:
-            self.entry = self.site.root
-            self.textboxes[0].insert(1.0, 'That page does not exist. Create a new page by appending to an old one.')
-            self.headings[0].focus_set()
-        self.update_wordcount(widget=self.textboxes[0])
-        return 'break'
+    @staticmethod
+    def prepare_entry(entry, markdown=None):
+        """
+        Manipulate entry content to suit textboxes.
+        Subroutine of self.load()
+        Overrides parent method.
+        :param entry (Page): A Page instance carrying text. Other Pages relative to this entry may also be accessed.
+        :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
+        :param return (str[]):
+        """
+        text = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>', r'<link>\1</link>', entry.content)
+        try:
+            return [markdown.to_markdown(text)]
+        except AttributeError:  # no markdown
+            return [text] if text else ['']
 
     def save(self, event=None):
         self.save_text.set('Save')
