@@ -19,7 +19,7 @@ class EditStory(Edit):
 
     def configure_widgets(self):
         for textbox in self.textboxes:
-            textbox.bind('<Control-r>', self.literal)
+            textbox.bind('<Control-r>', literal)
             textbox.bind('<Next>', self.next_paragraph)
             textbox.bind('<Prior>', self.previous_paragraph)
             textbox.bind('<Control-Next>', self.next_chapter)
@@ -106,7 +106,9 @@ class Chapter:
         :param texts:
         :return (nothing):
         """
-        self.paragraphs[self.current_paragraph].save(texts, entry)
+        paragraph = self.paragraphs[self.current_paragraph].paragraph
+        markdown = self.paragraphs[self.current_paragraph].markdown
+        self.paragraphs[self.current_paragraph].paragraph = paragraph_save(paragraph, texts, entry, markdown)
         return map(lambda x: str('\n'.join(x)), zip(*map(lambda x: x.paragraph, self.paragraphs)))
 
     def next_paragraph(self):
@@ -144,34 +146,37 @@ class Paragraph:
             displays[1] = displays[1].replace(i, j)     # Transliteration
         return displays
 
-    def save(self, texts, entry):
-        """
-        Update this paragraph
-        :param texts:
-        :return: (nothing)
-        """
-        markup = self.markdown.to_markup
-        translate = Translator('HL').convert_sentence
-        self.paragraph[0:5:2] = texts
-        self.paragraph[1] = translate(self.paragraph[2])    # Tinellbian
-        self.paragraph[3] = interlinear(self.paragraph)     # Interlinear
-        for i in range(3):
-            self.paragraph[i] = '&id={0}&vlinks='.format(self.paragraph[i])
-        self.paragraph = map(markup, self.paragraph)
-        replacements = [['.(', '&middot;('],
-                        ['(', chr(5)],
-                        ['<small-caps>', 2*chr(5)],
-                        [')', chr(6)],
-                        ['</small-caps>', 2*chr(6)],
-                        ['-', chr(7)]]
-        for i, j in replacements:
-            self.paragraph[2] = self.paragraph[2].replace(i, j)     # Transliteration
-        self.paragraph[4] = '&id=' + self.paragraph[4].replace(' | [r]', '&vlinks= | [r]')
-        uuid = uid()
-        for index, paragraph in enumerate(self.paragraph):
-            self.paragraph[index] = add_version_links(paragraph, index, entry, uuid)
+def paragraph_save(paragraph, texts, entry, markdown):
+    """
+    Update a paragraph with texts
+    :param paragraph (str[]):
+    :param texts:
+    :return (str[])
+    """
+    markup = markdown.to_markup
+    translate = Translator('HL').convert_sentence
+    paragraph[0:5:2] = texts
+    paragraph[1] = translate(paragraph[2])    # Tinellbian
+    paragraph[3] = interlinear(paragraph)     # Interlinear
+    for i in range(3):
+        paragraph[i] = '&id={0}&vlinks='.format(paragraph[i])
+    paragraph = map(markup, paragraph)
+    replacements = [['.(', '&middot;('],
+                    ['(', chr(5)],
+                    ['<small-caps>', 2*chr(5)],
+                    [')', chr(6)],
+                    ['</small-caps>', 2*chr(6)],
+                    ['-', chr(7)]]
+    for i, j in replacements:
+        paragraph[2] = paragraph[2].replace(i, j)     # Transliteration
+    paragraph[4] = '&id=' + paragraph[4].replace(' | [r]', '&vlinks= | [r]')
+    uuid = uid()
+    for index, para in enumerate(paragraph):
+        paragraph[index] = add_version_links(para, index, entry, uuid)
+    return paragraph
 
-def add_version_links(self, paragraph, index, entry, uuid):
+
+def add_version_links(paragraph, index, entry, uuid):
     """
     Adds version link information to a paragraph and its cousins
     :param paragraph (Paragraph):
@@ -189,7 +194,8 @@ def add_version_links(self, paragraph, index, entry, uuid):
     links = '<span class="version-links">{0}</span>'.format(links)
     return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
 
-def interlinear(pargraph):
+
+def interlinear(paragraph):
     """
     Format text from paragraphs for an interlinear gloss.
     :param paragraph (str[]): the paragraph texts from which to build the interlinear.
@@ -216,6 +222,7 @@ def interlinear(pargraph):
             italic = False
     text += '}[/t]'
     return text
+
 
 def morpheme_split(*texts):
     output = []
