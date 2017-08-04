@@ -528,7 +528,8 @@ class Page:
                 try:
                     cousin = cousin.children[index]
                 except (IndexError, AttributeError):
-                    cousin = None
+                    cousin = Page(name='New', parent=cousin, content='3]New\nNew text', markdown=cousin.markdown)
+                    cousin.insert(index=index)
             cousins.append(cousin)
         return cousins
 
