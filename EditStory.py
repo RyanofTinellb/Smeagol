@@ -15,8 +15,9 @@ class EditStory(Edit):
         self.datafile = datafile
         self.paragraphs = None
         self.entry = self.site.root[0][0][0]       # first great-grandchild
-        self.paragraphs, self.current_paragraph = self.create_chapter(self.entry)
+        self.paragraphs = self.current_paragraph = None
         self.configure_widgets()
+        self.load()
 
     def configure_widgets(self):
         for textbox in self.textboxes:
@@ -26,6 +27,35 @@ class EditStory(Edit):
             textbox.bind('<Control-Next>', self.next_chapter)
             textbox.bind('<Control-Prior>', self.previous_chapter)
         self.configure_language_radios()
+
+    def load(self):
+        cousins = map(lambda x: x.content.splitlines(), self.entry.cousins())     # Str[][]
+        count = max(map(len, cousins)) + 1      # int
+        current_paragraph = min(map(len, cousins)) - 1     # int
+        cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
+        paragraphs = map(None, *cousins) # str()[] (transposed)
+        self.paragraphs = paragraphs
+        self.current_paragraph = current_paragraph
+        self.display()
+
+    def display(self):
+        paragraph = self.paragraphs[self.current_paragraph]
+        markdown = self.markdown.to_markdown
+        displays = map(lambda x: remove_version_links(paragraph[2 * x]), range(3))
+        # have to add and subtract final '\n' because of how markdown works
+        displays = map(lambda x: markdown(x + '\n').replace('\n', ''), displays)
+        replacements = [['.(', '&middot;('],
+                        ['(', chr(5)],
+                        ['<', 2*chr(5)],
+                        [')', chr(6)],
+                        ['>', 2*chr(6)],
+                        ['-', chr(7)]]
+        for j, i in replacements[::-1]:
+            displays[1] = displays[1].replace(i, j)     # Transliteration
+        for window, text in zip(self.textboxes, displays):
+            window.delete('1.0', Tk.END)
+            window.insert('1.0', text)
+        return 'break'
 
     def previous_chapter(self, event=None):
         if self.entry.level > 2:
@@ -105,33 +135,6 @@ class EditStory(Edit):
         text = self.textboxes[window].get('1.0', Tk.END + '-1c')
         text = text.replace('\n', ' | ')
         return text
-
-    def display(self):
-        paragraph = self.paragraphs[self.current_paragraph]
-        markdown = self.markdown.to_markdown
-        displays = map(lambda x: remove_version_links(paragraph[2 * x]), range(3))
-        # have to add and subtract final '\n' because of how markdown works
-        displays = map(lambda x: markdown(x + '\n').replace('\n', ''), displays)
-        replacements = [['.(', '&middot;('],
-                        ['(', chr(5)],
-                        ['<', 2*chr(5)],
-                        [')', chr(6)],
-                        ['>', 2*chr(6)],
-                        ['-', chr(7)]]
-        for j, i in replacements[::-1]:
-            displays[1] = displays[1].replace(i, j)     # Transliteration
-        for window, text in zip(self.textboxes, displays):
-            window.delete('1.0', Tk.END)
-            window.insert('1.0', text)
-        return 'break'
-
-    def create_chapter(self, entry):
-        cousins = map(lambda x: x.content.splitlines(), entry.cousins())     # Str[][]
-        count = max(map(len, cousins)) + 1      # int
-        current_paragraph = min(map(len, cousins)) - 1     # int
-        cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
-        paragraphs = map(None, *cousins) # str()[] (transposed)
-        return paragraphs, current_paragraph
 
 
 def add_version_links(paragraph, index, entry, uid):
