@@ -94,12 +94,12 @@ class Chapter:
         count = max(map(len, cousins)) + 1      # int
         self.current_paragraph = min(map(len, cousins)) - 1     # int
         cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
-        cousins = zip(*cousins)    # Str()[]
-        self.paragraphs = map(lambda x: Paragraph(list(x), markdown), cousins)     # Paragraph[]
+        self.paragraphs = map(None, *cousins) # str()[] (transposed)
+        self.markdown = markdown
 
     def display(self):
-        paragraphs = self.paragraphs[self.current_paragraph].paragraph
-        markdown = self.paragraphs[self.current_paragraph].markdown
+        paragraphs = self.paragraphs[self.current_paragraph]
+        markdown = self.markdown
         return paragraph_display(paragraphs, markdown)
 
     def save(self, texts, entry):
@@ -108,10 +108,10 @@ class Chapter:
         :param texts:
         :return (nothing):
         """
-        paragraph = self.paragraphs[self.current_paragraph].paragraph
-        markdown = self.paragraphs[self.current_paragraph].markdown
-        self.paragraphs[self.current_paragraph].paragraph = paragraph_save(paragraph, texts, entry, markdown)
-        return map(lambda x: str('\n'.join(x)), zip(*map(lambda x: x.paragraph, self.paragraphs)))
+        paragraph = self.paragraphs[self.current_paragraph]     # str()
+        markdown = self.markdown
+        self.paragraphs[self.current_paragraph] = paragraph_save(texts, entry, markdown)
+        return map(lambda x: str('\n'.join(x)), zip(*self.paragraphs))
 
     def next_paragraph(self):
         try:
@@ -126,13 +126,7 @@ class Chapter:
             self.display()
         except IndexError:
             self.current_paragraph += 1
-
-
-class Paragraph:
-    def __init__(self, paragraphs, markdown):
-        self.markdown = markdown
-        self.paragraph = paragraphs     # Str[]
-
+            
 
 def paragraph_display(paragraph, markdown):
     markdown = markdown.to_markdown
@@ -149,13 +143,14 @@ def paragraph_display(paragraph, markdown):
         displays[1] = displays[1].replace(i, j)     # Transliteration
     return displays
 
-def paragraph_save(paragraph, texts, entry, markdown):
+def paragraph_save(texts, entry, markdown):
     """
     Update a paragraph with texts
     :param paragraph (str[]):
     :param texts:
     :return (str[])
     """
+    paragraph = [None] * 5
     markup = markdown.to_markup
     translate = Translator('HL').convert_sentence
     paragraph[0:5:2] = texts
@@ -182,7 +177,7 @@ def paragraph_save(paragraph, texts, entry, markdown):
 def add_version_links(paragraph, index, entry, uuid):
     """
     Adds version link information to a paragraph and its cousins
-    :param paragraph (Paragraph):
+    :param paragraph (str[]):
     :param index (int):
     :param entry (Page):
     :return (nothing):
