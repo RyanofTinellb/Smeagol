@@ -169,25 +169,25 @@ class Paragraph:
         self.paragraph[4] = '&id=' + self.paragraph[4].replace(' | [r]', '&vlinks= | [r]')
         uuid = uid()
         for index, paragraph in enumerate(self.paragraph):
-            self.paragraph[index] = self.add_version_links(paragraph, index, entry, uuid)
+            self.paragraph[index] = add_version_links(paragraph, index, entry, uuid)
 
-    def add_version_links(self, paragraph, index, entry, uuid):
-        """
-        Adds version link information to a paragraph and its cousins
-        :param paragraph (Paragraph):
-        :param index (int):
-        :param entry (Page):
-        :return (nothing):
-        """
-        links = ''
-        anchor = '<span class="version-anchor" id="{0}"></span>'.format(uuid)
-        categories = [node.name for node in entry.elders()]
-        cousins = entry.cousins()
-        for i, (cousin, category) in enumerate(zip(cousins, categories)):
-            if index != i:
-                links += cousins[index].hyperlink(cousin, category, fragment='#'+uuid) + '&nbsp;'
-        links = '<span class="version-links">{0}</span>'.format(links)
-        return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
+def add_version_links(self, paragraph, index, entry, uuid):
+    """
+    Adds version link information to a paragraph and its cousins
+    :param paragraph (Paragraph):
+    :param index (int):
+    :param entry (Page):
+    :return (nothing):
+    """
+    links = ''
+    anchor = '<span class="version-anchor" id="{0}"></span>'.format(uuid)
+    categories = [node.name for node in entry.elders()]
+    cousins = entry.cousins()
+    for i, (cousin, category) in enumerate(zip(cousins, categories)):
+        if index != i:
+            links += cousins[index].hyperlink(cousin, category, fragment='#'+uuid) + '&nbsp;'
+    links = '<span class="version-links">{0}</span>'.format(links)
+    return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
 
 def interlinear(pargraph):
     """
