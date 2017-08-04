@@ -30,9 +30,24 @@ class EditStory(Edit):
             heading.bind('<Prior>', handler)
             heading.bind('<Next>', handler)
         self.headings[0].bind('<Return>', self.insert_chapter)
-        self.headings[1].bind('<Return>', self.insert_heading)
+        self.headings[0].bind('<Tab>', self.insert_chapter)
+        self.headings[1].bind('<Return>', self.load)
+        self.headings[1].bind('<Tab>', self.load)
         self.headings[2].bind('<Return>', self.load)
         self.configure_language_radios()
+
+    def go_to_heading(self, event=None):
+        """
+        Move focus to the heading textbox, and select all the text therein.
+        Overrides parent method.
+        """
+        try:
+            heading = self.headings[1]
+            heading.focus_set()
+            heading.select_range(0, Tk.END)
+        except IndexError:  # no headings
+            pass
+        return 'break'
 
     def load(self, event=None):
         cousins = map(lambda x: x.content.splitlines(), self.entry.cousins())     # Str[][]
@@ -48,7 +63,10 @@ class EditStory(Edit):
         self.headings[0].insert(0, entry.parent.name)
         self.headings[1].insert(0, entry.name)
         self.headings[2].insert(0, 'Paragraph #' + str(self.current_paragraph))
-        self.textboxes[2].focus_set()
+        if event is not None and event.widget is self.headings[1]:
+            self.headings[2].focus_set()
+        else:
+            self.textboxes[2].focus_set()
         self.display()
 
     def display(self):
