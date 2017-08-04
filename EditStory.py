@@ -13,9 +13,9 @@ class EditStory(Edit):
         self.site = site
         self.markdown = markdown
         self.datafile = datafile
+        self.paragraphs = None
         self.entry = self.site.root[0][0][0]       # first great-grandchild
-        self.chapter = Chapter(self.entry, self.markdown)
-        self.current_paragraph = self.chapter.current_paragraph
+        self.paragraphs, self.current_paragraph = self.create_chapter(self.entry)
         self.configure_widgets()
 
     def configure_widgets(self):
@@ -30,8 +30,7 @@ class EditStory(Edit):
     def previous_chapter(self, event=None):
         if self.entry.level > 2:
             self.entry = self.entry.parent
-            self.chapter = Chapter(self.entry, self.markdown)
-            self.current_paragraph = self.chapter.current_paragraph
+            self.paragraphs, self.current_paragraph = self.create_chapter(self.entry)
             self.display()
             self.information.set('')
         return 'break'
@@ -43,8 +42,7 @@ class EditStory(Edit):
             if self.entry.next_node().level <= 1:
                 self.entry = old
             else:
-                self.chapter = Chapter(self.entry, self.markdown)
-                self.current_paragraph = self.chapter.current_paragraph
+                self.paragraphs, self.current_paragraph = self.create_chapter(self.entry)
             self.display()
             self.information.set('')
         except ValueError:
@@ -53,18 +51,20 @@ class EditStory(Edit):
 
     def previous_paragraph(self, event=None):
         self.current_paragraph -= 1
+        print(self.current_paragraph)
         self.display()
         self.information.set('')
         return 'break'
 
     def next_paragraph(self, event=None):
         self.current_paragraph += 1
+        print(self.current_paragraph)
         self.display()
         self.information.set('')
         return 'break'
 
     def save(self, event=None):
-        content = self.chapter.save(map(self.get_text, range(3)), self.entry, self.current_paragraph)
+        content = self.chapter_save(map(self.get_text, range(3)), self.entry, self.current_paragraph)
         cousins = self.entry.cousins()
         for text, cousin in zip(content, cousins):
             cousin.content = text
@@ -85,37 +85,32 @@ class EditStory(Edit):
         return text
 
     def display(self):
-        for window, text in zip(self.textboxes, self.chapter.display(self.current_paragraph)):
+        for window, text in zip(self.textboxes, self.chapter_display(self.current_paragraph)):
             window.delete('1.0', Tk.END)
             window.insert('1.0', text)
         return 'break'
 
-
-class Chapter:
-    def __init__(self, node, markdown):
-        cousins = map(lambda x: x.content.splitlines(), node.cousins())     # Str[][]
+    def create_chapter(self, entry):
+        cousins = map(lambda x: x.content.splitlines(), entry.cousins())     # Str[][]
         count = max(map(len, cousins)) + 1      # int
-        self.current_paragraph = min(map(len, cousins)) - 1     # int
         cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
-        self.paragraphs = map(None, *cousins) # str()[] (transposed)
-        self.markdown = markdown
+        paragraphs = map(None, *cousins) # str()[] (transposed)
+        current_paragraph = min(map(len, cousins)) - 1     # int
+        return paragraphs, current_paragraph
 
-    def display(self, current_paragraph):
-        paragraphs = self.paragraphs[current_paragraph]
-        markdown = self.markdown
-        return paragraph_display(paragraphs, markdown)
+    def chapter_display(self, current_paragraph):
+        paragraphs = self.paragraphs[self.current_paragraph]
+        return paragraph_display(paragraphs, self.markdown)
 
-    def save(self, texts, entry, current_paragraph):
+    def chapter_save(self, texts, entry, current_paragraph):
         """
         Cause the current paragraph to update itself
         :param texts:
         :return (nothing):
         """
-        paragraph = self.paragraphs[current_paragraph]     # str()
-        markdown = self.markdown
-        self.paragraphs[self.current_paragraph] = paragraph_save(texts, entry, markdown)
+        paragraph = self.paragraphs[self.current_paragraph]     # str()
+        self.paragraphs[self.current_paragraph] = paragraph_save(texts, self.entry, self.markdown)
         return map(lambda x: str('\n'.join(x)), zip(*self.paragraphs))
-
 
 def paragraph_display(paragraph, markdown):
     markdown = markdown.to_markdown
