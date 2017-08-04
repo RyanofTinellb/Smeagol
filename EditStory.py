@@ -83,7 +83,7 @@ class EditStory(Edit):
         return text
 
     def display(self):
-        for window, text in zip(self.textboxes, self.chapter_display(self.current_paragraph)):
+        for window, text in zip(self.textboxes, self.chapter_display()):
             window.delete('1.0', Tk.END)
             window.insert('1.0', text)
         return 'break'
@@ -96,9 +96,21 @@ class EditStory(Edit):
         paragraphs = map(None, *cousins) # str()[] (transposed)
         return paragraphs, current_paragraph
 
-    def chapter_display(self, current_paragraph):
-        paragraphs = self.paragraphs[self.current_paragraph]
-        return paragraph_display(paragraphs, self.markdown)
+    def chapter_display(self):
+        paragraph = self.paragraphs[self.current_paragraph]
+        markdown = self.markdown.to_markdown
+        displays = map(lambda x: remove_version_links(paragraph[2 * x]), range(3))
+        # have to add and subtract final '\n' because of how markdown works
+        displays = map(lambda x: markdown(x + '\n').replace('\n', ''), displays)
+        replacements = [['.(', '&middot;('],
+                        ['(', chr(5)],
+                        ['<', 2*chr(5)],
+                        [')', chr(6)],
+                        ['>', 2*chr(6)],
+                        ['-', chr(7)]]
+        for j, i in replacements[::-1]:
+            displays[1] = displays[1].replace(i, j)     # Transliteration
+        return displays
 
     def chapter_save(self, texts, entry, current_paragraph):
         """
@@ -130,21 +142,6 @@ class EditStory(Edit):
             paragraph[index] = add_version_links(para, index, entry, uid)
         self.paragraphs[self.current_paragraph] = paragraph
         return map(lambda x: str('\n'.join(x)), zip(*self.paragraphs))
-
-def paragraph_display(paragraph, markdown):
-    markdown = markdown.to_markdown
-    displays = map(lambda x: remove_version_links(paragraph[2 * x]), range(3))
-    # have to add and subtract final '\n' because of how markdown works
-    displays = map(lambda x: markdown(x + '\n').replace('\n', ''), displays)
-    replacements = [['.(', '&middot;('],
-                    ['(', chr(5)],
-                    ['<', 2*chr(5)],
-                    [')', chr(6)],
-                    ['>', 2*chr(6)],
-                    ['-', chr(7)]]
-    for j, i in replacements[::-1]:
-        displays[1] = displays[1].replace(i, j)     # Transliteration
-    return displays
 
 
 def add_version_links(paragraph, index, entry, uid):
