@@ -60,12 +60,6 @@ class EditStory(Edit):
         self.information.set('')
         return 'break'
 
-    @staticmethod
-    def literal(event=None):
-        event.widget.insert(Tk.INSERT, '|- -| {}')
-        event.widget.mark_set(Tk.INSERT, Tk.INSERT + '-1c')
-        return 'break'
-
     def save(self, event=None):
         content = self.chapter.save(map(self.get_text, range(3)), self.entry)
         cousins = self.entry.cousins()
@@ -137,7 +131,7 @@ class Paragraph:
 
     def display(self):
         markdown = self.markdown.to_markdown
-        displays = map(lambda x: self.remove_version_links(self.paragraph[2 * x]), range(3))
+        displays = map(lambda x: remove_version_links(self.paragraph[2 * x]), range(3))
         # have to add and subtract final '\n' because of how markdown works
         displays = map(lambda x: markdown(x + '\n').replace('\n', ''), displays)
         replacements = [['.(', '&middot;('],
@@ -149,15 +143,6 @@ class Paragraph:
         for j, i in replacements[::-1]:
             displays[1] = displays[1].replace(i, j)     # Transliteration
         return displays
-
-    @staticmethod
-    def remove_version_links(text):
-        """
-        Remove the version link information from a paragraph.
-        :param text (str): the paragraph to be cleaned.
-        :return (str):
-        """
-        return re.sub(r'<span class="version.*?</span>', '', text)
 
     def save(self, texts, entry):
         """
@@ -253,6 +238,21 @@ def uid(length=8):
     :param length (int): length of the uid
     """
     return ''.join([choice(printable[:62]) for i in range(length)])
+
+
+def remove_version_links(text):
+        """
+        Remove the version link information from a paragraph.
+        :param text (str): the paragraph to be cleaned.
+        :return (str):
+        """
+        return re.sub(r'<span class="version.*?</span>', '', text)
+
+
+def literal(event=None):
+    event.widget.insert(Tk.INSERT, '|- -| {}')
+    event.widget.mark_set(Tk.INSERT, Tk.INSERT + '-1c')
+    return 'break'
 
 
 if __name__ == '__main__':
