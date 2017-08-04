@@ -15,6 +15,7 @@ class EditStory(Edit):
         self.datafile = datafile
         self.entry = self.site.root[0][0][0]       # first great-grandchild
         self.chapter = Chapter(self.entry, self.markdown)
+        self.current_paragraph = self.chapter.current_paragraph
         self.configure_widgets()
 
     def configure_widgets(self):
@@ -30,6 +31,7 @@ class EditStory(Edit):
         if self.entry.level > 2:
             self.entry = self.entry.parent
             self.chapter = Chapter(self.entry, self.markdown)
+            self.current_paragraph = self.chapter.current_paragraph
             self.display()
             self.information.set('')
         return 'break'
@@ -42,6 +44,7 @@ class EditStory(Edit):
                 self.entry = old
             else:
                 self.chapter = Chapter(self.entry, self.markdown)
+                self.current_paragraph = self.chapter.current_paragraph
             self.display()
             self.information.set('')
         except ValueError:
@@ -49,19 +52,19 @@ class EditStory(Edit):
         return 'break'
 
     def previous_paragraph(self, event=None):
-        self.chapter.previous_paragraph()
+        self.current_paragraph -= 1
         self.display()
         self.information.set('')
         return 'break'
 
     def next_paragraph(self, event=None):
-        self.chapter.next_paragraph()
+        self.current_paragraph += 1
         self.display()
         self.information.set('')
         return 'break'
 
     def save(self, event=None):
-        content = self.chapter.save(map(self.get_text, range(3)), self.entry)
+        content = self.chapter.save(map(self.get_text, range(3)), self.entry, self.current_paragraph)
         cousins = self.entry.cousins()
         for text, cousin in zip(content, cousins):
             cousin.content = text
@@ -82,7 +85,7 @@ class EditStory(Edit):
         return text
 
     def display(self):
-        for window, text in zip(self.textboxes, self.chapter.display()):
+        for window, text in zip(self.textboxes, self.chapter.display(self.current_paragraph)):
             window.delete('1.0', Tk.END)
             window.insert('1.0', text)
         return 'break'
@@ -97,36 +100,22 @@ class Chapter:
         self.paragraphs = map(None, *cousins) # str()[] (transposed)
         self.markdown = markdown
 
-    def display(self):
-        paragraphs = self.paragraphs[self.current_paragraph]
+    def display(self, current_paragraph):
+        paragraphs = self.paragraphs[current_paragraph]
         markdown = self.markdown
         return paragraph_display(paragraphs, markdown)
 
-    def save(self, texts, entry):
+    def save(self, texts, entry, current_paragraph):
         """
         Cause the current paragraph to update itself
         :param texts:
         :return (nothing):
         """
-        paragraph = self.paragraphs[self.current_paragraph]     # str()
+        paragraph = self.paragraphs[current_paragraph]     # str()
         markdown = self.markdown
         self.paragraphs[self.current_paragraph] = paragraph_save(texts, entry, markdown)
         return map(lambda x: str('\n'.join(x)), zip(*self.paragraphs))
 
-    def next_paragraph(self):
-        try:
-            self.current_paragraph += 1
-            self.display()
-        except IndexError:
-            self.current_paragraph -= 1
-
-    def previous_paragraph(self):
-        try:
-            self.current_paragraph -= 1
-            self.display()
-        except IndexError:
-            self.current_paragraph += 1
-            
 
 def paragraph_display(paragraph, markdown):
     markdown = markdown.to_markdown
