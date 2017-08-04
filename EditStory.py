@@ -160,7 +160,7 @@ class EditStory(Edit):
         translate = Translator('HL').convert_sentence
         paragraph[0:5:2] = texts
         paragraph[1] = translate(paragraph[2])    # Tinellbian
-        paragraph[3] = interlinear(paragraph)     # Interlinear
+        paragraph[3] = interlinear(paragraph, self.markdown)     # Interlinear
         for i in range(3):
             paragraph[i] = '&id={0}&vlinks='.format(paragraph[i])
         paragraph = map(markup, paragraph)
@@ -217,7 +217,7 @@ def add_version_links(paragraph, index, entry, uid):
     return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
 
 
-def interlinear(paragraph):
+def interlinear(paragraph, markdown):
     """
     Format text from paragraphs for an interlinear gloss.
     :param paragraph (str[]): the paragraph texts from which to build the interlinear.
@@ -228,7 +228,9 @@ def interlinear(paragraph):
         paragraph[4]: Morpheme gloss
     :return (str): an interlinear in Story markdown.
     """
-    italic = False
+    italics = markdown.find_formatting('em')
+    upright = ('', '')
+    font_style = upright
     if paragraph[0] == '* **':
         return '&id=* **&vlinks='
     literal = paragraph[4][paragraph[4].find(' |- -| '):]
@@ -236,12 +238,12 @@ def interlinear(paragraph):
     # remove middot, and replace angle brackets with parentheses
     paragraph[3] = paragraph[2].replace('.(', '(').replace('<', '(').replace('>', ')')
     for transliteration, gloss in morpheme_split(paragraph[3], paragraph[4]):
-        if transliteration[0][:2] == '((':
-            transliteration[0] = transliteration[0][2:]
-            italic = True
-        text += inner_table(transliteration, gloss, italic)
-        if transliteration[-1][-2:] == '))':
-            italic = False
+        if transliteration[0].startswith(italics[0]):
+            transliteration[0] = transliteration[0][len(italics[0]):]
+            font_style = italics
+        text += inner_table(transliteration, gloss, font_style)
+        if transliteration[-1].endswith(italics[1]):
+            font_style = upright
     text += '}[/t]'
     return text
 
@@ -253,11 +255,9 @@ def morpheme_split(*texts):
     return zip(*output)
 
 
-def inner_table(top, bottom, italic=False):
-    if italic:
-        output = '[t](({0})) | [r]{1} | [/t]'.format(r'))- | (('.join(top), r'- | '.join(bottom))
-    else:
-        output = '[t]{0} | [r]{1} | [/t]'.format(r'- | '.join(top), r'- | '.join(bottom))
+def inner_table(top, bottom, font_style):
+    output = '[t]{{0}}{0}{{1}} | [r]{1} | [/t]'.format(r'{1}- | {0}'.join(top), r'- | '.join(bottom))
+    output = output.format(*font_style)
     return output
 
 
