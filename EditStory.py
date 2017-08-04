@@ -24,9 +24,18 @@ class EditStory(Edit):
             textbox.bind('<Control-r>', literal)
             textbox.bind('<Next>', self.next_paragraph)
             textbox.bind('<Prior>', self.previous_paragraph)
+        for i, heading in enumerate(self.headings):
+
+            def handler(event, self=self, i=i):
+                return self.scroll_headings(event, i)
+            heading.bind('<Prior>', handler)
+            heading.bind('<Next>', handler)
+        self.headings[0].bind('<Return>', self.insert_chapter)
+        self.headings[1].bind('<Return>', self.insert_heading)
+        self.headings[2].bind('<Return>', self.load)
         self.configure_language_radios()
 
-    def load(self):
+    def load(self, event=None):
         cousins = map(lambda x: x.content.splitlines(), self.entry.cousins())     # Str[][]
         count = max(map(len, cousins)) + 1      # int
         current_paragraph = min(map(len, cousins)) - 1     # int
@@ -53,6 +62,52 @@ class EditStory(Edit):
         for window, text in zip(self.textboxes, displays):
             window.delete('1.0', Tk.END)
             window.insert('1.0', text)
+        return 'break'
+
+    def scroll_headings(self, event, level):
+        """
+        Respond to PageUp / PageDown by changing headings, moving through the hierarchy.
+        :param event (Event): which entry box received the KeyPress
+        :param level (int): the level of the hierarchy that is being traversed.
+        """
+        if level <= 1:
+            heading = self.headings[level]
+            level += 2
+            direction = 1 if event.keysym == 'Next' else -1
+            # traverse hierarchy sideways
+            if self.entry.level == level:
+                try:
+                    self.entry = self.entry.sister(direction)
+                except IndexError:
+                    pass
+            # ascend hierarchy until correct level
+            while self.entry.level > level:
+                try:
+                    self.entry = self.entry.parent
+                except AttributeError:
+                    break
+            # descend hierarchy until correct level
+            while self.entry.level < level:
+                try:
+                    self.entry = self.entry.children[0]
+                except IndexError:
+                    break
+            for k in range(level - 2, 3):
+                self.headings[k].delete(0, Tk.END)
+            heading.insert(Tk.INSERT, self.entry.name)
+        else:       # scrolling the heading for the paragraph number
+            if event.keysym == 'Next':
+                self.next_paragraph()
+            else:
+                self.previous_paragraph()
+        return 'break'
+
+    def insert_chapter(self, event):
+        self.headings[1].focus_set()
+        return 'break'
+
+    def insert_heading(self, event=None):
+        self.headings[2].focus_set()
         return 'break'
 
     def previous_paragraph(self, event=None):
