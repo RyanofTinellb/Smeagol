@@ -56,7 +56,8 @@ class EditStory(Edit):
         return 'break'
 
     def previous_paragraph(self, event=None):
-        self.current_paragraph -= 1
+        if self.current_paragraph != 1:
+            self.current_paragraph -= 1
         self.display()
         self.information.set('')
         return 'break'
