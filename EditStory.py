@@ -83,20 +83,6 @@ class EditStory(Edit):
         return text
 
     def display(self):
-        for window, text in zip(self.textboxes, self.chapter_display()):
-            window.delete('1.0', Tk.END)
-            window.insert('1.0', text)
-        return 'break'
-
-    def create_chapter(self, entry):
-        cousins = map(lambda x: x.content.splitlines(), entry.cousins())     # Str[][]
-        count = max(map(len, cousins)) + 1      # int
-        current_paragraph = min(map(len, cousins)) - 1     # int
-        cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
-        paragraphs = map(None, *cousins) # str()[] (transposed)
-        return paragraphs, current_paragraph
-
-    def chapter_display(self):
         paragraph = self.paragraphs[self.current_paragraph]
         markdown = self.markdown.to_markdown
         displays = map(lambda x: remove_version_links(paragraph[2 * x]), range(3))
@@ -110,7 +96,18 @@ class EditStory(Edit):
                         ['-', chr(7)]]
         for j, i in replacements[::-1]:
             displays[1] = displays[1].replace(i, j)     # Transliteration
-        return displays
+        for window, text in zip(self.textboxes, displays):
+            window.delete('1.0', Tk.END)
+            window.insert('1.0', text)
+        return 'break'
+
+    def create_chapter(self, entry):
+        cousins = map(lambda x: x.content.splitlines(), entry.cousins())     # Str[][]
+        count = max(map(len, cousins)) + 1      # int
+        current_paragraph = min(map(len, cousins)) - 1     # int
+        cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
+        paragraphs = map(None, *cousins) # str()[] (transposed)
+        return paragraphs, current_paragraph
 
     def chapter_save(self, texts, entry, current_paragraph):
         """
