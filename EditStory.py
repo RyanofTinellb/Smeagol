@@ -24,8 +24,6 @@ class EditStory(Edit):
             textbox.bind('<Control-r>', literal)
             textbox.bind('<Next>', self.next_paragraph)
             textbox.bind('<Prior>', self.previous_paragraph)
-            textbox.bind('<Control-Next>', self.next_chapter)
-            textbox.bind('<Control-Prior>', self.previous_chapter)
         self.configure_language_radios()
 
     def load(self):
@@ -55,28 +53,6 @@ class EditStory(Edit):
         for window, text in zip(self.textboxes, displays):
             window.delete('1.0', Tk.END)
             window.insert('1.0', text)
-        return 'break'
-
-    def previous_chapter(self, event=None):
-        if self.entry.level > 2:
-            self.entry = self.entry.parent
-            self.paragraphs, self.current_paragraph = self.create_chapter(self.entry)
-            self.display()
-            self.information.set('')
-        return 'break'
-
-    def next_chapter(self, event=None):
-        try:
-            old = self.entry
-            self.entry = self.entry.next_node()
-            if self.entry.next_node().level <= 1:
-                self.entry = old
-            else:
-                self.paragraphs, self.current_paragraph = self.create_chapter(self.entry)
-            self.display()
-            self.information.set('')
-        except ValueError:
-            pass
         return 'break'
 
     def previous_paragraph(self, event=None):
