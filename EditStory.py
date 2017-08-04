@@ -91,9 +91,9 @@ class EditStory(Edit):
     def create_chapter(self, entry):
         cousins = map(lambda x: x.content.splitlines(), entry.cousins())     # Str[][]
         count = max(map(len, cousins)) + 1      # int
+        current_paragraph = min(map(len, cousins)) - 1     # int
         cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
         paragraphs = map(None, *cousins) # str()[] (transposed)
-        current_paragraph = min(map(len, cousins)) - 1     # int
         return paragraphs, current_paragraph
 
     def chapter_display(self, current_paragraph):
@@ -106,8 +106,29 @@ class EditStory(Edit):
         :param texts:
         :return (nothing):
         """
-        paragraph = self.paragraphs[self.current_paragraph]     # str()
-        self.paragraphs[self.current_paragraph] = paragraph_save(texts, self.entry, self.markdown)
+        length = 8
+        paragraph = [None] * 5
+        markup = self.markdown.to_markup
+        translate = Translator('HL').convert_sentence
+        paragraph[0:5:2] = texts
+        paragraph[1] = translate(paragraph[2])    # Tinellbian
+        paragraph[3] = interlinear(paragraph)     # Interlinear
+        for i in range(3):
+            paragraph[i] = '&id={0}&vlinks='.format(paragraph[i])
+        paragraph = map(markup, paragraph)
+        replacements = [['.(', '&middot;('],
+                        ['(', chr(5)],
+                        ['<small-caps>', 2*chr(5)],
+                        [')', chr(6)],
+                        ['</small-caps>', 2*chr(6)],
+                        ['-', chr(7)]]
+        for i, j in replacements:
+            paragraph[2] = paragraph[2].replace(i, j)     # Transliteration
+        paragraph[4] = '&id=' + paragraph[4].replace(' | [r]', '&vlinks= | [r]')
+        uid = ''.join([choice(printable[:62]) for i in range(length)])
+        for index, para in enumerate(paragraph):
+            paragraph[index] = add_version_links(para, index, entry, uid)
+        self.paragraphs[self.current_paragraph] = paragraph
         return map(lambda x: str('\n'.join(x)), zip(*self.paragraphs))
 
 def paragraph_display(paragraph, markdown):
@@ -124,36 +145,6 @@ def paragraph_display(paragraph, markdown):
     for j, i in replacements[::-1]:
         displays[1] = displays[1].replace(i, j)     # Transliteration
     return displays
-
-def paragraph_save(texts, entry, markdown):
-    """
-    Update a paragraph with texts
-    :param paragraph (str[]):
-    :param texts:
-    :return (str[])
-    """
-    paragraph = [None] * 5
-    markup = markdown.to_markup
-    translate = Translator('HL').convert_sentence
-    paragraph[0:5:2] = texts
-    paragraph[1] = translate(paragraph[2])    # Tinellbian
-    paragraph[3] = interlinear(paragraph)     # Interlinear
-    for i in range(3):
-        paragraph[i] = '&id={0}&vlinks='.format(paragraph[i])
-    paragraph = map(markup, paragraph)
-    replacements = [['.(', '&middot;('],
-                    ['(', chr(5)],
-                    ['<small-caps>', 2*chr(5)],
-                    [')', chr(6)],
-                    ['</small-caps>', 2*chr(6)],
-                    ['-', chr(7)]]
-    for i, j in replacements:
-        paragraph[2] = paragraph[2].replace(i, j)     # Transliteration
-    paragraph[4] = '&id=' + paragraph[4].replace(' | [r]', '&vlinks= | [r]')
-    uid = ''.join([choice(printable[:62]) for i in range(length)])
-    for index, para in enumerate(paragraph):
-        paragraph[index] = add_version_links(para, index, entry, uid)
-    return paragraph
 
 
 def add_version_links(paragraph, index, entry, uid):
