@@ -13,9 +13,8 @@ class EditStory(Edit):
         self.site = site
         self.markdown = markdown
         self.datafile = datafile
-        self.paragraphs = None
+        self.paragraphs = self.count = self.current_paragraph = None
         self.entry = self.site.root[0][0][0]       # first great-grandchild
-        self.paragraphs = self.current_paragraph = None
         self.configure_widgets()
         self.load()
 
@@ -37,9 +36,10 @@ class EditStory(Edit):
 
     def load(self, event=None):
         cousins = map(lambda x: x.content.splitlines(), self.entry.cousins())     # Str[][]
-        count = max(map(len, cousins)) + 1      # int
-        current_paragraph = min(map(len, cousins)) - 1     # int
-        cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
+        self.count = max(map(len, cousins))      # int
+        # current_paragraph = min(map(len, cousins))     # int
+        current_paragraph = self.count - 1
+        cousins = map(lambda x: x + (self.count - len(x)) * [''], cousins)     # still Str[][], but now padded
         paragraphs = map(None, *cousins) # str()[] (transposed)
         self.paragraphs = paragraphs
         self.current_paragraph = current_paragraph
@@ -111,16 +111,21 @@ class EditStory(Edit):
         return 'break'
 
     def previous_paragraph(self, event=None):
-        if self.current_paragraph != 1:
+        if self.current_paragraph > 1:
             self.current_paragraph -= 1
-        self.display()
-        self.information.set('')
+            self.headings[2].delete(0, Tk.END)
+            self.headings[2].insert(0, 'Paragraph #' + str(self.current_paragraph))
+            self.display()
+            self.information.set('')
         return 'break'
 
     def next_paragraph(self, event=None):
-        self.current_paragraph += 1
-        self.display()
-        self.information.set('')
+        if self.current_paragraph < self.count - 1:
+            self.current_paragraph += 1
+            self.headings[2].delete(0, Tk.END)
+            self.headings[2].insert(0, 'Paragraph #' + str(self.current_paragraph))
+            self.display()
+            self.information.set('')
         return 'break'
 
     def save(self, event=None):
