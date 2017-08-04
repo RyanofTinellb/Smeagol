@@ -51,14 +51,12 @@ class EditStory(Edit):
 
     def previous_paragraph(self, event=None):
         self.current_paragraph -= 1
-        print(self.current_paragraph)
         self.display()
         self.information.set('')
         return 'break'
 
     def next_paragraph(self, event=None):
         self.current_paragraph += 1
-        print(self.current_paragraph)
         self.display()
         self.information.set('')
         return 'break'
@@ -152,13 +150,13 @@ def paragraph_save(texts, entry, markdown):
     for i, j in replacements:
         paragraph[2] = paragraph[2].replace(i, j)     # Transliteration
     paragraph[4] = '&id=' + paragraph[4].replace(' | [r]', '&vlinks= | [r]')
-    uuid = uid()
+    uid = ''.join([choice(printable[:62]) for i in range(length)])
     for index, para in enumerate(paragraph):
-        paragraph[index] = add_version_links(para, index, entry, uuid)
+        paragraph[index] = add_version_links(para, index, entry, uid)
     return paragraph
 
 
-def add_version_links(paragraph, index, entry, uuid):
+def add_version_links(paragraph, index, entry, uid):
     """
     Adds version link information to a paragraph and its cousins
     :param paragraph (str[]):
@@ -167,12 +165,12 @@ def add_version_links(paragraph, index, entry, uuid):
     :return (nothing):
     """
     links = ''
-    anchor = '<span class="version-anchor" id="{0}"></span>'.format(uuid)
+    anchor = '<span class="version-anchor" id="{0}"></span>'.format(uid)
     categories = [node.name for node in entry.elders()]
     cousins = entry.cousins()
     for i, (cousin, category) in enumerate(zip(cousins, categories)):
         if index != i:
-            links += cousins[index].hyperlink(cousin, category, fragment='#'+uuid) + '&nbsp;'
+            links += cousins[index].hyperlink(cousin, category, fragment='#'+uid) + '&nbsp;'
     links = '<span class="version-links">{0}</span>'.format(links)
     return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
 
@@ -219,14 +217,6 @@ def inner_table(top, bottom, italic=False):
     else:
         output = '[t]{0} | [r]{1} | [/t]'.format(r'- | '.join(top), r'- | '.join(bottom))
     return output
-
-
-def uid(length=8):
-    """
-    Creates a unique alphanumeric identification number
-    :param length (int): length of the uid
-    """
-    return ''.join([choice(printable[:62]) for i in range(length)])
 
 
 def remove_version_links(text):
