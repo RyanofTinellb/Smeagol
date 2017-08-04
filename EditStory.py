@@ -98,7 +98,9 @@ class Chapter:
         self.paragraphs = map(lambda x: Paragraph(list(x), markdown), cousins)     # Paragraph[]
 
     def display(self):
-        return self.paragraphs[self.current_paragraph].display()
+        paragraphs = self.paragraphs[self.current_paragraph].paragraph
+        markdown = self.paragraphs[self.current_paragraph].markdown
+        return paragraph_display(paragraphs, markdown)
 
     def save(self, texts, entry):
         """
@@ -131,20 +133,21 @@ class Paragraph:
         self.markdown = markdown
         self.paragraph = paragraphs     # Str[]
 
-    def display(self):
-        markdown = self.markdown.to_markdown
-        displays = map(lambda x: remove_version_links(self.paragraph[2 * x]), range(3))
-        # have to add and subtract final '\n' because of how markdown works
-        displays = map(lambda x: markdown(x + '\n').replace('\n', ''), displays)
-        replacements = [['.(', '&middot;('],
-                        ['(', chr(5)],
-                        ['<', 2*chr(5)],
-                        [')', chr(6)],
-                        ['>', 2*chr(6)],
-                        ['-', chr(7)]]
-        for j, i in replacements[::-1]:
-            displays[1] = displays[1].replace(i, j)     # Transliteration
-        return displays
+
+def paragraph_display(paragraph, markdown):
+    markdown = markdown.to_markdown
+    displays = map(lambda x: remove_version_links(paragraph[2 * x]), range(3))
+    # have to add and subtract final '\n' because of how markdown works
+    displays = map(lambda x: markdown(x + '\n').replace('\n', ''), displays)
+    replacements = [['.(', '&middot;('],
+                    ['(', chr(5)],
+                    ['<', 2*chr(5)],
+                    [')', chr(6)],
+                    ['>', 2*chr(6)],
+                    ['-', chr(7)]]
+    for j, i in replacements[::-1]:
+        displays[1] = displays[1].replace(i, j)     # Transliteration
+    return displays
 
 def paragraph_save(paragraph, texts, entry, markdown):
     """
