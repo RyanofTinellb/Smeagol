@@ -169,7 +169,7 @@ class Paragraph:
         translate = Translator('HL').convert_sentence
         self.paragraph[0:5:2] = texts
         self.paragraph[1] = translate(self.paragraph[2])    # Tinellbian
-        self.paragraph[3] = self.interlinear()     # Interlinear
+        self.paragraph[3] = interlinear(self.paragraph)     # Interlinear
         for i in range(3):
             self.paragraph[i] = '&id={0}&vlinks='.format(self.paragraph[i])
         self.paragraph = map(markup, self.paragraph)
@@ -204,24 +204,33 @@ class Paragraph:
         links = '<span class="version-links">{0}</span>'.format(links)
         return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
 
-    def interlinear(self):
-        italic = False
-        if self.paragraph[0] == '* **':
-            return '&id=* **&vlinks='
-        literal = self.paragraph[4][self.paragraph[4].find(' |- -| '):]
-        text = '[t]&id={0}&vlinks={1} | -| &flex;'.format(self.paragraph[0], literal)
-        # remove middot, and replace angle brackets with parentheses
-        self.paragraph[3] = self.paragraph[2].replace('.(', '(').replace('<', '(').replace('>', ')')
-        for transliteration, gloss in morpheme_split(self.paragraph[3], self.paragraph[4]):
-            if transliteration[0][:2] == '((':
-                transliteration[0] = transliteration[0][2:]
-                italic = True
-            text += inner_table(transliteration, gloss, italic)
-            if transliteration[-1][-2:] == '))':
-                italic = False
-        text += '}[/t]'
-        return text
-
+def interlinear(pargraph):
+    """
+    Format text from paragraphs for an interlinear gloss.
+    :param paragraph (str[]): the paragraph texts from which to build the interlinear.
+        paragraph[0]: English
+        paragraph[1]: (not used here)
+        paragraph[2]: Full paragraph transliteration
+        paragraph[3]: Transliterated Tinellbian morphemes
+        paragraph[4]: Morpheme gloss
+    :return (str): an interlinear in Story markdown.
+    """
+    italic = False
+    if paragraph[0] == '* **':
+        return '&id=* **&vlinks='
+    literal = paragraph[4][paragraph[4].find(' |- -| '):]
+    text = '[t]&id={0}&vlinks={1} | -| &flex;'.format(paragraph[0], literal)
+    # remove middot, and replace angle brackets with parentheses
+    paragraph[3] = paragraph[2].replace('.(', '(').replace('<', '(').replace('>', ')')
+    for transliteration, gloss in morpheme_split(paragraph[3], paragraph[4]):
+        if transliteration[0][:2] == '((':
+            transliteration[0] = transliteration[0][2:]
+            italic = True
+        text += inner_table(transliteration, gloss, italic)
+        if transliteration[-1][-2:] == '))':
+            italic = False
+    text += '}[/t]'
+    return text
 
 def morpheme_split(*texts):
     output = []
