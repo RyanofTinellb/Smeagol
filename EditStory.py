@@ -37,12 +37,18 @@ class EditStory(Edit):
     def load(self, event=None):
         cousins = map(lambda x: x.content.splitlines(), self.entry.cousins())     # Str[][]
         self.count = max(map(len, cousins))      # int
-        # current_paragraph = min(map(len, cousins))     # int
-        current_paragraph = self.count - 1
+        current_paragraph = min(map(len, cousins)) - 1    # int
         cousins = map(lambda x: x + (self.count - len(x)) * [''], cousins)     # still Str[][], but now padded
         paragraphs = map(None, *cousins) # str()[] (transposed)
         self.paragraphs = paragraphs
         self.current_paragraph = current_paragraph
+        entry = self.entry
+        for heading in self.headings:
+            heading.delete(0, Tk.END)
+        self.headings[0].insert(0, entry.parent.name)
+        self.headings[1].insert(0, entry.name)
+        self.headings[2].insert(0, 'Paragraph #' + str(self.current_paragraph))
+        self.textboxes[2].focus_set()
         self.display()
 
     def display(self):
