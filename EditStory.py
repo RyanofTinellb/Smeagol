@@ -165,7 +165,7 @@ class EditStory(Edit):
         literal = texts.pop()
         paragraph[0:5:2] = texts
         paragraph[1] = translate(paragraph[2])    # Tinellbian
-        paragraph[4] += ' |- -| {' + literal + '}'
+        paragraph[4] += ' |- -| {' + literal + '}'      # Literal
         paragraph[3] = interlinear(paragraph, self.markdown)     # Interlinear
         for i in range(3):
             paragraph[i] = '&id={0}&vlinks='.format(paragraph[i])
@@ -274,12 +274,6 @@ def remove_version_links(text):
         :return (str):
         """
         return re.sub(r'<span class="version.*?</span>', '', text)
-
-
-def literal(event=None):
-    event.widget.insert(Tk.INSERT, '|- -| {}')
-    event.widget.mark_set(Tk.INSERT, Tk.INSERT + '-1c')
-    return 'break'
 
 
 if __name__ == '__main__':
