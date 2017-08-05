@@ -139,21 +139,17 @@ class EditStory(Edit):
         return 'break'
 
     def previous_paragraph(self, event=None):
-        if self.current_paragraph > 1:
-            self.current_paragraph -= 1
-            self.headings[2].delete(0, Tk.END)
-            self.headings[2].insert(0, 'Paragraph #' + str(self.current_paragraph))
-            self.display()
-            self.information.set('')
-        return 'break'
+        return self.move_paragraph(-1)
 
     def next_paragraph(self, event=None):
-        if self.current_paragraph < self.count - 1:
-            self.current_paragraph += 1
-            self.headings[2].delete(0, Tk.END)
-            self.headings[2].insert(0, 'Paragraph #' + str(self.current_paragraph))
-            self.display()
-            self.information.set('')
+        return self.move_paragraph(1)
+
+    def move_paragraph(self, direction=1):
+        if -direction < self.current_paragraph < self.count - direction:
+            self.current_paragraph += direction
+            entry = self.entry, self.paragraphs, self.current_paragraph, self.count
+            self.display(self.prepare_entry(entry, self.markdown))
+        self.information.set('Paragraph #' + str(self.current_paragraph))
         return 'break'
 
     def save(self, event=None):
