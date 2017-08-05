@@ -296,7 +296,10 @@ class Edit(Tk.Frame):
         """
         self.entry = self.find_entry(map(lambda x: x.get(), self.headings))
         markdown = self.choose(self.kind, self.markdowns)
-        texts = self.prepare_entry(self.entry, markdown)
+        self.display(self.prepare_entry(self.entry, markdown))
+        return 'break'
+
+    def display(self, texts):
         for text, textbox in zip(texts, self.textboxes):
             textbox.delete(1.0, Tk.END)
             textbox.insert(1.0, text)
@@ -309,7 +312,6 @@ class Edit(Tk.Frame):
                 self.initial_content()
         except AttributeError:
             pass
-        return 'break'
 
     def find_entry(self, headings):
         """
