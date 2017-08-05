@@ -8,19 +8,17 @@ from string import printable
 class EditStory(Edit):
     def __init__(self, directory, datafile, site, markdown, master=None):
         self.font = ('Californian FB', 16)
-        self.widgets = [3, 4, 'languages']
+        self.widgets = [2, 4, 'languages']
         Edit.__init__(self, directory, datafile, site, markdown)
         self.site = site
         self.markdown = markdown
         self.datafile = datafile
+        self.entry = self.site.root[0]
         self.paragraphs = self.count = self.current_paragraph = None
-        self.entry = self.site.root[0][0][0]       # first great-grandchild
         self.configure_widgets()
-        self.load()
 
     def configure_widgets(self):
         for textbox in self.textboxes:
-            textbox.bind('<Control-r>', literal)
             textbox.bind('<Next>', self.next_paragraph)
             textbox.bind('<Prior>', self.previous_paragraph)
         for i, heading in enumerate(self.headings):
@@ -33,21 +31,11 @@ class EditStory(Edit):
         self.headings[0].bind('<Tab>', self.insert_chapter)
         self.headings[1].bind('<Return>', self.load)
         self.headings[1].bind('<Tab>', self.load)
-        self.headings[2].bind('<Return>', self.load)
         self.configure_language_radios()
 
-    def go_to_heading(self, event=None):
         """
-        Move focus to the heading textbox, and select all the text therein.
-        Overrides parent method.
         """
-        try:
-            heading = self.headings[1]
-            heading.focus_set()
-            heading.select_range(0, Tk.END)
-        except IndexError:  # no headings
-            pass
-        return 'break'
+        self.information.set('Paragraph #' + str(self.current_paragraph))
 
     def load(self, event=None):
         cousins = map(lambda x: x.content.splitlines(), self.entry.cousins())     # Str[][]
@@ -62,11 +50,6 @@ class EditStory(Edit):
             heading.delete(0, Tk.END)
         self.headings[0].insert(0, entry.parent.name)
         self.headings[1].insert(0, entry.name)
-        self.headings[2].insert(0, 'Paragraph #' + str(self.current_paragraph))
-        if event is not None and event.widget is self.headings[1]:
-            self.headings[2].focus_set()
-        else:
-            self.textboxes[2].focus_set()
         self.display()
 
     def display(self):
@@ -120,7 +103,7 @@ class EditStory(Edit):
                     self.entry = self.entry.children[0]
                 except IndexError:
                     break
-            for k in range(level - 2, 3):
+            for k in range(level - 2, 2):
                 self.headings[k].delete(0, Tk.END)
             heading.insert(Tk.INSERT, self.entry.name)
         else:       # scrolling the heading for the paragraph number
