@@ -33,28 +33,51 @@ class EditStory(Edit):
         self.headings[1].bind('<Tab>', self.load)
         self.configure_language_radios()
 
+    def load(self, event=None):
         """
+        Find entry, manipulate entry to fit boxes, place in boxes
+        Overrides parent method
         """
+        Edit.load(self)
+        self.entry, self.paragraphs, self.current_paragraph, self.count = self.entry
         self.information.set('Paragraph #' + str(self.current_paragraph))
 
-    def load(self, event=None):
-        cousins = map(lambda x: x.content.splitlines(), self.entry.cousins())     # Str[][]
-        self.count = max(map(len, cousins))      # int
+    def find_entry(self, headings):
+        """
+        Find the current entry based on what is in the heading boxes.
+        Overrides parent method.
+        Subroutine of self.load().
+        :param headings (str[]): the texts from the heading boxes
+        :return (Page, str()[], int):
+        :   (Page): current entry
+        :   (str()[]): a list of paragraphs, where each paragraph consists of different version-links
+        :   (int): the index of the last untranslated paragraph
+        :   (int): the index of the last paragraph overall
+        """
+        entry = Edit.find_entry(self, [self.site.root[0].name] + headings)
+        cousins = map(lambda x: x.content.splitlines(), entry.cousins())     # Str[][]
+        count = max(map(len, cousins))      # int
         current_paragraph = min(map(len, cousins)) - 1    # int
-        cousins = map(lambda x: x + (self.count - len(x)) * [''], cousins)     # still Str[][], but now padded
+        cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
         paragraphs = map(None, *cousins) # str()[] (transposed)
-        self.paragraphs = paragraphs
-        self.current_paragraph = current_paragraph
-        entry = self.entry
-        for heading in self.headings:
-            heading.delete(0, Tk.END)
-        self.headings[0].insert(0, entry.parent.name)
-        self.headings[1].insert(0, entry.name)
-        self.display()
+        return entry, paragraphs, current_paragraph, count
 
-    def display(self):
-        paragraph = self.paragraphs[self.current_paragraph]
-        markdown = self.markdown.to_markdown
+    @staticmethod
+    def prepare_entry(entry, markdown=None):
+        """
+        Manipulate entry content to suit textboxes.
+        Subroutine of self.load()
+        Overrides parent method
+        :param entry (Page): A Page instance carrying text. Other Pages relative to this entry may also be accessed.
+        :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
+        :param return (str[]):
+        """
+        entry, paragraphs, current_paragraph, count = entry
+        paragraph = paragraphs[current_paragraph]
+        try:
+            markdown = markdown.to_markdown
+        except:
+            markdown = lambda x: x
         displays = map(lambda x: remove_version_links(paragraph[2 * x]), range(3))
         # have to add and subtract final '\n' because of how markdown interacts with the timestamp
         displays = map(lambda x: markdown(x + '\n').replace('\n', ''), displays)
@@ -70,10 +93,7 @@ class EditStory(Edit):
                         ['-', chr(7)]]
         for j, i in replacements[::-1]:
             displays[1] = displays[1].replace(i, j)     # Transliteration
-        for window, text in zip(self.textboxes, displays):
-            window.delete('1.0', Tk.END)
-            window.insert('1.0', text)
-        return 'break'
+        return displays
 
     def scroll_headings(self, event, level):
         """
