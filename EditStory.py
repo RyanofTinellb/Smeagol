@@ -8,7 +8,7 @@ from string import printable
 class EditStory(Edit):
     def __init__(self, directory, datafile, site, markdown, master=None):
         self.font = ('Californian FB', 16)
-        self.widgets = [3, 3, 'languages']
+        self.widgets = [3, 4, 'languages']
         Edit.__init__(self, directory, datafile, site, markdown)
         self.site = site
         self.markdown = markdown
@@ -73,8 +73,12 @@ class EditStory(Edit):
         paragraph = self.paragraphs[self.current_paragraph]
         markdown = self.markdown.to_markdown
         displays = map(lambda x: remove_version_links(paragraph[2 * x]), range(3))
-        # have to add and subtract final '\n' because of how markdown works
+        # have to add and subtract final '\n' because of how markdown interacts with the timestamp
         displays = map(lambda x: markdown(x + '\n').replace('\n', ''), displays)
+        displays[2:4] = displays[2].split(' |- -| ')
+        if len(displays) == 3:
+            displays.append('{}')
+        displays[3] = displays[3][1:-1]
         replacements = [['.(', '&middot;('],
                         ['(', chr(5)],
                         ['<', 2*chr(5)],
@@ -153,13 +157,15 @@ class EditStory(Edit):
         return 'break'
 
     def save(self, event=None):
-        texts = map(self.get_text, range(3))
+        texts = map(self.get_text, range(4))
         length = 8
         paragraph = [None] * 5
         markup = self.markdown.to_markup
         translate = Translator('HL').convert_sentence
+        literal = texts.pop()
         paragraph[0:5:2] = texts
         paragraph[1] = translate(paragraph[2])    # Tinellbian
+        paragraph[4] += ' |- -| {' + literal + '}'
         paragraph[3] = interlinear(paragraph, self.markdown)     # Interlinear
         for i in range(3):
             paragraph[i] = '&id={0}&vlinks='.format(paragraph[i])
@@ -172,7 +178,7 @@ class EditStory(Edit):
                         ['-', chr(7)]]
         for i, j in replacements:
             paragraph[2] = paragraph[2].replace(i, j)     # Transliteration
-        paragraph[4] = '&id=' + paragraph[4].replace(' | [r]', '&vlinks= | [r]')
+        paragraph[4] = '&id=' + paragraph[4].replace(' | [r]', '&vlinks= | [r]') # Gloss
         uid = ''.join([choice(printable[:62]) for i in range(length)])
         for index, para in enumerate(paragraph):
             paragraph[index] = add_version_links(para, index, self.entry, uid)
