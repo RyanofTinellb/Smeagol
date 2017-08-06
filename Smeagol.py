@@ -670,7 +670,7 @@ class Page:
             else:
                 return matriarch.title + ' ' + self.title
 
-    @cached_property
+    @property
     def contents(self):
         """
         Markup tags in square brackets to HTML, including headings, paragraphs, tables and lists.
