@@ -52,7 +52,7 @@ class EditStory(Edit):
         :   (int): the index of the last paragraph overall
         """
         entry = Edit.find_entry(self, [self.site.root[0].name] + headings)
-        cousins = map(lambda x: x.content.splitlines(), entry.cousins())     # Str[][]
+        cousins = map(lambda x: x.content.splitlines(), entry.cousins)     # Str[][]
         count = max(map(len, cousins))      # int
         current_paragraph = min(map(len, cousins)) - 1    # int
         cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
@@ -146,17 +146,50 @@ class EditStory(Edit):
         self.information.set('Paragraph #' + str(self.current_paragraph))
         return 'break'
 
-    def save(self, event=None):
-        texts = map(self.get_text, range(4))
+    @staticmethod
+    def get_text(textbox):
+        """
+        Retrieves text from textbox and removes line-breaks.
+        Overrides Edit.get_text()
+        """
+        return str(textbox.get(1.0, Tk.END + '-1c')).replace('\n', ' | ')
+
+    @staticmethod
+    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None):
+        """
+        Modify entry with manipulated texts.
+        Subroutine of self.save().
+        Overrrides parent method
+        :param entry (Page): the entry in the datafile to be modified.
+        :param texts (str[]): the texts to be manipulated and inserted.
+        :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
+        :param return (Nothing):
+        """
+        contents = map(join_strip, zip(*texts))
+        cousins = entry.cousins
+        for content, cousin in zip(contents, cousins):
+            cousin.content = content
+
+    @staticmethod
+    def prepare_paragraph(entry, texts, markdown=None):
+        """
+        Returns 5 versions of the same paragraph, based on the texts.
+        :param entry (Page):
+        :param texts (str[]):
+        :param markdown (Markdown):
+        """
         length = 8
         paragraph = [None] * 5
-        markup = self.markdown.to_markup
+        try:
+            markup = markdown.to_markup
+        except AttributeError:
+            markup = lambda x: x
         translate = Translator('HL').convert_sentence
         literal = texts.pop()
         paragraph[0:5:2] = texts
         paragraph[1] = translate(paragraph[2])    # Tinellbian
         paragraph[4] += ' |- -| {' + literal + '}'      # Literal
-        paragraph[3] = interlinear(paragraph, self.markdown)     # Interlinear
+        paragraph[3] = interlinear(paragraph, markdown)     # Interlinear
         for i in range(3):
             paragraph[i] = '&id={0}&vlinks='.format(paragraph[i])
         paragraph = map(markup, paragraph)
@@ -171,27 +204,22 @@ class EditStory(Edit):
         paragraph[4] = '&id=' + paragraph[4].replace(' | [r]', '&vlinks= | [r]') # Gloss
         uid = ''.join([choice(printable[:62]) for i in range(length)])
         for index, para in enumerate(paragraph):
-            paragraph[index] = add_version_links(para, index, self.entry, uid)
-        self.paragraphs[self.current_paragraph] = paragraph
-        content = map(lambda x: str('\n'.join(x)), zip(*self.paragraphs))
-        cousins = self.entry.cousins()
-        for text, cousin in zip(content, cousins):
-            cousin.content = text
-        page = re.sub(r'\n+', '\n', str(self.site))
-        if page:
-            with open(self.datafile, 'w') as data:
-                data.write(page)
-        self.entry.publish(self.site.template)
-        for cousin in cousins:
-            cousin.publish(self.site.template)
-        self.site.update_json()
-        self.information.set('Saved!')
-        return 'break'
+            paragraph[index] = add_version_links(para, index, entry, uid)
+        return tuple(paragraph)
 
-    def get_text(self, window):
-        text = self.textboxes[window].get('1.0', Tk.END + '-1c')
-        text = text.replace('\n', ' | ')
-        return text
+    @staticmethod
+    def publish(entry, site):
+        """
+        Put entry contents into datafile, publish appropriate Pages.
+        This is the default method - other Edit programs may override this.
+        Subroutine of self.save()
+        :param entry (Page):
+        :return (nothing):
+        """
+        for cousin in entry.cousins:
+            cousin.publish(site.template)
+        # reset entry so that it is not published twice
+        Edit.publish(entry=None, site=site)
 
 
 def add_version_links(paragraph, index, entry, uid):
@@ -204,8 +232,8 @@ def add_version_links(paragraph, index, entry, uid):
     """
     links = ''
     anchor = '<span class="version-anchor" id="{0}"></span>'.format(uid)
-    categories = [node.name for node in entry.elders()]
-    cousins = entry.cousins()
+    categories = [node.name for node in entry.elders]
+    cousins = entry.cousins
     for i, (cousin, category) in enumerate(zip(cousins, categories)):
         if index != i:
             links += cousins[index].hyperlink(cousin, category, fragment='#'+uid) + '&nbsp;'
@@ -264,6 +292,15 @@ def remove_version_links(text):
         :return (str):
         """
         return re.sub(r'<span class="version.*?</span>', '', text)
+
+
+def join_strip(texts):
+    """
+    Join
+    :param texts (str()):
+    :return (str):
+    """
+    return str(re.sub(r'\n*$', '', '\n'.join(texts), flags=re.M))
 
 
 if __name__ == '__main__':

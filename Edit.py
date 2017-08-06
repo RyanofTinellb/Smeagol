@@ -22,6 +22,7 @@ class Edit(Tk.Frame):
         self.kind = Tk.StringVar()
         self.kind.set(kind)
         self.change_directory(self.choose(self.kind, self.directories))
+        self.old = {}
 
         # initialise instance variables
         self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
@@ -325,16 +326,30 @@ class Edit(Tk.Frame):
         """
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages, update json.
         """
-        texts = map(lambda x: str(x.get(1.0, Tk.END + '-1c')), self.textboxes)
+        # prepare save
         markdown = self.choose(self.kind, self.markdowns)
         site = self.choose(self.kind, self.sites)
-        if self.entry:
-            self.prepare_texts(self.entry, site, texts, markdown, self.replacelinks)
-        self.publish(self.entry, site)
         for textbox in self.textboxes:
             textbox.edit_modified(False)
         self.save_text.set('Save')
+
+        texts = map(self.get_text, self.textboxes)
+
+        with ignored(AttributeError):
+            self.paragraphs[self.current_paragraph] = self.prepare_paragraph(self.entry, texts, self.markdown)
+            texts = self.paragraphs
+        if self.entry:
+            self.prepare_texts(self.entry, site, texts, markdown, self.replacelinks)
+        self.publish(self.entry, site)
         return 'break'
+
+    @staticmethod
+    def get_text(textbox):
+        """
+        Retrieves text from textbox.
+        Default method - may be overriden by descendant classes.
+        """
+        return str(textbox.get(1.0, Tk.END + '-1c'))
 
     @staticmethod
     def prepare_texts(entry, site, texts, markdown=None, replacelinks=None):
