@@ -101,29 +101,6 @@ class EditPage(Edit):
         except AttributeError:  # no markdown
             return [text] if text else ['']
 
-    # superceded by parent method
-    def save2(self, event=None):
-        self.entry.content = self.markdown.to_markup(str(self.textboxes[0].get(1.0, Tk.END)))
-        while self.entry.content[-2:] == '\n\n':
-            self.entry.content = self.entry.content[:-1]
-        # remove duplicate linebreaks
-        self.entry.content = re.sub(r'\n\n+', '\n', self.entry.content)
-        # update datestamp and publish.
-        self.entry.content = self.markdown.to_markup(self.markdown.to_markdown(self.entry.content))
-        if self.entry.content == '\n':
-            self.entry.delete()
-            self.entry.remove()
-        else:
-
-            self.entry.publish(self.site.template)
-        entry = str(self.site)
-        if entry:
-            with open(self.datafile, 'w') as data:
-                data.write(str(self.site))
-        self.site.update_json()
-        self.textboxes[0].edit_modified(False)
-        return 'break'
-
     @staticmethod
     def prepare_texts(entry, site, texts, markdown=None, replacelinks=None):
         """

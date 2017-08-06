@@ -22,7 +22,6 @@ class Edit(Tk.Frame):
         self.kind = Tk.StringVar()
         self.kind.set(kind)
         self.change_directory(self.choose(self.kind, self.directories))
-        self.old = {}
 
         # initialise instance variables
         self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
