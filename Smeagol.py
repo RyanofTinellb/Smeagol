@@ -1,7 +1,10 @@
 import os
 import win32api
 from Translation import *
+from collections import namedtuple
 from cached_property import cached_property
+
+Flatname = namedtuple('Flatname', ['name', 'score'])
 
 class Site:
     """
@@ -27,9 +30,9 @@ class Site:
         # initialize attributes and utility classes
         self.name = name
         self.source = source
-        self.template = Template(template)
-        self.main_template = Template(main_template)
-        self.markdown = Markdown(markdown)
+        self.template = template
+        self.main_template = main_template
+        self.markdown = markdown
         self.searchjson = searchjson
         self.leaf_level = leaf_level
         self.current = None
@@ -53,6 +56,13 @@ class Site:
                 node = node.parent
             node = self.add_node(name, node, page, previous)
             self.length += 1
+
+    def __setattr__(self, name, value):
+        if name in ('template', 'main_template'):
+            with open(value) as template:
+                self.__dict__[name] = template.read()
+        else:
+            self.__dict__[name] = value
 
     def refresh(self):
         self.current = None
@@ -268,7 +278,6 @@ class Page:
         self.content = content
         self.previous = previous
         self.markdown = markdown
-        self.flatname = FlatName(self.urlform)
 
     @cached_property
     def urlform(self):
@@ -919,36 +928,32 @@ class Page:
                     wordlist[word] = [number]
         return Analysis(wordlist, lines)
 
-class FlatName:
-    """
-    'flattens' the name to only include letters aiu'pbtdcjkgmnqlrfsxh
-    minigolf scoring rules: smallest number wins.
-    """
-    def __init__(self, name):
+    @cached_property
+    def flatname(self):
+        """
+        'flattens' the name to only include letters aiu'pbtdcjkgmnqlrfsxh
+        minigolf scoring rules: smallest number wins.
+        """
+        name = self.name
         alphabet = "aiu'pbtdcjkgmnqlrfsxh"
-        score = 2
+        radix = 2
         double_letter = re.compile(r'([{0}])\1'.format(alphabet))
-        self.score = 0
-        self.name = name
-        if re.match(r'\\-[aiu]', self.name):
-            self.name = self.name.replace(r'\-', "'", 1)
-            self.score = score ** 15
-        elif self.name.startswith(r'\-'):
-            self.name = self.name.replace(r'\-', "", 1)
-            self.score = score ** 15
+        if re.match(r'\\-[aiu]', name):
+            name = name.replace(r'\-', "'", 1)
+            score = radix ** 15
+        elif name.startswith(r'\-'):
+            name = name.replace(r'\-', "", 1)
+            score = radix ** 15
+        else:
+            score = 0
         while True:
             try:
-                index = re.search(double_letter, self.name).start()
+                index = re.search(double_letter, name).start()
             except AttributeError:
                 break
-            self.name = re.sub(double_letter, r'\1', self.name, 1)
-            self.score += score ** index
-
-class Template:
-    def __init__(self, filename):
-        with open(filename) as f:
-            self.template = f.read()
-
+            name = re.sub(double_letter, r'\1', name, 1)
+            score += radix ** index
+        return Flatname(name, score)
 
 class ContentsMode:
     def __init__(self):
