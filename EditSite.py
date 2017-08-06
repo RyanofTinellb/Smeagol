@@ -5,7 +5,7 @@ class EditPage(Edit):
     def __init__(self, directories, datafiles, sites, markdowns, master=None):
         self.font = ('Corbel', '14')
         self.widgets = [3, 1, 2]
-        Edit.__init__(self, directories=directories, datafiles=datafiles, sites=sites, markdowns=markdowns, kind='grammar')
+        super(EditPage, self).__init__(directories=directories, datafiles=datafiles, sites=sites, markdowns=markdowns, kind='grammar')
         self.site = sites['grammar']
         self.markdown = markdowns
         self.datafile = datafiles

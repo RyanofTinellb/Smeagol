@@ -6,7 +6,7 @@ class EditStory(Edit):
     def __init__(self, directory, datafile, site, markdown, master=None):
         self.font = ('Californian FB', 16)
         self.widgets = [2, 4, 'languages']
-        Edit.__init__(self, directory, datafile, site, markdown)
+        super(EditStory, self).__init__(directory, datafile, site, markdown)
         self.site = site
         self.markdown = markdown
         self.datafile = datafile
@@ -35,7 +35,7 @@ class EditStory(Edit):
         Find entry, manipulate entry to fit boxes, place in boxes
         Overrides parent method
         """
-        Edit.load(self)
+        super(EditStory, self).load()
         self.entry, self.paragraphs, self.current_paragraph, self.count = self.entry
         self.information.set('Paragraph #' + str(self.current_paragraph))
 
@@ -51,7 +51,7 @@ class EditStory(Edit):
         :   (int): the index of the last untranslated paragraph
         :   (int): the index of the last paragraph overall
         """
-        entry = Edit.find_entry(self, [self.site.root[0].name] + headings)
+        entry = super(EditStory, self).find_entry([self.site.root[0].name] + headings)
         cousins = map(lambda x: x.content.splitlines(), entry.cousins)     # Str[][]
         count = max(map(len, cousins))      # int
         current_paragraph = min(map(len, cousins)) - 1    # int
@@ -219,7 +219,7 @@ class EditStory(Edit):
         for cousin in entry.cousins:
             cousin.publish(site.template)
         # reset entry so that it is not published twice
-        Edit.publish(entry=None, site=site)
+        super(EditStory, EditStory).publish(entry=None, site=site)
 
 
 def add_version_links(paragraph, index, entry, uid):

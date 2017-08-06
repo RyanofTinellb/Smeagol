@@ -12,7 +12,7 @@ class EditDictionary(Edit):
         """
         self.font = ('Courier New', '15')
         self.widgets = [1, 1, 'languages']
-        Edit.__init__(self, directory, datafile, site, markdown, replacelinks)
+        super(EditDictionary, self).__init__(directory, datafile, site, markdown, replacelinks)
         # initialise instance variables
         self.heading = self.headings[0]
         self.edit_text = self.textboxes[0]

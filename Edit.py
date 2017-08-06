@@ -2,7 +2,7 @@ from Smeagol import *
 import Tkinter as Tk
 
 
-class Edit(Tk.Frame):
+class Edit(Tk.Frame, object):
     """
     Base class for EditDictionary, EditSite, TranslateStory.
     """
@@ -12,7 +12,7 @@ class Edit(Tk.Frame):
         :param kind (str): i.e.: 'grammar', 'dictionary', 'story'.
         :param directory (str):
         """
-        Tk.Frame.__init__(self, None)
+        super(Edit, self).__init__(None)
         # initialise initial variables
         self.directories = directories
         self.datafiles = datafiles
