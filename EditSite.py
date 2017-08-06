@@ -140,7 +140,7 @@ class EditPage(Edit):
         except AttributeError:  # no markdown
             text = ''.join(texts)
         links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', text.replace('\n', '')).split(r'@')[:-1])
-        matriarch = entry.ancestors()[1].urlform
+        matriarch = entry.ancestors[1].urlform
         for link in links:
             url = Page(link, markdown=site.markdown).urlform
             initial = re.sub(r'.*?(\w).*', r'\1', url)

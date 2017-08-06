@@ -120,7 +120,7 @@ class Site:
             self.current = self.root
             return self.root
         try:
-            self.current = self.current.next_node()
+            self.current = self.current.next_node
         except IndexError:
             self.current = None
             raise StopIteration
@@ -155,12 +155,12 @@ class Site:
         try:
             page = int(page)
             for _ in range(page):
-                node = node.next_node()
+                node = node.next_node
         # 'item' is a string
         except ValueError:
             while node.name != page:
                 try:
-                    node = node.next_node()
+                    node = node.next_node
                 except IndexError:
                     raise KeyError(page)
         return node
@@ -262,15 +262,15 @@ class Page:
         self.name = name
         self.parent = parent
         self.children = []
-        self.level = self.generation() - 1
+        self.level = self.generation - 1
         self.isLeaf = (leaf_level == self.level)
         self.content = content
         self.previous = previous
         self.markdown = markdown
-        self.urlform = self.simple()
         self.flatname = FlatName(self.urlform)
 
-    def simple(self):
+    @property
+    def urlform(self):
         """
         Simplify the name to make it more suitable for urls
         Put the name in lower case, and remove tags
@@ -387,12 +387,14 @@ class Page:
         """
         self.parent.children.remove(self)
 
+    @property
     def has_children(self):
         """
         :return (bool): True iff self has children
         """
         return len(self.children) > 0
 
+    @property
     def root(self):
         """
         Proceed up the Site
@@ -403,28 +405,31 @@ class Page:
             node = node.parent
         return node
 
+    @property
     def genealogy(self):
         """
         Generates for every Page in the Site sequentially
         :yield (Page):
         :raises StopIteration:
         """
-        node = self.root()
+        node = self.root
         yield node
         while True:
             try:
-                node = node.next_node()
+                node = node.next_node
                 yield node
             except IndexError:
                 raise StopIteration
 
+    @property
     def elders(self):
         """
         The first generation in the Site
         :return (Page[]):
         """
-        return self.root().children
+        return self.root.children
 
+    @property
     def ancestors(self):
         """
         Self and the direct ancestors of self, in order down from the root.
@@ -437,11 +442,12 @@ class Page:
             ancestry.insert(0, node)
         return ancestry
 
+    @property
     def generation(self):
         """
         :return (int): the generation number of the Page, with the root at one
         """
-        return len(self.ancestors())
+        return len(self.ancestors)
 
     def sister(self, index):
         children = self.parent.children
@@ -451,6 +457,7 @@ class Page:
         else:
             raise IndexError('No such sister')
 
+    @property
     def previous_sister(self):
         """
         :return (Page): the previous Page if it has the same parent as self
@@ -458,6 +465,7 @@ class Page:
         """
         return self.sister(-1)
 
+    @property
     def next_sister(self):
         """
         :return (Page): the next Page if it has the same parent as self
@@ -465,17 +473,18 @@ class Page:
         """
         return self.sister(1)
 
+    @property
     def next_node(self):
         """
         Finds the next sister, or uses iteration to find the next Page
         :return (Page): the next Page in sequence
         :raises IndexError: the next Page does not exist
         """
-        if self.has_children():
+        if self.has_children:
             return self.children[0]
         else:
             try:
-                next_node = self.next_sister()
+                next_node = self.next_sister
             except IndexError:
                 next_node = self.next_node_iter(self.parent)
         return next_node
@@ -489,12 +498,13 @@ class Page:
         if node.parent is None:
             raise IndexError('No more nodes')
         try:
-            right = node.next_sister()
+            right = node.next_sister
             return right
         except IndexError:
             right = self.next_node_iter(node.parent)
         return right
 
+    @property
     def descendants(self):
         """
         All the descendants of self, using iteration
@@ -502,9 +512,10 @@ class Page:
         """
         descendants = set(self.children)
         for child in self.children:
-            descendants.update(child.descendants())
+            descendants.update(child.descendants)
         return descendants
 
+    @property
     def cousins(self):
         """
         Taking a sub-hierarchy as the descendants of a Page, cousins are Pages at the same point as self, but in different sub-hierarchies.
@@ -527,17 +538,19 @@ class Page:
             cousins.append(cousin)
         return cousins
 
+    @property
     def family(self):
         """
         Return all of self, descendants, sisters, ancestors, and sisters of ancestors
         :rtype (Page{}):
         """
         family = set([])
-        for ancestor in self.ancestors():
+        for ancestor in self.ancestors:
             family.update(ancestor.children)
-        family.update(self.descendants())
+        family.update(self.descendants)
         return family
 
+    @property
     def fullUrlForm(self):
         """
         :return (str): the name and extension of the Page in a form suitable for URLs
@@ -545,12 +558,13 @@ class Page:
         # extension = '/index' if not self.isLeaf else ''
         return '{0}{1}.html'.format(self.urlform, '/index' if not self.isLeaf else '')
 
+    @property
     def folder(self):
         """
         :return (str): the folder in which the Page should appear, or an empty string if Page is the root
         """
         if self.level:
-            text = "/".join([i.urlform for i in self.ancestors()[1:-1]]) + '/'
+            text = "/".join([i.urlform for i in self.ancestors[1:-1]]) + '/'
             text += self.urlform + '/' if not self.isLeaf else ''
             return text if self.level != 1 else self.urlform + '/'
         else:
@@ -561,9 +575,9 @@ class Page:
         :return (str): a link to self of the form 'highlulani/morphology/index.html'
         """
         if extend:
-            return self.folder() + (self.fullUrlForm() if self.isLeaf else 'index.html')
+            return self.folder + (self.fullUrlForm if self.isLeaf else 'index.html')
         else:
-            return self.folder() + (self.urlform if self.isLeaf else 'index')
+            return self.folder + (self.urlform if self.isLeaf else 'index')
 
     def hyperlink(self, destination, template="{0}", needAnchorTags=True, fragment=''):
         """
@@ -583,7 +597,7 @@ class Page:
         # :variable link (str): a hyperlink of the form '<a href="../../phonology/consonants/index.html>Consonants</a>'
         try:
             extension = ".html" if destination.isLeaf else "/index.html"
-            ancestors = {'self': self.ancestors(), 'destination': destination.ancestors()}
+            ancestors = {'self': self.ancestors, 'destination': destination.ancestors}
             isDirect = destination in ancestors['self']
             # :variable (int) common: the number of nodes common to both source and destination ancestries
             try:
@@ -592,7 +606,7 @@ class Page:
                 common = min(map(len, ancestors.values()))
             # :variable (int) up: the number of levels the common ancestor is above the source
             # :variable (str) down: the hyperlink address from the common ancestor to the descendant
-            if destination == self.root():
+            if destination == self.root:
                 up = self.level + change - 1
                 down = "index"
                 extension = ".html"
@@ -622,6 +636,7 @@ class Page:
         else:
             return '<h{0}>{1}</h{0}>\n'.format(str(level), name)
 
+    @property
     def title(self):
         """
         :return (str): its own name, suitable for HTML titles
@@ -629,19 +644,21 @@ class Page:
         # remove tags from names
         return re.sub(r'[[<].*?[]>]', '', self.name)
 
+    @property
     def category_title(self):
         """
         :return (str): A title of the form 'High Lulani Verbs'
         """
         if self.level < 2:
-            return self.title()
+            return self.title
         else:
-            matriarch = self.ancestors()[1]
+            matriarch = self.ancestors[1]
             if matriarch.name in ('Introduction', 'Appendices'):
-                return self.title()
+                return self.title
             else:
-                return matriarch.title() + ' ' + self.title()
+                return matriarch.title + ' ' + self.title
 
+    @property
     def contents(self):
         """
         Markup tags in square brackets to HTML, including headings, paragraphs, tables and lists.
@@ -677,6 +694,7 @@ class Page:
             output += line
         return output
 
+    @property
     def stylesheet_and_icon(self):
         """
         :return (str): relative HTML links to the stylesheet and icon for self.
@@ -688,6 +706,7 @@ class Page:
             self.hyperlink('favicon.png', needAnchorTags=False))
         return output
 
+    @property
     def search_script(self):
         """
         :return (str): javascript function for moving to search page if required, using relative links
@@ -700,6 +719,7 @@ class Page:
     </script>'''.format(self.hyperlink('search.html', needAnchorTags=False))
         return output
 
+    @property
     def toc(self):
         """
         :return (str): a table of contents in HTML
@@ -711,7 +731,7 @@ class Page:
         else:  # self is root
             links = ''
             level = 0
-            for page in self.genealogy():
+            for page in self.genealogy:
                 if not page.level:
                     continue
                 old_level = level
@@ -724,6 +744,7 @@ class Page:
             links += (level - 1) * '</ul>\n'
             return links
 
+    @property
     def links(self):
         """
         :return (str):
@@ -740,20 +761,21 @@ class Page:
                     </li>
                   </form>
                 $links$
-                </ul>'''.format(' class="normal"' if self == self.root() else '',
-                                self.hyperlink(self.root()))
+                </ul>'''.format(' class="normal"' if self == self.root else '',
+                                self.hyperlink(self.root))
         for item, link in ( ['Grammar', 'grammar'],
                             ['Dictionary', 'dictionary'],
                             ['The Coelacanth Quartet', 'coelacanthquartet']):
-            if item != self.root().name:
+            if item != self.root.name:
                 output = output.replace('$out$', '<a href="http://{0}.tinellb.com">{1} &rarr;</a>'.format(link, item), 1)
         return output
 
+    @property
     def family_links(self):
         links = ''
         level = 0
-        family = self.family()
-        for page in self.genealogy():
+        family = self.family
+        for page in self.genealogy:
             if page in family:
                 old_level = level
                 level = page.level
@@ -766,13 +788,14 @@ class Page:
                 else:
                     links += '<li>{0}</li>\n'.format(self.hyperlink(page))
         links += (level) * '</ul>\n'
-        return self.links().replace('$links$', links)
+        return self.links.replace('$links$', links)
 
+    @property
     def cousin_links(self):
         links = ''
         level = 0
-        family = self.family()
-        for page in self.genealogy():
+        family = self.family
+        for page in self.genealogy:
             if page in family:
                 old_level = level
                 level = page.level
@@ -785,33 +808,36 @@ class Page:
                 else:
                     links += '<li>{0}</li>\n'.format(self.hyperlink(page))
         links += (level + 1) * '</ul>\n' + '<p>Other Versions:</p>\n<ul class="level-1">'
-        categories = [node.name for node in self.elders()]
-        cousins = self.cousins()
+        categories = [node.name for node in self.elders]
+        cousins = self.cousins
         for cousin, category in zip(cousins, categories):
             if cousin and cousin is not self:
                 links += '<li>{0}</li>\n'.format(self.hyperlink(cousin, category))
         links += '</ul><ul>'
-        return self.links().replace('$links$', links)
+        return self.links.replace('$links$', links)
 
+    @property
     def elder_links(self):
         links = '<ul>'
-        for elder in self.elders():
+        for elder in self.elders:
             links += '<li{0}>{1}</li>'.format(
                 (' class="normal"' if elder in [self, self.parent] else ''), self.hyperlink(elder))
-        return self.links().replace('$links$', links + '</ul>')
+        return self.links.replace('$links$', links + '</ul>')
 
+    @property
     def nav_footer(self):
         div = '<div>\n{0}\n</div>\n'
         if self.previous:
             output = div.format(self.hyperlink(self.previous, '&larr; Previous page'))
         else:
-            output = div.format(self.hyperlink(self.root(), '&uarr; Return to Menu'))
+            output = div.format(self.hyperlink(self.root, '&uarr; Return to Menu'))
         try:
-            output += div.format(self.hyperlink(self.next_node(), 'Next page &rarr;'))
+            output += div.format(self.hyperlink(self.next_node, 'Next page &rarr;'))
         except IndexError:
-            output += div.format(self.hyperlink(self.root(), 'Return to Menu &uarr;'))
+            output += div.format(self.hyperlink(self.root, 'Return to Menu &uarr;'))
         return output
 
+    @property
     def copyright(self):
         try:
             date = datetime.datetime.strptime(max(re.findall(r'(?<=&date=)\d{8}', self.content)), '%Y%m%d')
@@ -832,7 +858,7 @@ class Page:
         except AttributeError:
             # template is a string
             page = template
-        for (section, function) in [
+        for (section, text) in [
             ('{title}', self.title),
             ('{stylesheet}', self.stylesheet_and_icon),
             ('{search-script}', self.search_script),
@@ -846,9 +872,9 @@ class Page:
             ('{category-title}', self.category_title)
         ]:
             if page.count(section):
-                page = page.replace(section, function())
+                page = page.replace(section, text)
         with ignored(os.error):
-            os.makedirs(self.folder())
+            os.makedirs(self.folder)
         with open(self.link(), "w") as f:
             page = re.sub('\x05.*?(\x06\x06*)', '', page)
             page = re.sub(r'\x07', '', page)

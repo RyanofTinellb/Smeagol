@@ -144,7 +144,7 @@ class Edit(Tk.Frame):
         """
         Move focus to the heading textbox, and select all the text therein
         """
-        with ignored(IndexErrror):
+        with ignored(IndexError):
             heading = self.headings[0]
             heading.focus_set()
             heading.select_range(0, Tk.END)
