@@ -171,7 +171,7 @@ class EditStory(Edit):
             cousin.content = content
 
     @staticmethod
-    def prepare_paragraph(entry, texts, markdown=None):
+    def prepare_paragraph(entry, texts, markdown=None, translator=None):
         """
         Returns 5 versions of the same paragraph, based on the texts.
         :param entry (Page):
@@ -184,7 +184,10 @@ class EditStory(Edit):
             markup = markdown.to_markup
         except AttributeError:
             markup = lambda x: x
-        translate = Translator('HL').convert_sentence
+        try:
+            translate = translate.convert_sentence
+        except AttributeError:
+            markup = lambda x: x
         literal = texts.pop()
         paragraph[0:5:2] = texts
         paragraph[1] = translate(paragraph[2])    # Tinellbian

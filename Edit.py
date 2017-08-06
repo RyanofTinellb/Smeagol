@@ -335,7 +335,7 @@ class Edit(Tk.Frame, object):
         texts = map(self.get_text, self.textboxes)
 
         with ignored(AttributeError):
-            self.paragraphs[self.current_paragraph] = self.prepare_paragraph(self.entry, texts, self.markdown)
+            self.paragraphs[self.current_paragraph] = self.prepare_paragraph(self.entry, texts, self.markdown, self.translator)
             texts = self.paragraphs
         if self.entry:
             self.prepare_texts(self.entry, site, texts, markdown, self.replacelinks)
