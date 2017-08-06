@@ -4,12 +4,21 @@ from collections import OrderedDict as Odict
 from random import randint
 from contextlib import contextmanager
 
+
 @contextmanager
 def ignored(*exceptions):
     try:
         yield
     except exceptions:
         pass
+
+
+@contextmanager
+def converter(AttributeError):
+    try:
+        yield
+    except AttributeError:
+        yield lambda x: x
 
 
 class Translator:
@@ -43,15 +52,15 @@ class English:
 
     @staticmethod
     def convert_text(text):
-        return ''
+        return text
 
     @staticmethod
     def convert_sentence(text):
-        return ''
+        return text
 
     @staticmethod
     def convert_word(text):
-        return ''
+        return text
 
 
 class HighLulani:
