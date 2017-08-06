@@ -11,6 +11,13 @@ def ignored(*exceptions):
     except exceptions:
         pass
 
+@contextmanager
+def converter(AttributeError):
+    try:
+        yield
+    except AttributeError:
+        yield lambda x: x
+
 
 class Translator:
     def __init__(self, language=None):
@@ -43,15 +50,15 @@ class English:
 
     @staticmethod
     def convert_text(text):
-        return ''
+        return text
 
     @staticmethod
     def convert_sentence(text):
-        return ''
+        return text
 
     @staticmethod
     def convert_word(text):
-        return ''
+        return text
 
 
 class HighLulani:
