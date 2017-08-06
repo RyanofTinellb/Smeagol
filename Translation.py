@@ -12,6 +12,13 @@ def ignored(*exceptions):
     except exceptions:
         pass
 
+@contextmanager
+def converter(AttributeError):
+    try:
+        yield
+    except AttributeError:
+        yield lambda x: x
+
 
 @contextmanager
 def converter(AttributeError):
