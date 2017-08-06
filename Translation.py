@@ -13,17 +13,15 @@ def ignored(*exceptions):
         pass
 
 @contextmanager
-def converter(AttributeError):
+def conversion(converter, function):
+    """
+    Ensures a converter exists.
+    Returns identity function if not.
+    :param converter (object):
+    :param function (str):
+    """
     try:
-        yield
-    except AttributeError:
-        yield lambda x: x
-
-
-@contextmanager
-def converter(AttributeError):
-    try:
-        yield
+        yield getattr(converter, function)
     except AttributeError:
         yield lambda x: x
 

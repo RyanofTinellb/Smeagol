@@ -21,7 +21,6 @@ class Edit(Tk.Frame, object):
         self.replacelinks = replacelinks
         self.kind = Tk.StringVar()
         self.kind.set(kind)
-        self.change_directory(self.choose(self.kind, self.directories))
 
         # initialise instance variables
         self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
@@ -103,7 +102,8 @@ class Edit(Tk.Frame, object):
             textbox.delete(1.0, Tk.END)
         self.information.set('')
         self.go_to_heading()
-        os.chdir(self.choose(self.kind, self.directories))
+        with ignored(TypeError):
+            os.chdir(self.choose(self.kind, self.directories))
 
     def textbox_commands(self):
         return [
@@ -201,10 +201,6 @@ class Edit(Tk.Frame, object):
         return textboxes
 
     @staticmethod
-    def change_directory(directory):
-        os.chdir(directory)
-
-    @staticmethod
     def choose(kind, variables):
         """
         Return appropriate variable from a dictionary, or returns the variable itself if its not a dictionary.
@@ -233,32 +229,33 @@ class Edit(Tk.Frame, object):
             textbox.insert(Tk.INSERT, before + after)
             textbox.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(after)))
 
-    def bold(self, event=None):
+    def bold(self, event):
         """
         Insert markdown for bold tags, and place insertion point between them.
         """
-        self.insert_characters(event.widget, *self.markdown.find_formatting('strong'))
+        with conversion(markdown, 'find_formatting') as converter:
+            self.insert_characters(event.widget, *converter('strong'))
         return 'break'
 
-    def italic(self, event=None):
+    def italic(self, event):
         """
         Insert markdown for italic tags, and place insertion point between them.
         """
         self.insert_characters(event.widget, *self.markdown.find_formatting('em'))
         return 'break'
 
-    def small_caps(self, event=None):
+    def small_caps(self, event):
         """
         Insert markdown for small-caps tags, and place insertion point between them.
         """
         self.insert_characters(event.widget, *self.markdown.find_formatting('small-caps'))
         return 'break'
 
-    def insert_pipe(self, event=None):
+    def insert_pipe(self, event):
         self.insert_characters(event.widget, ' | ')
         return 'break'
 
-    def delete_word(self, event=None):
+    def delete_word(self, event):
         widget = event.widget
         get = widget.get
         delete = widget.delete
@@ -273,7 +270,7 @@ class Edit(Tk.Frame, object):
         self.update_wordcount(event)
         return 'break'
 
-    def backspace_word(self, event=None):
+    def backspace_word(self, event):
         widget = event.widget
         get = widget.get
         delete = widget.delete
@@ -381,7 +378,7 @@ class Edit(Tk.Frame, object):
             site.modify_source()
             site.update_json()
 
-    def edit_text_changed(self, event=None):
+    def edit_text_changed(self, event):
         """
         Notify the user that the edittext has been changed.
         Activates after each keypress.
@@ -422,10 +419,8 @@ class Edit(Tk.Frame, object):
         :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
         :param return (str[]):
         """
-        try:
-            return [markdown.to_markdown(entry.content)]
-        except AttributeError:  # no markdown
-            return [entry.content] if entry else ['']
+        with conversion(markdown, 'to_markdown') as markdown:
+            return [markdown(entry.content)]
 
     def refresh_markdown(self, event=None):
         try:
