@@ -1,10 +1,6 @@
 import os
-import re
-import datetime
 import win32api
-
-import Translation
-
+from Translation import *
 
 class Site:
     """
@@ -32,7 +28,7 @@ class Site:
         self.source = source
         self.template = Template(template)
         self.main_template = Template(main_template)
-        self.markdown = Translation.Markdown(markdown)
+        self.markdown = Markdown(markdown)
         self.searchjson = searchjson
         self.leaf_level = leaf_level
         self.current = None

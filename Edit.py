@@ -1,8 +1,6 @@
 from Smeagol import *
-from Translation import *
 import Tkinter as Tk
-import os
-import re
+
 
 class Edit(Tk.Frame):
     """

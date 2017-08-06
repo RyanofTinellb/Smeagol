@@ -1,5 +1,4 @@
 from Edit import *
-import re
 
 
 class EditDictionary(Edit):

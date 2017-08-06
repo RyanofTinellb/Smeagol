@@ -1,6 +1,3 @@
-import Tkinter as Tk
-from Smeagol import *
-from Translation import *
 from Edit import *
 
 

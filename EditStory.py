@@ -1,6 +1,3 @@
-import Tkinter as Tk
-from Translation import *
-from Smeagol import *
 from Edit import *
 from random import choice
 from string import printable

@@ -1,7 +1,7 @@
-from collections import OrderedDict as Odict
-from random import randint
 import re
 import datetime
+from collections import OrderedDict as Odict
+from random import randint
 
 
 class Translator:
