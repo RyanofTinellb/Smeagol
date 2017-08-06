@@ -858,21 +858,21 @@ class Page:
         except AttributeError:
             # template is a string
             page = template
-        for (section, text) in [
-            ('{title}', self.title),
-            ('{stylesheet}', self.stylesheet_and_icon),
-            ('{search-script}', self.search_script),
-            ('{content}', self.contents),
-            ('{toc}', self.toc),
-            ('{family-links}', self.family_links),
-            ('{cousin-links}', self.cousin_links),
-            ('{elder-links}', self.elder_links),
-            ('{nav-footer}', self.nav_footer),
-            ('{copyright}', self.copyright),
-            ('{category-title}', self.category_title)
+        for (section, function) in [
+            ('{title}', 'title'),
+            ('{stylesheet}', 'stylesheet_and_icon'),
+            ('{search-script}', 'search_script'),
+            ('{content}', 'contents'),
+            ('{toc}', 'toc'),
+            ('{family-links}', 'family_links'),
+            ('{cousin-links}', 'cousin_links'),
+            ('{elder-links}', 'elder_links'),
+            ('{nav-footer}', 'nav_footer'),
+            ('{copyright}', 'copyright'),
+            ('{category-title}', 'category_title')
         ]:
             if page.count(section):
-                page = page.replace(section, text)
+                page = page.replace(section, getattr(self, function))
         with ignored(os.error):
             os.makedirs(self.folder)
         with open(self.link(), "w") as f:
