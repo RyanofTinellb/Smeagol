@@ -358,10 +358,8 @@ class Edit(Tk.Frame, object):
         :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
         :param return (Nothing):
         """
-        try:
-            entry.content = str(map(markdown.to_markup, texts))
-        except AttributeError:  # no markdown
-            entry.content = str(texts)
+        with conversion(markdown, 'to_markup') as converter:
+            entry.content = str(map(converter, texts))
 
     @staticmethod
     def publish(entry, site):

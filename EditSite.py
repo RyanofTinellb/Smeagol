@@ -98,10 +98,8 @@ class EditPage(Edit):
         :param return (str[]):
         """
         text = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>', r'<link>\1</link>', entry.content)
-        try:
-            return [markdown.to_markdown(text)]
-        except AttributeError:  # no markdown
-            return [text] if text else ['']
+        with conversion(markdown, 'to_markdown') as converter:
+            return [converter(text)]
 
     @staticmethod
     def prepare_texts(entry, site, texts, markdown=None, replacelinks=None):
@@ -114,10 +112,8 @@ class EditPage(Edit):
         :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
         :param return (Nothing):
         """
-        try:
-            text = ''.join(map(markdown.to_markup, texts))
-        except AttributeError:  # no markdown
-            text = ''.join(texts)
+        with conversion(markdown, 'to_markdown') as converter:
+            text = ''.join(map(converter, texts))
         links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', text.replace('\n', '')).split(r'@')[:-1])
         matriarch = entry.ancestors[1].urlform
         for link in links:

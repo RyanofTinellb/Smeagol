@@ -71,13 +71,10 @@ class EditStory(Edit):
         """
         entry, paragraphs, current_paragraph, count = entry
         paragraph = paragraphs[current_paragraph]
-        try:
-            markdown = markdown.to_markdown
-        except:
-            markdown = lambda x: x
         displays = map(lambda x: remove_version_links(paragraph[2 * x]), range(3))
         # have to add and subtract final '\n' because of how markdown interacts with the timestamp
-        displays = map(lambda x: markdown(x + '\n').replace('\n', ''), displays)
+        with conversion(markdown, 'to_markdown') as converter:
+            displays = map(lambda x: converter(x + '\n').replace('\n', ''), displays)
         displays[2:4] = displays[2].split(' |- -| ')
         if len(displays) == 3:
             displays.append('{}')
@@ -180,22 +177,16 @@ class EditStory(Edit):
         """
         length = 8
         paragraph = [None] * 5
-        try:
-            markup = markdown.to_markup
-        except AttributeError:
-            markup = lambda x: x
-        try:
-            translate = translate.convert_sentence
-        except AttributeError:
-            markup = lambda x: x
         literal = texts.pop()
         paragraph[0:5:2] = texts
-        paragraph[1] = translate(paragraph[2])    # Tinellbian
+        with conversion(translate, 'convert_sentence') as converter:
+            paragraph[1] = translate(paragraph[2])    # Tinellbian
         paragraph[4] += ' |- -| {' + literal + '}'      # Literal
         paragraph[3] = interlinear(paragraph, markdown)     # Interlinear
         for i in range(3):
             paragraph[i] = '&id={0}&vlinks='.format(paragraph[i])
-        paragraph = map(markup, paragraph)
+        with conversion(markdown, 'to_markup') as converter:
+            paragraph = map(converter, paragraph)
         replacements = [['.(', '&middot;('],
                         ['(', chr(5)],
                         ['<small-caps>', 2*chr(5)],
