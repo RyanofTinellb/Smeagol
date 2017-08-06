@@ -136,23 +136,17 @@ class EditDictionary(Edit):
             entry.delete_htmlfile()
             entry.remove_from_hierarchy()
         else:
-            try:
+            with ignored(AttributeError):
                 # replace particular words in parts of speech with links to grammar.tinellb.com
                 text = replacelinks.replace(text)
-            except AttributeError:  # replacelinks is None
-                pass
-            try:
+            with ignored(AttributeError):
                 text = markdown.to_markup(text)
-            except AttributeError:  # markdown is None
-                pass
             # Write links out in full form
             links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1>', text.replace('\n', '')).split(r'>')[:-1])
             for link in links:
-                try:
+                with ignored(KeyError):
                     lower_link = re.sub(r'^&#x294;', r'&rsquo;', link).lower()
                     text = text.replace('<link>' + link + '</link>', entry.hyperlink(site[lower_link], link))
-                except KeyError:    # link not found
-                    pass
             # remove duplicate linebreaks
             text = re.sub(r'\n\n+', '\n', text)
             # update datestamp of parent

@@ -104,22 +104,16 @@ class EditStory(Edit):
             direction = 1 if event.keysym == 'Next' else -1
             # traverse hierarchy sideways
             if self.entry.level == level:
-                try:
+                with ignored(IndexError):
                     self.entry = self.entry.sister(direction)
-                except IndexError:
-                    pass
             # ascend hierarchy until correct level
             while self.entry.level > level:
-                try:
+                with ignored(AttributeError):
                     self.entry = self.entry.parent
-                except AttributeError:
-                    break
             # descend hierarchy until correct level
             while self.entry.level < level:
-                try:
+                with ignored(IndexError):
                     self.entry = self.entry.children[0]
-                except IndexError:
-                    break
             for k in range(level - 2, 2):
                 self.headings[k].delete(0, Tk.END)
             heading.insert(Tk.INSERT, self.entry.name)

@@ -78,10 +78,8 @@ class Site:
 
     @staticmethod
     def choose_dir(destination):
-        try:
+        with ignored(os.error):
             os.makedirs(destination)
-        except os.error:
-            pass
         try:
             os.chdir(destination)
         except os.error:
@@ -849,10 +847,8 @@ class Page:
         ]:
             if page.count(section):
                 page = page.replace(section, function())
-        try:
+        with ignored(os.error):
             os.makedirs(self.folder())
-        except os.error:
-            pass
         with open(self.link(), "w") as f:
             page = re.sub('\x05.*?(\x06\x06*)', '', page)
             page = re.sub(r'\x07', '', page)

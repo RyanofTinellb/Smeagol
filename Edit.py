@@ -144,12 +144,10 @@ class Edit(Tk.Frame):
         """
         Move focus to the heading textbox, and select all the text therein
         """
-        try:
+        with ignored(IndexErrror):
             heading = self.headings[0]
             heading.focus_set()
             heading.select_range(0, Tk.END)
-        except IndexError:  # no headings
-            pass
         return 'break'
 
     @staticmethod
@@ -305,11 +303,9 @@ class Edit(Tk.Frame):
         else:   # set focus on final textbox
             textbox.focus_set()
             self.update_wordcount(widget=textbox)
-        try:
+        with ignored(AttributeError):
             if self.entry.content == '':
                 self.initial_content()
-        except AttributeError:
-            pass
 
     def find_entry(self, headings):
         """
@@ -320,11 +316,9 @@ class Edit(Tk.Frame):
         :return (Page):
         """
         entry = site = self.choose(self.kind, self.sites)
-        try:
+        with ignored(KeyError):
             for heading in headings:
                 entry = entry[heading]
-        except KeyError: # unable to find entry in Site.
-            pass
         return entry if entry is not site else (site.root if site else None)
 
     def save(self, event=None):

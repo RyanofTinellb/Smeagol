@@ -2,6 +2,14 @@ import re
 import datetime
 from collections import OrderedDict as Odict
 from random import randint
+from contextlib import contextmanager
+
+@contextmanager
+def ignored(*exceptions):
+    try:
+        yield
+    except exceptions:
+        pass
 
 
 class Translator:

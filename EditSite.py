@@ -50,10 +50,8 @@ class EditPage(Edit):
         direction = 1 if event.keysym == 'Next' else -1
         # traverse hierarchy sideways
         if self.entry.level == level:
-            try:
+            with ignored(IndexError):
                 self.entry = self.entry.sister(direction)
-            except IndexError:
-                pass
         # ascend hierarchy until correct level
         while self.entry.level > level:
             try:
@@ -146,11 +144,9 @@ class EditPage(Edit):
         for link in links:
             url = Page(link, markdown=site.markdown).urlform
             initial = re.sub(r'.*?(\w).*', r'\1', url)
-            try:
+            with ignored(KeyError):
                 text = text.replace('<link>' + link + '</link>',
                 '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html#' + matriarch + '">' + link + '</a>')
-            except KeyError:
-                pass
         entry.content = text
 
 app = EditPage(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',
