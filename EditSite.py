@@ -30,6 +30,8 @@ class EditPage(Edit):
 
     def change_site(self, event=None):
         self.change_directory(self.choose(self.kind, self.directories))
+        self.site = self.choose(self.kind, self.sites)
+        self.entry = self.site.root
         self.clear_interface()
 
     def refresh_site(self, event=None):
