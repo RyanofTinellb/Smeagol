@@ -6,6 +6,8 @@ class Edit(Tk.Frame, object):
     """
     Base class for EditDictionary, EditSite, TranslateStory.
     """
+
+
     def __init__(self, directories=None, datafiles=None, sites=None, markdowns=None, replacelinks=None, kind=None, widgets=None):
         """
         Initialise an instance of the Edit class.
@@ -21,6 +23,8 @@ class Edit(Tk.Frame, object):
         self.replacelinks = replacelinks
         self.kind = Tk.StringVar()
         self.kind.set(kind)
+        with ignored(TypeError):
+            os.chdir(choose(self.kind, self.directories))
 
         # initialise instance variables
         self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
@@ -56,10 +60,9 @@ class Edit(Tk.Frame, object):
         self.load_button, self.save_button = self.buttons
 
         # textboxes
-        commands = self.textbox_commands()
         while True:
             try:
-                self.textboxes = self.create_textboxes(self.textframe, widgets[1], commands, self.font)
+                self.textboxes = self.create_textboxes(self.textframe, widgets[1], self.textbox_commands, self.font)
                 break
             except AttributeError:  # font missing
                 self.font = ('Calibri', 17)
@@ -102,25 +105,6 @@ class Edit(Tk.Frame, object):
             textbox.delete(1.0, Tk.END)
         self.information.set('')
         self.go_to_heading()
-        with ignored(TypeError):
-            os.chdir(self.choose(self.kind, self.directories))
-
-    def textbox_commands(self):
-        return [
-        ('<KeyPress>', self.edit_text_changed),
-        ('<Control-a>', self.select_all),
-        ('<Control-b>', self.bold),
-        ('<Control-i>', self.italic),
-        ('<Control-l>', self.load),
-        ('<Control-k>', self.small_caps),
-        ('<Control-m>', self.refresh_markdown),
-        ('<Control-s>', self.save),
-        ('<Control-BackSpace>', self.backspace_word),
-        ('<Control-Delete>', self.delete_word),
-        ('<Alt-d>', self.go_to_heading),
-        ('<Tab>', self.next_window),
-        ('<Shift-Tab>', self.previous_window),
-        ('<KeyPress-|>', self.insert_pipe)]
 
     def configure_language_radios(self):
         for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
@@ -201,19 +185,6 @@ class Edit(Tk.Frame, object):
         return textboxes
 
     @staticmethod
-    def choose(kind, variables):
-        """
-        Return appropriate variable from a dictionary, or returns the variable itself if its not a dictionary.
-        :param kind (Tk.StringVar): which variable to return.
-        :param variables (Object{str, various}): a dictionary of {kind, variable} pairs.
-        :param variables (Object): a single variable.
-        """
-        try:
-            return variables[kind.get()]
-        except (TypeError, AttributeError, ValueError, KeyError):
-            return variables
-
-    @staticmethod
     def insert_characters(textbox, before, after=''):
         """
         Insert given text into a Text textbox, either around an insertion cursor or selected text, and move the cursor to the appropriate place.
@@ -288,7 +259,7 @@ class Edit(Tk.Frame, object):
         Find entry, manipulate entry to fit boxes, place in boxes.
         """
         self.entry = self.find_entry(map(lambda x: x.get(), self.headings))
-        markdown = self.choose(self.kind, self.markdowns)
+        markdown = choose(self.kind, self.markdowns)
         self.display(self.prepare_entry(self.entry, markdown))
         return 'break'
 
@@ -312,7 +283,7 @@ class Edit(Tk.Frame, object):
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
         """
-        entry = site = self.choose(self.kind, self.sites)
+        entry = site = choose(self.kind, self.sites)
         with ignored(KeyError):
             for heading in headings:
                 entry = entry[heading]
@@ -323,8 +294,8 @@ class Edit(Tk.Frame, object):
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages, update json.
         """
         # prepare save
-        markdown = self.choose(self.kind, self.markdowns)
-        site = self.choose(self.kind, self.sites)
+        markdown = choose(self.kind, self.markdowns)
+        site = choose(self.kind, self.sites)
         for textbox in self.textboxes:
             textbox.edit_modified(False)
         self.save_text.set('Save')
@@ -427,6 +398,35 @@ class Edit(Tk.Frame, object):
         except AttributeError:
             self.information.set('No Markdown Found')
         return 'break'
+
+    @property
+    def textbox_commands(self):
+        return [('<KeyPress>', self.edit_text_changed),
+        ('<Control-a>', self.select_all),
+        ('<Control-b>', self.bold),
+        ('<Control-i>', self.italic),
+        ('<Control-l>', self.load),
+        ('<Control-k>', self.small_caps),
+        ('<Control-m>', self.refresh_markdown),
+        ('<Control-s>', self.save),
+        ('<Control-BackSpace>', self.backspace_word),
+        ('<Control-Delete>', self.delete_word),
+        ('<Alt-d>', self.go_to_heading),
+        ('<Tab>', self.next_window),
+        ('<Shift-Tab>', self.previous_window),
+        ('<KeyPress-|>', self.insert_pipe)]
+
+def choose(kind, variables):
+    """
+    Return appropriate variable from a dictionary, or returns the variable itself if its not a dictionary.
+    :param kind (Tk.StringVar): which variable to return.
+    :param variables (Object{str, various}): a dictionary of {kind, variable} pairs.
+    :param variables (Object): a single variable.
+    """
+    try:
+        return variables[kind.get()]
+    except (TypeError, AttributeError, ValueError, KeyError):
+        return variables
 
 
 if __name__ == '__main__':
