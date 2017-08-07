@@ -200,26 +200,32 @@ class Edit(Tk.Frame, object):
             textbox.insert(Tk.INSERT, before + after)
             textbox.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(after)))
 
+    def insert_formatting(self, event, tag):
+        """
+        Insert markdown for tags, and place insertion point between them.
+        """
+        with conversion(self.markdown, 'find_formatting') as converter:
+            self.insert_characters(event.widget, *converter(tag))
+
     def bold(self, event):
         """
         Insert markdown for bold tags, and place insertion point between them.
         """
-        with conversion(markdown, 'find_formatting') as converter:
-            self.insert_characters(event.widget, *converter('strong'))
+        self.insert_formatting('strong')
         return 'break'
 
     def italic(self, event):
         """
         Insert markdown for italic tags, and place insertion point between them.
         """
-        self.insert_characters(event.widget, *self.markdown.find_formatting('em'))
+        self.insert_formatting('em')
         return 'break'
 
     def small_caps(self, event):
         """
         Insert markdown for small-caps tags, and place insertion point between them.
         """
-        self.insert_characters(event.widget, *self.markdown.find_formatting('small-caps'))
+        self.insert_formatting('small-caps')
         return 'break'
 
     def insert_pipe(self, event):
