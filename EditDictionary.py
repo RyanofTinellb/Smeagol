@@ -13,21 +13,25 @@ class EditDictionary(Edit):
         self.font = ('Courier New', '15')
         self.widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
         super(EditDictionary, self).__init__(directory, datafile, site, markdown, replacelinks)
-        # initialise instance variables
+
+        # rename for readability
         self.heading = self.headings[0]
         self.edit_text = self.textboxes[0]
-        self.entry = ''
-        self.page = None
         self.markdown = self.markdowns
         self.site = self.sites
         self.datafile = self.datafiles
         self.words = randomwords.words
-        # initialise textboxes and buttons
+
         self.configure_widgets()
+
+        # initialise instance variables
+        self.entry, self.entries, self.current, self.page = '', [], -1, None
 
     def configure_widgets(self):
         self.configure_language_radios()
         self.heading.bind('<Control-r>', self.refresh_random)
+        self.heading.bind('<Prior>', self.scroll_headings)
+        self.heading.bind('<Next>', self.scroll_headings)
         self.heading.bind('<Return>', self.load)
         self.edit_text.bind('<Control-n>', self.initial_content)
         self.edit_text.bind('<Control-r>', self.refresh_random)
@@ -39,7 +43,7 @@ class EditDictionary(Edit):
         Insert the appropriate template for a new entry, and move the insertion pointer to allow for immediate input of the pronunciation.
         :precondition: The name of the entry, and its language, are already selected.
         """
-        name = self.headings[0].get()
+        name = self.heading.get()
         trans = self.translator
         before = ('2]{0}\n[3]{1}\n').format(name, trans.name)
         before += '' if self.language.get() == 'en' else '[4]{0}\n'.format(trans.convert_word(name))
@@ -62,6 +66,18 @@ class EditDictionary(Edit):
         """
         self.information.set('\n'.join(self.words()))
         return 'break'
+
+    def scroll_headings(self, event):
+        if event.keysym == 'Prior':
+            if self.current > 0:
+                self.current -= 1
+                self.heading.delete(0, Tk.END)
+                self.heading.insert(0, self.markdown.to_markdown(self.entries[self.current]))
+        elif event.keysym == 'Next':
+            if self.current < len(self.entries) - 1:
+                self.current += 1
+                self.heading.delete(0, Tk.END)
+                self.heading.insert(0, self.markdown.to_markdown(self.entries[self.current]))
 
     def add_translation(self, event=None):
         """
@@ -96,9 +112,10 @@ class EditDictionary(Edit):
         :param return (str[]):
         """
         content = entry.content # for code maintenance: so that next steps can be permuted easily.
-        content = markdown.to_markdown(content)
-        content = re.sub(r'\\<a href=\\"(?!http).*?\\"\\>(.*?)\\</a\\>', r'<\1>', content)
-        content = re.sub(r'\\<a href=\\"http.*?\\"\\>(.*?)\\</a\\>', r'\1', content)
+        content = re.sub(r'<a href="(?!http).*?">(.*?)</a>', r'<\1>', content)
+        content = re.sub(r'<a href="http.*?">(.*?)</a>', r'\1', content)
+        with conversion(markdown, 'to_markdown') as converter:
+            content = converter(content)
         return [content]
 
     def find_entry(self, headings):
@@ -111,13 +128,24 @@ class EditDictionary(Edit):
         """
         heading = headings[0]
         site = self.sites
-        # use str() to suppress unicode string
-        heading = self.markdowns.to_markup(heading, datestamp=False)
+        with conversion(self.markdown, 'to_markup') as converter:
+            heading = converter(heading, datestamp=False)
         try:
-            return site[heading]
+            entry = site[heading]
         except KeyError:
             initial = re.sub(r'.*?(\w).*', r'\1', heading).capitalize()
-            return Page(heading, site[initial], '', site.leaf_level, None, site.markdown).insert()
+            entry = Page(heading, site[initial], '', site.leaf_level, None, site.markdown).insert()
+
+        # keep track of which entries have been loaded
+        if not self.entries or heading != self.entries[self.current]:
+            try:
+                self.entries[self.current + 1] = heading
+                self.entries = self.entries[:self.current + 2]
+            except IndexError:
+                self.entries.append(heading)
+            self.current += 1
+
+        return entry
 
     @staticmethod
     def prepare_texts(entry, site, texts, markdown=None, replacelinks=None, kind=None):
