@@ -5,7 +5,7 @@ from string import printable
 class EditStory(Edit):
     def __init__(self, directory, datafile, site, markdown, master=None):
         self.font = ('Californian FB', 16)
-        self.widgets = [2, 4, 'languages']
+        self.widgets = WidgetAmounts(headings=2, textboxes=4, radios='languages')
         super(EditStory, self).__init__(directory, datafile, site, markdown)
         self.site = site
         self.markdown = markdown

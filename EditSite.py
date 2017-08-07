@@ -1,15 +1,17 @@
 from Edit import *
 
-
 class EditPage(Edit):
     def __init__(self, directories, datafiles, sites, markdowns, master=None):
         self.font = ('Corbel', '14')
-        self.widgets = [3, 1, 2]
+        self.widgets = WidgetAmounts(headings=3, textboxes=1, radios=2)
         super(EditPage, self).__init__(directories=directories, datafiles=datafiles, sites=sites, markdowns=markdowns, kind='grammar')
         self.site = sites['grammar']
         self.markdown = markdowns
         self.datafile = datafiles
         self.entry = self.site.root
+
+        # rename for readability
+        self.grammar_radio, self.story_radio = self.radios
         self.textbox = self.textboxes[0]
         self.configure_widgets()
 
@@ -20,13 +22,11 @@ class EditPage(Edit):
                 return self.scroll_headings(event, i)
             heading.bind('<Prior>', handler)
             heading.bind('<Next>', handler)
-        self.headings[0].bind('<Return>', self.insert_chapter)
-        self.headings[1].bind('<Return>', self.insert_heading)
-        self.headings[2].bind('<Return>', self.load)
+            heading.bind('<Return>', self.enter_headings)
         self.textbox.bind('<Control-o>', self.refresh_site)
         self.textbox.bind('<Control-t>', self.table)
-        self.radios[0].configure(text='Grammar', variable=self.kind, value='grammar', command=self.change_site)
-        self.radios[1].configure(text='Story', variable=self.kind, value='story', command=self.change_site)
+        self.grammar_radio.configure(text='Grammar', variable=self.kind, value='grammar', command=self.change_site)
+        self.story_radio.configure(text='Story', variable=self.kind, value='story', command=self.change_site)
 
     def change_site(self, event=None):
         with ignored(TypeError):
@@ -76,16 +76,16 @@ class EditPage(Edit):
         """
         Insert markdown for table, and place insertion point between them.
         """
-        self.textboxes[0].insert(Tk.INSERT, '[t]\n[/t]')
-        self.textboxes[0].mark_set(Tk.INSERT, Tk.INSERT + '-5c')
+        self.textbox.insert(Tk.INSERT, '[t]\n[/t]')
+        self.textbox.mark_set(Tk.INSERT, Tk.INSERT + '-5c')
         return 'break'
 
-    def insert_chapter(self, event):
-        self.headings[1].focus_set()
-        return 'break'
-
-    def insert_heading(self, event=None):
-        self.headings[2].focus_set()
+    def enter_headings(self, event):
+        level = self.headings.index(event.widget)
+        if level <= 1:
+            self.headings[level + 1].focus_set()
+        else:
+            self.load()
         return 'break'
 
     @staticmethod

@@ -1,18 +1,19 @@
 from Smeagol import *
 import Tkinter as Tk
 
+WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
 
 class Edit(Tk.Frame, object):
     """
     Base class for EditDictionary, EditSite, TranslateStory.
     """
 
-
     def __init__(self, directories=None, datafiles=None, sites=None, markdowns=None, replacelinks=None, kind=None, widgets=None):
         """
         Initialise an instance of the Edit class.
         :param kind (str): i.e.: 'grammar', 'dictionary', 'story'.
         :param directory (str):
+        :param widgets (WidgetAmounts): number of each of headings, textboxes, radiobuttons to create.
         """
         super(Edit, self).__init__(None)
         # initialise initial variables
@@ -40,15 +41,17 @@ class Edit(Tk.Frame, object):
         except AttributeError:
             self.widgets = widgets  # check if widgets were passed as an initial argument
             if widgets is None:
-                widgets = self.widgets = [0, 0, 0]
+                widgets = self.widgets = WidgetAmounts(0, 0, 0)
 
         # headings
-        self.headings = self.create_headings(self.buttonframe, widgets[0])
+        self.headings = self.create_headings(self.buttonframe, widgets.headings)
 
         # radio buttons
-        if widgets[2] == 'languages':
-            widgets[2] = self.translator.number
-        self.radios = self.create_radios(self.buttonframe, widgets[2])
+        try:
+            self.radios = self.create_radios(self.buttonframe, widgets.radios)
+        except TypeError:
+            if widgets.radios == 'languages':
+                self.radios = self.create_radios(self.buttonframe, self.translator.number)
 
         # labels
         self.blanklabel = Tk.Label(self.buttonframe, height=1000) # enough height to push all other widgets to the top of the window.
@@ -60,12 +63,11 @@ class Edit(Tk.Frame, object):
         self.load_button, self.save_button = self.buttons
 
         # textboxes
-        while True:
-            try:
-                self.textboxes = self.create_textboxes(self.textframe, widgets[1], self.textbox_commands, self.font)
-                break
-            except AttributeError:  # font missing
-                self.font = ('Calibri', 17)
+        try:
+            font = self.font
+        except AttributeError:
+            font = ('Calibri', 17)
+        self.textboxes = self.create_textboxes(self.textframe, widgets.textboxes, self.textbox_commands, self.font)
 
         # window
         self.create_window()
