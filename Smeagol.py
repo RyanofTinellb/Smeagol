@@ -1,7 +1,7 @@
 import os
 import win32api
 from Translation import *
-from collections import namedtuple
+from collections import namedtuple, deque
 from cached_property import cached_property
 
 Flatname = namedtuple('Flatname', ['name', 'score'])
@@ -448,11 +448,11 @@ class Page:
         :return (Page[]):
         """
         node = self
-        ancestry = [node]
+        ancestry = deque([node])
         while node.parent is not None:
             node = node.parent
-            ancestry.insert(0, node)
-        return ancestry
+            ancestry.appendleft(node)
+        return list(ancestry)
 
     @cached_property
     def generation(self):
@@ -533,11 +533,11 @@ class Page:
         Taking a sub-hierarchy as the descendants of a Page, cousins are Pages at the same point as self, but in different sub-hierarchies.
         """
         node = self
-        indices = []
+        indices = deque()
         while node.parent is not None:
-            indices.insert(0, node.parent.children.index(node))
+            indices.appendleft(node.parent.children.index(node))
             node = node.parent
-        indices.pop(0)
+        indices.popleft()
         cousins = []
         for child in node.children:
             cousin = child
