@@ -213,21 +213,25 @@ class Edit(Tk.Frame, object):
         """
         Insert markdown for bold tags, and place insertion point between them.
         """
-        self.insert_formatting('strong')
+        self.insert_formatting(event, 'strong')
         return 'break'
 
     def italic(self, event):
         """
         Insert markdown for italic tags, and place insertion point between them.
         """
-        self.insert_formatting('em')
+        self.insert_formatting(event, 'em')
         return 'break'
 
     def small_caps(self, event):
         """
         Insert markdown for small-caps tags, and place insertion point between them.
         """
-        self.insert_formatting('small-caps')
+        self.insert_formatting(event, 'small-caps')
+        return 'break'
+
+    def add_link(self, event):
+        self.insert_formatting(event, 'link')
         return 'break'
 
     def insert_pipe(self, event):
@@ -417,6 +421,7 @@ class Edit(Tk.Frame, object):
         ('<Control-l>', self.load),
         ('<Control-k>', self.small_caps),
         ('<Control-m>', self.refresh_markdown),
+        ('<Control-n>', self.add_link),
         ('<Control-s>', self.save),
         ('<Control-BackSpace>', self.backspace_word),
         ('<Control-Delete>', self.delete_word),

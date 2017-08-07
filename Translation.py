@@ -230,7 +230,7 @@ class Markdown:
         :param text (str):
         """
         try:
-            return self.markdown[self.markup.index(text)]
+            return self.to_markdown(text)
         except ValueError:
             return ''
 

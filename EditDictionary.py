@@ -33,7 +33,6 @@ class EditDictionary(Edit):
         self.heading.bind('<Prior>', self.scroll_headings)
         self.heading.bind('<Next>', self.scroll_headings)
         self.heading.bind('<Return>', self.load)
-        self.edit_text.bind('<Control-n>', self.initial_content)
         self.edit_text.bind('<Control-r>', self.refresh_random)
         self.edit_text.bind('<Control-t>', self.add_translation)
         self.edit_text.bind('<Control-=>', self.add_definition)
