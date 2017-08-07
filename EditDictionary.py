@@ -120,8 +120,12 @@ class EditDictionary(Edit):
         :param return (str[]):
         """
         content = entry.content # for code maintenance: so that next steps can be permuted easily.
-        content = re.sub(r'<a href="(?!http).*?">(.*?)</a>', r'<\1>', content)
-        content = re.sub(r'<a href="http.*?">(.*?)</a>', r'\1', content)
+        content = re.sub(r'<a href=\"(?!http).*?\">(.*?)</a>', r'<link>\1</link>', content)
+        # protect phonology links from subsequent line
+        content = re.sub(r'<a( href=\"http://grammar.*?phonology.*?</a>)', r'<b\1', content)
+        content = re.sub(r'<a href=\"http://grammar.*?\">(.*?)</a>', r'\1', content)
+        # un-protect phonology
+        content = re.sub(r'<b( href=\"http://grammar.*?phonology.*?</a>)', r'<a\1', content)
         with conversion(markdown, 'to_markdown') as converter:
             content = converter(content)
         return [content]
