@@ -37,6 +37,8 @@ class EditDictionary(Edit):
         self.edit_text.bind('<Control-r>', self.refresh_random)
         self.edit_text.bind('<Control-t>', self.add_translation)
         self.edit_text.bind('<Control-=>', self.add_definition)
+        self.edit_text.bind('<Prior>', self.scroll_history)
+        self.edit_text.bind('<Next>', self.scroll_history)
 
     def initial_content(self):
         """
@@ -78,6 +80,12 @@ class EditDictionary(Edit):
                 self.current += 1
                 self.heading.delete(0, Tk.END)
                 self.heading.insert(0, self.markdown.to_markdown(self.entries[self.current]))
+        return 'break'
+
+    def scroll_history(self, event):
+        self.scroll_headings(event)
+        self.load()
+        return 'break'
 
     def add_translation(self, event=None):
         """
