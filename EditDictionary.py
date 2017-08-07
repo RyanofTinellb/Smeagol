@@ -137,10 +137,10 @@ class EditDictionary(Edit):
             entry.remove_from_hierarchy()
         else:
             with ignored(AttributeError):
+                text = markdown.to_markup(text)
+            with ignored(AttributeError):
                 # replace particular words in parts of speech with links to grammar.tinellb.com
                 text = replacelinks.replace(text)
-            with ignored(AttributeError):
-                text = markdown.to_markup(text)
             # Write links out in full form
             links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1>', text.replace('\n', '')).split(r'>')[:-1])
             for link in links:

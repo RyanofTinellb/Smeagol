@@ -111,8 +111,10 @@ class EditPage(Edit):
         """
         if kind == 'grammar':
             text = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>', r'<link>\1</link>', entry.content)
-        else:
+        elif kind == 'story':
             text = EditStory.remove_version_links(entry.content)
+        else:
+            text = entry.content
         with conversion(markdown, 'to_markdown') as converter:
             return [converter(text)]
 

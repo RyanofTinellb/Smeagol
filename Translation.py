@@ -265,16 +265,16 @@ class d2gReplace():
     def replace(self, text):
         """
         Replaces appropriate words with links in text.
-        :precondition: text is a dictionary entry in Dictionary markdown.
+        :precondition: text is a dictionary entry in Smeagol markdown.
         """
         for language, word, url in zip(self.languages, self.words, self.urls):
             page = ''
-            url = r'\\<a href=\\"{0}\\"\\>{1}\\</a\\>'.format(url, word)
+            url = r'<a href="{0}">{1}</a>'.format(url, word)
             for line in text.splitlines():
                 if line.startswith('[3]'):
                     current_language = line[len('[3]'):]
                 elif word in line and url not in line and current_language == language:
-                    line = re.sub(r'(\[6\].*?)\b' + word + r'\b(.*?{{)', r'\1' + url + r'\2', line)
+                    line = re.sub(r'(\[6\].*?)\b' + word + r'\b(.*?<)', r'\1' + url + r'\2', line)
                 page += line + '\n'
             text = page
         return text
