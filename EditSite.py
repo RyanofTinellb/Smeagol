@@ -23,6 +23,8 @@ class EditPage(Edit):
             heading.bind('<Prior>', handler)
             heading.bind('<Next>', handler)
             heading.bind('<Return>', self.enter_headings)
+            heading.bind('<Up>', self.scroll_radios)
+            heading.bind('<Down>', self.scroll_radios)
         self.textbox.bind('<Control-o>', self.refresh_site)
         self.textbox.bind('<Control-t>', self.table)
         self.grammar_radio.configure(text='Grammar', variable=self.kind, value='grammar', command=self.change_site)
@@ -40,7 +42,6 @@ class EditPage(Edit):
         self.load()
         self.information.set('Site Refreshed!')
 
-        # TODO: Ensure headings scroll correct site when site is changed.
     def scroll_headings(self, event, level):
         """
         Respond to PageUp / PageDown by changing headings, moving through the hierarchy.
@@ -71,6 +72,14 @@ class EditPage(Edit):
             self.headings[k].delete(0, Tk.END)
         heading.insert(Tk.INSERT, self.entry.name)
         return 'break'
+
+    def scroll_radios(self, event):
+        if self.kind.get() == 'grammar':
+            self.story_radio.select()
+        else:
+            self.grammar_radio.select()
+        self.change_site()
+
 
     def table(self, event=None):
         """
