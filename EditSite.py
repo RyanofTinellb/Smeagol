@@ -1,4 +1,5 @@
 from Edit import *
+import EditStory
 
 class EditPage(Edit):
     def __init__(self, directories, datafiles, sites, markdowns, master=None):
@@ -98,41 +99,60 @@ class EditPage(Edit):
         return 'break'
 
     @staticmethod
-    def prepare_entry(entry, markdown=None):
+    def prepare_entry(entry, markdown=None, kind=None):
         """
         Manipulate entry content to suit textboxes.
-        Subroutine of self.load()
         Overrides parent method.
         :param entry (Page): A Page instance carrying text. Other Pages relative to this entry may also be accessed.
         :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
+        :param kind (str): i.e.: which kind of links should be removed, 'grammar', 'story'
         :param return (str[]):
+        :called by: Edit.load()
         """
-        text = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>', r'<link>\1</link>', entry.content)
+        if kind == 'grammar':
+            text = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>', r'<link>\1</link>', entry.content)
+        else:
+            text = EditStory.remove_version_links(entry.content)
         with conversion(markdown, 'to_markdown') as converter:
             return [converter(text)]
 
     @staticmethod
-    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None):
+    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None, uid=None, kind=None):
         """
         Modify entry with manipulated texts.
         Subroutine of self.save().
-        Overrides
+        Overrides parent method.
         :param entry (Page): the entry in the datafile to be modified.
         :param texts (str[]): the texts to be manipulated and inserted.
         :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
         :param return (Nothing):
         """
-        with conversion(markdown, 'to_markdown') as converter:
+        with conversion(markdown, 'to_markup') as converter:
             text = ''.join(map(converter, texts))
-        links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', text.replace('\n', '')).split(r'@')[:-1])
-        matriarch = entry.ancestors[1].urlform
-        for link in links:
-            url = Page(link, markdown=site.markdown).urlform
-            initial = re.sub(r'.*?(\w).*', r'\1', url)
-            with ignored(KeyError):
-                text = text.replace('<link>' + link + '</link>',
-                '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html#' + matriarch + '">' + link + '</a>')
+        if kind == 'grammar':
+            links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', text.replace('\n', '')).split(r'@')[:-1])
+            matriarch = entry.ancestors[1].urlform
+            for link in links:
+                url = Page(link, markdown=site.markdown).urlform
+                initial = re.sub(r'.*?(\w).*', r'\1', url)
+                with ignored(KeyError):
+                    text = text.replace('<link>' + link + '</link>',
+                    '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html#' + matriarch + '">' + link + '</a>')
+        elif kind == 'story':
+            paragraphs = text.splitlines()
+            index = entry.elders.index(entry.ancestors[1])
+            for uid, paragraph in enumerate(paragraphs[1:]):
+                if index == 4:
+                     paragraph = '&id=' + paragraphs[uid+1].replace(' | [r]', '&vlinks= | [r]')
+                elif index == 3:
+                    paragraph = '[t]&id=' + re.sub(r'(?= \| \[r\]<div class=\"literal\">)', '&vlinks=', paragraphs[uid+1][3:])
+                else:
+                    paragraph = '&id=' + paragraphs[uid+1] + '&vlinks='
+                paragraphs[uid+1] = EditStory.add_version_links(paragraph, index, entry, uid)
+            text = '\n'.join(paragraphs)
         entry.content = text
+        with open('c:/users/ryan/desktop/data.txt', 'w') as f:
+            f.write(text)
 
 app = EditPage(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',
                             'story': 'c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet'},

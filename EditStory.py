@@ -47,7 +47,7 @@ class EditStory(Edit):
         :param headings (str[]): the texts from the heading boxes
         :return (Page, str()[], int):
         :   (Page): current entry
-        :   (str()[]): a list of paragraphs, where each paragraph consists of different version-links
+        :   (str()[]): a list of paragraphs, where each paragraph consists of different versions
         :   (int): the index of the last untranslated paragraph
         :   (int): the index of the last paragraph overall
         """
@@ -60,7 +60,7 @@ class EditStory(Edit):
         return entry, paragraphs, current_paragraph, count
 
     @staticmethod
-    def prepare_entry(entry, markdown=None):
+    def prepare_entry(entry, markdown=None, kind=None):
         """
         Manipulate entry content to suit textboxes.
         Subroutine of self.load()
@@ -74,7 +74,7 @@ class EditStory(Edit):
         displays = map(lambda x: remove_version_links(paragraph[2 * x]), range(3))
         # have to add and subtract final '\n' because of how markdown interacts with the timestamp
         with conversion(markdown, 'to_markdown') as converter:
-            displays = map(lambda x: converter(x + '\n').replace('\n', ''), displays)
+            displays = map(converter, displays)
         displays[2:4] = displays[2].split(' |- -| ')
         if len(displays) == 3:
             displays.append('{}')
@@ -152,7 +152,7 @@ class EditStory(Edit):
         return str(textbox.get(1.0, Tk.END + '-1c')).replace('\n', ' | ')
 
     @staticmethod
-    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None):
+    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None, kind=None):
         """
         Modify entry with manipulated texts.
         Subroutine of self.save().
@@ -168,25 +168,27 @@ class EditStory(Edit):
             cousin.content = content
 
     @staticmethod
-    def prepare_paragraph(entry, texts, markdown=None, translator=None):
+    def prepare_paragraph(entry, texts, markdown=None, translator=None, uid=None):
         """
         Returns 5 versions of the same paragraph, based on the texts.
         :param entry (Page):
         :param texts (str[]):
         :param markdown (Markdown):
+        :called by: Edit.save()
+        :calls (static): interlinear(), add_version_links()
         """
         length = 8
-        paragraph = [None] * 5
+        paragraphs = [None] * 5
         literal = texts.pop()
-        paragraph[0:5:2] = texts
-        with conversion(translate, 'convert_sentence') as converter:
-            paragraph[1] = translate(paragraph[2])    # Tinellbian
-        paragraph[4] += ' |- -| {' + literal + '}'      # Literal
-        paragraph[3] = interlinear(paragraph, markdown)     # Interlinear
+        paragraphs[0:5:2] = texts
+        with conversion(translator, 'convert_sentence') as converter:
+            paragraphs[1] = converter(paragraphs[2])    # Tinellbian
+        paragraphs[4] += ' |- -| {' + literal + '}'      # Literal
+        paragraphs[3] = interlinear(paragraphs, markdown)     # Interlinear
         for i in range(3):
-            paragraph[i] = '&id={0}&vlinks='.format(paragraph[i])
+            paragraphs[i] = '&id={0}&vlinks='.format(paragraphs[i])
         with conversion(markdown, 'to_markup') as converter:
-            paragraph = map(converter, paragraph)
+            paragraphs = map(converter, paragraphs)
         replacements = [['.(', '&middot;('],
                         ['(', chr(5)],
                         ['<small-caps>', 2*chr(5)],
@@ -194,12 +196,11 @@ class EditStory(Edit):
                         ['</small-caps>', 2*chr(6)],
                         ['-', chr(7)]]
         for i, j in replacements:
-            paragraph[2] = paragraph[2].replace(i, j)     # Transliteration
-        paragraph[4] = '&id=' + paragraph[4].replace(' | [r]', '&vlinks= | [r]') # Gloss
-        uid = ''.join([choice(printable[:62]) for i in range(length)])
-        for index, para in enumerate(paragraph):
-            paragraph[index] = add_version_links(para, index, entry, uid)
-        return tuple(paragraph)
+            paragraphs[2] = paragraphs[2].replace(i, j)     # Transliteration
+        paragraphs[4] = '&id=' + paragraphs[4].replace(' | [r]', '&vlinks= | [r]') # Gloss
+        for index, paragraph in enumerate(paragraphs):
+            paragraphs[index] = add_version_links(paragraph, index, entry, uid)
+        return tuple(paragraphs)
 
     @staticmethod
     def publish(entry, site):
@@ -225,14 +226,24 @@ def add_version_links(paragraph, index, entry, uid):
     :return (nothing):
     """
     links = ''
-    anchor = '<span class="version-anchor" id="{0}"></span>'.format(uid)
+    anchor = '<span class="version-anchor" id="{0}"></span>'.format(str(uid))
     categories = [node.name for node in entry.elders]
     cousins = entry.cousins
     for i, (cousin, category) in enumerate(zip(cousins, categories)):
         if index != i:
-            links += cousins[index].hyperlink(cousin, category, fragment='#'+uid) + '&nbsp;'
+            links += cousins[index].hyperlink(cousin, category, fragment='#'+str(uid)) + '&nbsp;'
     links = '<span class="version-links">{0}</span>'.format(links)
     return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
+
+
+def remove_version_links(text):
+    """
+    Remove the version link information from a paragraph.
+    :precondition: text is in Smeagol markdown
+    :param text (str): the paragraph to be cleaned.
+    :return (str):
+    """
+    return re.sub(r'<span class="version.*?</span>', '', text)
 
 
 def interlinear(paragraph, markdown):
@@ -277,15 +288,6 @@ def inner_table(top, bottom, font_style):
     output = '[t]{{0}}{0}{{1}} | [r]{1} | [/t]'.format(r'{1}- | {0}'.join(top), r'- | '.join(bottom))
     output = output.format(*font_style)
     return output
-
-
-def remove_version_links(text):
-        """
-        Remove the version link information from a paragraph.
-        :param text (str): the paragraph to be cleaned.
-        :return (str):
-        """
-        return re.sub(r'<span class="version.*?</span>', '', text)
 
 
 def join_strip(texts):

@@ -86,7 +86,7 @@ class EditDictionary(Edit):
         return 'break'
 
     @staticmethod
-    def prepare_entry(entry, markdown=None):
+    def prepare_entry(entry, markdown=None, kind=None):
         """
         Manipulate entry content to suit textboxes.
         Subroutine of self.load()
@@ -120,7 +120,7 @@ class EditDictionary(Edit):
             return Page(heading, site[initial], '', site.leaf_level, None, site.markdown).insert()
 
     @staticmethod
-    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None):
+    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None, kind=None):
         """
         Modify entry with manipulated texts.
         Subroutine of self.save().

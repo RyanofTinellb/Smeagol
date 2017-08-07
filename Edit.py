@@ -268,7 +268,7 @@ class Edit(Tk.Frame, object):
         """
         self.entry = self.find_entry(map(lambda x: x.get(), self.headings))
         markdown = choose(self.kind, self.markdowns)
-        self.display(self.prepare_entry(self.entry, markdown))
+        self.display(self.prepare_entry(self.entry, markdown, self.kind.get()))
         return 'break'
 
     def display(self, texts):
@@ -311,10 +311,10 @@ class Edit(Tk.Frame, object):
         texts = map(self.get_text, self.textboxes)
 
         with ignored(AttributeError):
-            self.paragraphs[self.current_paragraph] = self.prepare_paragraph(self.entry, texts, self.markdown, self.translator)
+            self.paragraphs[self.current_paragraph] = self.prepare_paragraph(self.entry, texts, self.markdown, self.translator, self.current_paragraph)
             texts = self.paragraphs
         if self.entry:
-            self.prepare_texts(self.entry, site, texts, markdown, self.replacelinks)
+            self.prepare_texts(self.entry, site, texts, markdown, self.replacelinks, kind=self.kind.get())
         self.publish(self.entry, site)
         return 'break'
 
@@ -327,7 +327,7 @@ class Edit(Tk.Frame, object):
         return str(textbox.get(1.0, Tk.END + '-1c'))
 
     @staticmethod
-    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None):
+    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None, kind=None):
         """
         Modify entry with manipulated texts.
         Subroutine of self.save().
@@ -335,7 +335,8 @@ class Edit(Tk.Frame, object):
         :param entry (Page): the entry in the datafile to be modified.
         :param texts (str[]): the texts to be manipulated and inserted.
         :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
-        :param return (Nothing):
+        :param kind (str): e.g.: 'grammar', 'story'
+        :returns (Nothing):
         """
         with conversion(markdown, 'to_markup') as converter:
             entry.content = str(map(converter, texts))
@@ -423,6 +424,7 @@ class Edit(Tk.Frame, object):
         ('<Tab>', self.next_window),
         ('<Shift-Tab>', self.previous_window),
         ('<KeyPress-|>', self.insert_pipe)]
+
 
 def choose(kind, variables):
     """

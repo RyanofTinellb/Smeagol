@@ -199,12 +199,12 @@ class Markdown:
 
     def to_markup(self, text, datestamp=True):
         self.source, self.destination = self.markdown[::-1], self.markup[::-1]
-        text += datetime.datetime.strftime(datetime.datetime.today(), '&date=%Y%m%d\n') if datestamp else ''
+        text += datetime.datetime.strftime(datetime.datetime.today(), '&date=%Y%m%d') if datestamp else ''
         return self.convert(text)
 
     def to_markdown(self, text, datestamp=False):
         self.source, self.destination = self.markup, self.markdown
-        text = re.sub(r'&date=\d{8}\n', '', text) if not datestamp else text
+        text = re.sub(r'&date=\d{8}', '', text) if not datestamp else text
         return self.convert(text)
 
     def convert(self, text):
