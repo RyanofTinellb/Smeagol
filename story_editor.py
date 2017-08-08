@@ -2,11 +2,11 @@ from default_editor import *
 from random import choice
 from string import printable
 
-class EditStory(Edit):
+class StoryEditor(Editor):
     def __init__(self, directory, datafile, site, markdown, master=None):
         self.font = ('Californian FB', 16)
         self.widgets = WidgetAmounts(headings=2, textboxes=4, radios='languages')
-        super(EditStory, self).__init__(directory, datafile, site, markdown)
+        super(StoryEditor, self).__init__(directory, datafile, site, markdown)
         self.site = site
         self.markdown = markdown
         self.datafile = datafile
@@ -300,9 +300,9 @@ def join_strip(texts):
 
 
 if __name__ == '__main__':
-    app = EditStory(directory='c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet',
+    app = StoryEditor(directory='c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet',
                     datafile='data.txt',
                     site=Story(),
                     markdown=Markdown('c:/users/ryan/documents/tinellbianlanguages/storyreplacements.html'))
-    app.master.title('Edit the Story')
+    app.master.title('Edit a Story')
     app.mainloop()

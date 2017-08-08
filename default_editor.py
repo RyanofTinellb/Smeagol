@@ -3,7 +3,7 @@ import Tkinter as Tk
 
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
 
-class Edit(Tk.Frame, object):
+class Editor(Tk.Frame, object):
     """
     Base class for EditDictionary, EditSite, TranslateStory.
     """
@@ -15,7 +15,7 @@ class Edit(Tk.Frame, object):
         :param directory (str):
         :param widgets (WidgetAmounts): number of each of headings, textboxes, radiobuttons to create.
         """
-        super(Edit, self).__init__(None)
+        super(Editor, self).__init__(None)
         # initialise initial variables
         self.directories = directories
         self.datafiles = datafiles
