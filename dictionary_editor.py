@@ -1,4 +1,4 @@
-from default_editor import *
+from Edit import *
 
 
 class EditDictionary(Edit):

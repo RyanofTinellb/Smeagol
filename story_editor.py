@@ -1,4 +1,4 @@
-from default_editor import *
+from Edit import *
 from random import choice
 from string import printable
 

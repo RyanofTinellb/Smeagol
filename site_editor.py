@@ -1,5 +1,5 @@
-from default_editor import *
-import story_editor
+from Edit import *
+import EditStory
 
 class EditPage(Edit):
     def __init__(self, directories, datafiles, sites, markdowns, master=None):
@@ -112,7 +112,7 @@ class EditPage(Edit):
         if kind == 'grammar':
             text = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>', r'<link>\1</link>', entry.content)
         elif kind == 'story':
-            text = story_editor.remove_version_links(entry.content)
+            text = EditStory.remove_version_links(entry.content)
         else:
             text = entry.content
         with conversion(markdown, 'to_markdown') as converter:

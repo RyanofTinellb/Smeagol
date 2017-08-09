@@ -1,4 +1,4 @@
-from smeagol import *
+from Smeagol import *
 import Tkinter as Tk
 
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
