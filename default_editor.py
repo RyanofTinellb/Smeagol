@@ -1,21 +1,21 @@
-from Smeagol import *
+from smeagol import *
 import Tkinter as Tk
 
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
 
-class Edit(Tk.Frame, object):
+class Editor(Tk.Frame, object):
     """
-    Base class for EditDictionary, EditSite, TranslateStory.
+    Base class for DictionaryEditor, SiteEditor, StoryEditor
     """
 
     def __init__(self, directories=None, datafiles=None, sites=None, markdowns=None, replacelinks=None, kind=None, widgets=None):
         """
-        Initialise an instance of the Edit class.
+        Initialise an instance of the Editor class.
         :param kind (str): i.e.: 'grammar', 'dictionary', 'story'.
         :param directory (str):
         :param widgets (WidgetAmounts): number of each of headings, textboxes, radiobuttons to create.
         """
-        super(Edit, self).__init__(None)
+        super(Editor, self).__init__(None)
         # initialise initial variables
         self.directories = directories
         self.datafiles = datafiles
@@ -290,7 +290,7 @@ class Edit(Tk.Frame, object):
     def find_entry(self, headings):
         """
         Find the current entry based on what is in the heading boxes.
-        This is the default method - other Edit programs will override this.
+        This is the default method - other Editor programs will override this.
         Subroutine of self.load().
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
@@ -335,7 +335,7 @@ class Edit(Tk.Frame, object):
         """
         Modify entry with manipulated texts.
         Subroutine of self.save().
-        This is the default method - other Edit programs will override this.
+        This is the default method - other Editor programs will override this.
         :param entry (Page): the entry in the datafile to be modified.
         :param texts (str[]): the texts to be manipulated and inserted.
         :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
@@ -349,7 +349,7 @@ class Edit(Tk.Frame, object):
     def publish(entry, site):
         """
         Put entry contents into datafile, publish appropriate Pages.
-        This is the default method - other Edit programs may override this.
+        This is the default method - other Editor programs may override this.
         Subroutine of self.save()
         :param entry (Page):
         :return (nothing):
@@ -396,7 +396,7 @@ class Edit(Tk.Frame, object):
         """
         Manipulate entry content to suit textboxes.
         Subroutine of self.load()
-        This is the default method - other Edit programs will override this.
+        This is the default method - other Editor programs will override this.
         :param entry (Page): A Page instance carrying text. Other Pages relative to this entry may also be accessed.
         :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
         :param return (str[]):
@@ -445,5 +445,5 @@ def choose(kind, variables):
 
 
 if __name__ == '__main__':
-    app = Edit()
+    app = Editor()
     app.mainloop()

@@ -1,6 +1,6 @@
 import os
 import win32api
-from Translation import *
+from translation import *
 from collections import namedtuple, deque
 from cached_property import cached_property
 

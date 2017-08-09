@@ -1,7 +1,7 @@
-from Edit import *
+from default_editor import *
 
 
-class EditDictionary(Edit):
+class DictionaryEditor(Editor):
     def __init__(self, directory, datafile, site, markdown, replacelinks, randomwords, master=None):
         """
         :param directory (String): the path and filename of the top-level directory
@@ -12,7 +12,7 @@ class EditDictionary(Edit):
         """
         self.font = ('Courier New', '15')
         self.widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
-        super(EditDictionary, self).__init__(directory, datafile, site, markdown, replacelinks)
+        super(DictionaryEditor, self).__init__(directory, datafile, site, markdown, replacelinks)
 
         # rename for readability
         self.heading = self.headings[0]
@@ -113,7 +113,7 @@ class EditDictionary(Edit):
         """
         Manipulate entry content to suit textboxes.
         Subroutine of self.load()
-        Overrides method in Edit.py.
+        Overrides method in Editor.py.
         :param entry (Page): A Page instance carrying text. Other Pages relative to this entry may also be accessed.
         :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
         :param return (str[]):
@@ -132,7 +132,7 @@ class EditDictionary(Edit):
     def find_entry(self, headings):
         """
         Find the current entry based on what is in the heading boxes.
-        Overrides Edit.find_entry.
+        Overrides Editor.find_entry.
         Subroutine of self.load().
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
@@ -163,7 +163,7 @@ class EditDictionary(Edit):
         """
         Modify entry with manipulated texts.
         Subroutine of self.save().
-        Overrides Edit.prepare_texts()
+        Overrides Editor.prepare_texts()
         :param entry (Page): the entry in the datafile to be modified.
         :param texts (str[]): the texts to be manipulated and inserted.
         :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
@@ -197,7 +197,7 @@ class EditDictionary(Edit):
     def publish(entry, site):
         """
         Put entry contents into datafile, publish appropriate Pages.
-        Overrides Edit.publish()
+        Overrides Editor.publish()
         Subroutine of self.save()
         """
         if entry.content:
@@ -215,5 +215,5 @@ if __name__ == '__main__':
     replacelinks=d2gReplace(
     'c:/users/ryan/documents/tinellbianlanguages/dictionarylinkreplacements.txt'),
     randomwords=RandomWords(20,3))
-    app.master.title('Edit the Dictionary')
+    app.master.title('Editor the Dictionary')
     app.mainloop()

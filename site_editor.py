@@ -1,11 +1,11 @@
-from Edit import *
-import EditStory
+from default_editor import *
+import story_editor
 
-class EditPage(Edit):
+class SiteEditor(Editor):
     def __init__(self, directories, datafiles, sites, markdowns, master=None):
         self.font = ('Corbel', '14')
         self.widgets = WidgetAmounts(headings=3, textboxes=1, radios=2)
-        super(EditPage, self).__init__(directories=directories, datafiles=datafiles, sites=sites, markdowns=markdowns, kind='grammar')
+        super(SiteEditor, self).__init__(directories=directories, datafiles=datafiles, sites=sites, markdowns=markdowns, kind='grammar')
         self.site = sites['grammar']
         self.markdown = markdowns
         self.datafile = datafiles
@@ -107,7 +107,7 @@ class EditPage(Edit):
         :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
         :param kind (str): i.e.: which kind of links should be removed, 'grammar', 'story'
         :param return (str[]):
-        :called by: Edit.load()
+        :called by: Editor.load()
         """
         if kind == 'grammar':
             text = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>', r'<link>\1</link>', entry.content)
@@ -161,5 +161,5 @@ app = EditPage(directories={'grammar': 'c:/users/ryan/documents/tinellbianlangua
                     datafiles='data.txt',
                     sites={'grammar': Grammar(), 'story': Story()},
                     markdowns=Markdown('c:/users/ryan/documents/tinellbianlanguages/grammarstoryreplacements.html'))
-app.master.title('Edit Page')
+app.master.title('Editor Page')
 app.mainloop()

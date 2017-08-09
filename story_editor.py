@@ -1,8 +1,8 @@
-from Edit import *
+from default_editor import *
 from random import choice
 from string import printable
 
-class EditStory(Edit):
+class EditStory(Editor):
     def __init__(self, directory, datafile, site, markdown, master=None):
         self.font = ('Californian FB', 16)
         self.widgets = WidgetAmounts(headings=2, textboxes=4, radios='languages')
@@ -147,7 +147,7 @@ class EditStory(Edit):
     def get_text(textbox):
         """
         Retrieves text from textbox and removes line-breaks.
-        Overrides Edit.get_text()
+        Overrides Editor.get_text()
         """
         return str(textbox.get(1.0, Tk.END + '-1c')).replace('\n', ' | ')
 
@@ -174,7 +174,7 @@ class EditStory(Edit):
         :param entry (Page):
         :param texts (str[]):
         :param markdown (Markdown):
-        :called by: Edit.save()
+        :called by: Editor.save()
         :calls (static): interlinear(), add_version_links()
         """
         length = 8
@@ -206,7 +206,7 @@ class EditStory(Edit):
     def publish(entry, site):
         """
         Put entry contents into datafile, publish appropriate Pages.
-        This is the default method - other Edit programs may override this.
+        This is the default method - other Editor programs may override this.
         Subroutine of self.save()
         :param entry (Page):
         :return (nothing):
@@ -304,5 +304,5 @@ if __name__ == '__main__':
                     datafile='data.txt',
                     site=Story(),
                     markdown=Markdown('c:/users/ryan/documents/tinellbianlanguages/storyreplacements.html'))
-    app.master.title('Edit the Story')
+    app.master.title('Editor the Story')
     app.mainloop()
