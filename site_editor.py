@@ -1,11 +1,11 @@
 from default_editor import *
 import story_editor
 
-class SiteEditor(Editor):
+class EditPage(Edit):
     def __init__(self, directories, datafiles, sites, markdowns, master=None):
         self.font = ('Corbel', '14')
         self.widgets = WidgetAmounts(headings=3, textboxes=1, radios=2)
-        super(SiteEditor, self).__init__(directories=directories, datafiles=datafiles, sites=sites, markdowns=markdowns, kind='grammar')
+        super(EditPage, self).__init__(directories=directories, datafiles=datafiles, sites=sites, markdowns=markdowns, kind='grammar')
         self.site = sites['grammar']
         self.markdown = markdowns
         self.datafile = datafiles
@@ -156,7 +156,7 @@ class SiteEditor(Editor):
         with open('c:/users/ryan/desktop/data.txt', 'w') as f:
             f.write(text)
 
-app = SiteEditor(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',
+app = EditPage(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',
                             'story': 'c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet'},
                     datafiles='data.txt',
                     sites={'grammar': Grammar(), 'story': Story()},

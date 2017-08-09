@@ -9,12 +9,12 @@ __pycache__/
 *.so
 
 desktop.ini
-*.bat
+install_tinellbian_software.bat
 
 # Scratch files
-scratch.py
-scratch2.py
-scratch3.py
+Scratch.py
+Scratch2.py
+Scratch3.py
 
 # .idea folder
 .idea/

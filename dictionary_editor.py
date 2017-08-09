@@ -1,7 +1,7 @@
 from default_editor import *
 
 
-class DictionaryEditor(Editor):
+class EditDictionary(Edit):
     def __init__(self, directory, datafile, site, markdown, replacelinks, randomwords, master=None):
         """
         :param directory (String): the path and filename of the top-level directory
@@ -12,7 +12,7 @@ class DictionaryEditor(Editor):
         """
         self.font = ('Courier New', '15')
         self.widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
-        super(DictionaryEditor, self).__init__(directory, datafile, site, markdown, replacelinks)
+        super(EditDictionary, self).__init__(directory, datafile, site, markdown, replacelinks)
 
         # rename for readability
         self.heading = self.headings[0]
@@ -207,7 +207,7 @@ class DictionaryEditor(Editor):
         site.update_json()
 
 if __name__ == '__main__':
-    app = DictionaryEditor(directory='c:/users/ryan/documents/tinellbianlanguages/dictionary',
+    app = EditDictionary(directory='c:/users/ryan/documents/tinellbianlanguages/dictionary',
     datafile='data.txt',
     site=Dictionary(),
     markdown=Markdown(
