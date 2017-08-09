@@ -304,5 +304,5 @@ if __name__ == '__main__':
                     datafile='data.txt',
                     site=Story(),
                     markdown=Markdown('c:/users/ryan/documents/tinellbianlanguages/storyreplacements.html'))
-    app.master.title('Editor the Story')
+    app.master.title('Story Editor')
     app.mainloop()

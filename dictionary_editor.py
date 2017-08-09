@@ -215,5 +215,5 @@ if __name__ == '__main__':
     replacelinks=d2gReplace(
     'c:/users/ryan/documents/tinellbianlanguages/dictionarylinkreplacements.txt'),
     randomwords=RandomWords(20,3))
-    app.master.title('Editor the Dictionary')
+    app.master.title('Dictionary Editor')
     app.mainloop()

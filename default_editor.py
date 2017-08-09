@@ -446,4 +446,5 @@ def choose(kind, variables):
 
 if __name__ == '__main__':
     app = Editor()
+    app.master.title('Page Editor')
     app.mainloop()

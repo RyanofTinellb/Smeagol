@@ -161,5 +161,5 @@ app = SiteEditor(directories={'grammar': 'c:/users/ryan/documents/tinellbianlang
                     datafiles='data.txt',
                     sites={'grammar': Grammar(), 'story': Story()},
                     markdowns=Markdown('c:/users/ryan/documents/tinellbianlanguages/grammarstoryreplacements.html'))
-app.master.title('Editor Page')
+app.master.title('Page Editor')
 app.mainloop()
