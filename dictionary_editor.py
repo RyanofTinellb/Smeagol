@@ -207,7 +207,7 @@ class DictionaryEditor(Editor):
         site.update_json()
 
 if __name__ == '__main__':
-    app = EditDictionary(directory='c:/users/ryan/documents/tinellbianlanguages/dictionary',
+    app = DictionaryEditor(directory='c:/users/ryan/documents/tinellbianlanguages/dictionary',
     datafile='data.txt',
     site=Dictionary(),
     markdown=Markdown(

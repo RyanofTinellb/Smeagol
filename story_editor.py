@@ -300,7 +300,7 @@ def join_strip(texts):
 
 
 if __name__ == '__main__':
-    app = EditStory(directory='c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet',
+    app = StoryEditor(directory='c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet',
                     datafile='data.txt',
                     site=Story(),
                     markdown=Markdown('c:/users/ryan/documents/tinellbianlanguages/storyreplacements.html'))

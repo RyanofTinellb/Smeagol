@@ -156,7 +156,7 @@ class SiteEditor(Editor):
         with open('c:/users/ryan/desktop/data.txt', 'w') as f:
             f.write(text)
 
-app = EditPage(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',
+app = SiteEditor(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',
                             'story': 'c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet'},
                     datafiles='data.txt',
                     sites={'grammar': Grammar(), 'story': Story()},
