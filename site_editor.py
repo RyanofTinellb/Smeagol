@@ -112,7 +112,7 @@ class SiteEditor(Editor):
         if kind == 'grammar':
             text = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>', r'<link>\1</link>', entry.content)
         elif kind == 'story':
-            text = EditStory.remove_version_links(entry.content)
+            text = StoryEditor.remove_version_links(entry.content)
         else:
             text = entry.content
         with conversion(markdown, 'to_markdown') as converter:
@@ -150,7 +150,7 @@ class SiteEditor(Editor):
                     paragraph = '[t]&id=' + re.sub(r'(?= \| \[r\]<div class=\"literal\">)', '&vlinks=', paragraphs[uid+1][3:])
                 else:
                     paragraph = '&id=' + paragraphs[uid+1] + '&vlinks='
-                paragraphs[uid+1] = EditStory.add_version_links(paragraph, index, entry, uid)
+                paragraphs[uid+1] = StoryEditor.add_version_links(paragraph, index, entry, uid)
             text = '\n'.join(paragraphs)
         entry.content = text
         with open('c:/users/ryan/desktop/data.txt', 'w') as f:

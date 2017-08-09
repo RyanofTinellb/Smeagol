@@ -2,11 +2,11 @@ from default_editor import *
 from random import choice
 from string import printable
 
-class EditStory(Editor):
+class StoryEditor(Editor):
     def __init__(self, directory, datafile, site, markdown, master=None):
         self.font = ('Californian FB', 16)
         self.widgets = WidgetAmounts(headings=2, textboxes=4, radios='languages')
-        super(EditStory, self).__init__(directory, datafile, site, markdown)
+        super(StoryEditor, self).__init__(directory, datafile, site, markdown)
         self.site = site
         self.markdown = markdown
         self.datafile = datafile
@@ -35,7 +35,7 @@ class EditStory(Editor):
         Find entry, manipulate entry to fit boxes, place in boxes
         Overrides parent method
         """
-        super(EditStory, self).load()
+        super(StoryEditor, self).load()
         self.entry, self.paragraphs, self.current_paragraph, self.count = self.entry
         self.information.set('Paragraph #' + str(self.current_paragraph))
 
@@ -51,7 +51,7 @@ class EditStory(Editor):
         :   (int): the index of the last untranslated paragraph
         :   (int): the index of the last paragraph overall
         """
-        entry = super(EditStory, self).find_entry([self.site.root[0].name] + headings)
+        entry = super(StoryEditor, self).find_entry([self.site.root[0].name] + headings)
         cousins = map(lambda x: x.content.splitlines(), entry.cousins)     # Str[][]
         count = max(map(len, cousins))      # int
         current_paragraph = min(map(len, cousins)) - 1    # int
@@ -214,7 +214,7 @@ class EditStory(Editor):
         for cousin in entry.cousins:
             cousin.publish(site.template)
         # reset entry so that it is not published twice
-        super(EditStory, EditStory).publish(entry=None, site=site)
+        super(StoryEditor, StoryEditor).publish(entry=None, site=site)
 
 
 def add_version_links(paragraph, index, entry, uid):
