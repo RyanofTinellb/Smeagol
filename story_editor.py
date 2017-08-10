@@ -5,8 +5,8 @@ from string import printable
 class StoryEditor(Editor):
     def __init__(self, directory, datafile, site, markdown, master=None):
         self.font = ('Californian FB', 16)
-        self.widgets = WidgetAmounts(headings=2, textboxes=4, radios='languages')
-        super(StoryEditor, self).__init__(directory, datafile, site, markdown)
+        widgets = WidgetAmounts(headings=2, textboxes=4, radios='languages')
+        super(StoryEditor, self).__init__(directory, datafile, site, markdown, widgets=widgets)
         self.site = site
         self.markdown = markdown
         self.datafile = datafile

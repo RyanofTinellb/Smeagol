@@ -11,8 +11,8 @@ class DictionaryEditor(Editor):
         :param randomwords (int): the number of random words to appear when requested
         """
         self.font = ('Courier New', '15')
-        self.widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
-        super(DictionaryEditor, self).__init__(directory, datafile, site, markdown, replacelinks)
+        widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
+        super(DictionaryEditor, self).__init__(directory, datafile, site, markdown, replacelinks, widgets=widgets)
 
         # rename for readability
         self.heading = self.headings[0]

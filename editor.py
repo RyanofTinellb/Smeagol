@@ -36,14 +36,6 @@ class Editor(Tk.Frame, object):
         self.save_text.set('Save')
         self.translator = Translator()
 
-        # create widgets and window
-        try:
-            widgets = self.widgets
-        except AttributeError:
-            self.widgets = widgets  # check if widgets were passed as an initial argument
-            if widgets is None:
-                widgets = self.widgets = WidgetAmounts(0, 0, 0)
-
         # headings
         self.headings = self.create_headings(self.buttonframe, widgets.headings)
 
@@ -82,6 +74,8 @@ class Editor(Tk.Frame, object):
         self.datafile = datafiles
         self.entry = self.site.root
         self.grammar_radio, self.story_radio = self.radios
+        self.heading = self.headings[0]
+        self.edit_text = self.textboxes[0]
         self.textbox = self.textboxes[0]
         self.configure_widgets()
 
@@ -590,8 +584,7 @@ if __name__ == '__main__':
                                 'story': 'c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet'},
                         datafiles='data.txt',
                         sites={'grammar': Grammar(), 'story': Story()},
-                        markdowns=Markdown('c:/users/ryan/documents/tinellbianlanguages/grammarstoryreplacements.html'),
+                        markdowns=Markdown('c:/users/ryan/documents/tinellbianlanguages/grammarstoryreplacements.mkd'),
                         kind='grammar')
     app.master.title('Page Editor')
-    print(repr(app))
     app.mainloop()
