@@ -63,8 +63,9 @@ class Editor(Tk.Frame, object):
         self.textboxes = self.create_textboxes(self.textframe, widgets.textboxes, self.textbox_commands, self.font)
 
         # window
-        self.create_window()
         self.top = self.winfo_toplevel()
+        self.menu = self.create_menu(self.top)
+        self.create_window()
         self.top.state('zoomed')
         self.clear_interface()
 
@@ -78,6 +79,27 @@ class Editor(Tk.Frame, object):
         self.edit_text = self.textboxes[0]
         self.textbox = self.textboxes[0]
         self.configure_widgets()
+
+# TODO: abstract this method:
+            # pass in commands as arguments
+            # make recursive
+    def create_menu(self, master):
+        """
+        Create a menu.
+
+        :param master: (widget)
+        :returns: (widget)
+        """
+        menubar = Tk.Menu(master)
+        submenu = Tk.Menu(menubar, tearoff=0)
+        submenu.add_command(label='Open', command=self.editor_open, underline=0)
+        submenu.bind('<KeyPress-f>', self.editor_open)
+        menubar.add_cascade(label='File', menu=submenu)
+        return menubar
+
+# TODO: Use this method to open a new Site
+    def editor_open(self, event=None):
+        self.textbox.insert(Tk.INSERT, 'Editor Open')
 
     def enter_headings(self, event):
         level = self.headings.index(event.widget)
@@ -161,6 +183,7 @@ class Editor(Tk.Frame, object):
         Stack the textboxes on the right-hand side, taking as much room as possible.
         Stack the heading boxes, the buttons, radiobuttons and a label in the top-left corner.
         """
+        self.top['menu'] = self.menu
         self.pack(expand=True, fill=Tk.BOTH)
         self.buttonframe.pack(side=Tk.LEFT)
         self.textframe.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
