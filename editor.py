@@ -1,5 +1,7 @@
 from smeagol import *
 import Tkinter as Tk
+import tkFileDialog as fd
+import tkMessageBox as mb
 
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
 
@@ -99,7 +101,21 @@ class Editor(Tk.Frame, object):
 
 # TODO: Use this method to open a new Site
     def editor_open(self, event=None):
-        self.textbox.insert(Tk.INSERT, 'Editor Open')
+        while True:
+            filename = fd.askopenfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Open Site')
+            if filename:
+                try:
+                    with open(filename) as site:
+                        site = site.read().replace('\n', ' ')
+                    self.directories = eval(site.split(',')[0])
+                    self.sites = eval('Site(' + site + ')')
+                    self.change_site()
+                    break
+                except (IOError, SyntaxError):
+                    mb.showerror('Invalid File', 'Please select a valid *.smg file.')
+            else:
+                break
+        return 'break'
 
     def enter_headings(self, event):
         level = self.headings.index(event.widget)

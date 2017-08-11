@@ -267,6 +267,7 @@ class d2gReplace():
         Replaces appropriate words with links in text.
         :precondition: text is a dictionary entry in Smeagol markdown.
         """
+        current_language = ''
         for language, word, url in zip(self.languages, self.words, self.urls):
             page = ''
             url = r'<a href="{0}">{1}</a>'.format(url, word)
