@@ -70,7 +70,7 @@ class Site:
     def __repr__(self):
         details = ''
         for detail in self.details[:-1]:
-            details += "'{0}'\n".format(detail)
+            details += "'{0}',\n".format(detail)
         details += str(self.details[-1])
         return details
 

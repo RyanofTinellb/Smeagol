@@ -94,13 +94,14 @@ class Editor(Tk.Frame, object):
         """
         menubar = Tk.Menu(master)
         submenu = Tk.Menu(menubar, tearoff=0)
-        submenu.add_command(label='Open', command=self.editor_open, underline=0)
-        submenu.bind('<KeyPress-f>', self.editor_open)
+        submenu.add_command(label='Open', command=self.site_open, underline=0)
+        submenu.bind('<KeyPress-o>', self.site_open)
+        submenu.add_command(label='Save', command=self.site_save, underline=0)
+        submenu.bind('<KeyPress-s>', self.site_save)
         menubar.add_cascade(label='File', menu=submenu)
         return menubar
 
-# TODO: Use this method to open a new Site
-    def editor_open(self, event=None):
+    def site_open(self, event=None):
         while True:
             filename = fd.askopenfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Open Site')
             if filename:
@@ -115,6 +116,13 @@ class Editor(Tk.Frame, object):
                     mb.showerror('Invalid File', 'Please select a valid *.smg file.')
             else:
                 break
+        return 'break'
+
+    def site_save(self, event=None):
+        filename = fd.asksaveasfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Save Site', defaultextension='.smg')
+        if filename:
+            with open(filename, 'w') as site:
+                site.write(repr(choose(self.kind, self.sites)))
         return 'break'
 
     def enter_headings(self, event):
