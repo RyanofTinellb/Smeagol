@@ -10,6 +10,15 @@ class Site:
     """
     A hierarchy of Pages
     """
+    def __setattr__(self, name, value):
+        if name in ('template', 'main_template'):
+            with open(value) as template:
+                self.__dict__[name] = template.read()
+        elif name == 'markdown':
+            self.__dict__[name] = Markdown(value)
+        else:
+            self.__dict__[name] = value
+
     def __init__(self, destination, name, source, template, main_template, markdown, searchjson, leaf_level):
         """
         :param destination (str): the full path where the Site is to be located
@@ -28,6 +37,7 @@ class Site:
         """
         self.choose_dir(destination)
         # initialize attributes and utility classes
+        self.details = [destination, name, source, template, main_template, markdown, searchjson, leaf_level]
         self.name = name
         self.source = source
         self.template = template
@@ -57,14 +67,12 @@ class Site:
             node = self.add_node(name, node, page, previous)
             self.length += 1
 
-    def __setattr__(self, name, value):
-        if name in ('template', 'main_template'):
-            with open(value) as template:
-                self.__dict__[name] = template.read()
-        elif name == 'markdown':
-            self.__dict__[name] = Markdown(value)
-        else:
-            self.__dict__[name] = value
+    def __repr__(self):
+        details = ''
+        for detail in self.details[:-1]:
+            details += "'{0}'\n".format(detail)
+        details += str(self.details[-1])
+        return details
 
     def refresh(self):
         self.current = None
