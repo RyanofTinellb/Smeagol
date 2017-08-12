@@ -66,7 +66,7 @@ class Editor(Tk.Frame, object):
 
         # window
         self.top = self.winfo_toplevel()
-        self.menu = self.create_menu(self.top)
+        self.menu = self.create_menu(self.top, self.menu_commands)
         self.create_window()
         self.top.state('zoomed')
         self.clear_interface()
@@ -83,22 +83,36 @@ class Editor(Tk.Frame, object):
         self.configure_widgets()
 
 # TODO: abstract this method:
-            # pass in commands as arguments
             # make recursive
-    def create_menu(self, master):
+    def create_menu(self, master, menus=[]):
         """
         Create a menu.
 
         :param master: (widget)
+        :param menus: ((str, options=[])[]) A list of tuples of the form
+                (label, options)
+            :param label: (str): The name of the menu that the user will see.
+            :param options: ((str, method)[]) A list of tuples of the form
+                    (label, command)
+                :param label: (str): The name of the menubutton that the user
+                    will see. The letter following an underscore will be
+                :param command: (method) The function to be run when this
+                    option is selected from the menu.
         :returns: (widget)
         """
         menubar = Tk.Menu(master)
-        submenu = Tk.Menu(menubar, tearoff=0)
-        submenu.add_command(label='Open', command=self.site_open, underline=0)
-        submenu.bind('<KeyPress-o>', self.site_open)
-        submenu.add_command(label='Save', command=self.site_save, underline=0)
-        submenu.bind('<KeyPress-s>', self.site_save)
-        menubar.add_cascade(label='File', menu=submenu)
+        for menu in menus:
+            submenu = Tk.Menu(menubar, tearoff=0)
+            label, options = menu
+            menubar.add_cascade(label=label, menu=submenu)
+            for option in options:
+                label, command = option
+                underline = label.find('_')
+                underline = 0 if underline == -1 else underline
+                label = label.replace('_', '')
+                submenu.add_command(label=label, command=command,
+                    underline=underline)
+                submenu.bind('<KeyPress-{0}>'.format(label[underline]), command)
         return menubar
 
     def site_open(self, event=None):
@@ -584,6 +598,11 @@ class Editor(Tk.Frame, object):
         ('<Tab>', self.next_window),
         ('<Shift-Tab>', self.previous_window),
         ('<KeyPress-|>', self.insert_pipe)]
+
+    @property
+    def menu_commands(self):
+        return [('Site', [('Open', self.site_open),
+                        ('Save', self.site_save)])]
 
 
 def choose(kind, variables):
