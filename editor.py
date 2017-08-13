@@ -19,12 +19,12 @@ class Editor(Tk.Frame, object):
             radiobuttons to create.
         """
         super(Editor, self).__init__(None)
-        # initialise initial variables
         self.site = site
         self.markdown = markdown
         self.links = links
+        self.widgets = widgets
+        self.font = font
 
-        # initialise instance variables
         self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
         self.headings, self.radios, self.texts = [], [], []
         self.buttons = self.load_button = self.save_button = self.label = None
@@ -32,44 +32,26 @@ class Editor(Tk.Frame, object):
         self.save_text.set('Save')
         self.translator = Translator()
         self.entry = self.site.root
-
-        # headings
-        self.headings = self.create_headings(self.buttonframe, widgets.headings)
-
-        # radio buttons
-        try:
-            self.radios = self.create_radios(self.buttonframe, widgets.radios)
-        except TypeError:
-            if widgets.radios == 'languages':
-                self.radios = self.create_radios(self.buttonframe, self.translator.number)
-
-        # labels
-        self.blanklabel = Tk.Label(self.buttonframe, height=1000) # enough height to push all other widgets to the top of the window.
-        self.infolabel, self.information = self.create_label(self.buttonframe)
-
-        # load and save buttons
-        commands = self.load, self.save
-        self.buttons = self.create_buttons(self.buttonframe, commands, self.save_text)
-        self.load_button, self.save_button = self.buttons
-
-        # textboxes
-        self.textboxes = self.create_textboxes(self.textframe, widgets.textboxes, self.textbox_commands, font)
-
-        # window
         self.top = self.winfo_toplevel()
-        self.menu = self.create_menu(self.top, self.menu_commands)
-        self.create_window()
-        self.top.state('zoomed')
-        self.clear_interface()
 
-        # rename for readability
-        self.heading = self.headings[0]
-        self.textbox = self.textboxes[0]
+        self.create_widgets()
         self.configure_widgets()
+        self.place_widgets()
+        self.top.state('zoomed')
+        self.go_to_heading()
 
-# TODO: abstract this method:
-            # make recursive
-    def create_menu(self, master, menus=[]):
+    def create_widgets(self):
+        self.menu = self.create_menu(self.top, self.menu_commands)
+        self.headings = self.create_headings(self.buttonframe,
+                self.widgets.headings)
+        self.radios = self.create_radios(self.buttonframe, self.widgets.radios)
+        self.labels = self.create_labels(self.buttonframe)
+        self.buttons = self.create_buttons(self.buttonframe,
+                self.button_commands, self.save_text)
+        self.textboxes = self.create_textboxes(self.textframe,
+                self.widgets.textboxes, self.textbox_commands, self.font)
+
+    def create_menu(self, master, menus=None):
         """
         Create a menu.
 
@@ -85,6 +67,8 @@ class Editor(Tk.Frame, object):
                     option is selected from the menu.
         :returns: (widget)
         """
+        if menus is None:
+            menus = []
         menubar = Tk.Menu(master)
         for menu in menus:
             submenu = Tk.Menu(menubar, tearoff=0)
@@ -132,6 +116,12 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def configure_widgets(self):
+
+        self.heading = self.headings[0]
+        self.textbox = self.textboxes[0]
+        self.infolabel, self.information, self.blanklabel = self.labels
+        self.load_button, self.save_button = self.buttons
+
         for i, heading in enumerate(self.headings):
 
             def handler(event, self=self, i=i):
@@ -196,7 +186,7 @@ class Editor(Tk.Frame, object):
         self.entry = self.site.root
         self.clear_interface()
 
-    def create_window(self):
+    def place_widgets(self):
         """
         Place all widgets in GUI window.
         Stack the textboxes on the right-hand side, taking as much room as possible.
@@ -278,43 +268,57 @@ class Editor(Tk.Frame, object):
         :param commands (function(,)): pointer to the 'load' and 'save' methods.
         :param save_variable (Tk.StringVar): the textvariable for the 'save' button.
         """
-        return [Tk.Button(master, text='Load', command=commands[0]),
-        Tk.Button(master, command=commands[1], textvariable=save_variable)]
+        load_button = Tk.Button(master, text='Load', command=commands[0])
+        save_button = Tk.Button(master, command=commands[1],
+                textvariable=save_variable)
+        return load_button, save_button
 
-    @staticmethod
-    def create_label(master):
-        textvariable = Tk.StringVar()
-        return Tk.Label(master, textvariable=textvariable), textvariable
+    def create_labels(self, master):
+        information = Tk.StringVar()
+        info_label = Tk.Label(master=master, textvariable=information)
+        # blanklabel has enough height to push all other widgets to the top
+        #   of the window.
+        blank_label = Tk.Label(master=master, height=1000)
+        return info_label, information, blank_label
 
-    @staticmethod
-    def create_radios(master, number):
+    def create_radios(self, master, number):
         radios = []
+        try:
+            number = int(number)
+        except ValueError:
+            number = self.translator.number
         for _ in range(number):
             radio = Tk.Radiobutton(master)
             radios.append(radio)
-        return radios
+        return tuple(radios)
 
     @staticmethod
     def create_textboxes(master, number, commands=None, font=None):
+        if font is None:
+            font = self.font
         if not commands:
             commands = []
-        if not font:
-            font = ('Courier New', '15')
         textboxes = []
         for _ in range(number):
-            textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD, undo=True, font=font)
+            textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
+                    undo=True, font=font)
             for (key, command) in commands:
                 textbox.bind(key, command)
             textboxes.append(textbox)
-        return textboxes
+        return tuple(textboxes)
 
     @staticmethod
     def insert_characters(textbox, before, after=''):
         """
-        Insert given text into a Text textbox, either around an insertion cursor or selected text, and move the cursor to the appropriate place.
-        :param textbox (Tkinter Text): The Text into which the given text is to be inserted.
-        :param before (str): The text to be inserted before the insertion counter, or before the selected text.
-        :param after (str): The text to be inserted after the insertion cursor, or after the selected text.
+        Insert given text into a Text textbox, either around an
+        insertion cursor or selected text, and move the cursor
+        to the appropriate place.
+        :param textbox (Tkinter Text): The Text into which the
+        given text is to be inserted.
+        :param before (str): The text to be inserted before the
+        insertion counter, or before the selected text.
+        :param after (str): The text to be inserted after the
+        insertion cursor, or after the selected text.
         """
         try:
             text = textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
@@ -326,7 +330,8 @@ class Editor(Tk.Frame, object):
 
     def insert_formatting(self, event, tag):
         """
-        Insert markdown for tags, and place insertion point between them.
+        Insert markdown for tags, and place insertion point between
+        them.
         """
         with conversion(self.markdown, 'find_formatting') as converter:
             self.insert_characters(event.widget, *converter(tag))
@@ -545,6 +550,10 @@ class Editor(Tk.Frame, object):
         except AttributeError:
             self.information.set('No Markdown Found')
         return 'break'
+
+    @property
+    def button_commands(self):
+        return self.load, self.save
 
     @property
     def textbox_commands(self):
