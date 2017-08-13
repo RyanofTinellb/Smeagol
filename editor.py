@@ -9,34 +9,29 @@ class Editor(Tk.Frame, object):
     """
     Base class for DictionaryEditor and StoryEditor
     """
-
-    def __init__(self, directories=None, datafiles=None, sites=None, markdowns=None, replacelinks=None, kind=None, widgets=WidgetAmounts(headings=3, textboxes=1, radios=2), font=('Corbel', '14')):
+    def __init__(self, site=None, markdown=None, links=None,
+        widgets=WidgetAmounts(headings=3, textboxes=1, radios='languages'),
+        font=('Corbel', '14')):
         """
         Initialise an instance of the Editor class.
-        :param kind (str): i.e.: 'grammar', 'dictionary', 'story'.
         :param directory (str):
-        :param widgets (WidgetAmounts): number of each of headings, textboxes, radiobuttons to create.
+        :param widgets (WidgetAmounts): number of each of headings, textboxes,
+            radiobuttons to create.
         """
         super(Editor, self).__init__(None)
         # initialise initial variables
-        self.directories = directories
-        self.datafiles = datafiles
-        self.sites = sites
-        self.markdowns = markdowns
-        self.replacelinks = replacelinks
-        self.kind = Tk.StringVar()
-        self.kind.set(kind)
-        self.font = font
-        with ignored(TypeError):
-            os.chdir(choose(self.kind, self.directories))
+        self.site = site
+        self.markdown = markdown
+        self.links = links
 
         # initialise instance variables
         self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
         self.headings, self.radios, self.texts = [], [], []
-        self.buttons = self.load_button = self.save_button = self.label = self.entry = None
+        self.buttons = self.load_button = self.save_button = self.label = None
         self.save_text, self.language = Tk.StringVar(), Tk.StringVar()
         self.save_text.set('Save')
         self.translator = Translator()
+        self.entry = self.site.root
 
         # headings
         self.headings = self.create_headings(self.buttonframe, widgets.headings)
@@ -58,11 +53,7 @@ class Editor(Tk.Frame, object):
         self.load_button, self.save_button = self.buttons
 
         # textboxes
-        try:
-            font = self.font
-        except AttributeError:
-            font = ('Calibri', 17)
-        self.textboxes = self.create_textboxes(self.textframe, widgets.textboxes, self.textbox_commands, self.font)
+        self.textboxes = self.create_textboxes(self.textframe, widgets.textboxes, self.textbox_commands, font)
 
         # window
         self.top = self.winfo_toplevel()
@@ -71,14 +62,8 @@ class Editor(Tk.Frame, object):
         self.top.state('zoomed')
         self.clear_interface()
 
-        # from old SiteEditor
-        self.site = choose(self.kind, self.sites)
-        self.markdown = markdowns
-        self.datafile = datafiles
-        self.entry = self.site.root
-        self.grammar_radio, self.story_radio = self.radios
+        # rename for readability
         self.heading = self.headings[0]
-        self.edit_text = self.textboxes[0]
         self.textbox = self.textboxes[0]
         self.configure_widgets()
 
@@ -122,9 +107,8 @@ class Editor(Tk.Frame, object):
                 try:
                     with open(filename) as site:
                         site = site.read().replace('\n', ' ')
-                    self.directories = eval(site.split(',')[0])
                     self.sites = eval('Site(' + site + ')')
-                    self.change_site()
+                    self.reset()
                     break
                 except (IOError, SyntaxError):
                     mb.showerror('Invalid File', 'Please select a valid *.smg file.')
@@ -136,7 +120,7 @@ class Editor(Tk.Frame, object):
         filename = fd.asksaveasfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Save Site', defaultextension='.smg')
         if filename:
             with open(filename, 'w') as site:
-                site.write(repr(choose(self.kind, self.sites)))
+                site.write(repr(self.site))
         return 'break'
 
     def enter_headings(self, event):
@@ -158,8 +142,6 @@ class Editor(Tk.Frame, object):
             heading.bind('<Up>', self.scroll_radios)
             heading.bind('<Down>', self.scroll_radios)
         self.textbox.bind('<Control-t>', self.table)
-        self.grammar_radio.configure(text='Grammar', variable=self.kind, value='grammar', command=self.change_site)
-        self.story_radio.configure(text='Story', variable=self.kind, value='story', command=self.change_site)
 
     def scroll_radios(self, event):
         if self.kind.get() == 'grammar':
@@ -207,11 +189,10 @@ class Editor(Tk.Frame, object):
         heading.insert(Tk.INSERT, self.entry.name)
         return 'break'
 
-
-    def change_site(self, event=None):
-        with ignored(TypeError):
-            os.chdir(choose(self.kind, self.directories))
-        self.site = choose(self.kind, self.sites)
+    def reset(self, event=None):
+        """
+        Reset the program.
+        """
         self.entry = self.site.root
         self.clear_interface()
 
@@ -412,8 +393,8 @@ class Editor(Tk.Frame, object):
         Find entry, manipulate entry to fit boxes, place in boxes.
         """
         self.entry = self.find_entry(map(lambda x: x.get(), self.headings))
-        markdown = choose(self.kind, self.markdowns)
-        self.display(self.prepare_entry(self.entry, markdown, self.kind.get()))
+        texts = self.prepare_entry(self.entry)
+        self.display(texts)
         return 'break'
 
     def display(self, texts):
@@ -426,7 +407,7 @@ class Editor(Tk.Frame, object):
             self.update_wordcount(widget=textbox)
         with ignored(AttributeError):
             if self.entry.content == '':
-                self.initial_content()
+                self.initial_content
 
     def find_entry(self, headings):
         """
@@ -436,7 +417,7 @@ class Editor(Tk.Frame, object):
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
         """
-        entry = site = choose(self.kind, self.sites)
+        entry = site = self.site
         with ignored(KeyError):
             for heading in headings:
                 entry = entry[heading]
@@ -447,8 +428,8 @@ class Editor(Tk.Frame, object):
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages, update json.
         """
         # prepare save
-        markdown = choose(self.kind, self.markdowns)
-        site = choose(self.kind, self.sites)
+        markdown = self.markdown
+        site = self.site
         for textbox in self.textboxes:
             textbox.edit_modified(False)
         self.save_text.set('Save')
@@ -459,7 +440,7 @@ class Editor(Tk.Frame, object):
             self.paragraphs[self.current_paragraph] = self.prepare_paragraph(self.entry, texts, self.markdown, self.translator, self.current_paragraph - 1)
             texts = self.paragraphs
         if self.entry:
-            self.prepare_texts(self.entry, site, texts, markdown, self.replacelinks, kind=self.kind.get())
+            self.prepare_texts(texts)
         self.publish(self.entry, site)
         return 'break'
 
@@ -471,41 +452,28 @@ class Editor(Tk.Frame, object):
         """
         return str(textbox.get(1.0, Tk.END + '-1c'))
 
-    @staticmethod
-    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None, uid=None, kind=None):
+    def prepare_texts(self, texts):
         """
         Modify entry with manipulated texts.
         Subroutine of self.save().
         Overrides parent method.
-        :param entry (Page): the entry in the datafile to be modified.
         :param texts (str[]): the texts to be manipulated and inserted.
-        :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
         :param return (Nothing):
         """
-        with conversion(markdown, 'to_markup') as converter:
-            text = ''.join(map(converter, texts))
-        if kind == 'grammar':
-            links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', text.replace('\n', '')).split(r'@')[:-1])
-            matriarch = entry.ancestors[1].urlform
-            for link in links:
-                url = Page(link, markdown=site.markdown).urlform
-                initial = re.sub(r'.*?(\w).*', r'\1', url)
-                with ignored(KeyError):
-                    text = text.replace('<link>' + link + '</link>',
-                    '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html#' + matriarch + '">' + link + '</a>')
-        elif kind == 'story':
-            paragraphs = text.splitlines()
-            index = entry.elders.index(entry.ancestors[1])
-            for uid, paragraph in enumerate(paragraphs[1:]):
-                if index == 4:
-                     paragraph = '&id=' + paragraphs[uid+1].replace(' | [r]', '&vlinks= | [r]')
-                elif index == 3:
-                    paragraph = '[t]&id=' + re.sub(r'(?= \| \[r\]<div class=\"literal\">)', '&vlinks=', paragraphs[uid+1][3:])
-                else:
-                    paragraph = '&id=' + paragraphs[uid+1] + '&vlinks='
-                paragraphs[uid+1] = add_version_links(paragraph, index, entry, uid)
-            text = '\n'.join(paragraphs)
-        entry.content = text
+        text = ''.join(texts)
+        if not text:
+            self.entry.delete_htmlfile()
+            self.entry.remove_from_hierarchy()
+            self.reset()
+        else:
+            with conversion(self.links, 'add_links') as converter:
+                text = converter(text, self.entry, self.site)
+            with conversion(self.markdown, 'to_markup') as converter:
+                text = converter(text)
+            text = add_datestamp(text)
+            # remove duplicate linebreaks
+            text = re.sub(r'\n\n+', '\n', text)
+            self.entry.content = text
 
     @staticmethod
     def publish(entry, site):
@@ -553,25 +521,22 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(widget=textbox)
         return 'break'
 
-    @staticmethod
-    def prepare_entry(entry, markdown=None, kind=None):
+    def prepare_entry(self, entry):
         """
-        Manipulate entry content to suit textboxes.
+        Manipulate text taken from a single Page to suit a textbox.
+
         Default method, other Editors will override this.
-        :param entry (Page): A Page instance carrying text. Other Pages relative to this entry may also be accessed.
-        :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
-        :param kind (str): i.e.: which kind of links should be removed, 'grammar', 'story'
-        :param return (str[]):
+        :param entry (Page): A Page instance carrying text.
+        :param return (str):
         :called by: Editor.load()
         """
-        if kind == 'grammar':
-            text = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>', r'<link>\1</link>', entry.content)
-        elif kind == 'story':
-            text = remove_version_links(entry.content)
-        else:
-            text = entry.content
-        with conversion(markdown, 'to_markdown') as converter:
-            return [converter(text)]
+        text = entry.content
+        with conversion(self.links, 'remove_links') as converter:
+            text = converter(text)
+        with conversion(self.markdown, 'to_markdown') as converter:
+            text = converter(text)
+        text = remove_datestamp(text)
+        return [text]
 
     def refresh_markdown(self, event=None):
         try:
@@ -604,53 +569,19 @@ class Editor(Tk.Frame, object):
         return [('Site', [('Open', self.site_open),
                         ('Save', self.site_save)])]
 
-
-def choose(kind, variables):
-    """
-    Return appropriate variable from a dictionary, or returns the variable itself if its not a dictionary.
-    :param kind (Tk.StringVar): which variable to return.
-    :param variables (Object{str, various}): a dictionary of {kind, variable} pairs.
-    :param variables (Object): a single variable.
-    """
-    try:
-        return variables[kind.get()]
-    except (TypeError, AttributeError, ValueError, KeyError):
-        return variables
-
-def remove_version_links(text):
-    """
-    Remove the version link information from a paragraph.
-    :precondition: text is in Smeagol markdown
-    :param text (str): the paragraph to be cleaned.
-    :return (str):
-    """
-    return re.sub(r'<span class="version.*?</span>', '', text)
-
-def add_version_links(paragraph, index, entry, uid):
-    """
-    Adds version link information to a paragraph and its cousins
-    :param paragraph (str[]):
-    :param index (int):
-    :param entry (Page):
-    :return (nothing):
-    """
-    links = ''
-    anchor = '<span class="version-anchor" id="{0}"></span>'.format(str(uid))
-    categories = [node.name for node in entry.elders]
-    cousins = entry.cousins
-    for i, (cousin, category) in enumerate(zip(cousins, categories)):
-        if index != i:
-            links += cousins[index].hyperlink(cousin, category, fragment='#'+str(uid)) + '&nbsp;'
-    links = '<span class="version-links">{0}</span>'.format(links)
-    return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
-
+    @property
+    def initial_content(self):
+        """
+        Return the content to be placed in a textbox if the page is new
+        """
+        level = str(self.entry.level)
+        name = self.entry.name
+        return '{0}]{1}\n'.format(level, name)
 
 if __name__ == '__main__':
-    app = Editor(directories={'grammar': 'c:/users/ryan/documents/tinellbianlanguages/grammar',
-                                'story': 'c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet'},
-                        datafiles='data.txt',
-                        sites={'grammar': Grammar(), 'story': Story()},
-                        markdowns=Markdown('c:/users/ryan/documents/tinellbianlanguages/grammarstoryreplacements.mkd'),
-                        kind='grammar')
+    markdown = Markdown('c:/users/ryan/documents/tinellbianlanguages/'
+                                        'grammarstoryreplacements.mkd')
+    links = AddRemoveLinks([ExternalDictionary()])
+    app = Editor(site=Grammar(), markdown=markdown, links=links)
     app.master.title('Page Editor')
     app.mainloop()

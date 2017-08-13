@@ -1,8 +1,9 @@
 import re
-import datetime
+from datetime import datetime
 from collections import OrderedDict as Odict
 from random import randint
 from contextlib import contextmanager
+from urllib import quote
 
 
 @contextmanager
@@ -179,6 +180,21 @@ class RandomWords():
         else:
             return syllable
 
+def urlform(text, markdown=None):
+    name = text.lower()
+    safe_punctuation = '\'.$_+!()'
+    # remove safe punctuations that should only be used to encode non-ascii characters
+    name = re.sub(r'[{0}]'.format(safe_punctuation), '', name)
+    with conversion(markdown, 'to_markdown') as converter:
+        name = converter(name)
+    # remove extraneous initial apostrophes
+    name = re.sub(r"^''+", "'", name)
+    # remove text within tags
+    name = re.sub(r'<(div|ipa).*?\1>', '', name)
+    # remove tags, spaces and punctuation
+    name = re.sub(r'<.*?>|[/*;: ]', '', name)
+    name = quote(name, safe_punctuation)
+    return name
 
 class Markdown:
     def __init__(self, filename):
@@ -197,14 +213,12 @@ class Markdown:
                 self.markup.append(line[0])
                 self.markdown.append(line[1])
 
-    def to_markup(self, text, datestamp=True):
+    def to_markup(self, text):
         self.source, self.destination = self.markdown[::-1], self.markup[::-1]
-        text += datetime.datetime.strftime(datetime.datetime.today(), '&date=%Y%m%d') if datestamp else ''
         return self.convert(text)
 
-    def to_markdown(self, text, datestamp=False):
+    def to_markdown(self, text):
         self.source, self.destination = self.markup, self.markdown
-        text = re.sub(r'&date=\d{8}', '', text) if not datestamp else text
         return self.convert(text)
 
     def convert(self, text):
@@ -244,9 +258,111 @@ class Markdown:
                 self.markup.append(line[0])
                 self.markdown.append(line[1])
 
-class d2gReplace():
+def add_datestamp(text):
+    text += datetime.strftime(datetime.today(), '&date=%Y%m%d')
+    return text
+
+def remove_datestamp(text):
+    return re.sub(r'&date=\d{8}', '', text)
+
+def replace_datestamp(text):
+    return add_datestamp(remove_datestamp(text))
+
+class AddRemoveLinks:
+    def __init__(self, link_adders):
+        self.link_adders = link_adders
+
+    def add_links(self, text, entry, site):
+        for link_adder in self.link_adders:
+            text = link_adder.add_links(text, entry, site)
+        return text
+
+    def remove_links(self, text):
+        # external links to the dictionary - leaves as links
+        text = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>', r'<link>\1</link>', text)
+        # version links - removes entire span
+        text = re.sub(r'<span class="version.*?</span>', '', text)
+        # internal links
+        text = re.sub(r'<a href=\"(?!http).*?\">(.*?)</a>', r'<link>\1</link>', text)
+        # protect phonology links from subsequent line
+        text = re.sub(r'<a( href=\"http://grammar.*?phonology.*?</a>)', r'<b\1', text)
+        # external links to the grammar guide, except phonology
+        text = re.sub(r'<a href=\"http://grammar.*?\">(.*?)</a>', r'\1', text)
+        # un-protect phonology
+        text = re.sub(r'<b( href=\"http://grammar.*?phonology.*?</a>)', r'<a\1', text)
+        return text
+
+class ExternalDictionary:
+    def add_links(self, text, entry, site):
+        """
+        Replaces text of the form <link>Blah</link> with a hyperlink to the
+            dictionary entry 'Blah' on the Tinellbian languages dictionary site.
+        """
+        links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', text.replace('\n', '')).split(r'@')[:-1])
+        language = entry.ancestors[1].urlform
+        for link in links:
+            url = Page(link, markdown=site.markdown).urlform
+            initial = re.sub(r'.*?(\w).*', r'\1', url)
+            with ignored(KeyError):
+                text = text.replace('<link>' + link + '</link>',
+                '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html#' + language + '">' + link + '</a>')
+        return text
+
+class InternalStory:
+    def add_links(self, text, entry, site):
+        """
+        Add version links to the each paragraph of the text
+
+        :param entry: (Page)
+        :param text: (str)
+        :return: (str)
+        """
+        paragraphs = text.splitlines()
+        version = entry.elders.version(entry.ancestors[1])
+        for uid, paragraph in enumerate(paragraphs[1:]):
+            if version == 4:
+                 paragraph = '&id=' + paragraphs[uid+1].replace(' | [r]', '&vlinks= | [r]')
+            elif version == 3:
+                paragraph = '[t]&id=' + re.sub(r'(?= \| \[r\]<div class=\"literal\">)', '&vlinks=', paragraphs[uid+1][3:])
+            else:
+                paragraph = '&id=' + paragraphs[uid+1] + '&vlinks='
+            paragraphs[uid+1] = _version_links(paragraph, version, entry, uid)
+        return '\n'.join(paragraphs)
+
+    def _version_links(paragraph, index, entry, uid):
+        """
+        Adds version link information to a paragraph and its cousins
+
+        :param paragraph (str[]):
+        :param index (int):
+        :param entry (Page):
+        :return (nothing):
+        """
+        links = ''
+        anchor = '<span class="version-anchor" id="{0}"></span>'.format(str(uid))
+        categories = [node.name for node in entry.elders]
+        cousins = entry.cousins
+        for i, (cousin, category) in enumerate(zip(cousins, categories)):
+            if index != i:
+                links += cousins[index].hyperlink(cousin, category, fragment='#'+str(uid)) + '&nbsp;'
+        links = '<span class="version-links">{0}</span>'.format(links)
+        return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
+
+class InternalDictionary:
     """
-    Replace given words in parts of speech with URLs.
+    Replace particular words in parts of speech with links to grammar.tinellb.com
+    """
+    def add_links(self, text, entry, site):
+        links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1>', text.replace('\n', '')).split(r'>')[:-1])
+        for link in links:
+            with ignored(KeyError):
+                lower_link = re.sub(r'^&#x294;', r'&rsquo;', link).lower()
+                text = text.replace('<link>' + link + '</link>', entry.hyperlink(site[lower_link], link))
+        return text
+
+class ExternalGrammar:
+    """
+    Replace given words in parts of speech with external URLs.
     :param filename (str): filename to get replacements from.
     """
     def __init__(self, filename):
@@ -254,17 +370,20 @@ class d2gReplace():
         with open(filename) as replacements:
             replacements = replacements.read()
         for line in replacements.splitlines():
-            if line.startswith('#'):
+            if line.startswith('&'):
+                site = line[1:]
+            elif line.startswith('#'):
                 language = line[1:]
+                site += urlform(language)
             else:
                 word, url = line.split()
                 self.languages.append(language)
                 self.words.append(word)
-                self.urls.append('http://grammar.tinellb.com/' + url)
+                self.urls.append(site + url)
 
-    def replace(self, text):
+    def add_links(self, text, entry, site):
         """
-        Replaces appropriate words with links in text.
+        Add links to text, from
         :precondition: text is a dictionary entry in Smeagol markdown.
         """
         current_language = ''

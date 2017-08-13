@@ -9,16 +9,9 @@ Flatname = namedtuple('Flatname', ['name', 'score'])
 class Site:
     """
     A hierarchy of Pages
-    """
-    def __setattr__(self, name, value):
-        if name in ('template', 'main_template'):
-            with open(value) as template:
-                self.__dict__[name] = template.read()
-        elif name == 'markdown':
-            self.__dict__[name] = Markdown(value)
-        else:
-            self.__dict__[name] = value
 
+    Includes an override method for __setattr__()
+    """
     def __init__(self, destination, name, source, template, main_template, markdown, searchjson, leaf_level):
         """
         :param destination (str): the full path where the Site is to be located
@@ -66,6 +59,15 @@ class Site:
                 node = node.parent
             node = self.add_node(name, node, page, previous)
             self.length += 1
+
+    def __setattr__(self, name, value):
+        if name in ('template', 'main_template'):
+            with open(value) as template:
+                self.__dict__[name] = template.read()
+        elif name == 'markdown':
+            self.__dict__[name] = Markdown(value)
+        else:
+            self.__dict__[name] = value
 
     def __repr__(self):
         details = ''
@@ -296,17 +298,7 @@ class Page:
         Put the name in lower case, and remove tags
         Allowed punctuation: -'.$_+!()
         """
-        name = self.name.lower()
-        # remove safe punctuations that should only be used to encode non-ascii characters
-        name = re.sub(r'[\'.$_+!()]', '', name)
-        name = self.markdown.to_markdown(name)
-        # remove extraneous initial apostrophes
-        name = re.sub(r"^''+", "'", name)
-        # remove text within tags
-        name = re.sub(r'<(div|ipa).*?\1>', '', name)
-        # remove tags, spaces and punctuation
-        name = re.sub(r'<.*?>|[/*;: ]', '', name)
-        return name
+        return urlform(self.name)
 
     def __str__(self):
         return '[' + self.content
@@ -860,11 +852,11 @@ class Page:
     @cached_property
     def copyright(self):
         try:
-            date = datetime.datetime.strptime(max(re.findall(r'(?<=&date=)\d{8}', self.content)), '%Y%m%d')
+            date = datetime.strptime(max(re.findall(r'(?<=&date=)\d{8}', self.content)), '%Y%m%d')
         except ValueError:
             return ''
         suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else ["st", "nd", "rd"][date.day % 10 - 1]
-        output = datetime.datetime.strftime(date, '&copy;%Y&nbsp;Ryan&nbsp;Eakins. Last&nbsp;updated:&nbsp;%A,&nbsp;%B&nbsp;%#d' + suffix + ',&nbsp;%Y.')
+        output = datetime.strftime(date, '&copy;%Y&nbsp;Ryan&nbsp;Eakins. Last&nbsp;updated:&nbsp;%A,&nbsp;%B&nbsp;%#d' + suffix + ',&nbsp;%Y.')
         return output
 
     def publish(self, template):
