@@ -1,4 +1,4 @@
-from smeagol import *
+from smeagol import Site
 import Tkinter as Tk
 import tkFileDialog as fd
 import tkMessageBox as mb
@@ -84,37 +84,70 @@ class Editor(Tk.Frame, object):
                 submenu.bind('<KeyPress-{0}>'.format(label[underline]), command)
         return menubar
 
-    def site_open(self, event=None):
-        while True:
-            filename = fd.askopenfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Open Site')
-            if filename:
-                try:
-                    with open(filename) as site:
-                        site = site.read().replace('\n', ' ')
-                    self.sites = eval('Site(' + site + ')')
-                    self.reset()
-                    break
-                except (IOError, SyntaxError):
-                    mb.showerror('Invalid File', 'Please select a valid *.smg file.')
-            else:
-                break
-        return 'break'
+    @staticmethod
+    def create_headings(master, number, commands=None):
+        if not commands:
+            commands = []
+            headings = []
+            for _ in range(number):
+                heading = Tk.Entry(master)
+                for (key, command) in commands:
+                    heading.bind(key, command)
+                    headings.append(heading)
+                    return headings
 
-    def site_save(self, event=None):
-        filename = fd.asksaveasfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Save Site', defaultextension='.smg')
-        if filename:
-            with open(filename, 'w') as site:
-                site.write(repr(self.site))
-        return 'break'
+    @staticmethod
+    def create_buttons(master, commands, save_variable):
+        """
+        Create a Load and a Save button.
+        :param master (widget): which widget window to place the buttons in.
+        :param commands (function(,)): pointer to the 'load' and 'save' methods.
+        :param save_variable (Tk.StringVar): the textvariable for the 'save' button.
+        """
+        load_button = Tk.Button(master, text='Load', command=commands[0])
+        save_button = Tk.Button(master, command=commands[1],
+        textvariable=save_variable)
+        return load_button, save_button
 
+    def create_labels(self, master):
+            information = Tk.StringVar()
+            info_label = Tk.Label(master=master, textvariable=information)
+            # blanklabel has enough height to push all other widgets to the top
+            #   of the window.
+            blank_label = Tk.Label(master=master, height=1000)
+            return info_label, information, blank_label
+
+    def create_radios(self, master, number):
+        radios = []
+        try:
+            number = int(number)
+        except ValueError:
+            number = self.translator.number
+        for _ in range(number):
+            radio = Tk.Radiobutton(master)
+            radios.append(radio)
+            return tuple(radios)
+
+    @staticmethod
+    def create_textboxes(master, number, commands=None, font=None):
+        if font is None:
+            font = self.font
+        if not commands:
+            commands = []
+            textboxes = []
+        for _ in range(number):
+            textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
+                    undo=True, font=font)
+            for (key, command) in commands:
+                textbox.bind(key, command)
+                textboxes.append(textbox)
+        return tuple(textboxes)
 
     def configure_widgets(self):
-
         self.heading = self.headings[0]
         self.textbox = self.textboxes[0]
         self.infolabel, self.information, self.blanklabel = self.labels
         self.load_button, self.save_button = self.buttons
-
         for i, heading in enumerate(self.headings):
 
             def handler(event, self=self, i=i):
@@ -125,15 +158,37 @@ class Editor(Tk.Frame, object):
             heading.bind('<Up>', self.scroll_radios)
             heading.bind('<Down>', self.scroll_radios)
 
-    def scroll_radios(self, event):
-        if self.kind.get() == 'grammar':
-            self.story_radio.select()
-        else:
-            self.grammar_radio.select()
-        self.change_site()
+    def configure_radios(self):
+        for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
+            radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
+        self.language.set(self.translator.languages.keys()[0])
+        self.translator = Translator(self.language.get())
 
+    def place_widgets(self):
         """
+        Place all widgets in GUI window.
+        Stack the textboxes on the right-hand side, taking as much room as possible.
+        Stack the heading boxes, the buttons, radiobuttons and a label in the top-left corner.
         """
+        self.top['menu'] = self.menu
+        self.pack(expand=True, fill=Tk.BOTH)
+        self.buttonframe.pack(side=Tk.LEFT)
+        self.textframe.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
+        row = 0
+        for heading in self.headings:
+            heading.grid(row=row, column=0, columnspan=2, sticky=Tk.N)
+            row += 1
+        for i, button in enumerate(self.buttons):
+            button.grid(row=row, column=i)
+        row += 1
+        for radio in self.radios:
+            radio.grid(row=row, column=0, columnspan=2)
+            row += 1
+        for textbox in self.textboxes:
+            textbox.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
+            row += 1
+        self.infolabel.grid(row=row, column=0, columnspan=2)
+        self.blanklabel.grid(row=row+1, column=0, columnspan=2)
 
     def scroll_headings(self, event, level):
         """
@@ -166,7 +221,6 @@ class Editor(Tk.Frame, object):
         heading.insert(Tk.INSERT, self.entry.name)
         return 'break'
 
-
     def enter_headings(self, event):
         """
         Go to the next heading, or load the entry
@@ -176,65 +230,6 @@ class Editor(Tk.Frame, object):
             self.headings[level + 1].focus_set()
         except IndexError:
             self.load()
-        return 'break'
-
-    def reset(self, event=None):
-        """
-        Reset the program.
-        """
-        self.entry = self.site.root
-        self.clear_interface()
-
-    def place_widgets(self):
-        """
-        Place all widgets in GUI window.
-        Stack the textboxes on the right-hand side, taking as much room as possible.
-        Stack the heading boxes, the buttons, radiobuttons and a label in the top-left corner.
-        """
-        self.top['menu'] = self.menu
-        self.pack(expand=True, fill=Tk.BOTH)
-        self.buttonframe.pack(side=Tk.LEFT)
-        self.textframe.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
-        row = 0
-        for heading in self.headings:
-            heading.grid(row=row, column=0, columnspan=2, sticky=Tk.N)
-            row += 1
-        for i, button in enumerate(self.buttons):
-            button.grid(row=row, column=i)
-        row += 1
-        for radio in self.radios:
-            radio.grid(row=row, column=0, columnspan=2)
-            row += 1
-        for textbox in self.textboxes:
-            textbox.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
-            row += 1
-        self.infolabel.grid(row=row, column=0, columnspan=2)
-        self.blanklabel.grid(row=row+1, column=0, columnspan=2)
-
-    def clear_interface(self):
-        for heading in self.headings:
-            heading.delete(0, Tk.END)
-        for textbox in self.textboxes:
-            textbox.delete(1.0, Tk.END)
-        self.information.set('')
-        self.go_to_heading()
-
-    def configure_language_radios(self):
-        for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
-            radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
-        self.language.set(self.translator.languages.keys()[0])
-        self.translator = Translator(self.language.get())
-
-    def change_language(self, event=None):
-        """
-        Change the entry language to whatever is in the StringVar 'self.language'
-        """
-        self.translator = Translator(self.language.get())
-        return 'break'
-
-    @staticmethod
-    def select_all(event):
-        event.widget.tag_add('sel', '1.0', 'end')
         return 'break'
 
     def go_to_heading(self, event=None):
@@ -247,149 +242,73 @@ class Editor(Tk.Frame, object):
             heading.select_range(0, Tk.END)
         return 'break'
 
-    @staticmethod
-    def create_headings(master, number, commands=None):
-        if not commands:
-            commands = []
-        headings = []
-        for _ in range(number):
-            heading = Tk.Entry(master)
-            for (key, command) in commands:
-                heading.bind(key, command)
-            headings.append(heading)
-        return headings
-
-    @staticmethod
-    def create_buttons(master, commands, save_variable):
-        """
-        Create a Load and a Save button.
-        :param master (widget): which widget window to place the buttons in.
-        :param commands (function(,)): pointer to the 'load' and 'save' methods.
-        :param save_variable (Tk.StringVar): the textvariable for the 'save' button.
-        """
-        load_button = Tk.Button(master, text='Load', command=commands[0])
-        save_button = Tk.Button(master, command=commands[1],
-                textvariable=save_variable)
-        return load_button, save_button
-
-    def create_labels(self, master):
-        information = Tk.StringVar()
-        info_label = Tk.Label(master=master, textvariable=information)
-        # blanklabel has enough height to push all other widgets to the top
-        #   of the window.
-        blank_label = Tk.Label(master=master, height=1000)
-        return info_label, information, blank_label
-
-    def create_radios(self, master, number):
-        radios = []
-        try:
-            number = int(number)
-        except ValueError:
-            number = self.translator.number
-        for _ in range(number):
-            radio = Tk.Radiobutton(master)
-            radios.append(radio)
-        return tuple(radios)
-
-    @staticmethod
-    def create_textboxes(master, number, commands=None, font=None):
-        if font is None:
-            font = self.font
-        if not commands:
-            commands = []
-        textboxes = []
-        for _ in range(number):
-            textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
-                    undo=True, font=font)
-            for (key, command) in commands:
-                textbox.bind(key, command)
-            textboxes.append(textbox)
-        return tuple(textboxes)
-
-    @staticmethod
-    def insert_characters(textbox, before, after=''):
-        """
-        Insert given text into a Text textbox, either around an
-        insertion cursor or selected text, and move the cursor
-        to the appropriate place.
-        :param textbox (Tkinter Text): The Text into which the
-        given text is to be inserted.
-        :param before (str): The text to be inserted before the
-        insertion counter, or before the selected text.
-        :param after (str): The text to be inserted after the
-        insertion cursor, or after the selected text.
-        """
-        try:
-            text = textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
-            textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
-            textbox.insert(Tk.INSERT, before + text + after)
-        except Tk.TclError:
-            textbox.insert(Tk.INSERT, before + after)
-            textbox.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(after)))
-
-    def insert_formatting(self, event, tag):
-        """
-        Insert markdown for tags, and place insertion point between
-        them.
-        """
-        with conversion(self.markdown, 'find_formatting') as converter:
-            self.insert_characters(event.widget, *converter(tag))
-
-    def bold(self, event):
-        """
-        Insert markdown for bold tags, and place insertion point between them.
-        """
-        self.insert_formatting(event, 'strong')
-        return 'break'
-
-    def italic(self, event):
-        """
-        Insert markdown for italic tags, and place insertion point between them.
-        """
-        self.insert_formatting(event, 'em')
-        return 'break'
-
-    def small_caps(self, event):
-        """
-        Insert markdown for small-caps tags, and place insertion point between them.
-        """
-        self.insert_formatting(event, 'small-caps')
-        return 'break'
-
-    def add_link(self, event):
-        self.insert_formatting(event, 'link')
-        return 'break'
-
-    def insert_pipe(self, event):
-        self.insert_characters(event.widget, ' | ')
-        return 'break'
-
-    def delete_word(self, event):
-        widget = event.widget
-        get = widget.get
-        delete = widget.delete
-        if get(Tk.INSERT + '-1c') in ' .,;:?!\n' or widget.compare(Tk.INSERT, '==', '1.0'):
-            delete(Tk.INSERT, Tk.INSERT + ' wordend +1c')
-        elif get(Tk.INSERT) == ' ':
-            delete(Tk.INSERT, Tk.INSERT + '+1c wordend')
-        elif get(Tk.INSERT) in '.,;:?!':
-            delete(Tk.INSERT, Tk.INSERT + '+1c')
+    def scroll_radios(self, event):
+        if self.kind.get() == 'grammar':
+            self.story_radio.select()
         else:
-            delete(Tk.INSERT, Tk.INSERT + ' wordend')
-        self.update_wordcount(event)
+            self.grammar_radio.select()
+        self.change_site()
+
+    def change_language(self, event=None):
+        """
+        Change the entry language to whatever is in the StringVar 'self.language'
+        """
+        self.translator = Translator(self.language.get())
         return 'break'
 
-    def backspace_word(self, event):
-        widget = event.widget
-        get = widget.get
-        delete = widget.delete
-        if get(Tk.INSERT + '-1c') in '.,;:?! ':
-            delete(Tk.INSERT + '-2c wordstart', Tk.INSERT)
-        elif get(Tk.INSERT) in ' ':
-            delete(Tk.INSERT + '-1c wordstart -1c', Tk.INSERT)
-        else:
-            delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
-        self.update_wordcount(event)
+    def previous_window(self, event):
+        textbox = self.textboxes[(self.textboxes.index(event.widget) - 1)]
+        textbox.focus_set()
+        self.update_wordcount(widget=textbox)
+        return 'break'
+
+    def next_window(self, event):
+        try:
+            textbox = self.textboxes[(self.textboxes.index(event.widget) + 1)]
+        except IndexError:
+            textbox = self.textboxes[0]
+        textbox.focus_set()
+        self.update_wordcount(widget=textbox)
+        return 'break'
+
+    def site_open(self, event=None):
+        while True:
+            filename = fd.askopenfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Open Site')
+            if filename:
+                try:
+                    with open(filename) as site:
+                        site = site.read().replace('\n', ' ')
+                    self.sites = eval('Site(' + site + ')')
+                    self.reset()
+                    break
+                except (IOError, SyntaxError):
+                    mb.showerror('Invalid File', 'Please select a valid *.smg file.')
+            else:
+                break
+        return 'break'
+
+    def reset(self, event=None):
+        """
+        Reset the program.
+        """
+        self.entry = self.site.root
+        self.clear_interface()
+
+    def clear_interface(self):
+        for heading in self.headings:
+            heading.delete(0, Tk.END)
+        for textbox in self.textboxes:
+            textbox.delete(1.0, Tk.END)
+        self.information.set('')
+        self.go_to_heading()
+
+    def site_save(self, event=None):
+        filename = fd.asksaveasfilename(
+                filetypes=[('Sm\xe9agol File', '*.smg')],
+                title='Save Site', defaultextension='.smg')
+        if filename:
+            with open(filename, 'w') as site:
+                site.write(repr(self.site))
         return 'break'
 
     def load(self, event=None):
@@ -400,18 +319,6 @@ class Editor(Tk.Frame, object):
         texts = self.prepare_entry(self.entry)
         self.display(texts)
         return 'break'
-
-    def display(self, texts):
-        for text, textbox in zip(texts, self.textboxes):
-            textbox.delete(1.0, Tk.END)
-            textbox.insert(1.0, text)
-            textbox.edit_modified(False)
-        else:   # set focus on final textbox
-            textbox.focus_set()
-            self.update_wordcount(widget=textbox)
-        with ignored(AttributeError):
-            if self.entry.content == '':
-                self.initial_content
 
     def find_entry(self, headings):
         """
@@ -427,19 +334,45 @@ class Editor(Tk.Frame, object):
                 entry = entry[heading]
         return entry if entry is not site else (site.root if site else None)
 
+    def prepare_entry(self, entry):
+        """
+        Manipulate text taken from a single Page to suit a textbox.
+
+        Default method, other Editors will override this.
+        :param entry (Page): A Page instance carrying text.
+        :param return (str):
+        :called by: Editor.load()
+        """
+        text = entry.content
+        with conversion(self.links, 'remove_links') as converter:
+            text = converter(text)
+        with conversion(self.markdown, 'to_markdown') as converter:
+            text = converter(text)
+        text = remove_datestamp(text)
+        return [text]
+
+    def display(self, texts):
+        for text, textbox in zip(texts, self.textboxes):
+            textbox.delete(1.0, Tk.END)
+            textbox.insert(1.0, text)
+            textbox.edit_modified(False)
+        else:   # set focus on final textbox
+            textbox.focus_set()
+            self.update_wordcount(widget=textbox)
+        with ignored(AttributeError):
+            if self.entry.content == '':
+                self.initial_content
+
     def save(self, event=None):
         """
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages, update json.
         """
-        # prepare save
         markdown = self.markdown
         site = self.site
         for textbox in self.textboxes:
             textbox.edit_modified(False)
         self.save_text.set('Save')
-
         texts = map(self.get_text, self.textboxes)
-
         with ignored(AttributeError):
             self.paragraphs[self.current_paragraph] = self.prepare_paragraph(self.entry, texts, self.markdown, self.translator, self.current_paragraph - 1)
             texts = self.paragraphs
@@ -508,39 +441,98 @@ class Editor(Tk.Frame, object):
         if event is not None:
             widget = event.widget
         text = widget.get(1.0, Tk.END)
-        self.information.set(str(text.count(' ') + text.count('\n') - text.count('|')))
+        self.information.set(str(text.count(' ') + text.count('\n') - text.count(' | ')))
 
-    def next_window(self, event):
+    @staticmethod
+    def select_all(event):
+        event.widget.tag_add('sel', '1.0', 'end')
+        return 'break'
+
+    @staticmethod
+    def insert_characters(textbox, before, after=''):
+        """
+        Insert given text into a Text textbox, either around an
+        insertion cursor or selected text, and move the cursor
+        to the appropriate place.
+        :param textbox (Tkinter Text): The Text into which the
+        given text is to be inserted.
+        :param before (str): The text to be inserted before the
+        insertion counter, or before the selected text.
+        :param after (str): The text to be inserted after the
+        insertion cursor, or after the selected text.
+        """
         try:
-            textbox = self.textboxes[(self.textboxes.index(event.widget) + 1)]
-        except IndexError:
-            textbox = self.textboxes[0]
-        textbox.focus_set()
-        self.update_wordcount(widget=textbox)
+            text = textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
+            textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
+            textbox.insert(Tk.INSERT, before + text + after)
+        except Tk.TclError:
+            textbox.insert(Tk.INSERT, before + after)
+            textbox.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(after)))
+
+    def insert_formatting(self, event, tag):
+        """
+        Insert markdown for tags, and place insertion point between
+        them.
+        """
+        with conversion(self.markdown, 'find_formatting') as converter:
+            self.insert_characters(event.widget, *converter(tag))
+
+    def bold(self, event):
+        """
+        Insert markdown for bold tags, and place insertion point between them.
+        """
+        self.insert_formatting(event, 'strong')
         return 'break'
 
-    def previous_window(self, event):
-        textbox = self.textboxes[(self.textboxes.index(event.widget) - 1)]
-        textbox.focus_set()
-        self.update_wordcount(widget=textbox)
+    def italic(self, event):
+        """
+        Insert markdown for italic tags, and place insertion point between them.
+        """
+        self.insert_formatting(event, 'em')
         return 'break'
 
-    def prepare_entry(self, entry):
+    def small_caps(self, event):
         """
-        Manipulate text taken from a single Page to suit a textbox.
+        Insert markdown for small-caps tags, and place insertion point between them.
+        """
+        self.insert_formatting(event, 'small-caps')
+        return 'break'
 
-        Default method, other Editors will override this.
-        :param entry (Page): A Page instance carrying text.
-        :param return (str):
-        :called by: Editor.load()
-        """
-        text = entry.content
-        with conversion(self.links, 'remove_links') as converter:
-            text = converter(text)
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
-        text = remove_datestamp(text)
-        return [text]
+    def add_link(self, event):
+        self.insert_formatting(event, 'link')
+        return 'break'
+
+    def insert_pipe(self, event):
+        self.insert_characters(event.widget, ' | ')
+        return 'break'
+
+    def backspace_word(self, event):
+        widget = event.widget
+        get = widget.get
+        delete = widget.delete
+        if get(Tk.INSERT + '-1c') in '.,;:?! ':
+            delete(Tk.INSERT + '-2c wordstart', Tk.INSERT)
+        elif get(Tk.INSERT) in ' ':
+            delete(Tk.INSERT + '-1c wordstart -1c', Tk.INSERT)
+        else:
+            delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
+        self.update_wordcount(event)
+        return 'break'
+
+    def delete_word(self, event):
+        widget = event.widget
+        get = widget.get
+        delete = widget.delete
+        if get(Tk.INSERT + '-1c') in ' .,;:?!\n' or widget.compare(Tk.INSERT, '==', '1.0'):
+            delete(Tk.INSERT, Tk.INSERT + ' wordend +1c')
+        elif get(Tk.INSERT) == ' ':
+            delete(Tk.INSERT, Tk.INSERT + '+1c wordend')
+        elif get(Tk.INSERT) in '.,;:?!':
+            delete(Tk.INSERT, Tk.INSERT + '+1c')
+        else:
+            delete(Tk.INSERT, Tk.INSERT + ' wordend')
+        self.update_wordcount(event)
+        return 'break'
 
     def refresh_markdown(self, event=None):
         try:
@@ -549,6 +541,11 @@ class Editor(Tk.Frame, object):
         except AttributeError:
             self.information.set('No Markdown Found')
         return 'break'
+
+    @property
+    def menu_commands(self):
+        return [('Site', [('Open', self.site_open),
+                        ('Save', self.site_save)])]
 
     @property
     def button_commands(self):
@@ -571,11 +568,6 @@ class Editor(Tk.Frame, object):
         ('<Tab>', self.next_window),
         ('<Shift-Tab>', self.previous_window),
         ('<KeyPress-|>', self.insert_pipe)]
-
-    @property
-    def menu_commands(self):
-        return [('Site', [('Open', self.site_open),
-                        ('Save', self.site_save)])]
 
     @property
     def initial_content(self):
