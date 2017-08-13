@@ -1,4 +1,4 @@
-from smeagol import Site
+from smeagol import *
 import Tkinter as Tk
 import tkFileDialog as fd
 import tkMessageBox as mb
@@ -88,13 +88,13 @@ class Editor(Tk.Frame, object):
     def create_headings(master, number, commands=None):
         if not commands:
             commands = []
-            headings = []
-            for _ in range(number):
-                heading = Tk.Entry(master)
-                for (key, command) in commands:
-                    heading.bind(key, command)
-                    headings.append(heading)
-                    return headings
+        headings = []
+        for _ in range(number):
+            heading = Tk.Entry(master)
+            for (key, command) in commands:
+                heading.bind(key, command)
+            headings.append(heading)
+        return headings
 
     @staticmethod
     def create_buttons(master, commands, save_variable):
@@ -110,12 +110,12 @@ class Editor(Tk.Frame, object):
         return load_button, save_button
 
     def create_labels(self, master):
-            information = Tk.StringVar()
-            info_label = Tk.Label(master=master, textvariable=information)
-            # blanklabel has enough height to push all other widgets to the top
-            #   of the window.
-            blank_label = Tk.Label(master=master, height=1000)
-            return info_label, information, blank_label
+        information = Tk.StringVar()
+        info_label = Tk.Label(master=master, textvariable=information)
+        # blanklabel has enough height to push all other widgets to the top
+        #   of the window.
+        blank_label = Tk.Label(master=master, height=1000)
+        return info_label, information, blank_label
 
     def create_radios(self, master, number):
         radios = []
@@ -126,7 +126,7 @@ class Editor(Tk.Frame, object):
         for _ in range(number):
             radio = Tk.Radiobutton(master)
             radios.append(radio)
-            return tuple(radios)
+        return tuple(radios)
 
     @staticmethod
     def create_textboxes(master, number, commands=None, font=None):
@@ -134,7 +134,7 @@ class Editor(Tk.Frame, object):
             font = self.font
         if not commands:
             commands = []
-            textboxes = []
+        textboxes = []
         for _ in range(number):
             textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
                     undo=True, font=font)
@@ -148,6 +148,10 @@ class Editor(Tk.Frame, object):
         self.textbox = self.textboxes[0]
         self.infolabel, self.information, self.blanklabel = self.labels
         self.load_button, self.save_button = self.buttons
+        self.configure_headings()
+        self.configure_radios()
+
+    def configure_headings(self):
         for i, heading in enumerate(self.headings):
 
             def handler(event, self=self, i=i):
@@ -159,8 +163,10 @@ class Editor(Tk.Frame, object):
             heading.bind('<Down>', self.scroll_radios)
 
     def configure_radios(self):
-        for radio, (code, language) in zip(self.radios, self.translator.languages.items()):
-            radio.configure(text=language().name, variable=self.language, value=code, command=self.change_language)
+        settings = zip(self.radios, self.translator.languages.items())
+        for radio, (code, language) in settings:
+            radio.configure(text=language().name, variable=self.language,
+                    value=code, command=self.change_language)
         self.language.set(self.translator.languages.keys()[0])
         self.translator = Translator(self.language.get())
 
