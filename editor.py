@@ -107,13 +107,6 @@ class Editor(Tk.Frame, object):
                 site.write(repr(self.site))
         return 'break'
 
-    def enter_headings(self, event):
-        level = self.headings.index(event.widget)
-        if level <= 1:
-            self.headings[level + 1].focus_set()
-        else:
-            self.load()
-        return 'break'
 
     def configure_widgets(self):
 
@@ -177,6 +170,18 @@ class Editor(Tk.Frame, object):
         for k in range(level - 1, 3):
             self.headings[k].delete(0, Tk.END)
         heading.insert(Tk.INSERT, self.entry.name)
+        return 'break'
+
+
+    def enter_headings(self, event):
+        """
+        Go to the next heading, or load the entry
+        """
+        level = self.headings.index(event.widget)
+        try:
+            self.headings[level + 1].focus_set()
+        except IndexError:
+            self.load()
         return 'break'
 
     def reset(self, event=None):
