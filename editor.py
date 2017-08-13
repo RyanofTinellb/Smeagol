@@ -124,7 +124,6 @@ class Editor(Tk.Frame, object):
             heading.bind('<Return>', self.enter_headings)
             heading.bind('<Up>', self.scroll_radios)
             heading.bind('<Down>', self.scroll_radios)
-        self.textbox.bind('<Control-t>', self.table)
 
     def scroll_radios(self, event):
         if self.kind.get() == 'grammar':
@@ -133,13 +132,8 @@ class Editor(Tk.Frame, object):
             self.grammar_radio.select()
         self.change_site()
 
-    def table(self, event=None):
         """
-        Insert markdown for table, and place insertion point between them.
         """
-        self.textbox.insert(Tk.INSERT, '[t]\n[/t]')
-        self.textbox.mark_set(Tk.INSERT, Tk.INSERT + '-5c')
-        return 'break'
 
     def scroll_headings(self, event, level):
         """
