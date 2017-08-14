@@ -174,8 +174,10 @@ class Editor(Tk.Frame, object):
     def place_widgets(self):
         """
         Place all widgets in GUI window.
-        Stack the textboxes on the right-hand side, taking as much room as possible.
-        Stack the heading boxes, the buttons, radiobuttons and a label in the top-left corner.
+        Stack the textboxes on the right-hand side, taking as much
+            room as possible.
+        Stack the heading boxes, the buttons, radiobuttons and a
+            label in the top-left corner.
         """
         self.top['menu'] = self.menu
         self.pack(expand=True, fill=Tk.BOTH)
@@ -255,6 +257,7 @@ class Editor(Tk.Frame, object):
         Change the entry language to whatever is in the StringVar 'self.language'
         """
         self.translator = Translator(self.language.get())
+        self.textbox.focus_set()
         return 'break'
 
     def previous_window(self, event):
