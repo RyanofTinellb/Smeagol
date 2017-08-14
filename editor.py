@@ -49,7 +49,7 @@ class Editor(Tk.Frame, object):
         self.buttons = self.create_buttons(self.buttonframe,
                 self.button_commands, self.save_text)
         self.textboxes = self.create_textboxes(self.textframe,
-                self.widgets.textboxes, self.textbox_commands, self.font)
+                self.widgets.textboxes, self.font)
 
     def create_menu(self, master, menus=None):
         """
@@ -129,18 +129,14 @@ class Editor(Tk.Frame, object):
         return tuple(radios)
 
     @staticmethod
-    def create_textboxes(master, number, commands=None, font=None):
+    def create_textboxes(master, number, font=None):
         if font is None:
             font = self.font
-        if not commands:
-            commands = []
         textboxes = []
         for _ in range(number):
             textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
                     undo=True, font=font)
-            for (key, command) in commands:
-                textbox.bind(key, command)
-                textboxes.append(textbox)
+            textboxes.append(textbox)
         return tuple(textboxes)
 
     def configure_widgets(self):
@@ -148,27 +144,32 @@ class Editor(Tk.Frame, object):
         self.textbox = self.textboxes[0]
         self.infolabel, self.information, self.blanklabel = self.labels
         self.load_button, self.save_button = self.buttons
-        self.configure_headings()
-        self.configure_radios()
+        self.configure_headings(self.heading_commands)
+        self.configure_radios(self.radio_settings)
+        self.configure_textboxes(self.textbox_commands)
 
-    def configure_headings(self):
-        for i, heading in enumerate(self.headings):
+    def configure_headings(self, commands=None):
+        if commands:
+            for heading in self.headings:
+                for command in commands:
+                    keys, command = command
+                    for key in keys:
+                        heading.bind(key, command)
 
-            def handler(event, self=self, i=i):
-                return self.scroll_headings(event, i)
-            heading.bind('<Prior>', handler)
-            heading.bind('<Next>', handler)
-            heading.bind('<Return>', self.enter_headings)
-            heading.bind('<Up>', self.scroll_radios)
-            heading.bind('<Down>', self.scroll_radios)
+    def configure_radios(self, settings=None):
+        if settings:
+            settings = zip(self.radios, settings)
+            for radio, (code, language) in settings:
+                radio.configure(text=language().name, variable=self.language,
+                        value=code, command=self.change_language)
+            self.language.set(self.translator.languages.keys()[0])
+            self.translator = Translator(self.language.get())
 
-    def configure_radios(self):
-        settings = zip(self.radios, self.translator.languages.items())
-        for radio, (code, language) in settings:
-            radio.configure(text=language().name, variable=self.language,
-                    value=code, command=self.change_language)
-        self.language.set(self.translator.languages.keys()[0])
-        self.translator = Translator(self.language.get())
+    def configure_textboxes(self, commands=None):
+        if commands:
+            for textbox in self.textboxes:
+                for (key, command) in commands:
+                    textbox.bind(key, command)
 
     def place_widgets(self):
         """
@@ -552,6 +553,16 @@ class Editor(Tk.Frame, object):
     def menu_commands(self):
         return [('Site', [('Open', self.site_open),
                         ('Save', self.site_save)])]
+
+    @property
+    def heading_commands(self):
+        return [(['<Prior>', '<Next>'], self.scroll_headings),
+                (['<Return>'], self.enter_headings)]
+
+    @property
+    def radio_settings(self):
+        if self.widgets.radios == 'languages':
+            return self.translator.languages.items()
 
     @property
     def button_commands(self):
