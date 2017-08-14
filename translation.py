@@ -203,15 +203,18 @@ class Markdown:
         :param filename (String): the path to the replacements file
         :raise IOError: filename does not exist
         """
-        self.filename = filename
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None
-        with open(filename) as replacements:
-            for line in replacements:
-                line = line.split(" ")
-                self.markup.append(line[0])
-                self.markdown.append(line[1])
+        try:
+            with open(filename) as replacements:
+                for line in replacements:
+                    line = line.split(" ")
+                    self.markup.append(line[0])
+                    self.markdown.append(line[1])
+                self.filename = filename
+        except IOError:
+            self.filename = ''
 
     def to_markup(self, text):
         self.source, self.destination = self.markdown[::-1], self.markup[::-1]
@@ -252,11 +255,12 @@ class Markdown:
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None
-        with open(self.filename) as replacements:
-            for line in replacements:
-                line = line.split(" ")
-                self.markup.append(line[0])
-                self.markdown.append(line[1])
+        if filename:
+            with open(self.filename) as replacements:
+                for line in replacements:
+                    line = line.split(" ")
+                    self.markup.append(line[0])
+                    self.markdown.append(line[1])
 
 def add_datestamp(text):
     text += datetime.strftime(datetime.today(), '&date=%Y%m%d')

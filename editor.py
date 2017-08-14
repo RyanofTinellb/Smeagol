@@ -1,4 +1,5 @@
 from smeagol import *
+import webbrowser as web
 import Tkinter as Tk
 import tkFileDialog as fd
 import tkMessageBox as mb
@@ -538,9 +539,34 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(event)
         return 'break'
 
-    def refresh_markdown(self, event=None):
+    def markdown_open(self, event=None):
+        web.open_new_tab(self.markdown.filename)
+
+    def markdown_load(self, event=None):
+        filename = fd.askopenfilename(
+        filetypes=[('Sm\xe9agol Markdown File', '*.mkd')],
+        title='Load Markdown')
+        if filename:
+            try:
+                texts = map(self.get_text, self.textboxes)
+                texts = map(self.markdown.to_markup, texts)
+                self.markdown = Markdown(filename)
+                texts = map(self.markdown.to_markdown, texts)
+                for text, textbox in zip(texts, self.textboxes):
+                    textbox.delete(1.0, Tk.END)
+                    textbox.insert(1.0, text)
+            except IndexError:
+                mb.showerror('Invalid File', 'Please select a valid *.mkd file.')
+
+    def markdown_refresh(self, event=None):
         try:
+            texts = map(self.get, self.textboxes)
+            texts = map(self.markdown.to_markup, texts)
             self.markdown.refresh()
+            texts = map(self.markdown.to_markdown, texts)
+            for text, textbox in texts, self.textboxes:
+                textbox.delete(1.0, Tk.END)
+                textbox.insert(1.0, text)
             self.information.set('Markdown Refreshed!')
         except AttributeError:
             self.information.set('No Markdown Found')
@@ -549,7 +575,11 @@ class Editor(Tk.Frame, object):
     @property
     def menu_commands(self):
         return [('Site', [('Open', self.site_open),
-                        ('Save', self.site_save)])]
+                        ('Save', self.site_save)]),
+                ('Markdown', [('Load', self.markdown_load),
+                              ('Refresh', self.markdown_refresh),
+                              ('Open as _Html', self.markdown_open)]
+                              )]
 
     @property
     def heading_commands(self):
@@ -573,8 +603,9 @@ class Editor(Tk.Frame, object):
         ('<Control-i>', self.italic),
         ('<Control-l>', self.load),
         ('<Control-k>', self.small_caps),
-        ('<Control-m>', self.refresh_markdown),
+        ('<Control-m>', self.markdown_refresh),
         ('<Control-n>', self.add_link),
+        ('<Control-o>', self.site_open),
         ('<Control-s>', self.save),
         ('<Control-BackSpace>', self.backspace_word),
         ('<Control-Delete>', self.delete_word),
