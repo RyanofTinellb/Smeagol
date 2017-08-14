@@ -32,7 +32,8 @@ class Editor(Tk.Frame, object):
         self.save_text, self.language = Tk.StringVar(), Tk.StringVar()
         self.save_text.set('Save')
         self.translator = Translator()
-        self.entry = self.root = self.site.root
+        self.entry = self.site.root
+        self.root = Page('')
         self.top = self.winfo_toplevel()
 
         self.create_widgets()
@@ -330,7 +331,7 @@ class Editor(Tk.Frame, object):
     def find_entry(self, headings):
         """
         Find the current entry based on what is in the heading boxes.
-        This is the default method - other Editor programs will override this.
+        This is the default method - other Editor programs may override this.
         Subroutine of self.load().
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
@@ -339,7 +340,7 @@ class Editor(Tk.Frame, object):
         with ignored(KeyError):
             for heading in headings:
                 entry = entry[heading]
-        return entry if entry is not site else (site.root if site else None)
+        return entry if entry is not site else (self.root if site else None)
 
     def prepare_entry(self, entry):
         """
@@ -381,9 +382,6 @@ class Editor(Tk.Frame, object):
             textbox.edit_modified(False)
         self.save_text.set('Save')
         texts = map(self.get_text, self.textboxes)
-        with ignored(AttributeError):
-            self.paragraphs[self.current_paragraph] = self.prepare_paragraph(self.entry, texts, self.markdown, self.translator, self.current_paragraph - 1)
-            texts = self.paragraphs
         if self.entry:
             self.prepare_texts(texts)
         self.publish(self.entry, site)

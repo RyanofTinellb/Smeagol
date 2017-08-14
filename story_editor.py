@@ -3,78 +3,39 @@ from random import choice
 from string import printable
 
 class StoryEditor(Editor):
-    def __init__(self, directory, datafile, site, markdown, master=None):
-        self.font = ('Californian FB', 16)
+    def __init__(self, site, markdown, links, master=None):
+        font = ('Californian FB', 16)
         widgets = WidgetAmounts(headings=2, textboxes=4, radios='languages')
-        super(StoryEditor, self).__init__(directory, datafile, site, markdown, widgets=widgets)
-        self.site = site
-        self.markdown = markdown
-        self.datafile = datafile
-        self.entry = self.site.root[0]
+        super(StoryEditor, self).__init__(site, markdown, links, widgets, font)
+        self.entry = self.root = self.site.root[0]
         self.paragraphs = self.count = self.current_paragraph = None
-        self.configure_widgets()
 
-    def configure_widgets(self):
-        for textbox in self.textboxes:
-            textbox.bind('<Next>', self.next_paragraph)
-            textbox.bind('<Prior>', self.previous_paragraph)
-        for i, heading in enumerate(self.headings):
-
-            def handler(event, self=self, i=i):
-                return self.scroll_headings(event, i)
-            heading.bind('<Prior>', handler)
-            heading.bind('<Next>', handler)
-        self.headings[0].bind('<Return>', self.insert_chapter)
-        self.headings[0].bind('<Tab>', self.insert_chapter)
-        self.headings[1].bind('<Return>', self.load)
-        self.headings[1].bind('<Tab>', self.load)
-        self.configure_language_radios()
-
-    def load(self, event=None):
-        """
-        Find entry, manipulate entry to fit boxes, place in boxes
-        Overrides parent method
-        """
-        super(StoryEditor, self).load()
-        self.entry, self.paragraphs, self.current_paragraph, self.count = self.entry
-        self.information.set('Paragraph #' + str(self.current_paragraph))
-
-    def find_entry(self, headings):
-        """
-        Find the current entry based on what is in the heading boxes.
-        Overrides parent method.
-        Subroutine of self.load().
-        :param headings (str[]): the texts from the heading boxes
-        :return (Page, str()[], int):
-        :   (Page): current entry
-        :   (str()[]): a list of paragraphs, where each paragraph consists of different versions
-        :   (int): the index of the last untranslated paragraph
-        :   (int): the index of the last paragraph overall
-        """
-        entry = super(StoryEditor, self).find_entry([self.site.root[0].name] + headings)
-        cousins = map(lambda x: x.content.splitlines(), entry.cousins)     # Str[][]
-        count = max(map(len, cousins))      # int
-        current_paragraph = min(map(len, cousins)) - 1    # int
-        cousins = map(lambda x: x + (count - len(x)) * [''], cousins)     # still Str[][], but now padded
-        paragraphs = map(None, *cousins) # str()[] (transposed)
-        return entry, paragraphs, current_paragraph, count
-
-    @staticmethod
-    def prepare_entry(entry, markdown=None, kind=None):
+    def prepare_entry(self, entry):
         """
         Manipulate entry content to suit textboxes.
         Subroutine of self.load()
         Overrides parent method
         :param entry (Page): A Page instance carrying text. Other Pages relative to this entry may also be accessed.
-        :param markdown (Markdown): a Markdown instance to be applied to the contents of the entry. If None, the content is not changed.
         :param return (str[]):
         """
-        entry, paragraphs, current_paragraph, count = entry
-        paragraph = paragraphs[current_paragraph]
-        displays = map(lambda x: remove_version_links(paragraph[2 * x]), range(3))
-        # have to add and subtract final '\n' because of how markdown interacts with the timestamp
-        with conversion(markdown, 'to_markdown') as converter:
-            displays = map(converter, displays)
+        prepare = super(StoryEditor, self).prepare_entry
+        texts = map(lambda x: prepare(x)[0], entry.cousins)
+        self.make_paragraphs(texts)
+        texts = self.prepare_paragraphs(self.paragraphs[self.current_paragraph])
+        return texts
+
+    def make_paragraphs(self, texts):
+        cousins = map(lambda x: x.splitlines(), texts)     # Str[][]
+        self.count = max(map(len, cousins))      # int
+        self.current_paragraph = min(map(len, cousins)) - 1    # int
+        cousins = map(self.add_padding, cousins, len(cousins) * [self.count])     # still Str[][], but now padded
+        self.paragraphs = map(None, *cousins) # str()[] (transposed)
+
+    def add_padding(self, text, length):
+            return text + (length - len(text)) * ['']
+
+    def prepare_paragraphs(self, paragraph):
+        displays = [paragraph[2 * i] for i in xrange(3)]
         displays[2:4] = displays[2].split(' |- -| ')
         if len(displays) == 3:
             displays.append('{}')
@@ -89,44 +50,12 @@ class StoryEditor(Editor):
             displays[1] = displays[1].replace(i, j)     # Transliteration
         return displays
 
-    def scroll_headings(self, event, level):
-        """
-        Respond to PageUp / PageDown by changing headings, moving through the hierarchy.
-        :param event (Event): which entry box received the KeyPress
-        :param level (int): the level of the hierarchy that is being traversed.
-        """
-        if level <= 1:
-            heading = self.headings[level]
-            level += 2
-            direction = 1 if event.keysym == 'Next' else -1
-            # traverse hierarchy sideways
-            if self.entry.level == level:
-                with ignored(IndexError):
-                    self.entry = self.entry.sister(direction)
-            # ascend hierarchy until correct level
-            while self.entry.level > level:
-                with ignored(AttributeError):
-                    self.entry = self.entry.parent
-            # descend hierarchy until correct level
-            while self.entry.level < level:
-                with ignored(IndexError):
-                    self.entry = self.entry.children[0]
-            for k in range(level - 2, 2):
-                self.headings[k].delete(0, Tk.END)
-            heading.insert(Tk.INSERT, self.entry.name)
-        else:       # scrolling the heading for the paragraph number
-            if event.keysym == 'Next':
-                self.next_paragraph()
-            else:
-                self.previous_paragraph()
-        return 'break'
-
-    def insert_chapter(self, event):
-        self.headings[1].focus_set()
-        return 'break'
-
-    def insert_heading(self, event=None):
-        self.headings[2].focus_set()
+    def move_paragraph(self, direction=1):
+        if -direction < self.current_paragraph < self.count - direction:
+            self.current_paragraph += direction
+            texts = self.prepare_paragraphs(self.paragraphs[self.current_paragraph])
+            self.display(texts)
+        self.information.set('Paragraph #' + str(self.current_paragraph))
         return 'break'
 
     def previous_paragraph(self, event=None):
@@ -135,14 +64,6 @@ class StoryEditor(Editor):
     def next_paragraph(self, event=None):
         return self.move_paragraph(1)
 
-    def move_paragraph(self, direction=1):
-        if -direction < self.current_paragraph < self.count - direction:
-            self.current_paragraph += direction
-            entry = self.entry, self.paragraphs, self.current_paragraph, self.count
-            self.display(self.prepare_entry(entry, self.markdown))
-        self.information.set('Paragraph #' + str(self.current_paragraph))
-        return 'break'
-
     @staticmethod
     def get_text(textbox):
         """
@@ -150,22 +71,6 @@ class StoryEditor(Editor):
         Overrides Editor.get_text()
         """
         return str(textbox.get(1.0, Tk.END + '-1c')).replace('\n', ' | ')
-
-    @staticmethod
-    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None, kind=None):
-        """
-        Modify entry with manipulated texts.
-        Subroutine of self.save().
-        Overrrides parent method
-        :param entry (Page): the entry in the datafile to be modified.
-        :param texts (str[]): the texts to be manipulated and inserted.
-        :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
-        :param return (Nothing):
-        """
-        contents = map(join_strip, zip(*texts))
-        cousins = entry.cousins
-        for content, cousin in zip(contents, cousins):
-            cousin.content = content
 
     @staticmethod
     def prepare_paragraph(entry, texts, markdown=None, translator=None, uid=None):
@@ -203,7 +108,22 @@ class StoryEditor(Editor):
         return tuple(paragraphs)
 
     @staticmethod
-    def publish(entry, site):
+    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None, kind=None):
+        """
+        Modify entry with manipulated texts.
+        Subroutine of self.save().
+        Overrrides parent method
+        :param entry (Page): the entry in the datafile to be modified.
+        :param texts (str[]): the texts to be manipulated and inserted.
+        :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
+        :param return (Nothing):
+        """
+        contents = map(join_strip, zip(*texts))
+        cousins = entry.cousins
+        for content, cousin in zip(contents, cousins):
+            cousin.content = content
+
+    def publish(self, entry, site):
         """
         Put entry contents into datafile, publish appropriate Pages.
         This is the default method - other Editor programs may override this.
@@ -214,37 +134,14 @@ class StoryEditor(Editor):
         for cousin in entry.cousins:
             cousin.publish(site.template)
         # reset entry so that it is not published twice
-        super(StoryEditor, StoryEditor).publish(entry=None, site=site)
+        super(StoryEditor, self).publish(entry=None, site=site)
 
-
-def add_version_links(paragraph, index, entry, uid):
-    """
-    Adds version link information to a paragraph and its cousins
-    :param paragraph (str[]):
-    :param index (int):
-    :param entry (Page):
-    :return (nothing):
-    """
-    links = ''
-    anchor = '<span class="version-anchor" id="{0}"></span>'.format(str(uid))
-    categories = [node.name for node in entry.elders]
-    cousins = entry.cousins
-    for i, (cousin, category) in enumerate(zip(cousins, categories)):
-        if index != i:
-            links += cousins[index].hyperlink(cousin, category, fragment='#'+str(uid)) + '&nbsp;'
-    links = '<span class="version-links">{0}</span>'.format(links)
-    return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
-
-
-def remove_version_links(text):
-    """
-    Remove the version link information from a paragraph.
-    :precondition: text is in Smeagol markdown
-    :param text (str): the paragraph to be cleaned.
-    :return (str):
-    """
-    return re.sub(r'<span class="version.*?</span>', '', text)
-
+    @property
+    def textbox_commands(self):
+        commands = super(StoryEditor, self).textbox_commands
+        commands += [('<Next>', self.next_paragraph),
+                     ('<Prior>', self.previous_paragraph)]
+        return commands
 
 def interlinear(paragraph, markdown):
     """
@@ -292,7 +189,9 @@ def inner_table(top, bottom, font_style):
 
 def join_strip(texts):
     """
-    Join
+    For each string, remove linebreaks from the end, then join them
+        together.
+
     :param texts (str()):
     :return (str):
     """
@@ -300,9 +199,9 @@ def join_strip(texts):
 
 
 if __name__ == '__main__':
-    app = StoryEditor(directory='c:/users/ryan/documents/tinellbianlanguages/thecoelacanthquartet',
-                    datafile='data.txt',
-                    site=Story(),
-                    markdown=Markdown('c:/users/ryan/documents/tinellbianlanguages/storyreplacements.html'))
+    app = StoryEditor(site=Story(),
+                      markdown=Markdown('c:/users/ryan/documents/'
+                            'tinellbianlanguages/storyreplacements.mkd'),
+                      links=AddRemoveLinks([InternalStory()]))
     app.master.title('Story Editor')
     app.mainloop()
