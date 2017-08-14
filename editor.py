@@ -250,13 +250,6 @@ class Editor(Tk.Frame, object):
             heading.select_range(0, Tk.END)
         return 'break'
 
-    def scroll_radios(self, event):
-        if self.kind.get() == 'grammar':
-            self.story_radio.select()
-        else:
-            self.grammar_radio.select()
-        self.change_site()
-
     def change_language(self, event=None):
         """
         Change the entry language to whatever is in the StringVar 'self.language'
