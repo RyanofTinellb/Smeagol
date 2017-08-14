@@ -31,7 +31,7 @@ class Editor(Tk.Frame, object):
         self.save_text, self.language = Tk.StringVar(), Tk.StringVar()
         self.save_text.set('Save')
         self.translator = Translator()
-        self.entry = self.site.root
+        self.entry = self.root = self.site.root
         self.top = self.winfo_toplevel()
 
         self.create_widgets()
@@ -197,34 +197,35 @@ class Editor(Tk.Frame, object):
         self.infolabel.grid(row=row, column=0, columnspan=2)
         self.blanklabel.grid(row=row+1, column=0, columnspan=2)
 
-    def scroll_headings(self, event, level):
+    def scroll_headings(self, event):
         """
-        Respond to PageUp / PageDown by changing headings, moving through the hierarchy.
+        Respond to PageUp / PageDown by changing headings, moving
+            through the hierarchy.
         :param event (Event): which entry box received the KeyPress
-        :param level (int): the level of the hierarchy that is being traversed.
+        :param level (int): the level of the hierarchy that is being
+            traversed.
         """
-        heading = self.headings[level]
-        # bring
-        level += 1
+        heading = event.widget
+        level = self.headings.index(heading) + self.root.level + 1
         direction = 1 if event.keysym == 'Next' else -1
-        # traverse hierarchy sideways
-        if self.entry.level == level:
-            with ignored(IndexError):
-                self.entry = self.entry.sister(direction)
         # ascend hierarchy until correct level
         while self.entry.level > level:
             try:
                 self.entry = self.entry.parent
             except AttributeError:
                 break
+        # traverse hierarchy sideways
+        if self.entry.level == level:
+            with ignored(IndexError):
+                self.entry = self.entry.sister(direction)
         # descend hierarchy until correct level
         while self.entry.level < level:
             try:
                 self.entry = self.entry.children[0]
             except IndexError:
                 break
-        for k in range(level - 1, 3):
-            self.headings[k].delete(0, Tk.END)
+        for heading_ in self.headings[level - 1:]:
+            heading_.delete(0, Tk.END)
         heading.insert(Tk.INSERT, self.entry.name)
         return 'break'
 
