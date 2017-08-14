@@ -12,49 +12,15 @@ class DictionaryEditor(Editor):
         """
         font = ('Courier New', '15')
         widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
+        self.randomwords = randomwords
         super(DictionaryEditor, self).__init__(site, markdown, links, widgets, font)
-
-        # rename for readability
-        self.words = randomwords.words
-
-        self.configure_widgets()
 
         # initialise instance variables
         self.entry, self.history, self.current, self.page = '', [], -1, None
 
     def configure_widgets(self):
-        self.configure_language_radios()
-        self.heading.bind('<Control-r>', self.refresh_random)
-        self.heading.bind('<Prior>', self.scroll_headings)
-        self.heading.bind('<Next>', self.scroll_headings)
-        self.heading.bind('<Return>', self.load)
-        self.textbox.bind('<Control-r>', self.refresh_random)
-        self.textbox.bind('<Control-t>', self.add_translation)
-        self.textbox.bind('<Control-=>', self.add_definition)
-        self.textbox.bind('<Prior>', self.scroll_history)
-        self.textbox.bind('<Next>', self.scroll_history)
-
-    def initial_content(self):
-        """
-        Insert the appropriate template for a new entry, and move the insertion pointer to allow for immediate input of the pronunciation.
-        :precondition: The name of the entry, and its language, are already selected.
-        """
-        name = self.heading.get()
-        trans = self.translator
-        before = ('2]{0}\n[3]{1}\n').format(name, trans.name)
-        before += '' if self.language.get() == 'en' else '[4]{0}\n'.format(trans.convert_word(name))
-        before += '[5][p {0}]/'.format(trans.code)
-        after = '/[/p]\n[6]\n'
-        self.insert_characters(self.textboxes[0], before, after)
-        self.textboxes[0].focus_set()
-
-    def add_definition(self, event=None):
-        """
-        Insert the markdown for entry definition, and move the insertion pointer to allow for immediate input of the definition.
-        """
-        self.insert_characters(event, *self.markdown.find_formatting('div'))
-        self.insert_characters(event, ' ' + self.markdown.find('class="definition">'))
-        return 'break'
+        self.words = self.randomwords.words
+        super(DictionaryEditor, self).configure_widgets()
 
     def refresh_random(self, event=None):
         """
@@ -79,6 +45,27 @@ class DictionaryEditor(Editor):
     def scroll_history(self, event):
         self.scroll_headings(event)
         self.load()
+        return 'break'
+
+    def keep_history(self, heading):
+        """
+        Keep track of which entries have been loaded
+        """
+        if not self.history or heading != self.history[self.current]:
+            try:
+                self.history[self.current + 1] = heading
+                self.history = self.history[:self.current + 2]
+            except IndexError:
+                self.history.append(heading)
+            self.current += 1
+
+    def add_definition(self, event=None):
+        """
+        Insert the markdown for entry definition, and move the insertion pointer to allow for immediate input of the definition.
+        """
+        widget = event.widget
+        self.insert_characters(widget, *self.markdown.find_formatting('div'))
+        self.insert_characters(widget, ' ' + self.markdown.find('class="definition">'))
         return 'break'
 
     def add_translation(self, event=None):
@@ -123,18 +110,6 @@ class DictionaryEditor(Editor):
         self.keep_history(heading)
         return entry
 
-    def keep_history(self, heading):
-        """
-        Keep track of which entries have been loaded
-        """
-        if not self.history or heading != self.history[self.current]:
-            try:
-                self.history[self.current + 1] = heading
-                self.history = self.history[:self.current + 2]
-            except IndexError:
-                self.history.append(heading)
-            self.current += 1
-
     def prepare_texts(self, texts):
         """
         Modify entry with manipulated texts.
@@ -161,14 +136,46 @@ class DictionaryEditor(Editor):
         site.modify_source()
         site.update_json()
 
+    @property
+    def initial_content(self):
+        """
+        Insert the appropriate template for a new entry, and move the insertion pointer to allow for immediate input of the pronunciation.
+        :precondition: The name of the entry, and its language, are already selected.
+        """
+        name = self.heading.get()
+        trans = self.translator
+        before = ('2]{0}\n[3]{1}\n').format(name, trans.name)
+        before += '' if self.language.get() == 'en' else '[4]{0}\n'.format(trans.convert_word(name))
+        before += '[5][p {0}]/'.format(trans.code)
+        after = '/[/p]\n[6]\n'
+        self.insert_characters(self.textboxes[0], before, after)
+        self.textboxes[0].focus_set()
+
+    @property
+    def heading_commands(self):
+        commands = super(DictionaryEditor, self).heading_commands
+        commands += [(['<Control-r>'], self.refresh_random)]
+        return commands
+
+    @property
+    def textbox_commands(self):
+        commands = super(DictionaryEditor, self).textbox_commands
+        commands += [
+        ('<Control-r>', self.refresh_random),
+        ('<Control-t>', self.add_translation),
+        ('<Control-=>', self.add_definition),
+        ('<Prior>', self.scroll_history),
+        ('<Next>', self.scroll_history)]
+        return commands
+
 
 if __name__ == '__main__':
     links = ExternalGrammar('c:/users/ryan/documents/'
             'tinellbianlanguages/dictionarylinks.txt')
     app = DictionaryEditor(site=Dictionary(),
     markdown=Markdown('c:/users/ryan/documents/'
-        'tinellbianlanguages/dictionaryreplacements.html'),
-    links=AddRemoveLinks([links ]),
+        'tinellbianlanguages/dictionaryreplacements.mkd'),
+    links=AddRemoveLinks([links]),
     randomwords=RandomWords(20,3))
     app.master.title('Dictionary Editor')
     app.mainloop()

@@ -323,6 +323,8 @@ class Editor(Tk.Frame, object):
         self.entry = self.find_entry(map(lambda x: x.get(), self.headings))
         texts = self.prepare_entry(self.entry)
         self.display(texts)
+        self.save_text.set('Save')
+
         return 'break'
 
     def find_entry(self, headings):
@@ -363,6 +365,7 @@ class Editor(Tk.Frame, object):
             textbox.edit_modified(False)
         else:   # set focus on final textbox
             textbox.focus_set()
+            textbox.edit_modified(False)
             self.update_wordcount(widget=textbox)
         with ignored(AttributeError):
             if self.entry.content == '':
