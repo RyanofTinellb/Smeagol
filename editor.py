@@ -405,7 +405,7 @@ class Editor(Tk.Frame, object):
             self.entry.remove_from_hierarchy()
             self.reset()
         else:
-            text = self.convert_texts(text)
+            text = self.convert_texts(text, self.entry)
             # remove duplicate linebreaks
             text = re.sub(r'\n\n+', '\n', text)
             self.entry.content = text

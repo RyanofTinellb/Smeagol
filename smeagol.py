@@ -1066,16 +1066,16 @@ class Default():
         self.source = 'data.txt'
         self.template = 'template.html'
         self.main_template = 'main_template.html'
-        self.markdown = '../replacements.html'
+        self.markdown = '../replacements.mkd'
         self.searchjson = 'searching.json'
 
 
 if __name__ == '__main__':
-    oldtime = datetime.datetime.now()
+    oldtime = datetime.now()
     for site in Story, Grammar, Dictionary:
         site = site()
         print(site.name + ': ')
         for x in site.publish(): print(x)
-        newtime = datetime.datetime.now()
+        newtime = datetime.now()
         print('100% Done: ' + str(newtime - oldtime))
         oldtime = newtime
