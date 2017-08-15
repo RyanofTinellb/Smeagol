@@ -170,12 +170,13 @@ class DictionaryEditor(Editor):
 
 
 if __name__ == '__main__':
-    links = ExternalGrammar('c:/users/ryan/documents/'
-            'tinellbianlanguages/dictionarylinks.txt')
+    links = [ExternalGrammar('c:/users/ryan/documents/'
+            'tinellbianlanguages/dictionarylinks.txt'),
+            InternalDictionary()]
     app = DictionaryEditor(site=Dictionary(),
     markdown=Markdown('c:/users/ryan/documents/'
         'tinellbianlanguages/dictionaryreplacements.mkd'),
-    links=AddRemoveLinks([links]),
+    links=AddRemoveLinks(links),
     randomwords=RandomWords(20,3))
     app.master.title('Dictionary Editor')
     app.mainloop()
