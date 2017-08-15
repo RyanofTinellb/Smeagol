@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from smeagol import *
 import webbrowser as web
 import Tkinter as Tk
@@ -316,6 +317,12 @@ class Editor(Tk.Frame, object):
                 site.write(repr(self.site))
         return 'break'
 
+    def site_properties(self, event=None):
+        """
+        Open a properties window
+        """
+        properties_window = PropertiesWindow(self)
+
     def load(self, event=None):
         """
         Find entry, manipulate entry to fit boxes, place in boxes.
@@ -579,7 +586,8 @@ class Editor(Tk.Frame, object):
     @property
     def menu_commands(self):
         return [('Site', [('Open', self.site_open),
-                        ('Save', self.site_save)]),
+                        ('Save', self.site_save),
+                        ('P_roperties', self.site_properties)]),
                 ('Markdown', [('Load', self.markdown_load),
                               ('Refresh', self.markdown_refresh),
                               ('Open as _Html', self.markdown_open)]
@@ -626,6 +634,73 @@ class Editor(Tk.Frame, object):
         level = str(self.entry.level)
         name = self.entry.name
         return '{0}]{1}\n'.format(level, name)
+
+Property = namedtuple('Property', ['name', 'can_browse'])
+BoxChecks = namedtuple('BoxChecks', ['boxes', 'checks'])
+
+class PropertiesWindow(Tk.Toplevel, object):
+
+    """
+    Properties:
+        - site destination
+        - site name
+        - site source
+        - site template
+        - site main_template
+        - site markdown
+        - site searchjson
+        - site leaf_level
+        - editor links
+    """
+    def __init__(self, master=None):
+        super(PropertiesWindow, self).__init__(master)
+        self.entries = []
+        for row, prop in enumerate(self.properties.boxes):
+            label = Tk.Label(self, text=prop.name)
+            label.grid(row=row, column=0, sticky=Tk.W)
+            entry = Tk.Entry(self)
+            entry.grid(row=row, column=1)
+            self.entries.append(entry)
+            if prop.can_browse:
+                button = Tk.Button(self, text='Browse...')
+                button.grid(row=row, column=2)
+        for row, check in enumerate(self.properties.checks, start=row+1):
+            label = Tk.Label(self, text=check)
+            label.grid(row=row, column=0, sticky=Tk.W)
+            checkbutton = Tk.Checkbutton(self)
+            checkbutton.grid(row=row, column=2)
+
+    @property
+    def properties(self):
+        """
+        Return the properties the user can modify
+
+        The first list is the site properties.
+        Each tuple is of the form (property, can_browse):
+            :var property: (str) The name of the property to be modified
+            :var can_browse: (bool) Whether to display a 'Browse...' button
+                for that property
+
+        The second list is which links to put in finished pages.
+        These are checkboxes.
+        """
+        return BoxChecks(boxes=
+               [Property('Destination', True),
+                Property('Name', False),
+                Property('Source', True),
+                Property('Template', True),
+                Property('Main Template', True),
+                Property('URL/JSON Markdown', True),
+                Property('Searchterms File', True),
+                Property('Leaf Level', False)],
+                checks=[
+                'Version Links',
+                'Links within the Dictionary',
+                'Links to grammar.tinellb.com',
+                'Links to dictionary.tinellb.com',
+                ])
+
+
 
 if __name__ == '__main__':
     markdown = Markdown('c:/users/ryan/documents/tinellbianlanguages/'
