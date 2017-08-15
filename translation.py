@@ -322,7 +322,7 @@ class InternalStory:
         :return: (str)
         """
         paragraphs = text.splitlines()
-        version = entry.elders.version(entry.ancestors[1])
+        version = entry.elders.index(entry.ancestors[1])
         for uid, paragraph in enumerate(paragraphs[1:]):
             if version == 4:
                  paragraph = '&id=' + paragraphs[uid+1].replace(' | [r]', '&vlinks= | [r]')
@@ -330,9 +330,10 @@ class InternalStory:
                 paragraph = '[t]&id=' + re.sub(r'(?= \| \[r\]<div class=\"literal\">)', '&vlinks=', paragraphs[uid+1][3:])
             else:
                 paragraph = '&id=' + paragraphs[uid+1] + '&vlinks='
-            paragraphs[uid+1] = _version_links(paragraph, version, entry, uid)
+            paragraphs[uid+1] = self._version_links(paragraph, version, entry, uid)
         return '\n'.join(paragraphs)
 
+    @staticmethod
     def _version_links(paragraph, index, entry, uid):
         """
         Adds version link information to a paragraph and its cousins

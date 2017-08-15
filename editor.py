@@ -228,7 +228,7 @@ class Editor(Tk.Frame, object):
                 self.entry = self.entry.children[0]
             except IndexError:
                 break
-        for heading_ in self.headings[level - 1:]:
+        for heading_ in self.headings[level - self.root.level - 1:]:
             heading_.delete(0, Tk.END)
         heading.insert(Tk.INSERT, self.entry.name)
         return 'break'
@@ -259,7 +259,6 @@ class Editor(Tk.Frame, object):
         Change the entry language to whatever is in the StringVar 'self.language'
         """
         self.translator = Translator(self.language.get())
-        self.textbox.focus_set()
         return 'break'
 
     def previous_window(self, event):
@@ -352,11 +351,11 @@ class Editor(Tk.Frame, object):
         :called by: Editor.load()
         """
         text = entry.content
+        text = remove_datestamp(text)
         with conversion(self.links, 'remove_links') as converter:
             text = converter(text)
         with conversion(self.markdown, 'to_markdown') as converter:
             text = converter(text)
-        text = remove_datestamp(text)
         return [text]
 
     def display(self, texts):
@@ -366,7 +365,6 @@ class Editor(Tk.Frame, object):
             textbox.edit_modified(False)
         else:   # set focus on final textbox
             textbox.focus_set()
-            textbox.edit_modified(False)
             self.update_wordcount(widget=textbox)
         with ignored(AttributeError):
             if self.entry.content == '':
@@ -374,17 +372,15 @@ class Editor(Tk.Frame, object):
 
     def save(self, event=None):
         """
-        Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages, update json.
+        Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages.
         """
-        markdown = self.markdown
-        site = self.site
         for textbox in self.textboxes:
             textbox.edit_modified(False)
         self.save_text.set('Save')
         texts = map(self.get_text, self.textboxes)
         if self.entry:
             self.prepare_texts(texts)
-        self.publish(self.entry, site)
+        self.publish(self.entry, self.site)
         return 'break'
 
     @staticmethod
@@ -409,14 +405,21 @@ class Editor(Tk.Frame, object):
             self.entry.remove_from_hierarchy()
             self.reset()
         else:
-            with conversion(self.links, 'add_links') as converter:
-                text = converter(text, self.entry, self.site)
-            with conversion(self.markdown, 'to_markup') as converter:
-                text = converter(text)
-            text = add_datestamp(text)
+            text = self.convert_texts(text)
             # remove duplicate linebreaks
             text = re.sub(r'\n\n+', '\n', text)
             self.entry.content = text
+
+    def convert_texts(self, text, entry):
+        """
+        Run conversions over text
+        """
+        with conversion(self.markdown, 'to_markup') as converter:
+            text = converter(text)
+        with conversion(self.links, 'add_links') as converter:
+            text = converter(text, entry, self.site)
+        text = add_datestamp(text)
+        return text
 
     @staticmethod
     def publish(entry, site):

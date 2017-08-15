@@ -2,6 +2,7 @@ from editor import *
 from random import choice
 from string import printable
 
+
 class StoryEditor(Editor):
     def __init__(self, site, markdown, links, master=None):
         font = ('Californian FB', 16)
@@ -46,7 +47,7 @@ class StoryEditor(Editor):
                         [')', chr(6)],
                         ['>', 2*chr(6)],
                         ['-', chr(7)]]
-        for j, i in replacements[::-1]:
+        for j, i in reversed(replacements):
             displays[1] = displays[1].replace(i, j)     # Transliteration
         return displays
 
@@ -72,56 +73,44 @@ class StoryEditor(Editor):
         """
         return str(textbox.get(1.0, Tk.END + '-1c')).replace('\n', ' | ')
 
-    @staticmethod
-    def prepare_paragraph(entry, texts, markdown=None, translator=None, uid=None):
+    def prepare_texts(self, texts):
+        """
+        Modify entry with manipulated texts.
+
+        Overrrides parent method
+        :param return (Nothing):
+        :called by: self.save()
+        """
+        cousins = self.entry.cousins
+        paragraph = self.convert_paragraph(texts)
+        self.paragraphs[self.current_paragraph] = paragraph
+        texts = map(join_strip, zip(*self.paragraphs))
+        texts = map(self.convert_texts, texts, cousins)
+        for text, cousin in zip(texts, cousins):
+            cousin.content = text
+
+    def convert_paragraph(self, texts):
         """
         Returns 5 versions of the same paragraph, based on the texts.
         :param entry (Page):
         :param texts (str[]):
         :param markdown (Markdown):
         :called by: Editor.save()
-        :calls (static): interlinear(), add_version_links()
         """
-        length = 8
         paragraphs = [None] * 5
         literal = texts.pop()
         paragraphs[0:5:2] = texts
-        with conversion(translator, 'convert_sentence') as converter:
+        with conversion(self.translator, 'convert_sentence') as converter:
             paragraphs[1] = converter(paragraphs[2])    # Tinellbian
         paragraphs[4] += ' |- -| {' + literal + '}'      # Literal
-        paragraphs[3] = interlinear(paragraphs, markdown)     # Interlinear
-        for i in range(3):
-            paragraphs[i] = '&id={0}&vlinks='.format(paragraphs[i])
-        with conversion(markdown, 'to_markup') as converter:
-            paragraphs = map(converter, paragraphs)
-        replacements = [['.(', '&middot;('],
-                        ['(', chr(5)],
-                        ['<small-caps>', 2*chr(5)],
-                        [')', chr(6)],
-                        ['</small-caps>', 2*chr(6)],
-                        ['-', chr(7)]]
-        for i, j in replacements:
+        paragraphs[3] = interlinear(paragraphs, self.markdown)     # Interlinear
+        punctuation = ['.(', '(', ')', '-']
+        with conversion(self.markdown, 'find_formatting') as converter:
+            punctuation += list(converter('small-caps'))
+        replacements = ['&middot;(', chr(5), chr(6), 2*chr(5), 2*chr(6), chr(7)]
+        for i, j in zip(punctuation, replacements):
             paragraphs[2] = paragraphs[2].replace(i, j)     # Transliteration
-        paragraphs[4] = '&id=' + paragraphs[4].replace(' | [r]', '&vlinks= | [r]') # Gloss
-        for index, paragraph in enumerate(paragraphs):
-            paragraphs[index] = add_version_links(paragraph, index, entry, uid)
         return tuple(paragraphs)
-
-    @staticmethod
-    def prepare_texts(entry, site, texts, markdown=None, replacelinks=None, kind=None):
-        """
-        Modify entry with manipulated texts.
-        Subroutine of self.save().
-        Overrrides parent method
-        :param entry (Page): the entry in the datafile to be modified.
-        :param texts (str[]): the texts to be manipulated and inserted.
-        :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
-        :param return (Nothing):
-        """
-        contents = map(join_strip, zip(*texts))
-        cousins = entry.cousins
-        for content, cousin in zip(contents, cousins):
-            cousin.content = content
 
     def publish(self, entry, site):
         """
@@ -158,9 +147,9 @@ def interlinear(paragraph, markdown):
     upright = ('', '')
     font_style = upright
     if paragraph[0] == '* **':
-        return '&id=* **&vlinks='
+        return '* **'
     literal = paragraph[4][paragraph[4].find(' |- -| '):]
-    text = '[t]&id={0}&vlinks={1} | -| &flex;'.format(paragraph[0], literal)
+    text = '[t]{0}{1} | -| &flex;'.format(paragraph[0], literal)
     # remove middot, and replace angle brackets with parentheses
     paragraph[3] = paragraph[2].replace('.(', '(').replace('<', '(').replace('>', ')')
     for transliteration, gloss in morpheme_split(paragraph[3], paragraph[4]):
