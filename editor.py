@@ -6,6 +6,8 @@ import tkFileDialog as fd
 import tkMessageBox as mb
 
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
+Property = namedtuple('Property', ['name', 'can_browse'])
+BoxChecks = namedtuple('BoxChecks', ['boxes', 'checks'])
 
 class Editor(Tk.Frame, object):
     """
@@ -321,7 +323,12 @@ class Editor(Tk.Frame, object):
         """
         Open a properties window
         """
-        properties_window = PropertiesWindow(self)
+        boxes = self.site.details
+        adders = ['internalstory', 'internaldictionary', 'externalgrammar', 'externaldictionary']
+        adder_types = self.links.details
+        checks = map(lambda x: x in adder_types, adders)
+        defaults = BoxChecks(boxes=boxes, checks=checks)
+        properties_window = PropertiesWindow(defaults)
 
     def load(self, event=None):
         """
@@ -635,9 +642,6 @@ class Editor(Tk.Frame, object):
         name = self.entry.name
         return '{0}]{1}\n'.format(level, name)
 
-Property = namedtuple('Property', ['name', 'can_browse'])
-BoxChecks = namedtuple('BoxChecks', ['boxes', 'checks'])
-
 class PropertiesWindow(Tk.Toplevel, object):
 
     """
@@ -652,23 +656,28 @@ class PropertiesWindow(Tk.Toplevel, object):
         - site leaf_level
         - editor links
     """
-    def __init__(self, master=None):
+    def __init__(self, defaults, master=None):
         super(PropertiesWindow, self).__init__(master)
         self.entries = []
-        for row, prop in enumerate(self.properties.boxes):
+        for row, (prop, default) in enumerate(zip(self.properties.boxes,
+                defaults.boxes)):
             label = Tk.Label(self, text=prop.name)
             label.grid(row=row, column=0, sticky=Tk.W)
-            entry = Tk.Entry(self)
+            entry = Tk.Entry(self, width=50)
             entry.grid(row=row, column=1)
+            entry.insert(0, str(default))
             self.entries.append(entry)
             if prop.can_browse:
                 button = Tk.Button(self, text='Browse...')
                 button.grid(row=row, column=2)
-        for row, check in enumerate(self.properties.checks, start=row+1):
+        for row, (check, default) in enumerate(zip(self.properties.checks,
+                defaults.checks), start=row+1):
             label = Tk.Label(self, text=check)
             label.grid(row=row, column=0, sticky=Tk.W)
             checkbutton = Tk.Checkbutton(self)
             checkbutton.grid(row=row, column=2)
+            if default:
+                checkbutton.select()
 
     @property
     def properties(self):
