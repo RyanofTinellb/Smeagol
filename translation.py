@@ -275,6 +275,7 @@ def replace_datestamp(text):
 class AddRemoveLinks:
     def __init__(self, link_adders):
         self.link_adders = link_adders
+        self.details = map(lambda x: x.adder, link_adders)
 
     def add_links(self, text, entry, site):
         for link_adder in self.link_adders:
@@ -311,6 +312,10 @@ class ExternalDictionary:
                 text = text.replace('<link>' + link + '</link>',
                 '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html#' + language + '">' + link + '</a>')
         return text
+
+    @property
+    def adder(self):
+        return 'externaldictionary'
 
 class InternalStory:
     def add_links(self, text, entry, site):
@@ -353,6 +358,11 @@ class InternalStory:
         links = '<span class="version-links">{0}</span>'.format(links)
         return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
 
+
+    @property
+    def adder(self):
+        return 'internalstory'
+
 class InternalDictionary:
     """
     Replace particular words in parts of speech with links to grammar.tinellb.com
@@ -364,6 +374,10 @@ class InternalDictionary:
                 lower_link = re.sub(r'^&#x294;', r'&rsquo;', link).lower()
                 text = text.replace('<link>' + link + '</link>', entry.hyperlink(site[lower_link], link))
         return text
+
+    @property
+    def adder(self):
+        return 'internaldictionary'
 
 class ExternalGrammar:
     """
@@ -403,3 +417,7 @@ class ExternalGrammar:
                 page += line + '\n'
             text = page
         return text
+
+    @property
+    def adder(self):
+        return 'externalgrammar'
