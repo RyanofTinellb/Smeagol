@@ -64,6 +64,7 @@ class Site:
         if name in ('template', 'main_template'):
             with open(value) as template:
                 self.__dict__[name] = template.read()
+                self.__dict__[name + '_file'] = value
         elif name == 'markdown':
             self.__dict__[name] = Markdown(value)
         else:
