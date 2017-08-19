@@ -180,6 +180,7 @@ class RandomWords():
         else:
             return syllable
 
+
 def urlform(text, markdown=None):
     name = text.lower()
     safe_punctuation = '\'.$_+!()'
@@ -195,6 +196,7 @@ def urlform(text, markdown=None):
     name = re.sub(r'<.*?>|[/*;: ]', '', name)
     name = quote(name, safe_punctuation)
     return name
+
 
 class Markdown:
     def __init__(self, filename):
@@ -314,9 +316,9 @@ class ExternalDictionary:
             dictionary entry 'Blah' on the Tinellbian languages dictionary site.
         """
         links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', text.replace('\n', '')).split(r'@')[:-1])
-        language = entry.ancestors[1].urlform
+        language = urlform(entry.ancestors[1].name)
         for link in links:
-            url = Page(link, markdown=site.markdown).urlform
+            url = urlform(link, site.markdown)
             initial = re.sub(r'.*?(\w).*', r'\1', url)
             with ignored(KeyError):
                 text = text.replace('<link>' + link + '</link>',
