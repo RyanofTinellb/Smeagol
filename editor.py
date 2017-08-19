@@ -6,8 +6,7 @@ import tkFileDialog as fd
 import tkMessageBox as mb
 
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
-Property = namedtuple('Property', ['name', 'can_browse', 'command'])
-BoxChecks = namedtuple('BoxChecks', ['boxes', 'checks'])
+Property = namedtuple('Property', ['name', 'check', 'browse'])
 
 class Editor(Tk.Frame, object):
     """
@@ -327,10 +326,10 @@ class Editor(Tk.Frame, object):
         adders = ['internalstory', 'internaldictionary', 'externalgrammar', 'externaldictionary']
         adder_types = self.links.details
         checks = map(lambda x: x in adder_types, adders)
-        defaults = BoxChecks(boxes=boxes, checks=checks)
+        defaults = boxes + checks
         properties_window = PropertiesWindow(defaults)
         self.wait_window(properties_window)
-        self.site = Site(*properties_window.current_values.boxes)
+        self.site = Site(*properties_window.site_values)
         self.entry = self.site.root
 
     def load(self, event=None):
@@ -656,37 +655,19 @@ class PropertiesWindow(Tk.Toplevel, object):
         - site markdown
         - site searchjson
         - site leaf_level
-        - editor links
+        - editor links (x4)
     """
     def __init__(self, current_values, master=None):
         self.current_values = current_values
         super(PropertiesWindow, self).__init__(master)
-        self.entries, self.buttons = [], []
-        for row, (prop, current_value) in enumerate(zip(self.properties.boxes,
-                current_values.boxes)):
-            label = Tk.Label(self, text=prop.name)
-            label.grid(row=row, column=0, sticky=Tk.W)
-            entry = Tk.Entry(self, width=50)
-            entry.grid(row=row, column=1)
-            self.entries.append(entry)
-            entry.insert(0, str(current_value))
-            if prop.can_browse:
-                button = Tk.Button(self, text='Browse...',
-                        command=prop.command)
-                button.grid(row=row, column=2)
-        for row, (check, current_value) in enumerate(zip(self.properties.checks,
-                current_values.checks), start=row+1):
-            label = Tk.Label(self, text=check)
-            label.grid(row=row, column=0, sticky=Tk.W)
-            checkbutton = Tk.Checkbutton(self)
-            checkbutton.grid(row=row, column=2)
-            if current_value:
-                checkbutton.select()
+        self.property_frames = []
+        for row, property_ in enumerate(self.properties):
+            property_frame = PropertyFrame(self, row, *property_)
         row += 1
         done_button = Tk.Button(self, text='OK', command=self.finish_window)
         cancel_button = Tk.Button(self, text='Cancel', command=self.cancel_window)
-        done_button.grid(row=row, column=1, sticky=Tk.E)
-        cancel_button.grid(row=row, column=2)
+        done_button.grid(row=row, column=3)
+        cancel_button.grid(row=row, column=2, sticky=Tk.E)
 
     def find_destination(self):
         self.browse_folder(entry=self.entries[0])
@@ -750,22 +731,43 @@ class PropertiesWindow(Tk.Toplevel, object):
         The second list is which links to put in finished pages.
         These are checkboxes.
         """
-        return BoxChecks(boxes=
-               [Property('Destination', True, self.find_destination),
-                Property('Name', False, ''),
-                Property('Source', True, self.find_source),
-                Property('Template', True, self.find_template),
-                Property('Main Template', True, self.find_main_template),
-                Property('URL/JSON Markdown', True, self.find_markdown),
-                Property('Searchterms File', True, self.find_searchterms),
-                Property('Leaf Level', False, '')],
-                checks=[
-                'Version Links',
-                'Links within the Dictionary',
-                'Links to grammar.tinellb.com',
-                'Links to dictionary.tinellb.com',
-                ])
+        return [Property('Destination', False, True),
+                Property('Name', False, False),
+                Property('Source', False, True),
+                Property('Template', False, True),
+                Property('Main Template', False, True),
+                Property('URL/JSON Markdown', False, True),
+                Property('Searchterms File', False, True),
+                Property('Leaf Level', False, False),
+                Property('Version Links', True, False),
+                Property('Links within the Dictionary', True, False),
+                Property('Links to grammar.tinellb.com', True, True),
+                Property('Links to dictionary.tinellb.com', True, False)]
 
+
+class PropertyFrame:
+    """
+    Wrapper class for one row of a PropertiesWindow
+    """
+    def __init__(self, master, row, property_name, check=False, browse=False):
+        self.check = self.button = self.label = None
+        self.entry = Tk.Entry(master, width=50)
+        self.entry.grid(row=row, column=2)
+        self.label = Tk.Label(master, text=property_name)
+        self.label.grid(row=row, column=1, sticky=Tk.W)
+        if check:
+            self.checkvar = Tk.IntVar()
+            self.check = Tk.Checkbutton(master, variable=self.checkvar)
+            self.check.grid(row=row, column=0)
+        if browse:
+            self.button = Tk.Button(master, text='Browse...', command=self.browse)
+            self.button.grid(row=row, column=3)
+
+    def browse(self):
+        """
+        Allow the user to browse for a filename, and input that into the entry
+        """
+        pass
 
 if __name__ == '__main__':
     markdown = Markdown('c:/users/ryan/documents/tinellbianlanguages/'
