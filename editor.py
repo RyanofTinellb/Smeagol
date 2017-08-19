@@ -343,6 +343,10 @@ class Editor(Tk.Frame, object):
         self.site = Site(*properties_window.site_values)
         self.entry = self.site.root
 
+    def site_publish(self, event=None):
+        for _ in self.site.publish():
+            pass
+
     def load(self, event=None):
         """
         Find entry, manipulate entry to fit boxes, place in boxes.
@@ -606,7 +610,8 @@ class Editor(Tk.Frame, object):
     def menu_commands(self):
         return [('Site', [('Open', self.site_open),
                         ('Save', self.site_save),
-                        ('P_roperties', self.site_properties)]),
+                        ('P_roperties', self.site_properties),
+                        ('Publish All', self.site_publish)]),
                 ('Markdown', [('Load', self.markdown_load),
                               ('Refresh', self.markdown_refresh),
                               ('Open as _Html', self.markdown_open)]
