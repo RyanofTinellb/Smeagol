@@ -272,10 +272,20 @@ def remove_datestamp(text):
 def replace_datestamp(text):
     return add_datestamp(remove_datestamp(text))
 
+
 class AddRemoveLinks:
     def __init__(self, link_adders):
         self.link_adders = link_adders
-        self.details = map(lambda x: x.adder, link_adders)
+        self.details = dict(map(self.get_details, link_adders))
+
+    @staticmethod
+    def get_details(adder):
+        adder_name = adder.name
+        try:
+            adder_filename = adder.filename
+        except AttributeError:
+            adder_filename = ''
+        return (adder_name, adder_filename)
 
     def add_links(self, text, entry, site):
         for link_adder in self.link_adders:
@@ -314,7 +324,7 @@ class ExternalDictionary:
         return text
 
     @property
-    def adder(self):
+    def name(self):
         return 'externaldictionary'
 
 class InternalStory:
@@ -358,9 +368,8 @@ class InternalStory:
         links = '<span class="version-links">{0}</span>'.format(links)
         return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
 
-
     @property
-    def adder(self):
+    def name(self):
         return 'internalstory'
 
 class InternalDictionary:
@@ -376,7 +385,7 @@ class InternalDictionary:
         return text
 
     @property
-    def adder(self):
+    def name(self):
         return 'internaldictionary'
 
 class ExternalGrammar:
@@ -386,6 +395,7 @@ class ExternalGrammar:
     """
     def __init__(self, filename):
         self.languages, self.words, self.urls = [], [], []
+        self.filename = filename
         with open(filename) as replacements:
             replacements = replacements.read()
         for line in replacements.splitlines():
@@ -419,5 +429,5 @@ class ExternalGrammar:
         return text
 
     @property
-    def adder(self):
+    def name(self):
         return 'externalgrammar'

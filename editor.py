@@ -324,10 +324,17 @@ class Editor(Tk.Frame, object):
         """
         Pass current site details to a new Properties Window
         """
-        boxes = self.site.details
+        boxes = map(lambda x: (0, x), self.site.details)
+
         adders = ['internalstory', 'internaldictionary', 'externalgrammar', 'externaldictionary']
         adder_types = self.links.details
-        checks = map(lambda x: x in adder_types, adders)
+        checks = []
+        for adder in adders:
+            if adder in adder_types.keys():
+                checks.append((1, adder_types[adder]))
+            else:
+                checks.append((0, ''))
+
         defaults = boxes + checks
         properties_window = PropertiesWindow(defaults)
         self.wait_window(properties_window)
@@ -664,8 +671,8 @@ class PropertiesWindow(Tk.Toplevel, object):
         super(PropertiesWindow, self).__init__(master)
         self.property_frames = []
         commands = dict(done=self.finish_window, cancel=self.cancel_window)
-        for row, property_ in enumerate(self.properties):
-            property_frame = PropertyFrame(self, row, commands, *property_)
+        for row, (current_value, property_) in enumerate(zip(current_values, self.properties)):
+            property_frame = PropertyFrame(self, row, current_value, commands, *property_)
             self.property_frames.append(property_frame)
         row += 1
         done_button = Tk.Button(self, text='OK', command=commands['done'])
@@ -723,17 +730,42 @@ class PropertyFrame:
     """
     Wrapper class for one row of a PropertiesWindow
     """
-    def __init__(self, master, row, commands=None, property_name='',
+    def __init__(self, master, row, defaults, commands=None, property_name='',
                 check=False, entry=False, browse=False):
+        """
+        Create a row of the properties window
+
+        :param master: (widget) the widget to which all the widgets of
+            this frame belong.
+        :param row: (int) the row of the window onto which to place
+            this frame.
+        :param defaults: ((int, str)), current state of checkbox and textbox
+        :param commands: ({str:method}) the 'done' and 'cancel' commands
+            for the outer window.
+        :param property_name: (str) the name of the property being
+            changed on this row
+        :param check: (bool) whether to have a checkboxes
+        :param entry: (bool) whether to have a textbox/entry
+        :param browse: (bool) Whether to have a browse button
+                       (str) 'folder' if this property is to search for a
+                            directory
+                       ((str, str)) if this property is to search for a
+                            file. This is the tuple used by
+                            Tkinter's FileDialog
+        """
         self.check = self.button = self.label = None
+        defaults = dict(zip(['check', 'text'], defaults))
         if check:
             self.checkvar = Tk.IntVar()
+            self.checkvar.set(defaults['check'])
             self.check = Tk.Checkbutton(master, variable=self.checkvar)
             self.check.grid(row=row, column=0)
         self.label = Tk.Label(master, text=property_name)
         self.label.grid(row=row, column=1, sticky=Tk.W)
         if entry:
-            self.entry = Tk.Entry(master, width=50)
+            self.entryvar = Tk.StringVar()
+            self.entryvar.set(defaults['text'])
+            self.entry = Tk.Entry(master, width=50, textvariable=self.entryvar)
             self.entry.bind('<Return>', commands['done'])
             self.entry.bind('<Escape>', commands['cancel'])
             self.entry.grid(row=row, column=2)
@@ -769,6 +801,9 @@ class PropertyFrame:
         return browse_file
 
     def insert(self, text=None):
+        """
+        Insert text into the appropriate textbox
+        """
         if text:
             self.entry.delete(0, Tk.END)
             self.entry.insert(Tk.INSERT, text)
