@@ -6,7 +6,7 @@ import tkFileDialog as fd
 import tkMessageBox as mb
 
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
-Property = namedtuple('Property', ['name', 'can_browse'])
+Property = namedtuple('Property', ['name', 'can_browse', 'command'])
 BoxChecks = namedtuple('BoxChecks', ['boxes', 'checks'])
 
 class Editor(Tk.Frame, object):
@@ -321,7 +321,7 @@ class Editor(Tk.Frame, object):
 
     def site_properties(self, event=None):
         """
-        Open a properties window
+        Pass current site details to a new Properties Window
         """
         boxes = self.site.details
         adders = ['internalstory', 'internaldictionary', 'externalgrammar', 'externaldictionary']
@@ -329,6 +329,9 @@ class Editor(Tk.Frame, object):
         checks = map(lambda x: x in adder_types, adders)
         defaults = BoxChecks(boxes=boxes, checks=checks)
         properties_window = PropertiesWindow(defaults)
+        self.wait_window(properties_window)
+        self.site = Site(*properties_window.current_values.boxes)
+        self.entry = self.site.root
 
     def load(self, event=None):
         """
@@ -338,7 +341,6 @@ class Editor(Tk.Frame, object):
         texts = self.prepare_entry(self.entry)
         self.display(texts)
         self.save_text.set('Save')
-
         return 'break'
 
     def find_entry(self, headings):
@@ -656,28 +658,82 @@ class PropertiesWindow(Tk.Toplevel, object):
         - site leaf_level
         - editor links
     """
-    def __init__(self, defaults, master=None):
+    def __init__(self, current_values, master=None):
+        self.current_values = current_values
         super(PropertiesWindow, self).__init__(master)
-        self.entries = []
-        for row, (prop, default) in enumerate(zip(self.properties.boxes,
-                defaults.boxes)):
+        self.entries, self.buttons = [], []
+        for row, (prop, current_value) in enumerate(zip(self.properties.boxes,
+                current_values.boxes)):
             label = Tk.Label(self, text=prop.name)
             label.grid(row=row, column=0, sticky=Tk.W)
             entry = Tk.Entry(self, width=50)
             entry.grid(row=row, column=1)
-            entry.insert(0, str(default))
             self.entries.append(entry)
+            entry.insert(0, str(current_value))
             if prop.can_browse:
-                button = Tk.Button(self, text='Browse...')
+                button = Tk.Button(self, text='Browse...',
+                        command=prop.command)
                 button.grid(row=row, column=2)
-        for row, (check, default) in enumerate(zip(self.properties.checks,
-                defaults.checks), start=row+1):
+        for row, (check, current_value) in enumerate(zip(self.properties.checks,
+                current_values.checks), start=row+1):
             label = Tk.Label(self, text=check)
             label.grid(row=row, column=0, sticky=Tk.W)
             checkbutton = Tk.Checkbutton(self)
             checkbutton.grid(row=row, column=2)
-            if default:
+            if current_value:
                 checkbutton.select()
+        row += 1
+        done_button = Tk.Button(self, text='OK', command=self.finish_window)
+        cancel_button = Tk.Button(self, text='Cancel', command=self.cancel_window)
+        done_button.grid(row=row, column=1, sticky=Tk.E)
+        cancel_button.grid(row=row, column=2)
+
+    def find_destination(self):
+        self.browse_folder(entry=self.entries[0])
+
+    def browse_folder(self, entry):
+        filename = fd.askdirectory()
+        self.insert(filename, entry)
+
+    def find_source(self):
+        self.browse_file(filetype=('Data File', '*.txt'), entry=self.entries[2])
+
+    def find_template(self):
+        self.browse_file(filetype=('HTML Template', '*.html'), entry=self.entries[3])
+
+    def find_main_template(self):
+        self.browse_file(filetype=('HTML Template', '*.html'), entry=self.entries[4])
+
+    def find_markdown(self):
+        self.browse_file(filetype=('Markdown File', '*.mkd'), entry=self.entries[5])
+
+    def find_searchterms(self):
+        self.browse_file(filetype=('JSON File', '*.json'), entry=self.entries[6])
+
+    def browse_file(self, filetype, entry):
+        filename = fd.askopenfilename(filetypes=[filetype], title='Select File')
+        self.insert(filename, entry)
+
+    def insert(self, text, entry):
+        if text:
+            entry.delete(0, Tk.END)
+            entry.insert(Tk.INSERT, text)
+        entry.focus_set()
+
+    def finish_window(self):
+        new_values = []
+        for entry in self.entries:
+            value = entry.get()
+            new_values.append(value)
+        new_values[7] = int(new_values[7])
+        self.current_values = BoxChecks(boxes=new_values, checks=None)
+        self.destroy()
+
+    def cancel_window(self):
+        """
+        Do nothing if cancel button pressed
+        """
+        self.destroy()
 
     @property
     def properties(self):
@@ -687,28 +743,28 @@ class PropertiesWindow(Tk.Toplevel, object):
         The first list is the site properties.
         Each tuple is of the form (property, can_browse):
             :var property: (str) The name of the property to be modified
-            :var can_browse: (bool) Whether to display a 'Browse...' button
-                for that property
+            :var can_browse: (str) Whether to browse for a 'file', 'folder'
+                or neither ''.
+            :var command: the command to link to this button
 
         The second list is which links to put in finished pages.
         These are checkboxes.
         """
         return BoxChecks(boxes=
-               [Property('Destination', True),
-                Property('Name', False),
-                Property('Source', True),
-                Property('Template', True),
-                Property('Main Template', True),
-                Property('URL/JSON Markdown', True),
-                Property('Searchterms File', True),
-                Property('Leaf Level', False)],
+               [Property('Destination', True, self.find_destination),
+                Property('Name', False, ''),
+                Property('Source', True, self.find_source),
+                Property('Template', True, self.find_template),
+                Property('Main Template', True, self.find_main_template),
+                Property('URL/JSON Markdown', True, self.find_markdown),
+                Property('Searchterms File', True, self.find_searchterms),
+                Property('Leaf Level', False, '')],
                 checks=[
                 'Version Links',
                 'Links within the Dictionary',
                 'Links to grammar.tinellb.com',
                 'Links to dictionary.tinellb.com',
                 ])
-
 
 
 if __name__ == '__main__':
