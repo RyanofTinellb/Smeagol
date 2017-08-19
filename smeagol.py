@@ -37,7 +37,10 @@ class Site:
         self.main_template = main_template
         self.markdown = markdown
         self.searchjson = searchjson
-        self.leaf_level = leaf_level
+        try:
+            self.leaf_level = int(leaf_level)
+        except ValueError:
+            self.leaf_level = 1
         self.current = None
         self.length = 0
         node = self.root = Page(name, leaf_level=self.leaf_level, markdown=self.markdown)

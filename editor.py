@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from itertools import chain
 from smeagol import *
 import webbrowser as web
 import Tkinter as Tk
@@ -7,7 +8,7 @@ import tkMessageBox as mb
 
 
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
-Property = namedtuple('Property', ['name', 'check', 'textbox', 'browse'])
+Property = namedtuple('Property', ['name', 'owner', 'check', 'textbox', 'browse'])
 
 
 class Editor(Tk.Frame, object):
@@ -322,7 +323,8 @@ class Editor(Tk.Frame, object):
 
     def site_properties(self, event=None):
         """
-        Pass current site details to a new Properties Window
+        Pass current site details to a new Properties Window, and then
+            re-create the Site with the new values and renew the Links
         """
         boxes = map(lambda x: (0, x), self.site.details)
 
@@ -335,7 +337,7 @@ class Editor(Tk.Frame, object):
             else:
                 checks.append((0, ''))
 
-        defaults = boxes + checks
+        defaults = chain(boxes, checks)
         properties_window = PropertiesWindow(defaults)
         self.wait_window(properties_window)
         self.site = Site(*properties_window.site_values)
@@ -682,13 +684,26 @@ class PropertiesWindow(Tk.Toplevel, object):
         self.property_frames[0].entry.focus_set()
 
     def finish_window(self, event=None):
-        new_values = []
-        for entry in self.entries:
-            value = entry.get()
-            new_values.append(value)
-        new_values[7] = int(new_values[7])
-        self.current_values = BoxChecks(boxes=new_values, checks=None)
+        """
+        Set values to site values and links values from the properties
+            window, and then disable the window
+        """
+        self.site_values = []
+        self.link_values = []
+        for value in self.new_values:
+            if value['owner'] == 'site':
+                self.site_values.append(value['value'])
+            elif value['check'] == 1:
+                if value['value'] == '':
+                    self.link_values.append(value['owner']())
+                else:
+                    self.link_values.append(value['owner'](value['value']))
         self.destroy()
+
+    @property
+    def new_values(self):
+        for property_frame in self.property_frames:
+            yield property_frame.get()
 
     def cancel_window(self, event=None):
         """
@@ -703,6 +718,9 @@ class PropertiesWindow(Tk.Toplevel, object):
 
         Site properties are named tuples:
             :var name: (str) The name of the property to be modified
+            :var owner (str) If this property pertains to the 'site'
+                       (obj) A Links class, if the property pertains to
+                            the editor
             :var check: (bool) Whether this property has a Checkbutton
             :var entry: (bool) Whether this property has a Textbox / Entry
             :var browse: (bool) Whether to have a browse button
@@ -712,18 +730,18 @@ class PropertiesWindow(Tk.Toplevel, object):
                                 file, this is the tuple used by
                                 Tkinter's FileDialog
         """
-        return [Property('Destination', False, True, 'folder'),
-                Property('Name', False, True,  False),
-                Property('Source', False, True, ('Data File', '*.txt')),
-                Property('Template', False, True, ('HTML Template', '*.html')),
-                Property('Main Template', False, True, ('HTML Template', '*.html')),
-                Property('URL/JSON Markdown', False, True, ('Markdown File', '*.mkd')),
-                Property('Searchterms File', False, True, ('JSON File', '*.json')),
-                Property('Leaf Level', False, True, False),
-                Property('Version Links', True, False, False),
-                Property('Links within the Dictionary', True, False, False),
-                Property('Links to external grammar site', True, True, ('Grammar Links File', '*.txt')),
-                Property('Links to external dictionary site', True, False, False)]
+        return [Property('Destination', 'site', False, True, 'folder'),
+                Property('Name', 'site', False, True,  False),
+                Property('Source', 'site', False, True, ('Data File', '*.txt')),
+                Property('Template', 'site', False, True, ('HTML Template', '*.html')),
+                Property('Main Template', 'site', False, True, ('HTML Template', '*.html')),
+                Property('URL/JSON Markdown', 'site', False, True, ('Markdown File', '*.mkd')),
+                Property('Searchterms File', 'site', False, True, ('JSON File', '*.json')),
+                Property('Leaf Level', 'site', False, True, False),
+                Property('Version Links', InternalStory, True, False, False),
+                Property('Links within the Dictionary', InternalDictionary, True, False, False),
+                Property('Links to external grammar site', ExternalGrammar, True, True, ('Grammar Links File', '*.txt')),
+                Property('Links to external dictionary site', ExternalDictionary, True, False, False)]
 
 
 class PropertyFrame:
@@ -731,7 +749,7 @@ class PropertyFrame:
     Wrapper class for one row of a PropertiesWindow
     """
     def __init__(self, master, row, defaults, commands=None, property_name='',
-                check=False, entry=False, browse=False):
+                owner='site', check=False, entry=False, browse=False):
         """
         Create a row of the properties window
 
@@ -753,17 +771,17 @@ class PropertyFrame:
                             file. This is the tuple used by
                             Tkinter's FileDialog
         """
-        self.check = self.button = self.label = None
+        self.owner = owner
+        self.checkvar, self.entryvar = Tk.IntVar(), Tk.StringVar()
+        self.entry = self.check = self.button = self.label = None
         defaults = dict(zip(['check', 'text'], defaults))
         if check:
-            self.checkvar = Tk.IntVar()
             self.checkvar.set(defaults['check'])
             self.check = Tk.Checkbutton(master, variable=self.checkvar)
             self.check.grid(row=row, column=0)
         self.label = Tk.Label(master, text=property_name)
         self.label.grid(row=row, column=1, sticky=Tk.W)
         if entry:
-            self.entryvar = Tk.StringVar()
             self.entryvar.set(defaults['text'])
             self.entry = Tk.Entry(master, width=50, textvariable=self.entryvar)
             self.entry.bind('<Return>', commands['done'])
@@ -807,6 +825,10 @@ class PropertyFrame:
         if text:
             self.entry.delete(0, Tk.END)
             self.entry.insert(Tk.INSERT, text)
+
+    def get(self):
+        return dict(owner=self.owner,
+                check=self.checkvar.get(), value=self.entryvar.get())
 
 
 if __name__ == '__main__':
