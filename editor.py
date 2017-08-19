@@ -5,8 +5,10 @@ import Tkinter as Tk
 import tkFileDialog as fd
 import tkMessageBox as mb
 
+
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
 Property = namedtuple('Property', ['name', 'check', 'browse'])
+
 
 class Editor(Tk.Frame, object):
     """
@@ -661,13 +663,16 @@ class PropertiesWindow(Tk.Toplevel, object):
         self.current_values = current_values
         super(PropertiesWindow, self).__init__(master)
         self.property_frames = []
+        commands = dict(done=self.finish_window, cancel=self.cancel_window)
         for row, property_ in enumerate(self.properties):
-            property_frame = PropertyFrame(self, row, *property_)
+            property_frame = PropertyFrame(self, row, commands, *property_)
+            self.property_frames.append(property_frame)
         row += 1
-        done_button = Tk.Button(self, text='OK', command=self.finish_window)
-        cancel_button = Tk.Button(self, text='Cancel', command=self.cancel_window)
+        done_button = Tk.Button(self, text='OK', command=commands['done'])
+        cancel_button = Tk.Button(self, text='Cancel', command=commands['cancel'])
         done_button.grid(row=row, column=3)
         cancel_button.grid(row=row, column=2, sticky=Tk.E)
+        self.property_frames[0].entry.focus_set()
 
     def find_destination(self):
         self.browse_folder(entry=self.entries[0])
@@ -701,7 +706,7 @@ class PropertiesWindow(Tk.Toplevel, object):
             entry.insert(Tk.INSERT, text)
         entry.focus_set()
 
-    def finish_window(self):
+    def finish_window(self, event=None):
         new_values = []
         for entry in self.entries:
             value = entry.get()
@@ -710,7 +715,7 @@ class PropertiesWindow(Tk.Toplevel, object):
         self.current_values = BoxChecks(boxes=new_values, checks=None)
         self.destroy()
 
-    def cancel_window(self):
+    def cancel_window(self, event=None):
         """
         Do nothing if cancel button pressed
         """
@@ -749,9 +754,12 @@ class PropertyFrame:
     """
     Wrapper class for one row of a PropertiesWindow
     """
-    def __init__(self, master, row, property_name, check=False, browse=False):
+    def __init__(self, master, row, commands=None, property_name='',
+                check=False, browse=False):
         self.check = self.button = self.label = None
         self.entry = Tk.Entry(master, width=50)
+        self.entry.bind('<Return>', commands['done'])
+        self.entry.bind('<Escape>', commands['cancel'])
         self.entry.grid(row=row, column=2)
         self.label = Tk.Label(master, text=property_name)
         self.label.grid(row=row, column=1, sticky=Tk.W)
@@ -768,6 +776,7 @@ class PropertyFrame:
         Allow the user to browse for a filename, and input that into the entry
         """
         pass
+
 
 if __name__ == '__main__':
     markdown = Markdown('c:/users/ryan/documents/tinellbianlanguages/'
