@@ -7,7 +7,7 @@ import tkMessageBox as mb
 
 
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
-Property = namedtuple('Property', ['name', 'check', 'browse'])
+Property = namedtuple('Property', ['name', 'check', 'textbox', 'browse'])
 
 
 class Editor(Tk.Frame, object):
@@ -670,41 +670,9 @@ class PropertiesWindow(Tk.Toplevel, object):
         row += 1
         done_button = Tk.Button(self, text='OK', command=commands['done'])
         cancel_button = Tk.Button(self, text='Cancel', command=commands['cancel'])
-        done_button.grid(row=row, column=3)
+        done_button.grid(row=row, column=3, sticky=Tk.E+Tk.W)
         cancel_button.grid(row=row, column=2, sticky=Tk.E)
         self.property_frames[0].entry.focus_set()
-
-    def find_destination(self):
-        self.browse_folder(entry=self.entries[0])
-
-    def browse_folder(self, entry):
-        filename = fd.askdirectory()
-        self.insert(filename, entry)
-
-    def find_source(self):
-        self.browse_file(filetype=('Data File', '*.txt'), entry=self.entries[2])
-
-    def find_template(self):
-        self.browse_file(filetype=('HTML Template', '*.html'), entry=self.entries[3])
-
-    def find_main_template(self):
-        self.browse_file(filetype=('HTML Template', '*.html'), entry=self.entries[4])
-
-    def find_markdown(self):
-        self.browse_file(filetype=('Markdown File', '*.mkd'), entry=self.entries[5])
-
-    def find_searchterms(self):
-        self.browse_file(filetype=('JSON File', '*.json'), entry=self.entries[6])
-
-    def browse_file(self, filetype, entry):
-        filename = fd.askopenfilename(filetypes=[filetype], title='Select File')
-        self.insert(filename, entry)
-
-    def insert(self, text, entry):
-        if text:
-            entry.delete(0, Tk.END)
-            entry.insert(Tk.INSERT, text)
-        entry.focus_set()
 
     def finish_window(self, event=None):
         new_values = []
@@ -726,28 +694,29 @@ class PropertiesWindow(Tk.Toplevel, object):
         """
         Return the properties the user can modify
 
-        The first list is the site properties.
-        Each tuple is of the form (property, can_browse):
-            :var property: (str) The name of the property to be modified
-            :var can_browse: (str) Whether to browse for a 'file', 'folder'
-                or neither ''.
-            :var command: the command to link to this button
-
-        The second list is which links to put in finished pages.
-        These are checkboxes.
+        Site properties are named tuples:
+            :var name: (str) The name of the property to be modified
+            :var check: (bool) Whether this property has a Checkbutton
+            :var entry: (bool) Whether this property has a Textbox / Entry
+            :var browse: (bool) Whether to have a browse button
+                         (str) 'folder' if this property is to search for a
+                                directory
+                         ((str, str)) if this property is to search for a
+                                file, this is the tuple used by
+                                Tkinter's FileDialog
         """
-        return [Property('Destination', False, True),
-                Property('Name', False, False),
-                Property('Source', False, True),
-                Property('Template', False, True),
-                Property('Main Template', False, True),
-                Property('URL/JSON Markdown', False, True),
-                Property('Searchterms File', False, True),
-                Property('Leaf Level', False, False),
-                Property('Version Links', True, False),
-                Property('Links within the Dictionary', True, False),
-                Property('Links to grammar.tinellb.com', True, True),
-                Property('Links to dictionary.tinellb.com', True, False)]
+        return [Property('Destination', False, True, 'folder'),
+                Property('Name', False, True,  False),
+                Property('Source', False, True, ('Data File', '*.txt')),
+                Property('Template', False, True, ('HTML Template', '*.html')),
+                Property('Main Template', False, True, ('HTML Template', '*.html')),
+                Property('URL/JSON Markdown', False, True, ('Markdown File', '*.mkd')),
+                Property('Searchterms File', False, True, ('JSON File', '*.json')),
+                Property('Leaf Level', False, True, False),
+                Property('Version Links', True, False, False),
+                Property('Links within the Dictionary', True, False, False),
+                Property('Links to external grammar site', True, True, ('Grammar Links File', '*.txt')),
+                Property('Links to external dictionary site', True, False, False)]
 
 
 class PropertyFrame:
@@ -755,27 +724,54 @@ class PropertyFrame:
     Wrapper class for one row of a PropertiesWindow
     """
     def __init__(self, master, row, commands=None, property_name='',
-                check=False, browse=False):
+                check=False, entry=False, browse=False):
         self.check = self.button = self.label = None
-        self.entry = Tk.Entry(master, width=50)
-        self.entry.bind('<Return>', commands['done'])
-        self.entry.bind('<Escape>', commands['cancel'])
-        self.entry.grid(row=row, column=2)
-        self.label = Tk.Label(master, text=property_name)
-        self.label.grid(row=row, column=1, sticky=Tk.W)
         if check:
             self.checkvar = Tk.IntVar()
             self.check = Tk.Checkbutton(master, variable=self.checkvar)
             self.check.grid(row=row, column=0)
+        self.label = Tk.Label(master, text=property_name)
+        self.label.grid(row=row, column=1, sticky=Tk.W)
+        if entry:
+            self.entry = Tk.Entry(master, width=50)
+            self.entry.bind('<Return>', commands['done'])
+            self.entry.bind('<Escape>', commands['cancel'])
+            self.entry.grid(row=row, column=2)
         if browse:
+            if browse == 'folder':
+                self.browse = self.browse_folder
+            else:
+                self.browse = self.file_browser(browse)
             self.button = Tk.Button(master, text='Browse...', command=self.browse)
             self.button.grid(row=row, column=3)
 
-    def browse(self):
+    def browse_folder(self):
         """
-        Allow the user to browse for a filename, and input that into the entry
+        Allow the user to browse for a folder
         """
-        pass
+        filename = fd.askdirectory()
+        self.insert(filename)
+        self.entry.focus_set()
+
+    def file_browser(self, filetype):
+        def browse_file():
+            """
+            Allow the user to browse for a file of a given filetype
+
+            :param filetype: (str()) The usual tuple passed to a Tk.FileDialog
+            """
+            filename = fd.askopenfilename(filetypes=[filetype], title='Select File')
+            self.insert(filename)
+            if filename:
+                with ignored(AttributeError):
+                    self.check.select()
+            self.entry.focus_set()
+        return browse_file
+
+    def insert(self, text=None):
+        if text:
+            self.entry.delete(0, Tk.END)
+            self.entry.insert(Tk.INSERT, text)
 
 
 if __name__ == '__main__':
