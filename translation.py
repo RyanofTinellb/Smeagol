@@ -361,13 +361,13 @@ class InternalStory:
         :return (nothing):
         """
         links = ''
-        anchor = '<span class="version-anchor" id="{0}"></span>'.format(str(uid))
+        anchor = '<span class="version-anchor" aria-hidden="true" id="{0}"></span>'.format(str(uid))
         categories = [node.name for node in entry.elders]
         cousins = entry.cousins
         for i, (cousin, category) in enumerate(zip(cousins, categories)):
             if index != i:
                 links += cousins[index].hyperlink(cousin, category, fragment='#'+str(uid)) + '&nbsp;'
-        links = '<span class="version-links">{0}</span>'.format(links)
+        links = '<span class="version-links" aria-hidden="true">{0}</span>'.format(links)
         return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
 
     @property
