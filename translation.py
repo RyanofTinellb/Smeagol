@@ -340,14 +340,16 @@ class InternalStory:
         """
         paragraphs = text.splitlines()
         version = entry.elders.index(entry.ancestors[1])
-        for uid, paragraph in enumerate(paragraphs[1:]):
-            if version == 4:
-                 paragraph = '&id=' + paragraphs[uid+1].replace(' | [r]', '&vlinks= | [r]')
+        for uid, paragraph in enumerate(paragraphs[1:], start=1):
+            if paragraph == '<span class="stars">*&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;*</span>':
+                pass
+            elif version == 4:
+                 paragraph = '&id=' + paragraphs[uid].replace(' | [r]', '&vlinks= | [r]')
             elif version == 3:
-                paragraph = '[t]&id=' + re.sub(r'(?= \| \[r\]<div class=\"literal\">)', '&vlinks=', paragraphs[uid+1][3:])
+                paragraph = '[t]&id=' + re.sub(r'(?= \| \[r\]<div class=\"literal\">)', '&vlinks=', paragraphs[uid][3:])
             else:
-                paragraph = '&id=' + paragraphs[uid+1] + '&vlinks='
-            paragraphs[uid+1] = self._version_links(paragraph, version, entry, uid)
+                paragraph = '&id=' + paragraphs[uid] + '&vlinks='
+            paragraphs[uid] = self._version_links(paragraph, version, entry, uid)
         return '\n'.join(paragraphs)
 
     @staticmethod

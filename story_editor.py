@@ -4,7 +4,7 @@ from string import printable
 
 
 class StoryEditor(Editor):
-    def __init__(self, site, markdown, links, master=None):
+    def __init__(self, site=None, markdown=None, links=None, master=None):
         font = ('Californian FB', 16)
         widgets = WidgetAmounts(headings=2, textboxes=4, radios='languages')
         super(StoryEditor, self).__init__(site, markdown, links, widgets, font)
@@ -143,11 +143,11 @@ def interlinear(paragraph, markdown):
         paragraph[4]: Morpheme gloss
     :return (str): an interlinear in Story markdown.
     """
+    if paragraph[0] == '* **':
+        return '* **'
     italics = markdown.find_formatting('em')
     upright = ('', '')
     font_style = upright
-    if paragraph[0] == '* **':
-        return '* **'
     literal = paragraph[4][paragraph[4].find(' |- -| '):]
     text = '[t]{0}{1} | -| &flex;'.format(paragraph[0], literal)
     # remove middot, and replace angle brackets with parentheses
