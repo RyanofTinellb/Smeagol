@@ -102,12 +102,10 @@ class StoryEditor(Editor):
         paragraphs[0:5:2] = texts
         with conversion(self.translator, 'convert_sentence') as converter:
             paragraphs[1] = converter(paragraphs[2])    # Tinellbian
-        paragraphs[4] += ' |- -| {' + literal + '}'      # Literal
+        paragraphs[4] += ' |- -| {' + literal + '}'      # Gloss
         paragraphs[3] = interlinear(paragraphs, self.markdown)     # Interlinear
-        punctuation = ['.(', '(', ')', '-']
-        with conversion(self.markdown, 'find_formatting') as converter:
-            punctuation += list(converter('small-caps'))
-        replacements = ['&middot;(', chr(5), chr(6), 2*chr(5), 2*chr(6), chr(7)]
+        punctuation = ['.(', '(', ')', '-', '<', '>']
+        replacements = ['&middot;(', chr(5), chr(6), chr(7), 2*chr(5), 2*chr(6)]
         for i, j in zip(punctuation, replacements):
             paragraphs[2] = paragraphs[2].replace(i, j)     # Transliteration
         return tuple(paragraphs)
