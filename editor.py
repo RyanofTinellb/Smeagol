@@ -317,6 +317,7 @@ class Editor(Tk.Frame, object):
                 filetypes=[('Sm\xe9agol File', '*.smg')],
                 title='Save Site', defaultextension='.smg')
         if filename:
+            details = self.site.details + list(self.links.details)
             with open(filename, 'w') as site:
                 site.write(repr(self.site))
         return 'break'
@@ -341,6 +342,7 @@ class Editor(Tk.Frame, object):
         properties_window = PropertiesWindow(defaults)
         self.wait_window(properties_window)
         self.site = Site(*properties_window.site_values)
+        self.links = AddRemoveLinks(properties_window.link_values)
         self.entry = self.site.root
 
     def site_publish(self, event=None):
