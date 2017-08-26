@@ -311,20 +311,28 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def site_open(self, event=None):
+        """
+        Loop until a valid file is passed back, or user cancels
+        """
         filename = fd.askopenfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Open Site')
-        details = {}
         if filename:
             try:
                 with open(filename) as site:
-                    site = site.read().splitlines()
-                for line in site:
-                    property_, value = line.split(': ')
-                    details[property_] = value
-                self.reset()
-            except (IOError, SyntaxError):
-                mb.showerror('Invalid File', 'Please select a valid *.smg file.')
-        else:
-            pass
+                    sections = site.read().split('#')
+                for section in sections:
+                    try:
+                        header, config = section.split('\n', 1)
+                    except ValueError:
+                        continue
+                    if header == 'site':
+                        self.site = self.make_site_from_config(config)
+                        self.reset()
+                    elif header == 'editor':
+                        self.links = self.get_linkadder_from_config(config)
+                    else:
+                        raise SyntaxError
+            except SyntaxError:
+                self.site_open()
         return 'break'
 
     def make_site_from_config(self, config):
