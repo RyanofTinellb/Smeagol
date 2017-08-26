@@ -355,7 +355,7 @@ class Editor(Tk.Frame, object):
         link_adders = []
         for property_ in properties:
             config_adder = property_.split(': ')
-            link_adders.extend(self.create_linkadder(possible_adders, config_adder))
+            link_adders.append(self.create_linkadder(possible_adders, config_adder))
         return AddRemoveLinks(link_adders)
 
     def create_linkadder(self, possible_adders, config_adder):
@@ -371,8 +371,7 @@ class Editor(Tk.Frame, object):
         except ValueError:
             (key, ), value = config_adder, None
         adder = filter(lambda x: x.property == key, possible_adders)
-        adder = map(lambda x: x.owner, adder)
-        adder = map(lambda x: x(), adder) if value is None else map(lambda x: x(value), adder)
+        adder = adder[0].owner() if value is None else adder[0].owner(value)
         return adder
 
     def reset(self, event=None):
