@@ -48,6 +48,22 @@ externaldictionary\n"""
                     'c:/users/ryan/documents/tinellbianlanguages/dictionarylinks.txt'}
             self.assertEqual(expected, links.details)
 
+    def testCurrentProperties(self):
+        expected = [(0, 'c:/users/ryan/documents/tinellbianlanguages/grammar'),
+                    (0, 'Grammar'),
+                    (0, 'data.txt'),
+                    (0, 'template.html'),
+                    (0, 'main_template.html'),
+                    (0, '../replacements.mkd'),
+                    (0, 'searching.json'),
+                    (0, '3'),
+                    (0, ''),
+                    (0, ''),
+                    (0, ''),
+                    (1, '')]
+        actual = list(self.editor.current_properties())
+        self.assertEqual(expected, actual)
+
 
 if __name__ == '__main__':
     unittest.main()

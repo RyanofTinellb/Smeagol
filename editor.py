@@ -439,6 +439,10 @@ class Editor(Tk.Frame, object):
         self.links = AddRemoveLinks(properties_window.link_values)
         self.entry = self.site.root
 
+    def current_properties(self):
+        for i in range(150):
+            yield (i % 2, i)
+
     def site_publish(self, event=None):
         """
         Publish every page in the Site using the Site's own method
