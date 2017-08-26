@@ -8,7 +8,36 @@ import tkMessageBox as mb
 
 
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
-Property = namedtuple('Property', ['name', 'owner', 'check', 'textbox', 'browse'])
+
+"""
+Site properties are named tuples:
+    :var name: (str) The human-readable name of the property to be modified
+    :var property: (str) The name of the property as used by Smeagol
+    :var owner (str) If this property pertains to the 'site'
+               (obj) A Links class, if the property pertains to
+                    the editor
+    :var check: (bool) Whether this property has a Checkbutton
+    :var entry: (bool) Whether this property has a Textbox / Entry
+    :var browse: (bool) Whether to have a browse button
+                 (str) 'folder' if this property is to search for a
+                        directory
+                 ((str, str)) if this property is to search for a
+                        file, this is the tuple used by
+                        Tkinter's FileDialog
+"""
+Property = namedtuple('Property', ['name', 'property', 'owner', 'check', 'textbox', 'browse'])
+editor_properties = [Property('Destination', 'destination', 'site', False, True, 'folder'),
+    Property('Name', 'name', 'site', False, True,  False),
+    Property('Source', 'source', 'site', False, True, ('Data File', '*.txt')),
+    Property('Template', 'template', 'site', False, True, ('HTML Template', '*.html')),
+    Property('Main Template', 'main_template', 'site', False, True, ('HTML Template', '*.html')),
+    Property('URL/JSON Markdown', 'markdown', 'site', False, True, ('Markdown File', '*.mkd')),
+    Property('Searchterms File', 'searchjson', 'site', False, True, ('JSON File', '*.json')),
+    Property('Leaf Level', 'leaf_level', 'site', False, True, False),
+    Property('Version Links', 'internalstory', InternalStory, True, False, False),
+    Property('Links within the Dictionary', 'internaldictionary', InternalDictionary, True, False, False),
+    Property('Links to external grammar site', 'externalgrammar', ExternalGrammar, True, True, ('Grammar Links File', '*.txt')),
+    Property('Links to external dictionary site', 'externaldictionary', ExternalDictionary, True, False, False)]
 
 
 class Editor(Tk.Frame, object):
@@ -717,38 +746,6 @@ class PropertiesWindow(Tk.Toplevel, object):
         Do nothing if cancel button pressed
         """
         self.destroy()
-
-    @property
-    def properties(self):
-        """
-        Return the properties the user can modify
-
-        Site properties are named tuples:
-            :var name: (str) The name of the property to be modified
-            :var owner (str) If this property pertains to the 'site'
-                       (obj) A Links class, if the property pertains to
-                            the editor
-            :var check: (bool) Whether this property has a Checkbutton
-            :var entry: (bool) Whether this property has a Textbox / Entry
-            :var browse: (bool) Whether to have a browse button
-                         (str) 'folder' if this property is to search for a
-                                directory
-                         ((str, str)) if this property is to search for a
-                                file, this is the tuple used by
-                                Tkinter's FileDialog
-        """
-        return [Property('Destination', 'site', False, True, 'folder'),
-                Property('Name', 'site', False, True,  False),
-                Property('Source', 'site', False, True, ('Data File', '*.txt')),
-                Property('Template', 'site', False, True, ('HTML Template', '*.html')),
-                Property('Main Template', 'site', False, True, ('HTML Template', '*.html')),
-                Property('URL/JSON Markdown', 'site', False, True, ('Markdown File', '*.mkd')),
-                Property('Searchterms File', 'site', False, True, ('JSON File', '*.json')),
-                Property('Leaf Level', 'site', False, True, False),
-                Property('Version Links', InternalStory, True, False, False),
-                Property('Links within the Dictionary', InternalDictionary, True, False, False),
-                Property('Links to external grammar site', ExternalGrammar, True, True, ('Grammar Links File', '*.txt')),
-                Property('Links to external dictionary site', ExternalDictionary, True, False, False)]
 
 
 class PropertyFrame:
