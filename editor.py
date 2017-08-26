@@ -346,9 +346,9 @@ class Editor(Tk.Frame, object):
                 filetypes=[('Sm\xe9agol File', '*.smg')],
                 title='Save Site', defaultextension='.smg')
         if filename:
-            details = self.site.details + list(self.links.details)
+            details = self.editor_configuration()
             with open(filename, 'w') as site:
-                site.write(repr(self.site))
+                site.write(details)
         return 'break'
 
     @property
