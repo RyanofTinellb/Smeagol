@@ -74,11 +74,22 @@ class Site:
             self.__dict__[name] = value
 
     def __repr__(self):
-        details = ''
-        for detail in self.details[:-1]:
-            details += "'{0}',\n".format(detail)
-        details += str(self.details[-1])
-        return details
+        return ('Site(destination="{0}", '
+                'name="{1}", '
+                'source="{2}", '
+                'template="{3}", '
+                'main_template="{4}", '
+                'markdown="{5}", '
+                'searchjson="{6}", '
+                'leaf_level={7})').format(
+                self.destination,
+                self.name,
+                self.source,
+                self.template_file,
+                self.main_template_file,
+                self.markdown.filename,
+                self.searchjson,
+                str(self.leaf_level))
 
     def refresh(self):
         self.current = None
