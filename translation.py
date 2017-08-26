@@ -277,6 +277,12 @@ def replace_datestamp(text):
 
 class AddRemoveLinks:
     def __init__(self, link_adders):
+        """
+        Allow for the removal of all links, and addition of specific
+            links to Smeagol pages
+
+        :param link_adders: (obj[]) a list of link adder instances
+        """
         self.link_adders = link_adders
         self.details = dict(map(self.get_details, link_adders))
 
