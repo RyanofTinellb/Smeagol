@@ -49,14 +49,14 @@ externaldictionary\n"""
             self.assertEqual(expected, links.details)
 
     def testCurrentProperties(self):
-        expected = [(0, 'c:/users/ryan/documents/tinellbianlanguages/grammar'),
-                    (0, 'Grammar'),
-                    (0, 'data.txt'),
-                    (0, 'template.html'),
-                    (0, 'main_template.html'),
-                    (0, '../replacements.mkd'),
-                    (0, 'searching.json'),
-                    (0, '3'),
+        expected = [(1, 'c:/users/ryan/documents/tinellbianlanguages/grammar'),
+                    (1, 'Grammar'),
+                    (1, 'data.txt'),
+                    (1, 'template.html'),
+                    (1, 'main_template.html'),
+                    (1, '../replacements.mkd'),
+                    (1, 'searching.json'),
+                    (1, '3'),
                     (0, ''),
                     (0, ''),
                     (0, ''),
