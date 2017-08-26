@@ -351,6 +351,22 @@ class Editor(Tk.Frame, object):
                 site.write(repr(self.site))
         return 'break'
 
+    @property
+    def editor_configuration(self):
+        config = ''
+        details = self.site.details
+        adders = self.links.details
+        for property_ in editor_properties:
+            if property_.owner == 'site':
+                config += '{0}: {1}\n'.format(property_.property,
+                        details[property_.property])
+            elif property_.property in adders.keys():
+                if adders[property_.property] != '':
+                    config += '{0}: {1}\n'.format(property_.property, adders[property_.property])
+                else:
+                    config += property_.property + '\n'
+        return config
+
     def site_properties(self, event=None):
         """
         Pass current site details to a new Properties Window, and then
