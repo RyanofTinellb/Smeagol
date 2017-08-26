@@ -30,7 +30,15 @@ class Site:
         """
         self.choose_dir(destination)
         # initialize attributes and utility classes
-        self.details = [destination, name, source, template, main_template, markdown, searchjson, leaf_level]
+        self.details = dict(destination=destination,
+                            name=name,
+                            source=source,
+                            template=template,
+                            main_template=main_template,
+                            markdown=markdown,
+                            searchjson=searchjson,
+                            leaf_level=str(leaf_level))
+        self.destination = destination
         self.name = name
         self.source = source
         self.template = template
