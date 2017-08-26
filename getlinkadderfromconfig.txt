@@ -1,2 +1,2 @@
 externaldictionary
-externalgrammar: c:/users/ryan/documents/dictionarylinks.txt
+externalgrammar: c:/users/ryan/documents/tinellbianlanguages/dictionarylinks.txt

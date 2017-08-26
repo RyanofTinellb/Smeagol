@@ -45,8 +45,9 @@ externaldictionary\n"""
             config = config_file.read()
             links = self.editor.get_linkadder_from_config(config)
             expected = {'externaldictionary': '', 'externalgrammar':
-                    'c:/users/ryan/documents/dictionarylinks.txt'}
-            self.assertEqual(links.details, expected)
+                    'c:/users/ryan/documents/tinellbianlanguages/dictionarylinks.txt'}
+            self.assertEqual(expected, links.details)
+
 
 if __name__ == '__main__':
     unittest.main()
