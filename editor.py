@@ -428,8 +428,24 @@ class Editor(Tk.Frame, object):
         self.entry = self.site.root
 
     def current_properties(self):
-        for i in range(150):
-            yield (i % 2, i)
+        """
+        Match detail dictionaries with properties list, and return current
+                properties to place in properties window
+        """
+        current = []
+
+        details = self.site.details
+        details.update(self.links.details)
+
+        for property_ in editor_properties:
+            if property_.property in details:
+                check = 1
+                text = details[property_.property]
+            else:
+                check = 0
+                text = ''
+            current.append((check, text))
+        return current
 
     def site_publish(self, event=None):
         """
