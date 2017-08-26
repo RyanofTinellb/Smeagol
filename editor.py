@@ -337,19 +337,35 @@ class Editor(Tk.Frame, object):
         return Site(**details)
 
     def get_linkadder_from_config(self, config):
+        """
+        Create an AddRemoveLinks instance based on a given configuration file
+
+        :param config: (str) The appropriate section of a configuration file
+        """
         properties = config.splitlines()
         possible_adders = filter(lambda x: x.owner != 'site', editor_properties)
         link_adders = []
         for property_ in properties:
-            try:
-                key, value = property_.split(': ')
-            except ValueError:
-                key, value = property_, None
-            adder = filter(lambda x: x.property == key, possible_adders)
-            adder = map(lambda x: x.owner, adder)
-            adder = map(lambda x: x(), adder) if value is None else map(lambda x: x(value), adder)
-            link_adders.extend(adder)
+            config_adder = property_.split(': ')
+            link_adders.extend(self.create_linkadder(possible_adders, config_adder))
         return AddRemoveLinks(link_adders)
+
+    def create_linkadder(self, possible_adders, config_adder):
+        """
+        Create an instance of a Link Adder
+
+        :param possible_adders: (Property[]) the editor properties that
+            correspond to LinkAdders
+        :param config_adder: (tuple) a (key, value) pair from a config. file
+        """
+        try:
+            key, value = config_adder
+        except ValueError:
+            (key, ), value = config_adder, None
+        adder = filter(lambda x: x.property == key, possible_adders)
+        adder = map(lambda x: x.owner, adder)
+        adder = map(lambda x: x(), adder) if value is None else map(lambda x: x(value), adder)
+        return adder
 
     def reset(self, event=None):
         """
