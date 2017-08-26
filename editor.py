@@ -327,6 +327,30 @@ class Editor(Tk.Frame, object):
             pass
         return 'break'
 
+    def make_site_from_config(self, config):
+        details = {}
+        properties = config.splitlines()
+        for property_ in properties:
+            with ignored(ValueError):
+                key, value = property_.split(': ')
+                details[key] = value
+        return Site(**details)
+
+    def get_linkadder_from_config(self, config):
+        properties = config.splitlines()
+        possible_adders = filter(lambda x: x.owner != 'site', editor_properties)
+        link_adders = []
+        for property_ in properties:
+            try:
+                key, value = property_.split(': ')
+            except ValueError:
+                key, value = property_, None
+            adder = filter(lambda x: x.property == key, possible_adders)
+            adder = map(lambda x: x.owner, adder)
+            adder = map(lambda x: x(), adder) if value is None else map(lambda x: x(value), adder)
+            link_adders.extend(adder)
+        return AddRemoveLinks(link_adders)
+
     def reset(self, event=None):
         """
         Reset the program.
