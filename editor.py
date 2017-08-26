@@ -438,13 +438,10 @@ class Editor(Tk.Frame, object):
         details.update(self.links.details)
 
         for property_ in editor_properties:
-            if property_.property in details:
-                check = 1
-                text = details[property_.property]
-            else:
-                check = 0
-                text = ''
-            current.append((check, text))
+            try:
+                current.append((1, details[property_.property]))
+            except KeyError:
+                current.append((0, ''))
         return current
 
     def site_publish(self, event=None):
