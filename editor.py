@@ -775,17 +775,19 @@ class PropertiesWindow(Tk.Toplevel, object):
     def __init__(self, current_values, master=None):
         self.current_values = current_values
         super(PropertiesWindow, self).__init__(master)
-        self.property_frames = []
         commands = dict(done=self.finish_window, cancel=self.cancel_window)
+        self.property_frames = []
         for row, (current_value, property_) in enumerate(zip(current_values, self.properties)):
             property_frame = PropertyFrame(self, row, current_value, commands, *property_)
             self.property_frames.append(property_frame)
-        row += 1
+        self.configure_buttons(row+1, commands)
+        self.property_frames[0].entry.focus_set()
+
+    def configure_buttons(self, row, commands):
         done_button = Tk.Button(self, text='OK', command=commands['done'])
         cancel_button = Tk.Button(self, text='Cancel', command=commands['cancel'])
         done_button.grid(row=row, column=3, sticky=Tk.E+Tk.W)
         cancel_button.grid(row=row, column=2, sticky=Tk.E)
-        self.property_frames[0].entry.focus_set()
 
     def finish_window(self, event=None):
         """
