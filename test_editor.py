@@ -12,7 +12,8 @@ class testEditorConfiguration(unittest.TestCase):
                 links=links)
 
     def testEditorConfiguration(self):
-        expected = """destination: c:/users/ryan/documents/tinellbianlanguages/grammar
+        expected = """#site
+destination: c:/users/ryan/documents/tinellbianlanguages/grammar
 name: Grammar
 source: data.txt
 template: template.html
@@ -20,6 +21,8 @@ main_template: main_template.html
 markdown: ../replacements.mkd
 searchjson: searching.json
 leaf_level: 3
+
+#editor
 externaldictionary\n"""
         actual = self.editor.editor_configuration
         self.assertEqual(expected, actual,
