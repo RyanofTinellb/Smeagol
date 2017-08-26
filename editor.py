@@ -777,7 +777,7 @@ class PropertiesWindow(Tk.Toplevel, object):
         super(PropertiesWindow, self).__init__(master)
         commands = dict(done=self.finish_window, cancel=self.cancel_window)
         self.property_frames = []
-        for row, (current_value, property_) in enumerate(zip(current_values, self.properties)):
+        for row, (current_value, property_) in enumerate(zip(current_values, editor_properties)):
             property_frame = PropertyFrame(self, row, current_value, commands, *property_)
             self.property_frames.append(property_frame)
         self.configure_buttons(row+1, commands)
@@ -822,8 +822,8 @@ class PropertyFrame:
     """
     Wrapper class for one row of a PropertiesWindow
     """
-    def __init__(self, master, row, defaults, commands=None, property_name='',
-                owner='site', check=False, entry=False, browse=False):
+    def __init__(self, master, row, defaults, commands=None, human_name='',
+                property_name='', owner='site', check=False, entry=False, browse=False):
         """
         Create a row of the properties window
 
@@ -834,8 +834,8 @@ class PropertyFrame:
         :param defaults: ((int, str)), current state of checkbox and textbox
         :param commands: ({str:method}) the 'done' and 'cancel' commands
             for the outer window.
-        :param property_name: (str) the name of the property being
-            changed on this row
+        :param human_name: (str) the human-readable name of the property
+        :param property_name: (str) the Smeagol name of the property
         :param check: (bool) whether to have a checkboxes
         :param entry: (bool) whether to have a textbox/entry
         :param browse: (bool) Whether to have a browse button
@@ -853,7 +853,7 @@ class PropertyFrame:
             self.checkvar.set(defaults['check'])
             self.check = Tk.Checkbutton(master, variable=self.checkvar)
             self.check.grid(row=row, column=0)
-        self.label = Tk.Label(master, text=property_name)
+        self.label = Tk.Label(master, text=human_name)
         self.label.grid(row=row, column=1, sticky=Tk.W)
         if entry:
             self.entryvar.set(defaults['text'])
