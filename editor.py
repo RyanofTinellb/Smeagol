@@ -421,19 +421,7 @@ class Editor(Tk.Frame, object):
         Pass current site details to a new Properties Window, and then
             re-create the Site with the new values and renew the Links
         """
-        boxes = map(lambda x: (0, x), self.site.details)
-
-        adders = ['internalstory', 'internaldictionary', 'externalgrammar', 'externaldictionary']
-        adder_types = self.links.details
-        checks = []
-        for adder in adders:
-            if adder in adder_types.keys():
-                checks.append((1, adder_types[adder]))
-            else:
-                checks.append((0, ''))
-
-        defaults = chain(boxes, checks)
-        properties_window = PropertiesWindow(defaults)
+        properties_window = PropertiesWindow(self.current_properties())
         self.wait_window(properties_window)
         self.site = Site(*properties_window.site_values)
         self.links = AddRemoveLinks(properties_window.link_values)
