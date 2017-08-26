@@ -311,19 +311,20 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def site_open(self, event=None):
-        while True:
-            filename = fd.askopenfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Open Site')
-            if filename:
-                try:
-                    with open(filename) as site:
-                        site = site.read().replace('\n', ' ')
-                    self.sites = eval('Site(' + site + ')')
-                    self.reset()
-                    break
-                except (IOError, SyntaxError):
-                    mb.showerror('Invalid File', 'Please select a valid *.smg file.')
-            else:
-                break
+        filename = fd.askopenfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Open Site')
+        details = {}
+        if filename:
+            try:
+                with open(filename) as site:
+                    site = site.read().splitlines()
+                for line in site:
+                    property_, value = line.split(': ')
+                    details[property_] = value
+                self.reset()
+            except (IOError, SyntaxError):
+                mb.showerror('Invalid File', 'Please select a valid *.smg file.')
+        else:
+            pass
         return 'break'
 
     def reset(self, event=None):
@@ -353,19 +354,19 @@ class Editor(Tk.Frame, object):
 
     @property
     def editor_configuration(self):
-        config = ''
+        site_config = editor_config = ''
         details = self.site.details
         adders = self.links.details
         for property_ in editor_properties:
             if property_.owner == 'site':
-                config += '{0}: {1}\n'.format(property_.property,
+                site_config += '{0}: {1}\n'.format(property_.property,
                         details[property_.property])
             elif property_.property in adders.keys():
                 if adders[property_.property] != '':
-                    config += '{0}: {1}\n'.format(property_.property, adders[property_.property])
+                    editor_config += '{0}: {1}\n'.format(property_.property, adders[property_.property])
                 else:
-                    config += property_.property + '\n'
-        return config
+                    editor_config += property_.property + '\n'
+        return '#site\n{0}\n#editor\n{1}'.format(site_config, editor_config)
 
     def site_properties(self, event=None):
         """
@@ -391,6 +392,9 @@ class Editor(Tk.Frame, object):
         self.entry = self.site.root
 
     def site_publish(self, event=None):
+        """
+        Publish every page in the Site using the Site's own method
+        """
         for _ in self.site.publish():
             pass
 
