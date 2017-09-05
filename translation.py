@@ -183,7 +183,7 @@ class RandomWords():
 
 def urlform(text, markdown=None):
     name = text.lower()
-    safe_punctuation = '\'.$_+!()'
+    safe_punctuation = '\'.$_+!(),'
     # remove safe punctuations that should only be used to encode non-ascii characters
     name = re.sub(r'[{0}]'.format(safe_punctuation), '', name)
     with conversion(markdown, 'to_markdown') as converter:
