@@ -208,15 +208,12 @@ class Markdown:
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None
-        try:
-            with open(filename) as replacements:
-                for line in replacements:
-                    line = line.split(" ")
-                    self.markup.append(line[0])
-                    self.markdown.append(line[1])
-                self.filename = filename
-        except IOError:
-            self.filename = ''
+        with open(filename) as replacements:
+            for line in replacements:
+                line = line.split(" ")
+                self.markup.append(line[0])
+                self.markdown.append(line[1])
+            self.filename = filename
 
     def to_markup(self, text):
         self.source, self.destination = self.markdown[::-1], self.markup[::-1]

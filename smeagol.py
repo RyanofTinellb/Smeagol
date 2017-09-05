@@ -321,7 +321,7 @@ class Page:
         Put the name in lower case, and remove tags
         Allowed punctuation: -'.$_+!()
         """
-        return urlform(self.name)
+        return urlform(self.name, self.markdown)
 
     def __str__(self):
         return '[' + self.content
