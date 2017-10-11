@@ -1,4 +1,6 @@
-class TextAnalysis:
+import re
+
+class Analysis:
     def __init__(self, words, sentences, urls=None, names=None):
         """
         :param words (dict): {term: locations}

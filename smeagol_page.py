@@ -1,9 +1,14 @@
+from contents_mode import ContentsMode
+from text_analysis import Analysis
+from cached_property import cached_property
+from collections import deque
+from translation import *
+import os
+
 class Page:
     """
     A node in the hierarchy
     """
-
-    Flatname = namedtuple('Flatname', ['name', 'score'])
 
     def __init__(self, name, parent=None, content="", leaf_level=3, previous=None, markdown=None):
         """

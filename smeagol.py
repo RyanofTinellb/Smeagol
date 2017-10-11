@@ -1,3 +1,7 @@
+from smeagol_site import Site
+from smeagol_page import Page
+from datetime import datetime
+
 class Dictionary(Site):
     def __init__(self):
         d = Default()

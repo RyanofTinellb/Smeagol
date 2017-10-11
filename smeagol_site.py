@@ -1,3 +1,8 @@
+from smeagol_page import Page
+from text_analysis import Analysis
+from translation import *
+import os
+
 class Site:
     """
     A hierarchy of Pages

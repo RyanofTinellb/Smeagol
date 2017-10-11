@@ -1,5 +1,3 @@
-Flatname = namedtuple('Flatname', ['name', 'score'])
-
 class FlatName:
     def __init__(self, name, markdown):
         """

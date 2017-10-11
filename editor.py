@@ -1,6 +1,7 @@
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from itertools import chain
 from smeagol import *
+from translation import *
 import webbrowser as web
 import Tkinter as Tk
 import tkFileDialog as fd
