@@ -301,9 +301,7 @@ class Page:
 
         :attribute children (list): the Pages beneath self
         :attribute isLeaf (bool): is the Page at the lowest level of the hierarchy?
-        :attribute urlform (str): the name of the Page, in a form suitable for URLs
         :attribute level (int): how low the Page is on the hierarchy
-        :attribute flatname (FlatName): the name and Tinellbian alphabetical order of the Page
         """
         self.name = name
         self.parent = parent
@@ -422,14 +420,14 @@ class Page:
         """
         self.parent.children.remove(self)
 
-    @cached_property
+    @property
     def has_children(self):
         """
         :return (bool): True iff self has children
         """
         return len(self.children) > 0
 
-    @cached_property
+    @property
     def root(self):
         """
         Proceed up the Site
@@ -440,7 +438,7 @@ class Page:
             node = node.parent
         return node
 
-    @cached_property
+    @property
     def genealogy(self):
         """
         Generates for every Page in the Site sequentially
@@ -456,7 +454,7 @@ class Page:
             except IndexError:
                 raise StopIteration
 
-    @cached_property
+    @property
     def elders(self):
         """
         The first generation in the Site
@@ -464,7 +462,7 @@ class Page:
         """
         return self.root.children
 
-    @cached_property
+    @property
     def ancestors(self):
         """
         Self and the direct ancestors of self, in order down from the root.
@@ -477,7 +475,7 @@ class Page:
             ancestry.appendleft(node)
         return list(ancestry)
 
-    @cached_property
+    @property
     def generation(self):
         """
         :return (int): the generation number of the Page, with the root at one
@@ -492,7 +490,7 @@ class Page:
         else:
             raise IndexError('No such sister')
 
-    @cached_property
+    @property
     def previous_sister(self):
         """
         :return (Page): the previous Page if it has the same parent as self
@@ -500,7 +498,7 @@ class Page:
         """
         return self.sister(-1)
 
-    @cached_property
+    @property
     def next_sister(self):
         """
         :return (Page): the next Page if it has the same parent as self
@@ -508,7 +506,7 @@ class Page:
         """
         return self.sister(1)
 
-    @cached_property
+    @property
     def next_node(self):
         """
         Finds the next sister, or uses iteration to find the next Page
@@ -539,7 +537,7 @@ class Page:
             right = self.next_node_iter(node.parent)
         return right
 
-    @cached_property
+    @property
     def descendants(self):
         """
         All the descendants of self, using iteration
@@ -550,7 +548,7 @@ class Page:
             descendants.update(child.descendants)
         return descendants
 
-    @cached_property
+    @property
     def cousins(self):
         """
         Taking a sub-hierarchy as the descendants of a Page, cousins are Pages at the same point as self, but in different sub-hierarchies.
@@ -573,7 +571,7 @@ class Page:
             cousins.append(cousin)
         return cousins
 
-    @cached_property
+    @property
     def family(self):
         """
         Return all of self, descendants, sisters, ancestors, and sisters of ancestors
@@ -585,7 +583,7 @@ class Page:
         family.update(self.descendants)
         return family
 
-    @cached_property
+    @property
     def fullUrlForm(self):
         """
         :return (str): the name and extension of the Page in a form suitable for URLs
@@ -593,7 +591,7 @@ class Page:
         # extension = '/index' if not self.isLeaf else ''
         return '{0}{1}.html'.format(self.urlform, '/index' if not self.isLeaf else '')
 
-    @cached_property
+    @property
     def folder(self):
         """
         :return (str): the folder in which the Page should appear, or an empty string if Page is the root
@@ -671,7 +669,7 @@ class Page:
         else:
             return '<h{0}>{1}</h{0}>\n'.format(str(level), name)
 
-    @cached_property
+    @property
     def title(self):
         """
         :return (str): its own name, suitable for HTML titles
@@ -679,7 +677,7 @@ class Page:
         # remove tags from names
         return re.sub(r'[[<].*?[]>]', '', self.name)
 
-    @cached_property
+    @property
     def category_title(self):
         """
         :return (str): A title of the form 'High Lulani Verbs'
@@ -729,7 +727,7 @@ class Page:
             output += line
         return output
 
-    @cached_property
+    @property
     def stylesheet_and_icon(self):
         """
         :return (str): relative HTML links to the stylesheet and icon for self.
@@ -741,7 +739,7 @@ class Page:
             self.hyperlink('favicon.png', needAnchorTags=False))
         return output
 
-    @cached_property
+    @property
     def search_script(self):
         """
         :return (str): javascript function for moving to search page if required, using relative links
@@ -754,7 +752,7 @@ class Page:
     </script>'''.format(self.hyperlink('search.html', needAnchorTags=False))
         return output
 
-    @cached_property
+    @property
     def toc(self):
         """
         :return (str): a table of contents in HTML
@@ -779,14 +777,13 @@ class Page:
             links += (level - 1) * '</ul>\n'
             return links
 
-    @cached_property
+    @property
     def links(self):
         """
         :return (str):
         """
         output = '''<ul>
                   <li class="link"><a href="http://www.tinellb.com">&uarr; Main Page</a></li>
-                  <li class="link">$out$</li>
                   <li class="link">$out$</li>
                 </ul>
                 <ul><li{0}>{1}</li>
@@ -799,13 +796,12 @@ class Page:
                 </ul>'''.format(' class="normal"' if self == self.root else '',
                                 self.hyperlink(self.root))
         for item, link in ( ['Grammar', 'grammar'],
-                            ['Dictionary', 'dictionary'],
-                            ['The Coelacanth Quartet', 'coelacanthquartet']):
+                            ['Dictionary', 'dictionary']):
             if item != self.root.name:
                 output = output.replace('$out$', '<a href="http://{0}.tinellb.com">{1} &rarr;</a>'.format(link, item), 1)
         return output
 
-    @cached_property
+    @property
     def family_links(self):
         links = ''
         level = 0
@@ -825,7 +821,7 @@ class Page:
         links += (level) * '</ul>\n'
         return self.links.replace('$links$', links)
 
-    @cached_property
+    @property
     def cousin_links(self):
         links = ''
         level = 0
@@ -851,7 +847,7 @@ class Page:
         links += '</ul><ul>'
         return self.links.replace('$links$', links)
 
-    @cached_property
+    @property
     def elder_links(self):
         links = '<ul>'
         for elder in self.elders:
@@ -859,7 +855,7 @@ class Page:
                 (' class="normal"' if elder in [self, self.parent] else ''), self.hyperlink(elder))
         return self.links.replace('$links$', links + '</ul>')
 
-    @cached_property
+    @property
     def nav_footer(self):
         div = '<div>\n{0}\n</div>\n'
         if self.previous:
@@ -872,7 +868,7 @@ class Page:
             output += div.format(self.hyperlink(self.root, 'Return to Menu &uarr;'))
         return output
 
-    @cached_property
+    @property
     def copyright(self):
         try:
             date = datetime.strptime(max(re.findall(r'(?<=&date=)\d{8}', self.content)), '%Y%m%d')
@@ -953,7 +949,7 @@ class Page:
                     wordlist[word] = [number]
         return Analysis(wordlist, lines)
 
-    @cached_property
+    @property
     def flatname(self):
         """
         'flattens' the name to only include letters aiu'pbtdcjkgmnqlrfsxh
