@@ -9,18 +9,16 @@ class Site:
 
     Includes an override method for __setattr__()
     """
-    def __init__(self, destination, name, source, template, main_template, markdown, searchjson, leaf_level):
+    def __init__(self, destination, name, source, template, markdown, searchjson, leaf_level):
         """
         :param destination (str): the full path where the Site is to be located
         :param name (str): human-readable name of the Site
         :param source (str): filename and extension of the source file, relative to destination
         :param template (str): filename and extension of the template for ordinary pages, relative to destination
-        :param main_template (str): filename and extension of the template for the top-level (root) page, relative to destination
         :param markdown (str): filename and extension of the markdown file, relative to destination
         :param leaf_level (int): the level of the lowermost pages in the hierarchy, where the root is at 0.
 
         :attribute template (Template): the template for ordinary pages
-        :attribute main_template (Template): the template for the top-level page
         :attribute markdown (Markdown): the conversion between markup and markdown for Page names.
         :attribute current (Page):
         :attribute root (Page): the root of the hierarchy
@@ -31,7 +29,6 @@ class Site:
                             name=name,
                             source=source,
                             template=template,
-                            main_template=main_template,
                             markdown=markdown,
                             searchjson=searchjson,
                             leaf_level=str(leaf_level))
@@ -39,7 +36,6 @@ class Site:
         self.name = name
         self.source = source
         self.template = template
-        self.main_template = main_template
         self.markdown = markdown
         self.searchjson = searchjson
         try:
@@ -48,7 +44,6 @@ class Site:
             self.leaf_level = 1
         self.current = None
         self.length = 0
-        node = self.root = Page(name, leaf_level=self.leaf_level, markdown=self.markdown)
 
         # break source text into pages, with the splits on square brackets before numbers <= leaf_level
         with open(source) as source:
@@ -57,7 +52,7 @@ class Site:
         source = split.split(source)
 
         # create page on appropriate level of hierarchy, with name taken from the source file
-        # ignore first (empty) page
+        node = self.root = Page(name, content=source[0][1:], leaf_level=self.leaf_level, markdown=self.markdown)
         for page in source[1:]:
             previous = node
             level, name = re.split('[]\n]', page, 2)[:2]
@@ -69,7 +64,7 @@ class Site:
             self.length += 1
 
     def __setattr__(self, name, value):
-        if name in ('template', 'main_template'):
+        if name == 'template':
             with open(value) as template:
                 self.__dict__[name] = template.read()
                 self.__dict__[name + '_file'] = value
@@ -83,15 +78,13 @@ class Site:
                 'name="{1}", '
                 'source="{2}", '
                 'template="{3}", '
-                'main_template="{4}", '
-                'markdown="{5}", '
-                'searchjson="{6}", '
-                'leaf_level={7})').format(
+                'markdown="{4}", '
+                'searchjson="{5}", '
+                'leaf_level={6})').format(
                 self.destination,
                 self.name,
                 self.source,
                 self.template_file,
-                self.main_template_file,
                 self.markdown.filename,
                 self.searchjson,
                 str(self.leaf_level))
@@ -136,7 +129,7 @@ class Site:
         :rtype: str
         :class: Site
         """
-        return ''.join([str(page) for page in self if str(page)])[1:] # apparently adds a [ to the beginning, which is why we remove it
+        return ''.join([str(page) for page in self if str(page)])
 
     def __len__(self):
         """
@@ -234,8 +227,7 @@ class Site:
         length = len(self)
         chunk = 3 if length > 1000 else 50
         progress = 1
-        self.root.publish(self.main_template)
-        self.reset(); self.next()
+        self.reset()
         for i, page in enumerate(self):
             page.publish(self.template)
             if i == int(progress * chunk * length / 100):

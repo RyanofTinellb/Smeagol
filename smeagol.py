@@ -5,19 +5,19 @@ from datetime import datetime
 class Dictionary(Site):
     def __init__(self):
         d = Default()
-        Site.__init__(self, d.destination + 'dictionary', 'Dictionary', d.source, d.template, d.main_template, d.markdown, d.searchjson, 2)
+        Site.__init__(self, d.destination + 'dictionary', 'Dictionary', d.source, d.template, d.markdown, d.searchjson, 2)
 
 
 class Grammar(Site):
     def __init__(self):
         d = Default()
-        Site.__init__(self, d.destination + 'grammar', 'Grammar', d.source, d.template, d.main_template, d.markdown, d.searchjson, 3)
+        Site.__init__(self, d.destination + 'grammar', 'Grammar', d.source, d.template, d.markdown, d.searchjson, 3)
 
 
 class Story(Site):
     def __init__(self):
         d = Default()
-        Site.__init__(self, d.destination + 'thecoelacanthquartet', 'The Coelacanth Quartet', d.source, d.template, d.main_template, d.markdown, d.searchjson, 3)
+        Site.__init__(self, d.destination + 'thecoelacanthquartet', 'The Coelacanth Quartet', d.source, d.template, d.markdown, d.searchjson, 3)
 
 
 class TheCoelacanthQuartet(Story):
@@ -30,7 +30,6 @@ class Default():
         self.destination = 'c:/users/ryan/documents/tinellbianlanguages/'
         self.source = 'data.txt'
         self.template = 'template.html'
-        self.main_template = 'main_template.html'
         self.markdown = '../replacements.mkd'
         self.searchjson = 'searching.json'
 

@@ -172,6 +172,7 @@ class Page:
                 node = node.next_node
                 yield node
             except IndexError:
+                node = self.root
                 raise StopIteration
 
     @property
@@ -278,7 +279,10 @@ class Page:
         while node.parent is not None:
             indices.appendleft(node.parent.children.index(node))
             node = node.parent
-        indices.popleft()
+        try:
+            indices.popleft()
+        except IndexError:
+            return []
         cousins = []
         for child in node.children:
             cousin = child
