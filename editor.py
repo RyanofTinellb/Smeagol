@@ -473,7 +473,7 @@ class Editor(Tk.Frame, object):
         with ignored(KeyError):
             for heading in headings:
                 entry = entry[heading]
-        return entry if entry is not site else (self.root if site else None)
+        return entry if entry is not site else (self.site.root if site else None)
 
     def prepare_entry(self, entry):
         """
