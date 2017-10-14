@@ -286,8 +286,7 @@ class Page:
                 try:
                     cousin = cousin.children[index]
                 except (IndexError, AttributeError):
-                    cousin = Page(name='New', parent=cousin, content='3]New\nNew text', markdown=cousin.markdown)
-                    cousin.insert(index=index)
+                    cousin = Page(name=None)
             cousins.append(cousin)
         return cousins
 
@@ -562,7 +561,7 @@ class Page:
         categories = [node.name for node in self.elders]
         cousins = self.cousins
         for cousin, category in zip(cousins, categories):
-            if cousin and cousin is not self:
+            if cousin.name and cousin is not self:
                 links += '<li>{0}</li>\n'.format(self.hyperlink(cousin, category))
         links += '</ul><ul>'
         return self.links.replace('$links$', links)
