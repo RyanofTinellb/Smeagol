@@ -319,13 +319,19 @@ class ExternalDictionary:
             dictionary entry 'Blah' on the Tinellbian languages dictionary site.
         """
         links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', text.replace('\n', '')).split(r'@')[:-1])
-        language = urlform(entry.ancestors[1].name)
+        if entry is not site.root:
+            language = urlform(entry.ancestors[1].name)
         for link in links:
             url = urlform(link, site.markdown)
             initial = re.sub(r'.*?(\w).*', r'\1', url)
             with ignored(KeyError):
-                text = text.replace('<link>' + link + '</link>',
-                '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html#' + language + '">' + link + '</a>')
+                if entry is not site.root:
+                    text = text.replace('<link>' + link + '</link>',
+                        '<a href="http://dictionary.tinellb.com/' + initial +
+                            '/' + url + '.html#' + language + '">' + link + '</a>')
+                else:
+                    text = text.replace('<link>' + link + '</link>',
+                        '<a href="' + url + '/index.html">' + link + '</a>')
         return text
 
     @property
