@@ -347,6 +347,8 @@ class InternalStory:
         :param text: (str)
         :return: (str)
         """
+        if entry.name is None:
+            return ''
         paragraphs = text.splitlines()
         version = entry.elders.index(entry.ancestors[1])
         for uid, paragraph in enumerate(paragraphs[1:], start=1):
@@ -376,7 +378,7 @@ class InternalStory:
         categories = [node.name for node in entry.elders]
         cousins = entry.cousins
         for i, (cousin, category) in enumerate(zip(cousins, categories)):
-            if index != i:
+            if index != i and cousin.name is not None:
                 links += cousins[index].hyperlink(cousin, category, fragment='#'+str(uid)) + '&nbsp;'
         links = '<span class="version-links" aria-hidden="true">{0}</span>'.format(links)
         return paragraph.replace('&id=', anchor).replace('&vlinks=', links)

@@ -119,7 +119,8 @@ class StoryEditor(Editor):
         :return (nothing):
         """
         for cousin in entry.cousins:
-            cousin.publish(site.template)
+            if cousin.name is not None:
+                cousin.publish(site.template)
         # reset entry so that it is not published twice
         super(StoryEditor, self).publish(entry=None, site=site)
 
