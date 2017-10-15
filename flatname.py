@@ -7,6 +7,8 @@ class FlatName:
         'flattens' the name to only include letters aiu'pbtdcjkgmnqlrfsxh
         Smallest number comes earlier in the ordering.
         """
+        if name is None:
+            name = ''
         alphabet = "aiu'pbtdcjkgmnqlrfsxh"
         punctuation = "-'#"
         radix = len(punctuation)

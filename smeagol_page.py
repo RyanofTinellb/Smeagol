@@ -11,7 +11,7 @@ class Page:
     A node in the hierarchy
     """
 
-    def __init__(self, name, parent=None, content="", leaf_level=3, previous=None, markdown=None):
+    def __init__(self, name=None, parent=None, content='', leaf_level=3, previous=None, markdown=None):
         """
         :param name (str): the name of the Page
         :param parent (Page): the Page's immediate ancestor
@@ -292,7 +292,7 @@ class Page:
                 try:
                     cousin = cousin.children[index]
                 except (IndexError, AttributeError):
-                    cousin = Page(name=None)
+                    cousin = Page()
             cousins.append(cousin)
         return cousins
 
