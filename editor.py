@@ -68,7 +68,7 @@ class Editor(Tk.Frame, object):
         self.save_text.set('Save')
         self.translator = Translator()
         self.entry = self.site.root
-        self.root = Page('')
+        self.root = self.site.root
         self.top = self.winfo_toplevel()
 
         self.create_widgets()
@@ -469,7 +469,7 @@ class Editor(Tk.Frame, object):
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
         """
-        entry = self.site.root
+        entry = self.root
         with ignored(KeyError):
             for heading in headings:
                 entry = entry[heading]
