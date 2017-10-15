@@ -469,11 +469,11 @@ class Editor(Tk.Frame, object):
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
         """
-        entry = site = self.site
+        entry = self.site.root
         with ignored(KeyError):
             for heading in headings:
                 entry = entry[heading]
-        return entry if entry is not site else (self.site.root if site else None)
+        return entry
 
     def prepare_entry(self, entry):
         """

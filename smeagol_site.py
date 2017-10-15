@@ -194,7 +194,7 @@ class Site:
                 node = node.next_node
         # 'item' is a string
         except ValueError:
-            while node.name != page:
+            while node.name != page and page != '':
                 try:
                     node = node.next_node
                 except IndexError:
