@@ -28,7 +28,7 @@ class StoryEditor(Editor):
     def make_paragraphs(self, texts):
         cousins = map(lambda x: x.splitlines(), texts)     # Str[][]
         self.count = max(map(len, cousins))      # int
-        self.current_paragraph = min(map(len, cousins)) - 1    # int
+        self.current_paragraph = abs(min(map(len, cousins)) - 1)    # int >= 0
         cousins = map(self.add_padding, cousins, len(cousins) * [self.count])     # still Str[][], but now padded
         self.paragraphs = map(None, *cousins) # str()[] (transposed)
 
