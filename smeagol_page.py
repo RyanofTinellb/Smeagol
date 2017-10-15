@@ -2,6 +2,7 @@ from contents_mode import ContentsMode
 from text_analysis import Analysis
 from cached_property import cached_property
 from collections import deque
+from flatname import FlatName
 from translation import *
 import os
 
@@ -31,6 +32,7 @@ class Page:
         self.content = content
         self.previous = previous
         self.markdown = markdown
+        self.flatname = FlatName(name, markdown)
 
     @cached_property
     def urlform(self):

@@ -1,3 +1,6 @@
+from translation import urlform
+import re
+
 class FlatName:
     def __init__(self, name, markdown):
         """
@@ -14,13 +17,13 @@ class FlatName:
         name = re.sub(double_letter, r'\1#', name, 1)
 
         for points, pattern in enumerate(punctuation):
-            score += score_pattern(name, pattern, radix, points+1)
+            score += self.score_pattern(name, pattern, radix, points+1)
             name = name.replace(pattern, '*')
             name = name.replace('*', '')
             self.name = name
             self.score = score
 
-    def score_pattern(word, pattern, radix, points):
+    def score_pattern(self, word, pattern, radix, points):
         """
         Calculate a score for each occurance of a pattern in the word.
         More points are given for later occurances.
@@ -29,10 +32,10 @@ class FlatName:
         :param pattern: The pattern being searched for.
         :param points: The number of points given for this pattern.
         """
-        total = sum([points * radix**index for index in pattern_indices(word, pattern)])
+        total = sum([points * radix**index for index in self.pattern_indices(word, pattern)])
         return total
 
-    def pattern_indices(word, pattern):
+    def pattern_indices(self, word, pattern):
         index = -1
         while True:
             try:
