@@ -3,41 +3,29 @@ from text_analysis import Analysis
 from translation import *
 import os
 
-class Site:
+class Site(object):
     """
     A hierarchy of Pages
-
-    Includes an override method for __setattr__()
     """
-    def __init__(self, destination, name, source, template, markdown, searchjson, leaf_level):
+    def __init__(self, destination, name, files, leaf_level):
         """
         :param destination (str): the full path where the Site is to be located
         :param name (str): human-readable name of the Site
-        :param source (str): filename and extension of the source file, relative to destination
-        :param template (str): filename and extension of the template for ordinary pages, relative to destination
-        :param markdown (str): filename and extension of the markdown file, relative to destination
+        :param files (Files):
         :param leaf_level (int): the level of the lowermost pages in the hierarchy, where the root is at 0.
-
-        :attribute template (Template): the template for ordinary pages
-        :attribute markdown (Markdown): the conversion between markup and markdown for Page names.
-        :attribute current (Page):
-        :attribute root (Page): the root of the hierarchy
         """
         self.choose_dir(destination)
         # initialize attributes and utility classes
-        self.details = dict(destination=destination,
-                            name=name,
-                            source=source,
-                            template=template,
-                            markdown=markdown,
-                            searchjson=searchjson,
-                            leaf_level=str(leaf_level))
         self.destination = destination
         self.name = name
-        self.source = source
-        self.template = template
-        self.markdown = markdown
-        self.searchjson = searchjson
+        self.files = files
+        self.details = dict(destination=destination,
+                            name=name,
+                            source=files.source,
+                            template=files.template_file,
+                            markdown=files.markdown_file,
+                            searchjson=files.searchjson,
+                            leaf_level=str(leaf_level))
         try:
             self.leaf_level = int(leaf_level)
         except ValueError:
@@ -46,7 +34,7 @@ class Site:
         self.length = 0
 
         # break source text into pages, with the splits on square brackets before numbers <= leaf_level
-        with open(source) as source:
+        with open(files.source) as source:
             source = source.read()
         split = re.compile(r'\[(?=[{0}])'.format(''.join(map(lambda x: str(x + 1), range(self.leaf_level)))))
         source = split.split(source)
@@ -63,16 +51,6 @@ class Site:
             node = self.add_node(name, node, page, previous)
             self.length += 1
 
-    def __setattr__(self, name, value):
-        if name == 'template':
-            with open(value) as template:
-                self.__dict__[name] = template.read()
-                self.__dict__[name + '_file'] = value
-        elif name == 'markdown':
-            self.__dict__[name] = Markdown(value)
-        else:
-            self.__dict__[name] = value
-
     def __repr__(self):
         return ('Site(destination="{0}", '
                 'name="{1}", '
@@ -83,10 +61,10 @@ class Site:
                 'leaf_level={6})').format(
                 self.destination,
                 self.name,
-                self.source,
-                self.template_file,
-                self.markdown.filename,
-                self.searchjson,
+                self.files.source,
+                self.files.template_file,
+                self.files.markdown_file,
+                self.files.searchjson,
                 str(self.leaf_level))
 
     def refresh(self):
@@ -111,6 +89,22 @@ class Site:
                 node = node.parent
             node = self.add_node(name, node, page, previous)
             self.length += 1
+
+    @property
+    def source(self):
+        return self.files.source
+
+    @property
+    def template(self):
+        return self.files.template
+
+    @property
+    def markdown(self):
+        return self.files.markdown
+
+    @property
+    def searchjson(self):
+        return self.files.searchjson
 
     @staticmethod
     def choose_dir(destination):

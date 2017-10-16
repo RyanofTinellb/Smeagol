@@ -192,7 +192,7 @@ class Node(object):
                 try:
                     cousin = cousin.children[index]
                 except (IndexError, AttributeError):
-                    cousin = Node()
+                    cousin = None
             cousins.append(cousin)
         return cousins
 

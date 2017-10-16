@@ -373,7 +373,7 @@ class Page(Node):
         categories = [node.name for node in self.elders]
         cousins = self.cousins
         for cousin, category in zip(cousins, categories):
-            if cousin.name and cousin is not self:
+            if cousin and cousin is not self:
                 links += '<li>{0}</li>\n'.format(self.hyperlink(cousin, category))
         links += '</ul><ul>'
         return self.links.replace('$links$', links)
