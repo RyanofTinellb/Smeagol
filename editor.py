@@ -29,11 +29,10 @@ Site properties are named tuples:
 Property = namedtuple('Property', ['name', 'property', 'owner', 'check', 'textbox', 'browse'])
 editor_properties = [Property('Destination', 'destination', 'site', False, True, 'folder'),
     Property('Name', 'name', 'site', False, True,  False),
-    Property('Source', 'source', 'site', False, True, ('Data File', '*.txt')),
-    Property('Template', 'template', 'site', False, True, ('HTML Template', '*.html')),
-    Property('Main Template', 'main_template', 'site', False, True, ('HTML Template', '*.html')),
-    Property('URL/JSON Markdown', 'markdown', 'site', False, True, ('Markdown File', '*.mkd')),
-    Property('Searchterms File', 'searchjson', 'site', False, True, ('JSON File', '*.json')),
+    Property('Source', 'source', 'file', False, True, ('Data File', '*.txt')),
+    Property('Template', 'template', 'file', False, True, ('HTML Template', '*.html')),
+    Property('URL/JSON Markdown', 'markdown', 'file', False, True, ('Markdown File', '*.mkd')),
+    Property('Searchterms File', 'searchjson', 'file', False, True, ('JSON File', '*.json')),
     Property('Leaf Level', 'leaf_level', 'site', False, True, False),
     Property('Version Links', 'internalstory', InternalStory, True, False, False),
     Property('Links within the Dictionary', 'internaldictionary', InternalDictionary, True, False, False),
@@ -343,6 +342,12 @@ class Editor(Tk.Frame, object):
             with ignored(ValueError):
                 key, value = property_.split(': ')
                 details[key] = value
+        files = dict(source='source', template='template', markdown='markdown',
+                     searchjson='searchjson')
+        for file_ in files.keys():
+            with ignored(KeyError):
+                files[file_] = details.pop(file_)
+        details['files'] = Files(**files)
         return Site(**details)
 
     def get_linkadder_from_config(self, config):
@@ -352,7 +357,7 @@ class Editor(Tk.Frame, object):
         :param config: (str) The appropriate section of a configuration file
         """
         properties = config.splitlines()
-        possible_adders = filter(lambda x: x.owner != 'site', editor_properties)
+        possible_adders = filter(lambda x: x.owner not in ['site', 'file'], editor_properties)
         link_adders = []
         for property_ in properties:
             config_adder = property_.split(': ')
@@ -406,7 +411,7 @@ class Editor(Tk.Frame, object):
         details = self.site.details
         adders = self.links.details
         for property_ in editor_properties:
-            if property_.owner == 'site':
+            if property_.owner in ['site', 'file']:
                 site_config += '{0}: {1}\n'.format(property_.property,
                         details[property_.property])
             elif property_.property in adders.keys():
@@ -771,7 +776,6 @@ class PropertiesWindow(Tk.Toplevel, object):
         - site name
         - site source
         - site template
-        - site main_template
         - site markdown
         - site searchjson
         - site leaf_level
@@ -801,14 +805,19 @@ class PropertiesWindow(Tk.Toplevel, object):
         """
         self.site_values = []
         self.link_values = []
+        files = []
         for value in self.new_values:
             if value['owner'] == 'site':
                 self.site_values.append(value['value'])
+            elif value['owner'] == 'file':
+                files.append(value['value'])
             elif value['check'] == 1:
                 if value['value'] == '':
                     self.link_values.append(value['owner']())
                 else:
                     self.link_values.append(value['owner'](value['value']))
+        files = Files(*files)
+        self.site_values.insert(2, files)
         self.destroy()
 
     @property
