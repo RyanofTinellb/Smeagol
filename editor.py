@@ -682,6 +682,30 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(event)
         return 'break'
 
+    def select_paragraph(self, event=None):
+        event.widget.tag_add('sel', Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
+        return 'break'
+
+    def delete_line(self, event=None):
+        event.widget.delete(Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
+        return 'break'
+
+    def move_line_up(self, event=None):
+        textbox = event.widget
+        text = textbox.get(Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
+        textbox.delete(Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
+        textbox.insert(Tk.INSERT + '-1c linestart', text)
+        textbox.mark_set(Tk.INSERT, Tk.INSERT + '-1c linestart -1c linestart')
+        return 'break'
+
+    def move_line_down(self, event=None):
+        textbox = event.widget
+        text = textbox.get(Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
+        textbox.delete(Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
+        textbox.insert(Tk.INSERT + ' lineend +1c', text)
+        textbox.mark_set(Tk.INSERT, Tk.INSERT + ' lineend +1c')
+        return 'break'
+
     def markdown_open(self, event=None):
         web.open_new_tab(self.markdown.filename)
 
@@ -748,10 +772,13 @@ class Editor(Tk.Frame, object):
         ('<Control-i>', self.italic),
         ('<Control-l>', self.load),
         ('<Control-k>', self.small_caps),
+        ('<Control-K>', self.delete_line),
         ('<Control-m>', self.markdown_refresh),
         ('<Control-n>', self.add_link),
         ('<Control-o>', self.site_open),
         ('<Control-s>', self.save),
+        ('<Control-Up>', self.move_line_up),
+        ('<Control-Down>', self.move_line_down),
         ('<Control-BackSpace>', self.backspace_word),
         ('<Control-Delete>', self.delete_word),
         ('<Alt-d>', self.go_to_heading),
