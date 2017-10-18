@@ -180,9 +180,10 @@ class RandomWords():
         else:
             return syllable
 
+
 def urlform(text, markdown=None):
     name = text.lower()
-    safe_punctuation = '\'.$_+!()'
+    safe_punctuation = '\'.$_+!(),'
     # remove safe punctuations that should only be used to encode non-ascii characters
     name = re.sub(r'[{0}]'.format(safe_punctuation), '', name)
     with conversion(markdown, 'to_markdown') as converter:
@@ -196,6 +197,7 @@ def urlform(text, markdown=None):
     name = quote(name, safe_punctuation)
     return name
 
+
 class Markdown:
     def __init__(self, filename):
         """
@@ -206,15 +208,12 @@ class Markdown:
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None
-        try:
-            with open(filename) as replacements:
-                for line in replacements:
-                    line = line.split(" ")
-                    self.markup.append(line[0])
-                    self.markdown.append(line[1])
-                self.filename = filename
-        except IOError:
-            self.filename = ''
+        with open(filename) as replacements:
+            for line in replacements:
+                line = line.split(" ")
+                self.markup.append(line[0])
+                self.markdown.append(line[1])
+            self.filename = filename
 
     def to_markup(self, text):
         self.source, self.destination = self.markdown[::-1], self.markup[::-1]
@@ -272,9 +271,26 @@ def remove_datestamp(text):
 def replace_datestamp(text):
     return add_datestamp(remove_datestamp(text))
 
+
 class AddRemoveLinks:
     def __init__(self, link_adders):
+        """
+        Allow for the removal of all links, and addition of specific
+            links to Smeagol pages
+
+        :param link_adders: (obj[]) a list of link adder instances
+        """
         self.link_adders = link_adders
+        self.details = dict(map(self.get_details, link_adders))
+
+    @staticmethod
+    def get_details(adder):
+        adder_name = adder.name
+        try:
+            adder_filename = adder.filename
+        except AttributeError:
+            adder_filename = ''
+        return (adder_name, adder_filename)
 
     def add_links(self, text, entry, site):
         for link_adder in self.link_adders:
@@ -303,14 +319,24 @@ class ExternalDictionary:
             dictionary entry 'Blah' on the Tinellbian languages dictionary site.
         """
         links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', text.replace('\n', '')).split(r'@')[:-1])
-        language = entry.ancestors[1].urlform
+        if entry is not site.root:
+            language = urlform(entry.ancestors[1].name)
         for link in links:
-            url = Page(link, markdown=site.markdown).urlform
+            url = urlform(link, site.markdown)
             initial = re.sub(r'.*?(\w).*', r'\1', url)
             with ignored(KeyError):
-                text = text.replace('<link>' + link + '</link>',
-                '<a href="http://dictionary.tinellb.com/' + initial + '/' + url + '.html#' + language + '">' + link + '</a>')
+                if entry is not site.root:
+                    text = text.replace('<link>' + link + '</link>',
+                        '<a href="http://dictionary.tinellb.com/' + initial +
+                            '/' + url + '.html#' + language + '">' + link + '</a>')
+                else:
+                    text = text.replace('<link>' + link + '</link>',
+                        '<a href="' + url + '/index.html">' + link + '</a>')
         return text
+
+    @property
+    def name(self):
+        return 'externaldictionary'
 
 class InternalStory:
     def add_links(self, text, entry, site):
@@ -321,16 +347,20 @@ class InternalStory:
         :param text: (str)
         :return: (str)
         """
+        if entry.name is None:
+            return ''
         paragraphs = text.splitlines()
         version = entry.elders.index(entry.ancestors[1])
-        for uid, paragraph in enumerate(paragraphs[1:]):
-            if version == 4:
-                 paragraph = '&id=' + paragraphs[uid+1].replace(' | [r]', '&vlinks= | [r]')
+        for uid, paragraph in enumerate(paragraphs[1:], start=1):
+            if paragraph == '<span class="stars">*&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;*</span>':
+                pass
+            elif version == 4:
+                 paragraph = '&id=' + paragraphs[uid].replace(' | [r]', '&vlinks= | [r]')
             elif version == 3:
-                paragraph = '[t]&id=' + re.sub(r'(?= \| \[r\]<div class=\"literal\">)', '&vlinks=', paragraphs[uid+1][3:])
+                paragraph = '[t]&id=' + re.sub(r'(?= \| \[r\]<div class=\"literal\">)', '&vlinks=', paragraphs[uid][3:])
             else:
-                paragraph = '&id=' + paragraphs[uid+1] + '&vlinks='
-            paragraphs[uid+1] = self._version_links(paragraph, version, entry, uid)
+                paragraph = '&id=' + paragraphs[uid] + '&vlinks='
+            paragraphs[uid] = self._version_links(paragraph, version, entry, uid)
         return '\n'.join(paragraphs)
 
     @staticmethod
@@ -344,14 +374,18 @@ class InternalStory:
         :return (nothing):
         """
         links = ''
-        anchor = '<span class="version-anchor" id="{0}"></span>'.format(str(uid))
+        anchor = '<span class="version-anchor" aria-hidden="true" id="{0}"></span>'.format(str(uid))
         categories = [node.name for node in entry.elders]
         cousins = entry.cousins
         for i, (cousin, category) in enumerate(zip(cousins, categories)):
-            if index != i:
+            if index != i and cousin.name is not None:
                 links += cousins[index].hyperlink(cousin, category, fragment='#'+str(uid)) + '&nbsp;'
-        links = '<span class="version-links">{0}</span>'.format(links)
+        links = '<span class="version-links" aria-hidden="true">{0}</span>'.format(links)
         return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
+
+    @property
+    def name(self):
+        return 'internalstory'
 
 class InternalDictionary:
     """
@@ -365,6 +399,10 @@ class InternalDictionary:
                 text = text.replace('<link>' + link + '</link>', entry.hyperlink(site[lower_link], link))
         return text
 
+    @property
+    def name(self):
+        return 'internaldictionary'
+
 class ExternalGrammar:
     """
     Replace given words in parts of speech with external URLs.
@@ -372,6 +410,7 @@ class ExternalGrammar:
     """
     def __init__(self, filename):
         self.languages, self.words, self.urls = [], [], []
+        self.filename = filename
         with open(filename) as replacements:
             replacements = replacements.read()
         for line in replacements.splitlines():
@@ -403,3 +442,7 @@ class ExternalGrammar:
                 page += line + '\n'
             text = page
         return text
+
+    @property
+    def name(self):
+        return 'externalgrammar'

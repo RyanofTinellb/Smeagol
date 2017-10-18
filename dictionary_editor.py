@@ -105,7 +105,7 @@ class DictionaryEditor(Editor):
         try:
             entry = site[heading]
         except KeyError:
-            initial = re.sub(r'.*?(\w).*', r'\1', heading).capitalize()
+            initial = re.sub(r'.*?(\w).*', r'\1', urlform(heading, self.site.markdown)).capitalize()
             entry = Page(heading, site[initial], '', site.leaf_level, None, site.markdown).insert()
         self.keep_history(heading)
         return entry
@@ -121,7 +121,8 @@ class DictionaryEditor(Editor):
         :param return (Nothing):
         """
         texts = super(DictionaryEditor, self).prepare_texts(texts)
-        self.entry.parent.content = replace_datestamp(self.entry.parent.content)
+        with ignored(AttributeError):
+            self.entry.parent.content = replace_datestamp(self.entry.parent.content)
 
     @staticmethod
     def publish(entry, site):
@@ -132,7 +133,8 @@ class DictionaryEditor(Editor):
         """
         if entry.content:
             entry.publish(site.template)
-        entry.parent.publish(site.template)
+        with ignored(AttributeError):
+            entry.parent.publish(site.template)
         site.modify_source()
         site.update_json()
 

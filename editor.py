@@ -1,10 +1,44 @@
+from collections import OrderedDict, namedtuple
+from itertools import chain
 from smeagol import *
+from translation import *
 import webbrowser as web
 import Tkinter as Tk
 import tkFileDialog as fd
 import tkMessageBox as mb
 
+
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
+
+"""
+Site properties are named tuples:
+    :var name: (str) The human-readable name of the property to be modified
+    :var property: (str) The name of the property as used by Smeagol
+    :var owner (str) If this property pertains to the 'site'
+               (obj) A Links class, if the property pertains to
+                    the editor
+    :var check: (bool) Whether this property has a Checkbutton
+    :var entry: (bool) Whether this property has a Textbox / Entry
+    :var browse: (bool) Whether to have a browse button
+                 (str) 'folder' if this property is to search for a
+                        directory
+                 ((str, str)) if this property is to search for a
+                        file, this is the tuple used by
+                        Tkinter's FileDialog
+"""
+Property = namedtuple('Property', ['name', 'property', 'owner', 'check', 'textbox', 'browse'])
+editor_properties = [Property('Destination', 'destination', 'site', False, True, 'folder'),
+    Property('Name', 'name', 'site', False, True,  False),
+    Property('Source', 'source', 'file', False, True, ('Data File', '*.txt')),
+    Property('Template', 'template', 'file', False, True, ('HTML Template', '*.html')),
+    Property('URL/JSON Markdown', 'markdown', 'file', False, True, ('Markdown File', '*.mkd')),
+    Property('Searchterms File', 'searchjson', 'file', False, True, ('JSON File', '*.json')),
+    Property('Leaf Level', 'leaf_level', 'site', False, True, False),
+    Property('Version Links', 'internalstory', InternalStory, True, False, False),
+    Property('Links within the Dictionary', 'internaldictionary', InternalDictionary, True, False, False),
+    Property('Links to external grammar site', 'externalgrammar', ExternalGrammar, True, True, ('Grammar Links File', '*.txt')),
+    Property('Links to external dictionary site', 'externaldictionary', ExternalDictionary, True, False, False)]
+
 
 class Editor(Tk.Frame, object):
     """
@@ -33,7 +67,7 @@ class Editor(Tk.Frame, object):
         self.save_text.set('Save')
         self.translator = Translator()
         self.entry = self.site.root
-        self.root = Page('')
+        self.root = self.site.root
         self.top = self.winfo_toplevel()
 
         self.create_widgets()
@@ -277,26 +311,80 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def site_open(self, event=None):
-        while True:
-            filename = fd.askopenfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Open Site')
-            if filename:
-                try:
-                    with open(filename) as site:
-                        site = site.read().replace('\n', ' ')
-                    self.sites = eval('Site(' + site + ')')
-                    self.reset()
-                    break
-                except (IOError, SyntaxError):
-                    mb.showerror('Invalid File', 'Please select a valid *.smg file.')
-            else:
-                break
+        """
+        Loop until a valid file is passed back, or user cancels
+        """
+        filename = fd.askopenfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Open Site')
+        if filename:
+            try:
+                with open(filename) as site:
+                    sections = site.read().split('#')
+                for section in sections:
+                    try:
+                        header, config = section.split('\n', 1)
+                    except ValueError:
+                        continue
+                    if header == 'site':
+                        self.site = self.make_site_from_config(config)
+                        self.reset()
+                    elif header == 'editor':
+                        self.links = self.get_linkadder_from_config(config)
+                    else:
+                        raise SyntaxError
+            except SyntaxError:
+                self.site_open()
         return 'break'
+
+    def make_site_from_config(self, config):
+        details = {}
+        properties = config.splitlines()
+        for property_ in properties:
+            with ignored(ValueError):
+                key, value = property_.split(': ')
+                details[key] = value
+        files = dict(source='source', template='template', markdown='markdown',
+                     searchjson='searchjson')
+        for file_ in files.keys():
+            with ignored(KeyError):
+                files[file_] = details.pop(file_)
+        details['files'] = Files(**files)
+        return Site(**details)
+
+    def get_linkadder_from_config(self, config):
+        """
+        Create an AddRemoveLinks instance based on a given configuration file
+
+        :param config: (str) The appropriate section of a configuration file
+        """
+        properties = config.splitlines()
+        possible_adders = filter(lambda x: x.owner not in ['site', 'file'], editor_properties)
+        link_adders = []
+        for property_ in properties:
+            config_adder = property_.split(': ')
+            link_adders.append(self.create_linkadder(possible_adders, config_adder))
+        return AddRemoveLinks(link_adders)
+
+    def create_linkadder(self, possible_adders, config_adder):
+        """
+        Create an instance of a Link Adder
+
+        :param possible_adders: (Property[]) the editor properties that
+            correspond to LinkAdders
+        :param config_adder: (tuple) a (key, value) pair from a config. file
+        """
+        try:
+            key, value = config_adder
+        except ValueError:
+            (key, ), value = config_adder, None
+        adder = filter(lambda x: x.property == key, possible_adders)
+        adder = adder[0].owner() if value is None else adder[0].owner(value)
+        return adder
 
     def reset(self, event=None):
         """
         Reset the program.
         """
-        self.entry = self.site.root
+        self.entry = self.root = self.site.root
         self.clear_interface()
 
     def clear_interface(self):
@@ -312,9 +400,61 @@ class Editor(Tk.Frame, object):
                 filetypes=[('Sm\xe9agol File', '*.smg')],
                 title='Save Site', defaultextension='.smg')
         if filename:
+            details = self.editor_configuration
             with open(filename, 'w') as site:
-                site.write(repr(self.site))
+                site.write(details)
         return 'break'
+
+    @property
+    def editor_configuration(self):
+        site_config = editor_config = ''
+        details = self.site.details
+        adders = self.links.details
+        for property_ in editor_properties:
+            if property_.owner in ['site', 'file']:
+                site_config += '{0}: {1}\n'.format(property_.property,
+                        details[property_.property])
+            elif property_.property in adders.keys():
+                if adders[property_.property] != '':
+                    editor_config += '{0}: {1}\n'.format(property_.property, adders[property_.property])
+                else:
+                    editor_config += property_.property + '\n'
+        return '#site\n{0}\n#editor\n{1}'.format(site_config, editor_config)
+
+    def site_properties(self, event=None):
+        """
+        Pass current site details to a new Properties Window, and then
+            re-create the Site with the new values and renew the Links
+        """
+        properties_window = PropertiesWindow(self.current_properties())
+        self.wait_window(properties_window)
+        self.site = Site(*properties_window.site_values)
+        self.links = AddRemoveLinks(properties_window.link_values)
+        self.entry = self.site.root
+
+    def current_properties(self):
+        """
+        Match detail dictionaries with properties list, and return current
+                properties to place in properties window
+        """
+        current = []
+
+        details = self.site.details
+        details.update(self.links.details)
+
+        for property_ in editor_properties:
+            try:
+                current.append((1, details[property_.property]))
+            except KeyError:
+                current.append((0, ''))
+        return current
+
+    def site_publish(self, event=None):
+        """
+        Publish every page in the Site using the Site's own method
+        """
+        for _ in self.site.publish():
+            pass
 
     def load(self, event=None):
         """
@@ -324,7 +464,6 @@ class Editor(Tk.Frame, object):
         texts = self.prepare_entry(self.entry)
         self.display(texts)
         self.save_text.set('Save')
-
         return 'break'
 
     def find_entry(self, headings):
@@ -335,11 +474,11 @@ class Editor(Tk.Frame, object):
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
         """
-        entry = site = self.site
+        entry = self.site.root
         with ignored(KeyError):
             for heading in headings:
                 entry = entry[heading]
-        return entry if entry is not site else (self.root if site else None)
+        return entry
 
     def prepare_entry(self, entry):
         """
@@ -579,7 +718,9 @@ class Editor(Tk.Frame, object):
     @property
     def menu_commands(self):
         return [('Site', [('Open', self.site_open),
-                        ('Save', self.site_save)]),
+                        ('Save', self.site_save),
+                        ('P_roperties', self.site_properties),
+                        ('Publish All', self.site_publish)]),
                 ('Markdown', [('Load', self.markdown_load),
                               ('Refresh', self.markdown_refresh),
                               ('Open as _Html', self.markdown_open)]
@@ -626,6 +767,157 @@ class Editor(Tk.Frame, object):
         level = str(self.entry.level)
         name = self.entry.name
         return '{0}]{1}\n'.format(level, name)
+
+class PropertiesWindow(Tk.Toplevel, object):
+
+    """
+    Properties:
+        - site destination
+        - site name
+        - site source
+        - site template
+        - site markdown
+        - site searchjson
+        - site leaf_level
+        - editor links (x4)
+    """
+    def __init__(self, current_values, master=None):
+        self.current_values = current_values
+        super(PropertiesWindow, self).__init__(master)
+        commands = dict(done=self.finish_window, cancel=self.cancel_window)
+        self.property_frames = []
+        for row, (current_value, property_) in enumerate(zip(current_values, editor_properties)):
+            property_frame = PropertyFrame(self, row, current_value, commands, *property_)
+            self.property_frames.append(property_frame)
+        self.configure_buttons(row+1, commands)
+        self.property_frames[0].entry.focus_set()
+
+    def configure_buttons(self, row, commands):
+        done_button = Tk.Button(self, text='OK', command=commands['done'])
+        cancel_button = Tk.Button(self, text='Cancel', command=commands['cancel'])
+        done_button.grid(row=row, column=3, sticky=Tk.E+Tk.W)
+        cancel_button.grid(row=row, column=2, sticky=Tk.E)
+
+    def finish_window(self, event=None):
+        """
+        Set values to site values and links values from the properties
+            window, and then disable the window
+        """
+        self.site_values = []
+        self.link_values = []
+        files = []
+        for value in self.new_values:
+            if value['owner'] == 'site':
+                self.site_values.append(value['value'])
+            elif value['owner'] == 'file':
+                files.append(value['value'])
+            elif value['check'] == 1:
+                if value['value'] == '':
+                    self.link_values.append(value['owner']())
+                else:
+                    self.link_values.append(value['owner'](value['value']))
+        files = Files(*files)
+        self.site_values.insert(2, files)
+        self.destroy()
+
+    @property
+    def new_values(self):
+        for property_frame in self.property_frames:
+            yield property_frame.get()
+
+    def cancel_window(self, event=None):
+        """
+        Do nothing if cancel button pressed
+        """
+        self.destroy()
+
+
+class PropertyFrame:
+    """
+    Wrapper class for one row of a PropertiesWindow
+    """
+    def __init__(self, master, row, defaults, commands=None, human_name='',
+                property_name='', owner='site', check=False, entry=False, browse=False):
+        """
+        Create a row of the properties window
+
+        :param master: (widget) the widget to which all the widgets of
+            this frame belong.
+        :param row: (int) the row of the window onto which to place
+            this frame.
+        :param defaults: ((int, str)), current state of checkbox and textbox
+        :param commands: ({str:method}) the 'done' and 'cancel' commands
+            for the outer window.
+        :param human_name: (str) the human-readable name of the property
+        :param property_name: (str) the Smeagol name of the property
+        :param check: (bool) whether to have a checkboxes
+        :param entry: (bool) whether to have a textbox/entry
+        :param browse: (bool) Whether to have a browse button
+                       (str) 'folder' if this property is to search for a
+                            directory
+                       ((str, str)) if this property is to search for a
+                            file. This is the tuple used by
+                            Tkinter's FileDialog
+        """
+        self.owner = owner
+        self.checkvar, self.entryvar = Tk.IntVar(), Tk.StringVar()
+        self.entry = self.check = self.button = self.label = None
+        defaults = dict(zip(['check', 'text'], defaults))
+        if check:
+            self.checkvar.set(defaults['check'])
+            self.check = Tk.Checkbutton(master, variable=self.checkvar)
+            self.check.grid(row=row, column=0)
+        self.label = Tk.Label(master, text=human_name)
+        self.label.grid(row=row, column=1, sticky=Tk.W)
+        if entry:
+            self.entryvar.set(defaults['text'])
+            self.entry = Tk.Entry(master, width=50, textvariable=self.entryvar)
+            self.entry.bind('<Return>', commands['done'])
+            self.entry.bind('<Escape>', commands['cancel'])
+            self.entry.grid(row=row, column=2)
+        if browse:
+            if browse == 'folder':
+                self.browse = self.browse_folder
+            else:
+                self.browse = self.file_browser(browse)
+            self.button = Tk.Button(master, text='Browse...', command=self.browse)
+            self.button.grid(row=row, column=3)
+
+    def browse_folder(self):
+        """
+        Allow the user to browse for a folder
+        """
+        filename = fd.askdirectory()
+        self.insert(filename)
+        self.entry.focus_set()
+
+    def file_browser(self, filetype):
+        def browse_file():
+            """
+            Allow the user to browse for a file of a given filetype
+
+            :param filetype: (str()) The usual tuple passed to a Tk.FileDialog
+            """
+            filename = fd.askopenfilename(filetypes=[filetype], title='Select File')
+            self.insert(filename)
+            if filename:
+                with ignored(AttributeError):
+                    self.check.select()
+            self.entry.focus_set()
+        return browse_file
+
+    def insert(self, text=None):
+        """
+        Insert text into the appropriate textbox
+        """
+        if text:
+            self.entry.delete(0, Tk.END)
+            self.entry.insert(Tk.INSERT, text)
+
+    def get(self):
+        return dict(owner=self.owner,
+                check=self.checkvar.get(), value=self.entryvar.get())
+
 
 if __name__ == '__main__':
     markdown = Markdown('c:/users/ryan/documents/tinellbianlanguages/'

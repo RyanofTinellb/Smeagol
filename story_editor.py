@@ -1,10 +1,11 @@
 from editor import *
 from random import choice
 from string import printable
+from interlinear import Interlinear
 
 
 class StoryEditor(Editor):
-    def __init__(self, site, markdown, links, master=None):
+    def __init__(self, site=None, markdown=None, links=None, master=None):
         font = ('Californian FB', 16)
         widgets = WidgetAmounts(headings=2, textboxes=4, radios='languages')
         super(StoryEditor, self).__init__(site, markdown, links, widgets, font)
@@ -28,7 +29,7 @@ class StoryEditor(Editor):
     def make_paragraphs(self, texts):
         cousins = map(lambda x: x.splitlines(), texts)     # Str[][]
         self.count = max(map(len, cousins))      # int
-        self.current_paragraph = min(map(len, cousins)) - 1    # int
+        self.current_paragraph = abs(min(map(len, cousins)) - 1)    # int >= 0
         cousins = map(self.add_padding, cousins, len(cousins) * [self.count])     # still Str[][], but now padded
         self.paragraphs = map(None, *cousins) # str()[] (transposed)
 
@@ -84,7 +85,7 @@ class StoryEditor(Editor):
         cousins = self.entry.cousins
         paragraph = self.convert_paragraph(texts)
         self.paragraphs[self.current_paragraph] = paragraph
-        texts = map(join_strip, zip(*self.paragraphs))
+        texts = map(self.join_strip, zip(*self.paragraphs))
         texts = map(self.convert_texts, texts, cousins)
         for text, cousin in zip(texts, cousins):
             cousin.content = text
@@ -102,12 +103,10 @@ class StoryEditor(Editor):
         paragraphs[0:5:2] = texts
         with conversion(self.translator, 'convert_sentence') as converter:
             paragraphs[1] = converter(paragraphs[2])    # Tinellbian
-        paragraphs[4] += ' |- -| {' + literal + '}'      # Literal
-        paragraphs[3] = interlinear(paragraphs, self.markdown)     # Interlinear
-        punctuation = ['.(', '(', ')', '-']
-        with conversion(self.markdown, 'find_formatting') as converter:
-            punctuation += list(converter('small-caps'))
-        replacements = ['&middot;(', chr(5), chr(6), 2*chr(5), 2*chr(6), chr(7)]
+        paragraphs[4] += ' |- -| {' + literal + '}'      # Gloss
+        paragraphs[3] = Interlinear(paragraphs, self.markdown)     # Interlinear
+        punctuation = ['.(', '(', ')', '-', '<', '>']
+        replacements = ['&middot;(', chr(5), chr(6), chr(7), 2*chr(5), 2*chr(6)]
         for i, j in zip(punctuation, replacements):
             paragraphs[2] = paragraphs[2].replace(i, j)     # Transliteration
         return tuple(paragraphs)
@@ -121,9 +120,23 @@ class StoryEditor(Editor):
         :return (nothing):
         """
         for cousin in entry.cousins:
-            cousin.publish(site.template)
+            if cousin.name is not None:
+                cousin.publish(site.template)
         # reset entry so that it is not published twice
         super(StoryEditor, self).publish(entry=None, site=site)
+
+    @staticmethod
+    def join_strip(texts):
+        """
+        For each string, remove linebreaks from the end, then join them
+            together.
+
+        :param texts (str()):
+        :return (str):
+        """
+        texts = map(str, texts)
+        # flags=re.M for multiline
+        return str(re.sub(r'\n*$', '', '\n'.join(texts), flags=re.M))
 
     @property
     def textbox_commands(self):
@@ -131,60 +144,6 @@ class StoryEditor(Editor):
         commands += [('<Next>', self.next_paragraph),
                      ('<Prior>', self.previous_paragraph)]
         return commands
-
-def interlinear(paragraph, markdown):
-    """
-    Format text from paragraphs for an interlinear gloss.
-    :param paragraph (str[]): the paragraph texts from which to build the interlinear.
-        paragraph[0]: English
-        paragraph[1]: (not used here)
-        paragraph[2]: Full paragraph transliteration
-        paragraph[3]: Transliterated Tinellbian morphemes
-        paragraph[4]: Morpheme gloss
-    :return (str): an interlinear in Story markdown.
-    """
-    italics = markdown.find_formatting('em')
-    upright = ('', '')
-    font_style = upright
-    if paragraph[0] == '* **':
-        return '* **'
-    literal = paragraph[4][paragraph[4].find(' |- -| '):]
-    text = '[t]{0}{1} | -| &flex;'.format(paragraph[0], literal)
-    # remove middot, and replace angle brackets with parentheses
-    paragraph[3] = paragraph[2].replace('.(', '(').replace('<', '(').replace('>', ')')
-    for transliteration, gloss in morpheme_split(paragraph[3], paragraph[4]):
-        if transliteration[0].startswith(italics[0]):
-            transliteration[0] = transliteration[0][len(italics[0]):]
-            font_style = italics
-        text += inner_table(transliteration, gloss, font_style)
-        if transliteration[-1].endswith(italics[1]):
-            font_style = upright
-    text += '}[/t]'
-    return text
-
-
-def morpheme_split(*texts):
-    output = []
-    for text in texts:
-        output.append([word.split(r'-') for word in text.split(' ')])
-    return zip(*output)
-
-
-def inner_table(top, bottom, font_style):
-    output = '[t]{{0}}{0}{{1}} | [r]{1} | [/t]'.format(r'{1}- | {0}'.join(top), r'- | '.join(bottom))
-    output = output.format(*font_style)
-    return output
-
-
-def join_strip(texts):
-    """
-    For each string, remove linebreaks from the end, then join them
-        together.
-
-    :param texts (str()):
-    :return (str):
-    """
-    return str(re.sub(r'\n*$', '', '\n'.join(texts), flags=re.M))
 
 
 if __name__ == '__main__':
