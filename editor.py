@@ -428,7 +428,7 @@ class Editor(Tk.Frame, object):
         """
         properties_window = PropertiesWindow(self.current_properties())
         self.wait_window(properties_window)
-        self.site = Site(*properties_window.site_values)
+        self.site = Site(**properties_window.site_values)
         self.links = AddRemoveLinks(properties_window.link_values)
         self.entry = self.site.root
 
@@ -803,21 +803,21 @@ class PropertiesWindow(Tk.Toplevel, object):
         Set values to site values and links values from the properties
             window, and then disable the window
         """
-        self.site_values = []
+        self.site_values = {}
         self.link_values = []
-        files = []
+        files = {}
         for value in self.new_values:
             if value['owner'] == 'site':
-                self.site_values.append(value['value'])
+                self.site_values[value['property']] = value['value']
             elif value['owner'] == 'file':
-                files.append(value['value'])
+                files[value['property']] = value['value']
             elif value['check'] == 1:
                 if value['value'] == '':
                     self.link_values.append(value['owner']())
                 else:
                     self.link_values.append(value['owner'](value['value']))
-        files = Files(*files)
-        self.site_values.insert(2, files)
+        files = Files(**files)
+        self.site_values['files'] = files
         self.destroy()
 
     @property
@@ -860,6 +860,7 @@ class PropertyFrame:
                             Tkinter's FileDialog
         """
         self.owner = owner
+        self.property = property_name
         self.checkvar, self.entryvar = Tk.IntVar(), Tk.StringVar()
         self.entry = self.check = self.button = self.label = None
         defaults = dict(zip(['check', 'text'], defaults))
@@ -915,7 +916,7 @@ class PropertyFrame:
             self.entry.insert(Tk.INSERT, text)
 
     def get(self):
-        return dict(owner=self.owner,
+        return dict(owner=self.owner, property=self.property,
                 check=self.checkvar.get(), value=self.entryvar.get())
 
 
