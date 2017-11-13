@@ -10,39 +10,46 @@ class EditorProperties():
     """
 
     :param config_filename: (str) name of a .smg Smeagol configuration file
+
+    properties:
+        self.template
+        self.config_filename - to save changes to
+        self.config
+        self.files - a Files object
+        self.site - a Site object
+        self.randomwords - a RandomWords object
+        self.linkadder - a AddRemoveLinks object
     """
-    def __init__(self, config_filename=None):
-        os.chdir(os.path.dirname(sys.argv[0]))
-        with open('editor_properties.json') as template:
+    def __init__(self, config=None, template=None):
+        self.setup_config(config)
+        self.setup_template(template)
+
+    def setup_template(self, template):
+        template = template or os.path.dirname(sys.argv[0]) + '\\editor_properties.json'
+        with open(template) as template:
             self.template = json.load(template)
+
+    def setup_config(self, config):
+        self.config_filename = config
         try:
-            with open(config_filename) as config:
+            with open(config) as config:
                 self.config = json.load(config)
         except TypeError:
             self.config = dict()
-
-    def get_dict(self, kind):
-        """
-        Get names of keys from editor properties
-
-        :param kind: (str) name of the property owner
-        """
-        keys = [key['property'] for key in self.template if key['owner'] == kind]
-        return {key: self.config.get(key) for key in keys}
 
     @property
     def files(self):
         """
         Create a File object from the config info
         """
-        return Files(**self.get_dict('file'))
+        return Files(**self.config['file'])
 
     @property
     def site(self):
         """
         Create a Site object from the config info
         """
-        dict_ = self.get_dict('site')
+        dict_ = self.config['site']
         dict_['files'] = self.files
         return Site(**dict_)
 

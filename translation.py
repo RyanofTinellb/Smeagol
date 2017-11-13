@@ -136,6 +136,7 @@ class RandomWords():
         self.maximum = number
         self.geminate = geminate - 1
 
+    @property
     def words(self):
         return [self.word() for x in range(self.maximum)]
 
