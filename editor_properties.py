@@ -4,7 +4,7 @@ import json
 import translation
 from smeagol_site import Site
 from smeagol_files import Files
-from translation import AddRemoveLinks
+from translation import AddRemoveLinks, RandomWords
 
 class EditorProperties():
     """
@@ -45,6 +45,13 @@ class EditorProperties():
         dict_ = self.get_dict('site')
         dict_['files'] = self.files
         return Site(**dict_)
+
+    @property
+    def randomwords(self):
+        """
+        Create a RandomWords object from the config info
+        """
+        return RandomWords(**self.config['random words'])
 
     @property
     def linkadder(self):

@@ -68,6 +68,22 @@
     "browse": false
   },
   {
+    "name": "Number of Random Words",
+    "property": "number",
+    "owner": "randomwords",
+    "check": false,
+    "textbox": true,
+    "browse": false
+  },
+  {
+    "name": "Fraction of Consonants being Geminated (1/n)",
+    "owner": "randomwords",
+    "property": "geminate",
+    "check": false,
+    "textbox": true,
+    "browse": false
+  },
+  {
     "name": "Version Links within Stories",
     "property": "InternalStory",
     "owner": "links",
