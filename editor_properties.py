@@ -1,6 +1,10 @@
 import sys
 import os
 import json
+import translation
+from smeagol_site import Site
+from smeagol_files import Files
+from translation import AddRemoveLinks
 
 class EditorProperties():
     """
@@ -15,51 +19,44 @@ class EditorProperties():
             with open(config_filename) as config:
                 self.config = json.load(config)
         except TypeError:
-            self.config = ''
+            self.config = dict()
 
-    
-
-    def make_site_from_config(self, config):
-        details = {}
-        properties = config.splitlines()
-        for property_ in properties:
-            with ignored(ValueError):
-                key, value = property_.split(': ')
-                details[key] = value
-        files = dict(source='source', template='template', markdown='markdown',
-            searchjson='searchjson')
-        for file_ in files.keys():
-            with ignored(KeyError):
-                files[file_] = details.pop(file_)
-                details['files'] = Files(**files)
-        return details
-
-    def get_linkadder_from_config(self, config):
+    def get_dict(self, kind):
         """
-        Create an AddRemoveLinks instance based on a given configuration file
+        Get names of keys from editor properties
 
-        :param config: (str) The appropriate section of a configuration file
+        :param kind: (str) name of the property owner
         """
-        properties = config.splitlines()
-        possible_adders = filter(lambda x: x.owner not in ['site', 'file'], properties_window)
-        link_adders = []
-        for property_ in properties:
-            config_adder = property_.split(': ')
-            link_adders.append(self.create_linkadder(possible_adders, config_adder))
-        return link_adders
+        keys = [key['property'] for key in self.template if key['owner'] == kind]
+        return {key: self.config.get(key) for key in keys}
 
-    def create_linkadder(self, possible_adders, config_adder):
+    @property
+    def files(self):
         """
-        Create an instance of a Link Adder
+        Create a File object from the config info
+        """
+        return Files(**self.get_dict('file'))
 
-        :param possible_adders: (Property[]) the editor properties that
-        correspond to LinkAdders
-        :param config_adder: (tuple) a (key, value) pair from a config. file
+    @property
+    def site(self):
         """
+        Create a Site object from the config info
+        """
+        dict_ = self.get_dict('site')
+        dict_['files'] = self.files
+        return Site(**dict_)
+
+    @property
+    def linkadder(self):
+        """
+        Create an AddRemoveLinks instance from the config info
+        """
+        return AddRemoveLinks(map(self._links, self.config['links']))
+
+    def _links(self, linkadder):
         try:
-            key, value = config_adder
-        except ValueError:
-            (key, ), value = config_adder, None
-        adder = filter(lambda x: x.property == key, possible_adders)
-        adder = adder[0].owner() if value is None else adder[0].owner(value)
-        return adder
+            linkadder = getattr(translation, linkadder)()
+        except TypeError:
+            linkadder, filename = linkadder['type'], linkadder['filename']
+            linkadder = getattr(translation, linkadder)(filename)
+        return linkadder
