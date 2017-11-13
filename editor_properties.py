@@ -74,3 +74,8 @@ class EditorProperties():
             linkadder, filename = linkadder['type'], linkadder['filename']
             linkadder = getattr(translation, linkadder)(filename)
         return linkadder
+
+    def save(self, filename=None):
+        self.config_filename = filename or self.config_filename
+        with open(self.config_filename, 'w') as config:
+            json.dump(self.config, config)
