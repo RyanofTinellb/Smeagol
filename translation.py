@@ -199,7 +199,7 @@ def urlform(text, markdown=None):
 
 
 class Markdown:
-    def __init__(self, filename):
+    def __init__(self, filename=''):
         """
         Marking down proceeds down the Replacements page
         :param filename (String): the path to the replacements file
@@ -208,12 +208,13 @@ class Markdown:
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None
-        with open(filename) as replacements:
-            for line in replacements:
-                line = line.split(" ")
-                self.markup.append(line[0])
-                self.markdown.append(line[1])
-            self.filename = filename
+        self.filename = filename
+        if filename:
+            with open(filename) as replacements:
+                for line in replacements:
+                    line = line.split(" ")
+                    self.markup.append(line[0])
+                    self.markdown.append(line[1])
 
     def to_markup(self, text):
         self.source, self.destination = self.markdown[::-1], self.markup[::-1]
