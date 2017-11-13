@@ -55,24 +55,27 @@ class PropertyFrame:
         value = self.config[self.owner]
 
         self.checkvar, self.entryvar = Tk.IntVar(), Tk.StringVar()
-        self.entry = self.check = self.button = self.label = None
+        self.entry = self.button = self.label = None
         if self.check:
-            self.checkvar.set([adder['type'] for adder in value].includes(self.property))
+            self.checkvar.set(self.property in [adder['type'] for adder in value])
             self.check = Tk.Checkbutton(master, variable=self.checkvar)
             self.check.grid(row=row, column=0)
         self.label = Tk.Label(master, text=self.name)
         self.label.grid(row=row, column=1, sticky=Tk.W)
-        if self.browse:
+        if self.textbox:
             try:
                 text = value[self.property]
             except TypeError:
-                text = [prop['filename'] for prop in value if prop['type'] == self.property]
+                text = [prop['filename'] for prop in value if prop['type'] == self.property][0]
             self.entryvar.set(text)
             self.entry = Tk.Entry(master, width=50, textvariable=self.entryvar)
             self.entry.bind('<Return>', commands['done'])
             self.entry.bind('<Escape>', commands['cancel'])
             self.entry.grid(row=row, column=2)
-            if self.browse == 'folder':
+            self.entry.xview('end')
+            if not self.browse:
+                return
+            elif self.browse == 'folder':
                 self.browse = self.browse_folder
             else:
                 self.browse = self.file_browser((self.browse['text'], self.browse['extension']))

@@ -76,7 +76,7 @@
     "browse": false
   },
   {
-    "name": "Fraction of Consonants being Geminated (1/n)",
+    "name": "Odds of Gemination",
     "owner": "random words",
     "property": "geminate",
     "check": false,
