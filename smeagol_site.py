@@ -32,9 +32,9 @@ class Site(object):
             self.leaf_level = int(leaf_level)
         except ValueError:
             self.leaf_level = 1
-        self.refresh()
+        self.create_site()
 
-    def refresh(self):
+    def create_site(self):
         self.current = None
         self.length = 0
 
