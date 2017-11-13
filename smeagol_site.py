@@ -1,4 +1,5 @@
 from smeagol_page import Page
+from smeagol_files import Files
 from text_analysis import Analysis
 from translation import *
 import os
@@ -19,13 +20,13 @@ class Site(object):
         # initialize attributes and utility classes
         self.destination = destination
         self.name = name
-        self.files = files
+        self.files = files or Files()
         self.details = dict(destination=destination,
                             name=name,
-                            source=files.source,
-                            template=files.template_file,
-                            markdown=files.markdown_file,
-                            searchjson=files.searchjson,
+                            source=self.files.source,
+                            template=self.files.template_file,
+                            markdown=self.files.markdown_file,
+                            searchjson=self.files.searchjson,
                             leaf_level=str(leaf_level))
         try:
             self.leaf_level = int(leaf_level)
