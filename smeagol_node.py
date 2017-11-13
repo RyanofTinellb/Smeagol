@@ -15,6 +15,7 @@ class Node(object):
         self.parent = parent
         self.children = []
         self.level = self.generation - 1
+        self.isRoot = self is self.root
 
     def insert(self, index=None):
         """
@@ -106,6 +107,8 @@ class Node(object):
         return len(self.ancestors)
 
     def sister(self, index):
+        if self.isRoot:
+            raise IndexError
         children = self.parent.children
         node_order = children.index(self)
         if len(children) > node_order + index >= 0:
@@ -151,7 +154,7 @@ class Node(object):
         :return (Node): the next Node in sequence
         :raises IndexError: the next Node does not exist
         """
-        if node.parent is None:
+        if self.isRoot or node.parent is None:
             raise IndexError('No more nodes')
         try:
             right = node.next_sister
