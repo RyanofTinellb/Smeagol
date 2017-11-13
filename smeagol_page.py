@@ -288,25 +288,10 @@ class Page(Node):
         """
         :return (str): a table of contents in HTML
         """
-        if self.isLeaf:
+        if self.level: # self not root nor leaf
+            return "".join(['<p>{0}</p>\n'.format(self.hyperlink(child)) for child  in self.children])
+        else:
             return ''
-        elif self.level: # self neither root nor leaf
-            return "".join(['<p>{0}</p>\n'.format(self.hyperlink(child)) for child in self.children])
-        else:  # self is root
-            links = ''
-            level = 0
-            for page in self.genealogy:
-                if not page.level:
-                    continue
-                old_level = level
-                level = page.level
-                if level > old_level:
-                    links += '<ul class=\"level-{0}\">'.format(str(level))
-                elif level < old_level:
-                    links += (old_level - level) * '</ul>\n'
-                links += '<li>{0}</li>\n'.format(self.hyperlink(page))
-            links += (level - 1) * '</ul>\n'
-            return links
 
     @property
     def links(self):
