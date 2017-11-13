@@ -26,7 +26,7 @@ class Editor(Tk.Frame, object):
             radiobuttons to create.
         """
         super(Editor, self).__init__(None)
-        self.site = site
+        self.site = site or Site()
         self.markdown = markdown
         self.links = links
         self.widgets = widgets

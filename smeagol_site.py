@@ -7,14 +7,15 @@ class Site(object):
     """
     A hierarchy of Pages
     """
-    def __init__(self, destination, name, files, leaf_level):
+    def __init__(self, destination=None, name=None, files=None, leaf_level=None):
         """
         :param destination (str): the full path where the Site is to be located
         :param name (str): human-readable name of the Site
         :param files (Files):
         :param leaf_level (int): the level of the lowermost pages in the hierarchy, where the root is at 0.
         """
-        self.choose_dir(destination)
+        if destination:
+            self.choose_dir(destination)
         # initialize attributes and utility classes
         self.destination = destination
         self.name = name
