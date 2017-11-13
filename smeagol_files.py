@@ -7,8 +7,11 @@ class Files:
         """
         self.source = source
         self.template_file = template
-        with open(self.template_file) as template:
-            self.template = template.read()
+        if template:
+            with open(self.template_file) as template:
+                self.template = template.read()
+        else:
+            self.template = None
         self.markdown_file = markdown
         self.markdown = Markdown(self.markdown_file)
         self.searchjson = searchjson
