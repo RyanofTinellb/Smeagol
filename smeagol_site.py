@@ -30,13 +30,17 @@ class Site(object):
                             leaf_level=str(leaf_level))
         try:
             self.leaf_level = int(leaf_level)
-        except ValueError:
+        except (ValueError, TypeError):
             self.leaf_level = 1
         self.create_site()
 
     def create_site(self):
         self.current = None
         self.length = 0
+
+        if not self.files.source:
+            self.root = Page(self.name, leaf_level=self.leaf_level, markdown=self.markdown)
+            return
 
         # break source text into pages, with the splits on square brackets before numbers <= leaf_level
         with open(self.files.source) as source:
