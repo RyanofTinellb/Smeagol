@@ -376,6 +376,8 @@ class Page(Node):
         div = '<div>\n{0}\n</div>\n'
         if self.previous:
             output = div.format(self.hyperlink(self.previous, '&larr; Previous page'))
+        elif self is self.root:
+            output = div.format('<a href="http://www.tinellb.com">&uarr; Go to Main Page')
         else:
             output = div.format(self.hyperlink(self.root, '&uarr; Return to Menu'))
         try:
