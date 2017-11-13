@@ -134,7 +134,7 @@ class HighLulani:
 class RandomWords():
     def __init__(self, number, geminate):
         self.maximum = number
-        self.geminate = geminate
+        self.geminate = geminate - 1
 
     def words(self):
         return [self.word() for x in range(self.maximum)]
