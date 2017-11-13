@@ -1,42 +1,19 @@
-from collections import namedtuple
-from translation import *
 import Tkinter as Tk
-
-"""Site properties are named tuples:
-    :var name: (str) The human-readable name of the property to be modified
-    :var property: (str) The name of the property as used by Smeagol
-    :var owner (str) If this property pertains to the 'site'
-               (obj) A Links class, if the property pertains to
-                    the editor
-    :var check: (bool) Whether this property has a Checkbutton
-    :var entry: (bool) Whether this property has a Textbox / Entry
-    :var browse: (bool) Whether to have a browse button
-                 (str) 'folder' if this property is to search for a
-                        directory
-                 ((str, str)) if this property is to search for a
-                        file, this is the tuple used by
-                        Tkinter's FileDialog"""
+from editor_properties import EditorProperties
 
 class PropertiesWindow(Tk.Toplevel, object):
 
     """
-    Properties:
-        - site destination
-        - site name
-        - site source
-        - site template
-        - site markdown
-        - site searchjson
-        - site leaf_level
-        - editor links (x4)
+
+    :param properties: (EditorProperties)
     """
-    def __init__(self, current_values, master=None):
-        self.current_values = current_values
+    def __init__(self, properties=None, master=None):
         super(PropertiesWindow, self).__init__(master)
+        self.properties = properties or EditorProperties()
         commands = dict(done=self.finish_window, cancel=self.cancel_window)
         self.property_frames = []
-        for row, (current_value, property_) in enumerate(zip(current_values, editor_properties)):
-            property_frame = PropertyFrame(self, row, current_value, commands, *property_)
+        for row, property_ in enumerate(self.properties):
+            property_frame = PropertyFrame(self, row, self.properties)
             self.property_frames.append(property_frame)
         self.configure_buttons(row+1, commands)
         self.property_frames[0].entry.focus_set()
@@ -52,27 +29,9 @@ class PropertiesWindow(Tk.Toplevel, object):
         Set values to site values and links values from the properties
             window, and then disable the window
         """
-        self.site_values = {}
-        self.link_values = []
-        files = {}
-        for value in self.new_values:
-            if value['owner'] == 'site':
-                self.site_values[value['property']] = value['value']
-            elif value['owner'] == 'file':
-                files[value['property']] = value['value']
-            elif value['check'] == 1:
-                if value['value'] == '':
-                    self.link_values.append(value['owner']())
-                else:
-                    self.link_values.append(value['owner'](value['value']))
-        files = Files(**files)
-        self.site_values['files'] = files
+        for frame in self.property_frames:
+            property_frame.update()
         self.destroy()
-
-    @property
-    def new_values(self):
-        for property_frame in self.property_frames:
-            yield property_frame.get()
 
     def cancel_window(self, event=None):
         """
