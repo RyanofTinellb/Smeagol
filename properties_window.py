@@ -166,16 +166,3 @@ class PropertyFrame:
     def get(self):
         return dict(owner=self.owner, property=self.property,
                 check=self.checkvar.get(), value=self.entryvar.get())
-
-Property = namedtuple('Property', ['name', 'property', 'owner', 'check', 'textbox', 'browse'])
-editor_properties = [Property('Destination', 'destination', 'site', False, True, 'folder'),
-    Property('Name', 'name', 'site', False, True,  False),
-    Property('Source', 'source', 'file', False, True, ('Data File', '*.txt')),
-    Property('Template', 'template', 'file', False, True, ('HTML Template', '*.html')),
-    Property('URL/JSON Markdown', 'markdown', 'file', False, True, ('Markdown File', '*.mkd')),
-    Property('Searchterms File', 'searchjson', 'file', False, True, ('JSON File', '*.json')),
-    Property('Leaf Level', 'leaf_level', 'site', False, True, False),
-    Property('Version Links', 'internalstory', InternalStory, True, False, False),
-    Property('Links within the Dictionary', 'internaldictionary', InternalDictionary, True, False, False),
-    Property('Links to external grammar site', 'externalgrammar', ExternalGrammar, True, True, ('Grammar Links File', '*.txt')),
-    Property('Links to external dictionary site', 'externaldictionary', ExternalDictionary, True, False, False)]

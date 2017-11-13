@@ -1,0 +1,108 @@
+{
+  "Property": ["name", "property", "owner", "check", "textbox", "browse"],
+  "editor_properties": [
+    {
+      "name": "Destination",
+      "property": "destination",
+      "owner": "site",
+      "check": false,
+      "textbox": true,
+      "browse": "folder"
+    },
+    {
+      "name": "Name",
+      "property": "name",
+      "owner": "site",
+      "check": false,
+      "textbox": true,
+      "browse": false
+    },
+    {
+      "name": "Source",
+      "property": "source",
+      "owner": "file",
+      "check": false,
+      "textbox": true,
+      "browse": {
+        "text": "Data File",
+        "extension": ".txt"
+      }
+    },
+    {
+      "name": "Template",
+      "property": "template",
+      "owner": "file",
+      "check": false,
+      "textbox": true,
+      "browse": {
+        "text": "HTML Template",
+        "extension": "*.html"
+      }
+    },
+    {
+      "name": "URL/JSON Markdown",
+      "property": "markdown",
+      "owner": "file",
+      "check": false,
+      "textbox": true,
+      "browse": {
+        "text": "Markdown File",
+        "extension": "*.mkd"
+      }
+    },
+    {
+      "name": "Searchterms File",
+      "property": "searchjson",
+      "owner": "file",
+      "check": false,
+      "textbox": true,
+      "browse": {
+        "text": "JSON File",
+        "extension": "*.json"
+      }
+    },
+    {
+      "name": "Leaf Level",
+      "property": "leaf_level",
+      "owner": "site",
+      "check": false,
+      "textbox": true,
+      "browse": false
+    },
+    {
+      "name": "Version Links within Stories",
+      "property": "internalstory",
+      "owner": "InternalStory",
+      "check": true,
+      "textbox": false,
+      "browse": false
+    },
+    {
+      "name": "Links within Dictionaries",
+      "property": "internaldictionary",
+      "owner": "InternalDictionary",
+      "check": true,
+      "textbox": false,
+      "browse": false
+    },
+    {
+      "name": "Links to an external Grammar",
+      "property": "externalgrammar",
+      "owner": "ExternalGrammar",
+      "check": true,
+      "textbox": true,
+      "browse": {
+        "text": "Grammar Links File",
+        "extension": "*.txt"
+      }
+    },
+    {
+      "name": "Links to an external Dictionary",
+      "property": "externaldictionary",
+      "owner": "ExternalDictionary",
+      "check": true,
+      "textbox": false,
+      "browse": false
+    }
+  ]
+}
