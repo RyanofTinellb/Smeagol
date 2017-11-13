@@ -12,8 +12,8 @@ class PropertiesWindow(Tk.Toplevel, object):
         self.properties = properties or EditorProperties()
         commands = dict(done=self.finish_window, cancel=self.cancel_window)
         self.property_frames = []
-        for row, property_ in enumerate(self.properties):
-            property_frame = PropertyFrame(self, row, self.properties)
+        for row, property_ in enumerate(self.properties.template):
+            property_frame = PropertyFrame(self, row, self.properties, commands)
             self.property_frames.append(property_frame)
         self.configure_buttons(row+1, commands)
         self.property_frames[0].entry.focus_set()
@@ -43,51 +43,39 @@ class PropertyFrame:
     """
     Wrapper class for one row of a PropertiesWindow
     """
-    def __init__(self, master, row, defaults, commands=None, human_name='',
-                property_name='', owner='site', check=False, entry=False, browse=False):
+    def __init__(self, master, row, properties, commands):
         """
         Create a row of the properties window
-
-        :param master: (widget) the widget to which all the widgets of
-            this frame belong.
-        :param row: (int) the row of the window onto which to place
-            this frame.
-        :param defaults: ((int, str)), current state of checkbox and textbox
-        :param commands: ({str:method}) the 'done' and 'cancel' commands
-            for the outer window.
-        :param human_name: (str) the human-readable name of the property
-        :param property_name: (str) the Smeagol name of the property
-        :param check: (bool) whether to have a checkboxes
-        :param entry: (bool) whether to have a textbox/entry
-        :param browse: (bool) Whether to have a browse button
-                       (str) 'folder' if this property is to search for a
-                            directory
-                       ((str, str)) if this property is to search for a
-                            file. This is the tuple used by
-                            Tkinter's FileDialog
         """
-        self.owner = owner
-        self.property = property_name
+        self.properties = properties
+        self.template = properties.template[row]
+        self.config = properties.config
+        self.__dict__.update(self.template)
+
+        value = self.config[self.owner]
+
         self.checkvar, self.entryvar = Tk.IntVar(), Tk.StringVar()
         self.entry = self.check = self.button = self.label = None
-        defaults = dict(zip(['check', 'text'], defaults))
-        if check:
-            self.checkvar.set(defaults['check'])
+        if self.check:
+            self.checkvar.set([adder['type'] for adder in value].includes(self.property))
             self.check = Tk.Checkbutton(master, variable=self.checkvar)
             self.check.grid(row=row, column=0)
-        self.label = Tk.Label(master, text=human_name)
+        self.label = Tk.Label(master, text=self.name)
         self.label.grid(row=row, column=1, sticky=Tk.W)
-        if entry:
-            self.entryvar.set(defaults['text'])
+        if self.browse:
+            try:
+                text = value[self.property]
+            except TypeError:
+                text = [prop['filename'] for prop in value if prop['type'] == self.property]
+            self.entryvar.set(text)
             self.entry = Tk.Entry(master, width=50, textvariable=self.entryvar)
             self.entry.bind('<Return>', commands['done'])
             self.entry.bind('<Escape>', commands['cancel'])
             self.entry.grid(row=row, column=2)
-        if browse:
-            if browse == 'folder':
+            if self.browse == 'folder':
                 self.browse = self.browse_folder
             else:
-                self.browse = self.file_browser(browse)
+                self.browse = self.file_browser((self.browse['text'], self.browse['extension']))
             self.button = Tk.Button(master, text='Browse...', command=self.browse)
             self.button.grid(row=row, column=3)
 

@@ -18,7 +18,7 @@
   {
     "name": "Source",
     "property": "source",
-    "owner": "file",
+    "owner": "files",
     "check": false,
     "textbox": true,
     "browse": {
@@ -29,7 +29,7 @@
   {
     "name": "Template",
     "property": "template",
-    "owner": "file",
+    "owner": "files",
     "check": false,
     "textbox": true,
     "browse": {
@@ -40,7 +40,7 @@
   {
     "name": "URL/JSON Markdown",
     "property": "markdown",
-    "owner": "file",
+    "owner": "files",
     "check": false,
     "textbox": true,
     "browse": {
@@ -51,7 +51,7 @@
   {
     "name": "Searchterms File",
     "property": "searchjson",
-    "owner": "file",
+    "owner": "files",
     "check": false,
     "textbox": true,
     "browse": {
@@ -70,14 +70,14 @@
   {
     "name": "Number of Random Words",
     "property": "number",
-    "owner": "randomwords",
+    "owner": "random words",
     "check": false,
     "textbox": true,
     "browse": false
   },
   {
     "name": "Fraction of Consonants being Geminated (1/n)",
-    "owner": "randomwords",
+    "owner": "random words",
     "property": "geminate",
     "check": false,
     "textbox": true,
