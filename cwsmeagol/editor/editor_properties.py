@@ -1,8 +1,8 @@
 import sys
 import os
 import json
-import translation
-from smeagol_site import Site
+from .. import translation
+from ..site.smeagol_site import Site
 from smeagol_files import Files
 from translation import AddRemoveLinks, RandomWords
 

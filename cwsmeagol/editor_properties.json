@@ -117,7 +117,7 @@
     "vartype": "string",
     "browse": {
       "text": "Grammar Links File",
-      "extension": "*.txt"
+      "extension": "*.glk"
     }
   },
   {

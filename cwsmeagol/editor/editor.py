@@ -16,9 +16,7 @@ class Editor(Tk.Frame, object):
     """
     Base class for DictionaryEditor and StoryEditor
     """
-    def __init__(self, site=None, markdown=None, links=None,
-        widgets=WidgetAmounts(headings=3, textboxes=1, radios='languages'),
-        font=('Corbel', '14')):
+    def __init__(self, properties=None, widgets=None, font=None):
         """
         Initialise an instance of the Editor class.
         :param directory (str):
@@ -26,11 +24,9 @@ class Editor(Tk.Frame, object):
             radiobuttons to create.
         """
         super(Editor, self).__init__(None)
-        self.site = site or Site()
-        self.markdown = markdown
-        self.links = links
-        self.widgets = widgets
-        self.font = font
+        self.properties = properties or EditorProperties()
+        self.widgets = widgets or WidgetAmounts(headings=3, textboxes=1, radios='languages')
+        self.font = font or ('Corbel', '14')
 
         self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
         self.headings, self.radios, self.texts = [], [], []

@@ -1,3 +1,5 @@
+from random import *
+
 class RandomWords():
     def __init__(self, number, geminate):
         self.maximum = number
