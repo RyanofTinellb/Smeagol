@@ -105,15 +105,14 @@ class PropertyFrame:
             self.entry.focus_set()
         return browse_file
 
-    def insert(self, text=None):
+    def insert(self, text=''):
         """
         Insert text into the appropriate textbox
         """
-        if text:
-            self.entry.delete(0, Tk.END)
-            self.entry.insert(Tk.INSERT, text)
-            self.entry.xview('end')
+        self.entryvar.set(text)
+        self.entry.xview('end')
 
-    def get(self):
-        return dict(owner=self.owner, property=self.property,
-                check=self.checkvar.get(), value=self.entryvar.get())
+    def update(self):
+        text = self.entryvar.get()
+        check = self.checkvar.get()
+        self.properties.update(self.owner, self.property, text, check)
