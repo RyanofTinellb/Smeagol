@@ -1,5 +1,7 @@
 import Tkinter as Tk
+import tkFileDialog as fd
 from editor_properties import EditorProperties
+from utils import *
 
 class PropertiesWindow(Tk.Toplevel, object):
 
@@ -30,7 +32,7 @@ class PropertiesWindow(Tk.Toplevel, object):
             window, and then disable the window
         """
         for frame in self.property_frames:
-            property_frame.update()
+            frame.update()
         self.destroy()
 
     def cancel_window(self, event=None):
@@ -51,11 +53,9 @@ class PropertyFrame:
         self.template = properties.template[row]
         self.config = properties.config
         self.__dict__.update(self.template)
-
-        value = self.config[self.owner]
-
         self.checkvar, self.entryvar = Tk.IntVar(), Tk.StringVar()
         self.entry = self.button = self.label = None
+        value = self.config[self.owner]
         if self.check:
             self.checkvar.set(self.property in [adder['type'] for adder in value])
             self.check = Tk.Checkbutton(master, variable=self.checkvar)
@@ -112,6 +112,7 @@ class PropertyFrame:
         if text:
             self.entry.delete(0, Tk.END)
             self.entry.insert(Tk.INSERT, text)
+            self.entry.xview('end')
 
     def get(self):
         return dict(owner=self.owner, property=self.property,
