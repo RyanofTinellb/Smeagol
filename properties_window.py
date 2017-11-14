@@ -15,8 +15,9 @@ class PropertiesWindow(Tk.Toplevel, object):
         commands = dict(done=self.finish_window, cancel=self.cancel_window)
         self.property_frames = []
         for row, property_ in enumerate(self.properties.template):
-            property_frame = PropertyFrame(self, row, self.properties, commands)
-            self.property_frames.append(property_frame)
+            if (property_['owner'] in self.properties.config):
+                property_frame = PropertyFrame(self, row, self.properties, commands)
+                self.property_frames.append(property_frame)
         self.configure_buttons(row+1, commands)
         self.property_frames[0].entry.focus_set()
 
@@ -116,4 +117,5 @@ class PropertyFrame:
     def update(self):
         text = self.entryvar.get()
         check = self.checkvar.get()
-        self.properties.update(self.owner, self.property, text, check)
+        integer = self.textbox and self.vartype == 'integer'
+        self.properties.update(self.owner, self.property, text, check, integer)
