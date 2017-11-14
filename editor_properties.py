@@ -30,12 +30,9 @@ class EditorProperties():
             self.template = json.load(template)
 
     def setup_config(self, config):
-        self.config_filename = config
-        try:
-            with open(config) as config:
-                self.config = json.load(config)
-        except TypeError:
-            self.config = dict()
+        self.config_filename = config or os.path.dirname(sys.argv[0]) + '\\editor_properties.smg'
+        with open(self.config_filename) as config:
+            self.config = json.load(config)
 
     @property
     def files(self):
