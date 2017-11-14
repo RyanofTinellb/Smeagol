@@ -1,8 +1,0 @@
-searchjson: c:/users/ryan/documents/tinellbianlanguages/grammar/searching.json
-template: c:/users/ryan/documents/tinellbianlanguages/grammar/template.html
-destination: c:/users/ryan/desktop
-name: Ryan
-source: c:/users/ryan/documents/tinellbianlanguages/grammar/data.txt
-main_template: c:/users/ryan/documents/tinellbianlanguages/grammar/main_template.html
-markdown: c:/users/ryan/documents/tinellbianlanguages/replacements.mkd
-leaf_level: 3
