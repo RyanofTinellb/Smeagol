@@ -5,7 +5,8 @@
     "owner": "site",
     "check": false,
     "textbox": true,
-    "browse": "folder"
+    "browse": "folder",
+    "vartype": "string"
   },
   {
     "name": "Name",
@@ -13,7 +14,8 @@
     "owner": "site",
     "check": false,
     "textbox": true,
-    "browse": false
+    "browse": false,
+    "vartype": "string"
   },
   {
     "name": "Source",
@@ -24,7 +26,8 @@
     "browse": {
       "text": "Data File",
       "extension": ".txt"
-    }
+    },
+    "vartype": "string"
   },
   {
     "name": "Template",
@@ -32,6 +35,7 @@
     "owner": "files",
     "check": false,
     "textbox": true,
+    "vartype": "string",
     "browse": {
       "text": "HTML Template",
       "extension": "*.html"
@@ -43,6 +47,7 @@
     "owner": "files",
     "check": false,
     "textbox": true,
+    "vartype": "string",
     "browse": {
       "text": "Markdown File",
       "extension": "*.mkd"
@@ -54,6 +59,7 @@
     "owner": "files",
     "check": false,
     "textbox": true,
+    "vartype": "string",
     "browse": {
       "text": "JSON File",
       "extension": "*.json"
@@ -65,12 +71,14 @@
     "owner": "site",
     "check": false,
     "textbox": true,
+    "vartype": "integer",
     "browse": false
   },
   {
     "name": "Number of Random Words",
     "property": "number",
     "owner": "random words",
+    "vartype": "integer",
     "check": false,
     "textbox": true,
     "browse": false
@@ -79,6 +87,7 @@
     "name": "Odds of Gemination",
     "owner": "random words",
     "property": "geminate",
+    "vartype": "integer",
     "check": false,
     "textbox": true,
     "browse": false
@@ -105,6 +114,7 @@
     "owner": "links",
     "check": true,
     "textbox": true,
+    "vartype": "string",
     "browse": {
       "text": "Grammar Links File",
       "extension": "*.txt"

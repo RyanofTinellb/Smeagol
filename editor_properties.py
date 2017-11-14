@@ -84,7 +84,7 @@ class EditorProperties():
         else:
             self.config['links'].append(dict(type=kind))
 
-    def update(self, owner, prop, text, check):
+    def update(self, owner, prop, text, check, integer=False):
         """
 
         :raise: ValueError
@@ -95,6 +95,10 @@ class EditorProperties():
             else:
                 self.removelinkadder(prop)
         else:
+            try:
+                text = int(text) if integer else text
+            except ValueError:
+                text = 0
             self.config[owner][prop] = text
 
     def _links(self, linkadder):
