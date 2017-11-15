@@ -1,6 +1,8 @@
+from collections import OrderedDict
+
 class Translator:
     def __init__(self, language=None):
-        languages = Odict()
+        languages = OrderedDict()
         languages['en'] = English
         languages['hl'] = HighLulani
         self.languages = languages

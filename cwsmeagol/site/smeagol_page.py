@@ -4,7 +4,7 @@ from cached_property import cached_property
 from collections import deque
 from flatname import FlatName
 from smeagol_node import Node
-from translation import *
+from ..translation import *
 import os
 
 class Page(Node):

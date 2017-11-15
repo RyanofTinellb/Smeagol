@@ -1,4 +1,6 @@
 import json
+import re
+import urllib
 from contextlib import contextmanager
 
 @contextmanager
@@ -34,7 +36,7 @@ def urlform(text, markdown=None):
     name = re.sub(r'<(div|ipa).*?\1>', '', name)
     # remove tags, spaces and punctuation
     name = re.sub(r'<.*?>|[/*;: ]', '', name)
-    name = quote(name, safe_punctuation)
+    name = urllib.quote(name, safe_punctuation)
     return name
 
 def add_datestamp(text):

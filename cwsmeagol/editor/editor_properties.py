@@ -4,7 +4,6 @@ import json
 from .. import translation
 from ..site.smeagol_site import Site
 from smeagol_files import Files
-from translation import AddRemoveLinks, RandomWords
 
 class EditorProperties():
     """
@@ -21,16 +20,18 @@ class EditorProperties():
         self.linkadder - a AddRemoveLinks object
     """
     def __init__(self, config=None, template=None):
-        self.setup_config(config)
         self.setup_template(template)
+        self.setup_config(config)
 
     def setup_template(self, template):
-        template = template or os.path.dirname(sys.argv[0]) + '\\editor_properties.json'
+        template = template or (
+            os.path.join(os.path.dirname(__file__), 'editor_properties.json'))
         with open(template) as template:
             self.template = json.load(template)
 
     def setup_config(self, config):
-        self.config_filename = config or os.path.dirname(sys.argv[0]) + '\\editor_properties.smg'
+        self.config_filename = config or (
+            os.path.join(os.path.dirname(__file__), 'editor_properties.smg'))
         with open(self.config_filename) as config:
             self.config = json.load(config)
 
@@ -39,7 +40,7 @@ class EditorProperties():
         """
         Create a File object from the config info
         """
-        return Files(**self.config['file'])
+        return Files(**self.config['files'])
 
     @property
     def site(self):

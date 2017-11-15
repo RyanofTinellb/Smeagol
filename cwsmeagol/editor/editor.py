@@ -2,7 +2,10 @@ from properties_window import PropertiesWindow
 from collections import OrderedDict, namedtuple
 from itertools import chain
 from smeagol import *
-from translation import *
+from ..translation import *
+from editor_properties import EditorProperties
+from ..utils import *
+
 import webbrowser as web
 import Tkinter as Tk
 import tkFileDialog as fd
@@ -34,6 +37,7 @@ class Editor(Tk.Frame, object):
         self.save_text, self.language = Tk.StringVar(), Tk.StringVar()
         self.save_text.set('Save')
         self.translator = Translator()
+        self.site = self.properties.site
         self.entry = self.site.root
         self.root = self.site.root
         self.top = self.winfo_toplevel()

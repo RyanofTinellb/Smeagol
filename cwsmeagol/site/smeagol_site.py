@@ -1,7 +1,7 @@
 from smeagol_page import Page
-from smeagol_files import Files
+from ..editor.smeagol_files import Files
 from text_analysis import Analysis
-from translation import *
+from ..translation import *
 import os
 
 class Site(object):

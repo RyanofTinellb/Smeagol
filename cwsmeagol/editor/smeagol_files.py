@@ -1,4 +1,4 @@
-from translation import Markdown
+from ..translation.markdown import Markdown
 
 class Files:
     def __init__(self, source='', template='', markdown='', searchjson=''):

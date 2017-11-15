@@ -1,4 +1,4 @@
-from utils import urlform
+from ..utils import urlform
 import re
 
 class FlatName:
