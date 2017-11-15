@@ -27,6 +27,7 @@ class Editor(Tk.Frame, object):
             radiobuttons to create.
         """
         super(Editor, self).__init__(None)
+        self.master.title('Page Editor')
         self.properties = properties or EditorProperties()
         self.widgets = widgets or WidgetAmounts(headings=3, textboxes=1, radios='languages')
         self.font = font or ('Corbel', '14')
@@ -237,6 +238,7 @@ class Editor(Tk.Frame, object):
         for heading_ in self.headings[level - self.root.level - 1:]:
             heading_.delete(0, Tk.END)
         heading.insert(Tk.INSERT, self.entry.name)
+        self.master.title('Editing ' + self.entry.name)
         return 'break'
 
     def enter_headings(self, event):
