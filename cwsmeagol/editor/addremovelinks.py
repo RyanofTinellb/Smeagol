@@ -7,16 +7,6 @@ class AddRemoveLinks:
         :param link_adders: (obj[]) a list of link adder instances
         """
         self.link_adders = link_adders
-        self.details = dict(map(self.get_details, link_adders))
-
-    @staticmethod
-    def get_details(adder):
-        adder_name = adder.name
-        try:
-            adder_filename = adder.filename
-        except AttributeError:
-            adder_filename = ''
-        return (adder_name, adder_filename)
 
     def add_links(self, text, entry, site):
         for link_adder in self.link_adders:
@@ -59,10 +49,6 @@ class ExternalDictionary:
                     text = text.replace('<link>' + link + '</link>',
                         '<a href="' + url + '/index.html">' + link + '</a>')
         return text
-
-    @property
-    def name(self):
-        return 'externaldictionary'
 
 class InternalStory:
     def add_links(self, text, entry, site):
@@ -109,10 +95,6 @@ class InternalStory:
         links = '<span class="version-links" aria-hidden="true">{0}</span>'.format(links)
         return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
 
-    @property
-    def name(self):
-        return 'internalstory'
-
 class InternalDictionary:
     """
     Replace particular words in parts of speech with links to grammar.tinellb.com
@@ -124,10 +106,6 @@ class InternalDictionary:
                 lower_link = re.sub(r'^&#x294;', r'&rsquo;', link).lower()
                 text = text.replace('<link>' + link + '</link>', entry.hyperlink(site[lower_link], link))
         return text
-
-    @property
-    def name(self):
-        return 'internaldictionary'
 
 class ExternalGrammar:
     """
