@@ -64,6 +64,14 @@ class EditorProperties():
         """
         return AddRemoveLinks(map(self._links, self.config['links']))
 
+    def _links(self, linkadder):
+        try:
+            linkadder = getattr(translation, linkadder)()
+        except TypeError:
+            linkadder, filename = linkadder['type'], linkadder['filename']
+            linkadder = getattr(translation, linkadder)(filename)
+        return linkadder
+
     def removelinkadder(self, kind):
         """
         Remove the linkadder of the appropriate type from configuration
@@ -71,11 +79,7 @@ class EditorProperties():
         :param kind: (str) type of the adder
         """
         links = self.config['links']
-        self.config['links'] = filter(lambda adder: self._different(adder, kind), links)
-
-    @staticmethod
-    def _different(adder, kind):
-        return adder['type'] != kind
+        self.config['links'] = [adder for adder in links if adder['type'] != kind]
 
     def addlinkadder(self, kind, filename):
         self.removelinkadder(kind)
@@ -100,14 +104,6 @@ class EditorProperties():
             except ValueError:
                 text = 0
             self.config[owner][prop] = text
-
-    def _links(self, linkadder):
-        try:
-            linkadder = getattr(translation, linkadder)()
-        except TypeError:
-            linkadder, filename = linkadder['type'], linkadder['filename']
-            linkadder = getattr(translation, linkadder)(filename)
-        return linkadder
 
     def save(self, filename=None):
         self.config_filename = filename or self.config_filename
