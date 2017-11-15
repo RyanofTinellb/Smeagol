@@ -2,6 +2,7 @@ from smeagol_page import Page
 from ..editor.smeagol_files import Files
 from text_analysis import Analysis
 from ..translation import *
+from ..utils import *
 import os
 
 class Site(object):

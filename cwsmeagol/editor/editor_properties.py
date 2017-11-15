@@ -4,6 +4,7 @@ import json
 from .. import translation
 from ..site.smeagol_site import Site
 from smeagol_files import Files
+import tkFileDialog as fd
 
 class EditorProperties():
     """
@@ -34,6 +35,30 @@ class EditorProperties():
             os.path.join(os.path.dirname(__file__), 'editor_properties.smg'))
         with open(self.config_filename) as config:
             self.config = json.load(config)
+
+    def open(self):
+        """
+        Loop until a valid file is passed back, or user cancels
+        """
+        filetypes = [('Sm\xe9agol File', '*.smg')]
+        title = 'Open Site'
+        filename = fd.askopenfilename(filetypes=filetypes, title=title)
+        if filename:
+            self.setup_config(filename)
+        else:
+            self.open()
+
+    def save(self, filename=None):
+        self.config_filename = filename or self.config_filename
+        with open(self.config_filename, 'w') as config:
+            json.dump(self.config, config)
+
+    def saveas(self):
+        filetypes = [('Sm\xe9agol File', '*.smg')]
+        title = 'Open Site'
+        filename = fd.asksaveasfilename(filetypes=filetypes, title=title)
+        if filename:
+            self.save(filename)
 
     @property
     def files(self):
@@ -105,8 +130,3 @@ class EditorProperties():
             except ValueError:
                 text = 0
             self.config[owner][prop] = text
-
-    def save(self, filename=None):
-        self.config_filename = filename or self.config_filename
-        with open(self.config_filename, 'w') as config:
-            json.dump(self.config, config)

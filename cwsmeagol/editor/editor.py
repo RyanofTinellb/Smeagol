@@ -288,25 +288,9 @@ class Editor(Tk.Frame, object):
         """
         Loop until a valid file is passed back, or user cancels
         """
-        filename = fd.askopenfilename(filetypes=[('Sm\xe9agol File', '*.smg')], title='Open Site')
-        if filename:
-            try:
-                with open(filename) as site:
-                    sections = site.read().split('#')
-                for section in sections:
-                    try:
-                        header, config = section.split('\n', 1)
-                    except ValueError:
-                        continue
-                    if header == 'site':
-                        self.site = self.make_site_from_config(config)
-                        self.reset()
-                    elif header == 'editor':
-                        self.links = self.get_linkadder_from_config(config)
-                    else:
-                        raise SyntaxError
-            except SyntaxError:
-                self.site_open()
+        self.properties.open()
+        self.site = self.properties.site
+        self.reset()
         return 'break'
 
     def reset(self, event=None):
@@ -325,13 +309,11 @@ class Editor(Tk.Frame, object):
         self.go_to_heading()
 
     def site_save(self, event=None):
-        filename = fd.asksaveasfilename(
-                filetypes=[('Sm\xe9agol File', '*.smg')],
-                title='Save Site', defaultextension='.smg')
-        if filename:
-            details = self.editor_configuration
-            with open(filename, 'w') as site:
-                site.write(details)
+        self.properties.save()
+        return 'break'
+
+    def site_saveas(self, event=None):
+        self.properties.saveas()
         return 'break'
 
     @property
@@ -672,6 +654,7 @@ class Editor(Tk.Frame, object):
     def menu_commands(self):
         return [('Site', [('Open', self.site_open),
                         ('Save', self.site_save),
+                        ('Save _As', self.site_saveas),
                         ('P_roperties', self.site_properties),
                         ('Publish All', self.site_publish)]),
                 ('Markdown', [('Load', self.markdown_load),

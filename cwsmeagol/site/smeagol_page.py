@@ -5,6 +5,7 @@ from collections import deque
 from flatname import FlatName
 from smeagol_node import Node
 from ..translation import *
+from ..utils import *
 import os
 
 class Page(Node):
