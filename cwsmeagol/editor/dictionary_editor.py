@@ -12,8 +12,7 @@ class DictionaryEditor(Editor):
         """
         font = ('Courier New', '15')
         widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
-        self.randomwords = randomwords
-        super(DictionaryEditor, self).__init__(site, markdown, links, widgets, font)
+        super(DictionaryEditor, self).__init__(properties, widgets, font)
 
         # initialise instance variables
         self.entry, self.history, self.current, self.page = '', [], -1, None
@@ -22,12 +21,6 @@ class DictionaryEditor(Editor):
         self.words = self.randomwords.words
         super(DictionaryEditor, self).configure_widgets()
 
-    def refresh_random(self, event=None):
-        """
-        Show a certain number of random nonsense words using High Lulani phonotactics.
-        """
-        self.information.set('\n'.join(self.words()))
-        return 'break'
 
     def scroll_headings(self, event):
         if event.keysym == 'Prior':

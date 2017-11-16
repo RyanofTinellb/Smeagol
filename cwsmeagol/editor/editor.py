@@ -149,6 +149,10 @@ class Editor(Tk.Frame, object):
         return tuple(textboxes)
 
     def configure_widgets(self):
+        try:
+            self.words = self.properties.randomwords.words
+        except TypeError:
+            self.words = None
         self.heading = self.headings[0]
         self.textbox = self.textboxes[0]
         self.infolabel, self.information, self.blanklabel = self.labels
@@ -156,6 +160,14 @@ class Editor(Tk.Frame, object):
         self.configure_headings(self.heading_commands)
         self.configure_radios(self.radio_settings)
         self.configure_textboxes(self.textbox_commands)
+
+    def refresh_random(self, event=None):
+        """
+        Show a certain number of random nonsense words using High Lulani phonotactics.
+        """
+        if self.words:
+            self.information.set('\n'.join(self.words()))
+        return 'break'
 
     def configure_headings(self, commands=None):
         if commands:
