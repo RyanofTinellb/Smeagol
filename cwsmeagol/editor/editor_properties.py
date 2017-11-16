@@ -1,9 +1,9 @@
 import sys
 import os
 import json
-from .. import translation
-from ..site.smeagol_site import Site
 from smeagol_files import Files
+from cwsmeagol.site import Site
+from cwsmeagol.translation import *
 import tkFileDialog as fd
 
 class EditorProperties():
@@ -23,6 +23,7 @@ class EditorProperties():
     def __init__(self, config=None, template=None):
         self.setup_template(template)
         self.setup_config(config)
+
 
     def setup_template(self, template):
         template = template or (
