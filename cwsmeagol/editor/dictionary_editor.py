@@ -2,25 +2,20 @@ from editor import Editor, WidgetAmounts
 from cwsmeagol.utils import *
 
 class DictionaryEditor(Editor):
-    def __init__(self, site=None, markdown=None, links=None, randomwords=None, master=None):
+    def __init__(self, properties=None, master=None):
         """
-        :param directory (String): the path and filename of the top-level directory
-        :param datafile (String): the path, filename and extension of the data file, relative to directory
-        :param site (Site): the site being modified
-        :param markdown (String): the path, filename and extension of the replacements file, relative to directory
-        :param randomwords (int): the number of random words to appear when requested
+
         """
         font = ('Courier New', '15')
         widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
         super(DictionaryEditor, self).__init__(properties, widgets, font)
 
         # initialise instance variables
-        self.entry, self.history, self.current, self.page = '', [], -1, None
-
-    def configure_widgets(self):
-        self.words = self.randomwords.words
-        super(DictionaryEditor, self).configure_widgets()
-
+        self.markdown = self.properties.files.markdown
+        self.entry = ''
+        self.history = []
+        self.current = -1
+        self.page = None
 
     def scroll_headings(self, event):
         if event.keysym == 'Prior':
