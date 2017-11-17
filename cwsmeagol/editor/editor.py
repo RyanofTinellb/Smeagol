@@ -328,49 +328,15 @@ class Editor(Tk.Frame, object):
         self.properties.saveas()
         return 'break'
 
-    @property
-    def editor_configuration(self):
-        site_config = editor_config = ''
-        details = self.site.details
-        adders = self.links.details
-        for property_ in editor_properties:
-            if property_.owner in ['site', 'file']:
-                site_config += '{0}: {1}\n'.format(property_.property,
-                        details[property_.property])
-            elif property_.property in adders.keys():
-                if adders[property_.property] != '':
-                    editor_config += '{0}: {1}\n'.format(property_.property, adders[property_.property])
-                else:
-                    editor_config += property_.property + '\n'
-        return '#site\n{0}\n#editor\n{1}'.format(site_config, editor_config)
-
     def site_properties(self, event=None):
         """
         Pass current site details to a new Properties Window, and then
             re-create the Site with the new values and renew the Links
         """
-        properties_window = PropertiesWindow(self.current_properties())
+        properties_window = PropertiesWindow(self.properties)
         self.wait_window(properties_window)
-        self.site = Site(**properties_window.site_values)
-        self.links = AddRemoveLinks(properties_window.link_values)
+        self.site = self.properties.site
         self.entry = self.site.root
-
-    def current_properties(self):
-        """
-        Match detail dictionaries with properties list, and return current
-                properties to place in properties window
-        """
-        current = []
-
-        details = self.site.details
-        details.update(self.links.details)
-
-        for property_ in editor_properties:
-            try:
-                current.append((1, details[property_.property]))
-            except KeyError:
-                current.append((0, ''))
-        return current
 
     def site_publish(self, event=None):
         """

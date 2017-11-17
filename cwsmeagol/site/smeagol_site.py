@@ -22,13 +22,6 @@ class Site(object):
         self.destination = destination
         self.name = name
         self.files = files or Files()
-        self.details = dict(destination=destination,
-                            name=name,
-                            source=self.files.source,
-                            template=self.files.template_file,
-                            markdown=self.files.markdown_file,
-                            searchjson=self.files.searchjson,
-                            leaf_level=str(leaf_level))
         try:
             self.leaf_level = int(leaf_level)
         except (ValueError, TypeError):
