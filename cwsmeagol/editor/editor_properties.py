@@ -23,6 +23,7 @@ class EditorProperties():
     def __init__(self, config=None, template=None):
         self.setup_template(template)
         self.setup_config(config)
+        self._site = self.site
 
 
     def setup_template(self, template):
@@ -69,20 +70,33 @@ class EditorProperties():
         return Files(**self.config['files'])
 
     @property
-    def site(self):
+    def site(self, overwrite=True):
         """
         Create a Site object from the config info
+
+        :param overwrite: (bool) write over the source file?
         """
-        dict_ = self.config['site']
-        dict_['files'] = self.files
-        return Site(**dict_)
+        if overwrite:
+            site = self.config['site']
+            self._site.choose_dir(site['destination'])
+            self._site.name = site['name']
+            self._site.leaf_level = site['leaf_level']
+            self.site.files = self.files()
+        else:
+            dict_ = self.config['site']
+            dict_['files'] = self.files
+            self._site = Site(**dict_)
+        return self._site
 
     @property
     def randomwords(self):
         """
         Create a RandomWords object from the config info
         """
-        return RandomWords(**self.config['random words'])
+        if self.config['random words']:
+            return RandomWords(**self.config['random words'])
+        else:
+            return None
 
     @property
     def linkadder(self):
@@ -99,7 +113,7 @@ class EditorProperties():
             linkadder = getattr(translation, linkadder)(filename)
         return linkadder
 
-    def removelinkadder(self, kind):
+    def _removelinkadder(self, kind):
         """
         Remove the linkadder of the appropriate type from configuration
 
@@ -108,7 +122,7 @@ class EditorProperties():
         links = self.config['links']
         self.config['links'] = [adder for adder in links if adder['type'] != kind]
 
-    def addlinkadder(self, kind, filename):
+    def _addlinkadder(self, kind, filename):
         self.removelinkadder(kind)
         if filename:
             self.config['links'].append(dict(type=kind, filename=filename))
@@ -122,9 +136,9 @@ class EditorProperties():
         """
         if owner == 'links':
             if check:
-                self.addlinkadder(prop, text)
+                self._addlinkadder(prop, text)
             else:
-                self.removelinkadder(prop)
+                self._removelinkadder(prop)
         else:
             try:
                 text = int(text) if integer else text
