@@ -1,9 +1,9 @@
-from smeagol_page import Page
-from ..editor.smeagol_files import Files
-from text_analysis import Analysis
-from ..translation import *
-from ..utils import *
 import os
+from smeagol_page import Page
+from cwsmeagol.editor.smeagol_files import Files
+from text_analysis import Analysis
+from cwsmeagol.translation import *
+from cwsmeagol.utils import *
 
 class Site(object):
     """
@@ -214,6 +214,7 @@ class Site(object):
         """
         Write the Site's contents to the sourcefile.
         """
+        print('source: ' + self.source)
         with open(self.source, 'w') as source:
             source.write(str(self))
 

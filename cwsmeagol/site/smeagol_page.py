@@ -1,12 +1,12 @@
-from contents_mode import ContentsMode
-from text_analysis import Analysis
+import os
 from cached_property import cached_property
 from collections import deque
+from contents_mode import ContentsMode
+from text_analysis import Analysis
 from flatname import FlatName
 from smeagol_node import Node
-from ..translation import *
-from ..utils import *
-import os
+from cwsmeagol.translation import *
+from cwsmeagol.utils import *
 
 class Page(Node):
     """

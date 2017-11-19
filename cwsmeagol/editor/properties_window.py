@@ -1,7 +1,7 @@
 import Tkinter as Tk
 import tkFileDialog as fd
 from editor_properties import EditorProperties
-from ..utils import *
+from cwsmeagol.utils import *
 
 class PropertiesWindow(Tk.Toplevel, object):
 
