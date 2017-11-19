@@ -1,6 +1,3 @@
-from editor import Editor, WidgetAmounts
-from cwsmeagol.utils import *
-
 class DictionaryEditor(Editor):
     def __init__(self, properties=None, master=None):
         """

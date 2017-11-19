@@ -1,7 +1,7 @@
 from editor import *
 from random import choice
 from string import printable
-from interlinear import Interlinear
+from cwsmeagol.translation import Interlinear
 
 
 class StoryEditor(Editor):

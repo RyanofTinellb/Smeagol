@@ -2,7 +2,8 @@ import sys
 import os
 import json
 from smeagol_files import Files
-from cwsmeagol.site import Site
+from addremovelinks import AddRemoveLinks
+from cwsmeagol.site.smeagol_site import Site
 from cwsmeagol.translation import *
 import tkFileDialog as fd
 

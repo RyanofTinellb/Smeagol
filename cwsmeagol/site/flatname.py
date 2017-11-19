@@ -1,5 +1,5 @@
-from ..utils import urlform
 import re
+from cwsmeagol.utils import urlform
 
 class FlatName:
     def __init__(self, name, markdown):

@@ -1,17 +1,3 @@
-from properties_window import PropertiesWindow
-from collections import OrderedDict, namedtuple
-from itertools import chain
-from smeagol import *
-from ..translation import *
-from editor_properties import EditorProperties
-from ..utils import *
-
-import webbrowser as web
-import Tkinter as Tk
-import tkFileDialog as fd
-import tkMessageBox as mb
-
-
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
 
 
@@ -40,7 +26,6 @@ class Editor(Tk.Frame, object):
         self.translator = Translator()
         self.site = self.properties.site
         self.entry = self.site.root
-        self.root = self.site.root
         self.top = self.winfo_toplevel()
 
         self.create_widgets()
@@ -48,6 +33,14 @@ class Editor(Tk.Frame, object):
         self.place_widgets()
         self.top.state('zoomed')
         self.go_to_heading()
+
+    @property
+    def markdown(self):
+        return self.properties.markdown
+
+    @property
+    def root(self):
+        return self.site.root
 
     def create_widgets(self):
         self.menu = self.create_menu(self.top, self.menu_commands)
@@ -402,13 +395,19 @@ class Editor(Tk.Frame, object):
         """
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages.
         """
+        print(1)
         for textbox in self.textboxes:
             textbox.edit_modified(False)
+        print(2)
         self.save_text.set('Save')
+        print(3)
         texts = map(self.get_text, self.textboxes)
+        print(4)
         if self.entry:
             self.prepare_texts(texts)
+        print(5)
         self.publish(self.entry, self.site)
+        print(6)
         return 'break'
 
     @staticmethod
@@ -428,7 +427,7 @@ class Editor(Tk.Frame, object):
         :param return (Nothing):
         """
         text = ''.join(texts)
-        if not text:
+        if self.entry.level and not text:
             self.entry.delete_htmlfile()
             self.entry.remove_from_hierarchy()
             self.reset()
