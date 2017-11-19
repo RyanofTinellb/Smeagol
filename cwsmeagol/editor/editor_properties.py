@@ -9,7 +9,9 @@ import tkFileDialog as fd
 class EditorProperties():
     """
 
-    :param config_filename: (str) name of a .smg Smeagol configuration file
+    :param config: (str) name of a .smg Smeagol configuration file
+    :param template: (str) name of a file containing all possible properties
+    :param overwrite: (bool) save to source file? / lose current Site?
 
     properties:
         self.template
@@ -20,11 +22,22 @@ class EditorProperties():
         self.randomwords - a RandomWords object
         self.linkadder - a AddRemoveLinks object
     """
-    def __init__(self, config=None, template=None):
+    def __init__(self, config=None, template=None, save=True):
+        self.save = save
         self.setup_template(template)
         self.setup_config(config)
-        self._site = self.site
+        self._site = self.create_site()
 
+    """
+
+    Open editor: make a new blank Site object.
+    New Site: make a new blank Site object.
+    Open an .smg file: make a new Site object with the .smg properties.
+    Open a .txt file: make a new Site object from source.txt
+
+    Save / Change Properties: do not make a new Site, modify the old one.
+
+    """
 
     def setup_template(self, template):
         template = template or (
@@ -42,13 +55,12 @@ class EditorProperties():
         """
         Loop until a valid file is passed back, or user cancels
         """
-        filetypes = [('Sm\xe9agol File', '*.smg')]
-        title = 'Open Site'
-        filename = fd.askopenfilename(filetypes=filetypes, title=title)
-        if filename:
-            self.setup_config(filename)
-        else:
-            self.open()
+        filename = None
+        while not filename:
+            filetypes = [('Sm\xe9agol File', '*.smg')]
+            title = 'Open Site'
+            filename = fd.askopenfilename(filetypes=filetypes, title=title)
+        self.setup_config(filename)
 
     def save(self, filename=None):
         self.config_filename = filename or self.config_filename
@@ -70,23 +82,17 @@ class EditorProperties():
         return Files(**self.config['files'])
 
     @property
-    def site(self, overwrite=True):
+    def site(self):
+        return self._site
+
+
+    def create_site(self):
         """
         Create a Site object from the config info
-
-        :param overwrite: (bool) write over the source file?
         """
-        if overwrite:
-            site = self.config['site']
-            self._site.choose_dir(site['destination'])
-            self._site.name = site['name']
-            self._site.leaf_level = site['leaf_level']
-            self.site.files = self.files()
-        else:
-            dict_ = self.config['site']
-            dict_['files'] = self.files
-            self._site = Site(**dict_)
-        return self._site
+        dict_ = self.config['site']
+        dict_['files'] = self.files
+        return Site(**dict_)
 
     @property
     def randomwords(self):
