@@ -395,19 +395,13 @@ class Editor(Tk.Frame, object):
         """
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages.
         """
-        print(1)
         for textbox in self.textboxes:
             textbox.edit_modified(False)
-        print(2)
         self.save_text.set('Save')
-        print(3)
         texts = map(self.get_text, self.textboxes)
-        print(4)
         if self.entry:
             self.prepare_texts(texts)
-        print(5)
         self.publish(self.entry, self.site)
-        print(6)
         return 'break'
 
     @staticmethod
