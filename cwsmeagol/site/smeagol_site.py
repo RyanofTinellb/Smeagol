@@ -17,7 +17,7 @@ class Site(object):
         :param leaf_level (int): the level of the lowermost pages in the hierarchy, where the root is at 0.
         """
         if destination:
-            self.choose_dir(destination)
+            self.change_destination()
         # initialize attributes and utility classes
         self.destination = destination
         self.name = name
@@ -86,8 +86,8 @@ class Site(object):
     def searchjson(self):
         return self.files.searchjson
 
-    @staticmethod
-    def choose_dir(destination):
+    def change_destination(self):
+        destination = self.destination
         with ignored(os.error):
             os.makedirs(destination)
         try:
