@@ -1,3 +1,9 @@
+import Tkinter as Tk
+from collections import namedtuple
+from editor_properties import EditorProperties
+from cwsmeagol.utils import *
+from cwsmeagol.translation import Translator
+
 WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
 
 
