@@ -1,6 +1,7 @@
 import Tkinter as Tk
 from collections import namedtuple
 from editor_properties import EditorProperties
+from properties_window import PropertiesWindow
 from cwsmeagol.utils import *
 from cwsmeagol.translation import Translator
 

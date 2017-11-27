@@ -1,3 +1,5 @@
+import re
+
 class AddRemoveLinks:
     def __init__(self, link_adders):
         """
