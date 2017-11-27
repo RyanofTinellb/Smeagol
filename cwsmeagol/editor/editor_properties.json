@@ -24,6 +24,7 @@
     "check": false,
     "textbox": true,
     "browse": {
+      "action": "save",
       "text": "Data File",
       "extension": ".txt"
     },
@@ -38,6 +39,7 @@
     "vartype": "string",
     "browse": {
       "text": "HTML Template",
+      "action": "open",
       "extension": "*.html"
     }
   },
@@ -50,6 +52,7 @@
     "vartype": "string",
     "browse": {
       "text": "Markdown File",
+      "action": "open",
       "extension": "*.mkd"
     }
   },
@@ -62,6 +65,7 @@
     "vartype": "string",
     "browse": {
       "text": "JSON File",
+      "action": "save",
       "extension": "*.json"
     }
   },
@@ -117,6 +121,7 @@
     "vartype": "string",
     "browse": {
       "text": "Grammar Links File",
+      "action": "open",
       "extension": "*.glk"
     }
   },
