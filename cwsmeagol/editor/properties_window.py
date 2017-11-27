@@ -51,8 +51,6 @@ class PropertyFrame:
         Create a row of the properties window
         """
         self.properties = properties
-        self.template = properties.template[row]
-        self.config = properties.config
         self.__dict__.update(self.template)
         self.checkvar, self.entryvar = Tk.IntVar(), Tk.StringVar()
         self.entry = self.button = self.label = None
@@ -83,6 +81,14 @@ class PropertyFrame:
                 self.browse = self.file_browser((self.browse['text'], self.browse['extension']))
             self.button = Tk.Button(master, text='Browse...', command=self.browse)
             self.button.grid(row=row, column=3)
+
+    @property
+    def template(self):
+        return self.properties.template[self.row]
+
+    @property
+    def config(self):
+        return self.properties.config
 
     def browse_folder(self):
         """

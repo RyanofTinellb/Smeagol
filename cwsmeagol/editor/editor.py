@@ -38,7 +38,6 @@ class Editor(Tk.Frame, object):
         self.save_text.set('Save')
         self.language = Tk.StringVar()
         self.translator = Translator()
-        self.site = self.properties.site
         self.entry = self.site.root
         self.top = self.winfo_toplevel()
 
@@ -49,12 +48,28 @@ class Editor(Tk.Frame, object):
         self.go_to_heading()
 
     @property
+    def site(self):
+        return self.properties.site
+
+    @property
     def markdown(self):
         return self.properties.markdown
 
     @property
+    def links(self):
+        return self.properties.linkadder
+
+    @property
+    def source(self):
+        return self.properties.source
+
+    @property
     def root(self):
         return self.site.root
+
+    @property
+    def destination(self):
+        return self.site.destination
 
     def create_widgets(self):
         self.menu = self.create_menu(self.top, self.menu_commands)
@@ -308,7 +323,6 @@ class Editor(Tk.Frame, object):
         Loop until a valid file is passed back, or user cancels
         """
         self.properties.open()
-        self.site = self.properties.site
         self.reset()
         return 'break'
 
@@ -316,7 +330,7 @@ class Editor(Tk.Frame, object):
         """
         Reset the program.
         """
-        self.entry = self.root = self.site.root
+        self.entry = self.site.root
         self.clear_interface()
 
     def clear_interface(self):
@@ -342,7 +356,6 @@ class Editor(Tk.Frame, object):
         """
         properties_window = PropertiesWindow(self.properties)
         self.wait_window(properties_window)
-        self.site = self.properties.site
         self.entry = self.site.root
 
     def site_publish(self, event=None):

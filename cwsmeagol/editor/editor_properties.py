@@ -52,6 +52,14 @@ class EditorProperties():
         with open(self.config_filename) as config:
             self.config = json.load(config)
 
+    @property
+    def files(self):
+        return self.site.files
+
+    @property
+    def source(self):
+        return self.site.source
+
     def open(self):
         """
         Loop until a valid file is passed back, or user cancels
