@@ -12,7 +12,6 @@ class EditorProperties():
 
     :param config: (str) name of a .smg Smeagol configuration file
     :param template: (str) name of a file containing all possible properties
-    :param overwrite: (bool) save to source file? / lose current Site?
 
     properties:
         self.template
@@ -23,22 +22,11 @@ class EditorProperties():
         self.randomwords - a RandomWords object
         self.linkadder - a AddRemoveLinks object
     """
-    def __init__(self, config=None, template=None, save=True):
-        self.save = save
+    def __init__(self, config=None, template=None):
         self.setup_template(template)
         self.setup_config(config)
-        self._site = self.create_site()
-
-    """
-
-    Open editor: make a new blank Site object.
-    New Site: make a new blank Site object.
-    Open an .smg file: make a new Site object with the .smg properties.
-    Open a .txt file: make a new Site object from source.txt
-
-    Save / Change Properties: do not make a new Site, modify the old one.
-
-    """
+        self.create_site()
+        self.linkadder = self.create_linkadder()
 
     def setup_template(self, template):
         template = template or os.path.join(os.path.dirname(__file__),
@@ -64,12 +52,12 @@ class EditorProperties():
         """
         Loop until a valid file is passed back, or user cancels
         """
-        filename = None
-        while not filename:
-            filetypes = [('Sm\xe9agol File', '*.smg')]
-            title = 'Open Site'
-            filename = fd.askopenfilename(filetypes=filetypes, title=title)
-        self.setup_config(filename)
+        filetypes = [('Sm\xe9agol File', '*.smg')]
+        title = 'Open Site'
+        filename = fd.askopenfilename(filetypes=filetypes, title=title)
+        if filename:
+            self.setup_config(filename)
+            self.create_site()
 
     def save(self, filename=None):
         self.config_filename = filename or self.config_filename
@@ -78,30 +66,39 @@ class EditorProperties():
 
     def saveas(self):
         filetypes = [('Sm\xe9agol File', '*.smg')]
-        title = 'Open Site'
-        filename = fd.asksaveasfilename(filetypes=filetypes, title=title)
+        title = 'Save Site'
+        filename = re.replace(r'(\.smg)?$', r'.smg', fd.asksaveasfilename(filetypes=filetypes, title=title))
+        raise ValueError(filename)
         if filename:
             self.save(filename)
 
-    @property
-    def files(self):
+    def collate_files(self):
         """
         Create a File object from the config info
         """
         return Files(**self.config['files'])
 
-    @property
-    def site(self):
-        return self._site
-
+    def update_site(self):
+        """
+        Update the current Site object with new properties from the
+            config file.
+        """
+        for prop, value in self.config['site'].items():
+            self.site.__dict__[prop] = value
+        self.site.files = self.collate_files()
+        self.site.change_destination()
 
     def create_site(self):
         """
-        Create a Site object from the config info
+        Create a new Site object from the config info
         """
         dict_ = self.config['site']
-        dict_['files'] = self.files
-        return Site(**dict_)
+        dict_['files'] = self.collate_files()
+        self.site = Site(**dict_)
+
+    @property
+    def markdown(self):
+        return self.files.markdown
 
     @property
     def randomwords(self):
@@ -113,8 +110,7 @@ class EditorProperties():
         else:
             return None
 
-    @property
-    def linkadder(self):
+    def create_linkadder(self):
         """
         Create an AddRemoveLinks instance from the config info
         """

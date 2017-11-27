@@ -34,6 +34,7 @@ class PropertiesWindow(Tk.Toplevel, object):
         """
         for frame in self.property_frames:
             frame.update()
+        self.properties.update_site()
         self.destroy()
 
     def cancel_window(self, event=None):

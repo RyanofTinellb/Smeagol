@@ -18,7 +18,7 @@
     "vartype": "string"
   },
   {
-    "name": "Source",
+    "name": "Data File",
     "property": "source",
     "owner": "files",
     "check": false,

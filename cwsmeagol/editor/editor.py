@@ -420,6 +420,8 @@ class Editor(Tk.Frame, object):
         """
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages.
         """
+        if self.is_new:
+            self.site_properties()
         for textbox in self.textboxes:
             textbox.edit_modified(False)
         self.save_text.set('Save')
@@ -428,6 +430,16 @@ class Editor(Tk.Frame, object):
             self.prepare_texts(texts)
         self.publish(self.entry, self.site)
         return 'break'
+
+    @property
+    def is_new(self):
+        if self.site is None:
+            return True
+        elif not self.source:
+            return True
+        elif self.destination is None:
+            return True
+        return False
 
     @staticmethod
     def get_text(textbox):
@@ -476,9 +488,9 @@ class Editor(Tk.Frame, object):
         :param entry (Page):
         :return (nothing):
         """
-        if entry:
+        if entry is not None:
             entry.publish(site.template)
-        if site:
+        if site is not None:
             site.modify_source()
             site.update_json()
 
