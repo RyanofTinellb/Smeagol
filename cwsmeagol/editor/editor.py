@@ -119,12 +119,10 @@ class Editor(Tk.Frame, object):
     def create_headings(master, number, commands=None):
         if not commands:
             commands = []
-        headings = []
-        for _ in range(number):
-            heading = Tk.Entry(master)
+        headings = [Tk.Entry(master) for _ in range(number)]
+        for heading in headings:
             for (key, command) in commands:
                 heading.bind(key, command)
-            headings.append(heading)
         return headings
 
     @staticmethod
@@ -707,6 +705,4 @@ class Editor(Tk.Frame, object):
 
 
 if __name__ == '__main__':
-    app = Editor()
-    app.master.title('Page Editor')
-    app.mainloop()
+    Editor().mainloop()

@@ -41,8 +41,8 @@ class EditorProperties():
     """
 
     def setup_template(self, template):
-        template = template or (
-            os.path.join(os.path.dirname(__file__), 'editor_properties.json'))
+        template = template or os.path.join(os.path.dirname(__file__),
+                                                'editor_properties.json')
         with open(template) as template:
             self.template = json.load(template)
 

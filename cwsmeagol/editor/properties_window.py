@@ -50,6 +50,7 @@ class PropertyFrame:
         """
         Create a row of the properties window
         """
+        self.row = row
         self.properties = properties
         self.__dict__.update(self.template)
         self.checkvar, self.entryvar = Tk.IntVar(), Tk.StringVar()
@@ -78,7 +79,7 @@ class PropertyFrame:
             elif self.browse == 'folder':
                 self.browse = self.browse_folder
             else:
-                self.browse = self.file_browser((self.browse['text'], self.browse['extension']))
+                self.browse = self.file_browser()
             self.button = Tk.Button(master, text='Browse...', command=self.browse)
             self.button.grid(row=row, column=3)
 
@@ -98,7 +99,9 @@ class PropertyFrame:
         self.insert(filename)
         self.entry.focus_set()
 
-    def file_browser(self, filetype):
+    def file_browser(self):
+        browse = self.browse
+        filetype = (browse['text'], browse['extension'])
         def browse_file():
             """
             Allow the user to browse for a file of a given filetype

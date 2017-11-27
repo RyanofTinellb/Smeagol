@@ -425,10 +425,10 @@ class Page(Node):
                 page = page.replace(section, getattr(self, function))
         with ignored(os.error):
             os.makedirs(self.folder)
+        page = re.sub('\x05.*?(\x06\x06*)', '', page)
+        page = re.sub(r'\x07', '', page)
+        page = re.sub(r'&date=\d{8}', '', page)
         with open(self.link(), "w") as f:
-            page = re.sub('\x05.*?(\x06\x06*)', '', page)
-            page = re.sub(r'\x07', '', page)
-            page = re.sub(r'&date=\d{8}', '', page)
             f.write(page)
 
     def delete_htmlfile(self):

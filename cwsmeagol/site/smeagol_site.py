@@ -16,12 +16,11 @@ class Site(object):
         :param files (Files):
         :param leaf_level (int): the level of the lowermost pages in the hierarchy, where the root is at 0.
         """
-        if destination:
-            self.change_destination()
         # initialize attributes and utility classes
-        self.destination = destination
         self.name = name
         self.files = files or Files()
+        self.destination = destination
+        self.change_destination()
         try:
             self.leaf_level = int(leaf_level)
         except (ValueError, TypeError):
@@ -31,7 +30,6 @@ class Site(object):
     def create_site(self):
         self.current = None
         self.length = 0
-
         if not self.files.source:
             self.root = Page(self.name, leaf_level=self.leaf_level, markdown=self.markdown)
             return
@@ -87,15 +85,16 @@ class Site(object):
         return self.files.searchjson
 
     def change_destination(self):
-        destination = self.destination
-        with ignored(os.error):
-            os.makedirs(destination)
-        try:
+        if self.destination:
+            destination = self.destination
+            with ignored(os.error):
+                os.makedirs(destination)
+            try:
+                os.chdir(destination)
+            except os.error:
+                win32api.MessageBox(0, 'That does not seem to be a valid destination. Please try again.', 'Unable to Create destination')
+                return
             os.chdir(destination)
-        except os.error:
-            win32api.MessageBox(0, 'That does not seem to be a valid destination. Please try again.', 'Unable to Create destination')
-            return
-        os.chdir(destination)
 
     def __str__(self):
         """
@@ -207,13 +206,13 @@ class Site(object):
         """
         Write the Site's contents to the sourcefile.
         """
-        print('source: ' + self.source)
         with open(self.source, 'w') as source:
             source.write(str(self))
 
     def update_json(self):
-        with open(self.searchjson, 'w') as f:
-            f.write(str(self.analyse()))
+        if self.searchjson:
+            with open(self.searchjson, 'w') as f:
+                f.write(str(self.analyse()))
 
     def analyse(self):
         """
