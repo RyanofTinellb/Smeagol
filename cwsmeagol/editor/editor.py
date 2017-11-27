@@ -25,11 +25,18 @@ class Editor(Tk.Frame, object):
         self.widgets = widgets or WidgetAmounts(headings=3, textboxes=1, radios='languages')
         self.font = font or ('Corbel', '14')
 
-        self.buttonframe, self.textframe = Tk.Frame(self), Tk.Frame(self)
-        self.headings, self.radios, self.texts = [], [], []
-        self.buttons = self.load_button = self.save_button = self.label = None
-        self.save_text, self.language = Tk.StringVar(), Tk.StringVar()
+        self.buttonframe = Tk.Frame(self)
+        self.textframe = Tk.Frame(self)
+        self.headings = []
+        self.radios = []
+        self.texts = []
+        self.buttons = None
+        self.load_button = None
+        self.save_button = None
+        self.label = None
+        self.save_text = Tk.StringVar()
         self.save_text.set('Save')
+        self.language = Tk.StringVar()
         self.translator = Translator()
         self.site = self.properties.site
         self.entry = self.site.root
