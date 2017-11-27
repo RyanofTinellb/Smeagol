@@ -406,8 +406,8 @@ class Page(Node):
         try:
             page = template.template
         except AttributeError:
-            # template is a string
-            page = template
+            # template is a string or None
+            page = template or "{title}\n{family-links}\n{content}\n{toc}\n{copyright}"
         for (section, function) in [
             ('{title}', 'title'),
             ('{stylesheet}', 'stylesheet_and_icon'),
