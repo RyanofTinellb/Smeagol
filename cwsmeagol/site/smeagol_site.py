@@ -198,15 +198,8 @@ class Site(object):
         Create / modify all .html files, and create search JSON file.
         :class: Site
         """
-        length = len(self)
-        chunk = 3 if length > 1000 else 50
-        progress = 1
-        self.reset()
-        for i, page in enumerate(self):
+        for page in self:
             page.publish(self.template)
-            if i == int(progress * chunk * length / 100):
-                yield str(progress * chunk) + '% Done'
-                progress += 1
         self.update_json()
         self.modify_source()
 

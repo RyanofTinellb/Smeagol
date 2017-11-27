@@ -51,7 +51,7 @@ if __name__ == '__main__':
     for site in Story, Grammar, Dictionary:
         site = site()
         print(site.name + ': ')
-        for x in site.publish(): print(x)
+        site.publish()
         newtime = datetime.now()
         print('100% Done: ' + str(newtime - oldtime))
         oldtime = newtime
