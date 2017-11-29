@@ -1,3 +1,8 @@
+import SimpleHTTPServer
+import SocketServer
+import threading
+import os
+import webbrowser as web
 import Tkinter as Tk
 from collections import namedtuple
 from editor_properties import EditorProperties
@@ -21,6 +26,7 @@ class Editor(Tk.Frame, object):
         """
         super(Editor, self).__init__(None)
         self.master.title('Page Editor')
+        self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.properties = properties or EditorProperties()
         self.widgets = widgets or WidgetAmounts(headings=3, textboxes=1, radios='languages')
         self.font = font or ('Corbel', '14')
@@ -34,6 +40,8 @@ class Editor(Tk.Frame, object):
         self.load_button = None
         self.save_button = None
         self.label = None
+        self.server = None
+        self.start_server()
         self.save_text = Tk.StringVar()
         self.save_text.set('Save')
         self.language = Tk.StringVar()
@@ -322,6 +330,20 @@ class Editor(Tk.Frame, object):
         """
         self.properties.open()
         self.reset()
+        return 'break'
+
+    def start_server(self):
+        self.PORT = 41809
+        Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+        self.server = SocketServer.TCPServer(("", self.PORT), Handler)
+        self.thread = threading.Thread(target=self.server.serve_forever)
+        self.thread.start()
+
+    def open_in_browser(self, event=None):
+        self.server.shutdown()
+        self.server.server_close()
+        web.open_new_tab(os.path.join('http://localhost:' + str(self.PORT), self.entry.link()))
+        self.start_server()
         return 'break'
 
     def reset(self, event=None):
@@ -658,11 +680,16 @@ class Editor(Tk.Frame, object):
             self.information.set('No Markdown Found')
         return 'break'
 
+    def quit(self):
+        self.server.shutdown()
+        self.master.destroy()
+
     @property
     def menu_commands(self):
         return [('Site', [('Open', self.site_open),
                         ('Save', self.site_save),
                         ('Save _As', self.site_saveas),
+                        ('Open in _Browser', self.open_in_browser),
                         ('P_roperties', self.site_properties),
                         ('Publish All', self.site_publish)]),
                 ('Markdown', [('Load', self.markdown_load),
