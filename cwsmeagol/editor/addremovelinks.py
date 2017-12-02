@@ -1,4 +1,6 @@
 import re
+import json
+from cwsmeagol.utils import urlform, ignored
 
 class AddRemoveLinks:
     def __init__(self, link_adders):
@@ -10,50 +12,56 @@ class AddRemoveLinks:
         """
         self.link_adders = link_adders
 
-    def add_links(self, text, entry, site):
+    def add_links(self, text, entry):
         for link_adder in self.link_adders:
-            text = link_adder.add_links(text, entry, site)
+            text = link_adder.add_links(text, entry)
         return text
 
     def remove_links(self, text):
-        # external links to the dictionary - leaves as links
-        text = re.sub('<a href="http://dictionary.tinellb.com/.*?">(.*?)</a>', r'<link>\1</link>', text)
-        # version links - removes entire span
-        text = re.sub(r'<span class="version.*?</span>', '', text)
-        # internal links
-        text = re.sub(r'<a href=\"(?!http).*?\">(.*?)</a>', r'<link>\1</link>', text)
-        # protect phonology links from subsequent line
-        text = re.sub(r'<a( href=\"http://grammar.*?phonology.*?</a>)', r'<b\1', text)
-        # external links to the grammar guide, except phonology
-        text = re.sub(r'<a href=\"http://grammar.*?\">(.*?)</a>', r'\1', text)
-        # un-protect phonology
-        text = re.sub(r'<b( href=\"http://grammar.*?phonology.*?</a>)', r'<a\1', text)
+        for link_adder in self.link_adders:
+            text = link_adder.remove_links(text)
         return text
 
 class ExternalDictionary:
-    def add_links(self, text, entry, site):
+    """
+    Move between markdown links and links to an external dictionary site
+
+    :param text: (str) The source text
+    :param url: (str) A url to the top page of the external site
+    """
+    def __init__(self, url):
+        self.url = url
+        self.language = None
+
+    def add_links(self, text, entry):
         """
-        Replaces text of the form <link>Blah</link> with a hyperlink to the
-            dictionary entry 'Blah' on the Tinellbian languages dictionary site.
+        Replace links in text with hyperlinks to an external dictionary site
+
+        text: 'foo<link>bar</link>baz' =>
+            'foo<a href="url/b/bar.html#language">bar</a>baz'
+
         """
-        links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1@', text.replace('\n', '')).split(r'@')[:-1])
-        if entry is not site.root:
-            language = urlform(entry.ancestors[1].name)
-        for link in links:
-            url = urlform(link, site.markdown)
-            initial = re.sub(r'.*?(\w).*', r'\1', url)
-            with ignored(KeyError):
-                if entry is not site.root:
-                    text = text.replace('<link>' + link + '</link>',
-                        '<a href="http://dictionary.tinellb.com/' + initial +
-                            '/' + url + '.html#' + language + '">' + link + '</a>')
-                else:
-                    text = text.replace('<link>' + link + '</link>',
-                        '<a href="' + url + '/index.html">' + link + '</a>')
-        return text
+        self.language = entry.ancestors[1].urlform
+        return re.sub(r'<{0}>(.*?)</{0}>'.format('link'), self._link, text)
+
+    def _link(matchobj):
+        word = matchobj.group(1)
+        link = urlform(word)
+        initial = re.findall(r'\w', link)[0]
+        return '<a href="{0}/{1}/{2}.html#{3}">{4}</a>'.format(
+                self.url, initial, link, self.language, word)
+
+    def remove_links(self, text):
+        """
+        text: 'foo<a href="url/b/bar.html#language">bar</a>baz' =>
+                    'foo<link>bar</link>baz'
+
+        """
+        return re.sub(r'<a href="{0}.*?>(.*?)</a>'.format(self.url), r'<{0}>\1</{0}>'.format('link'), text)
+
 
 class InternalStory:
-    def add_links(self, text, entry, site):
+    def add_links(self, text, entry):
         """
         Add version links to the each paragraph of the text
 
@@ -64,21 +72,23 @@ class InternalStory:
         if entry.name is None:
             return ''
         paragraphs = text.splitlines()
-        version = entry.elders.index(entry.ancestors[1])
+        version = entry.ancestors[1].name
         for uid, paragraph in enumerate(paragraphs[1:], start=1):
-            if paragraph == '<span class="stars">*&nbsp;&nbsp;&nbsp;&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;*</span>':
+            if paragraph == '<span class="stars">* * *</span>':
                 pass
-            elif version == 4:
-                 paragraph = '&id=' + paragraphs[uid].replace(' | [r]', '&vlinks= | [r]')
-            elif version == 3:
-                paragraph = '[t]&id=' + re.sub(r'(?= \| \[r\]<div class=\"literal\">)', '&vlinks=', paragraphs[uid][3:])
+            elif version == 'Gloss':
+                 paragraph = '{0}' + paragraphs[uid].replace(' | [r]', '{1} | [r]')
+            elif version == 'Interlinear':
+                paragraph = '[t]{0}'
+                regex = r'(?= \| \[r\]<div class=\"literal\">)'
+                paragraph += re.sub(regex, '{1}', paragraphs[uid][3:])
             else:
-                paragraph = '&id=' + paragraphs[uid] + '&vlinks='
+                paragraph = '{{0}}{0}{{1}}'.format(paragraphs[uid])
             paragraphs[uid] = self._version_links(paragraph, version, entry, uid)
         return '\n'.join(paragraphs)
 
     @staticmethod
-    def _version_links(paragraph, index, entry, uid):
+    def _version_links(paragraph, version, entry, uid):
         """
         Adds version link information to a paragraph and its cousins
 
@@ -91,23 +101,47 @@ class InternalStory:
         anchor = '<span class="version-anchor" aria-hidden="true" id="{0}"></span>'.format(str(uid))
         categories = [node.name for node in entry.elders]
         cousins = entry.cousins
-        for i, (cousin, category) in enumerate(zip(cousins, categories)):
-            if index != i and cousin.name is not None:
-                links += cousins[index].hyperlink(cousin, category, fragment='#'+str(uid)) + '&nbsp;'
+        for cousin, category in zip(cousins, categories):
+            if version != category and cousin.name is not None:
+                links += entry.hyperlink(cousin, category, fragment='#'+str(uid)) + ' '
         links = '<span class="version-links" aria-hidden="true">{0}</span>'.format(links)
-        return paragraph.replace('&id=', anchor).replace('&vlinks=', links)
+        return paragraph.format(anchor, links)
+
+    def remove_links(self, text):
+        return re.sub(r'<span class="version.*?</span>', '', text)
 
 class InternalDictionary:
+    def __init__(self):
+
     """
-    Replace particular words in parts of speech with links to grammar.tinellb.com
+    Replace links with hyperlinks to other entries in the same dictionary
     """
-    def add_links(self, text, entry, site):
-        links = set(re.sub(r'.*?<link>(.*?)</link>.*?', r'\1>', text.replace('\n', '')).split(r'>')[:-1])
-        for link in links:
-            with ignored(KeyError):
-                lower_link = re.sub(r'^&#x294;', r'&rsquo;', link).lower()
-                text = text.replace('<link>' + link + '</link>', entry.hyperlink(site[lower_link], link))
-        return text
+    def add_links(self, text, entry):
+        """
+        Add links of the form
+            '<a href="../b/blah.html#highlulani">blah</a>'
+        """
+        div = ' <div class="definition">'
+        lang = '[3]' #language marker
+        output = []
+        regex = r'<{0}>(.*?)</{0}>'.format('link')
+        for line in text.splitlines():
+            if line.startswith(lang):
+                self.language = line[len(lang):]
+            output.append(re.sub(regex, self._link, line))
+        return '\n'.join(output)
+
+    def _link(self, text):
+        word = text.group(1).split(':')
+        language = urlform(self.language if len(word) == 1 else word[0])
+        link = urlform(word)
+        initial = re.findall(r'\w', link)[0]
+        return '<a href="../{0}/{1}.html#{2}">{3}</a>'.format(
+                                            initial, link, language, word[1])
+
+    def remove_links(self, text):
+        regex = r'<a href="\.\./.*?">(.*?)</a>'
+        return re.sub(regex, r'\1', text)
 
 class ExternalGrammar:
     """
@@ -115,40 +149,51 @@ class ExternalGrammar:
     :param filename (str): filename to get replacements from.
     """
     def __init__(self, filename):
-        self.languages, self.words, self.urls = [], [], []
-        self.filename = filename
         with open(filename) as replacements:
-            replacements = replacements.read()
-        for line in replacements.splitlines():
-            if line.startswith('&'):
-                site = line[1:]
-            elif line.startswith('#'):
-                language = line[1:]
-                site += urlform(language)
-            else:
-                word, url = line.split()
-                self.languages.append(language)
-                self.words.append(word)
-                self.urls.append(site + url)
+            self.replacements = json.load(replacements)
+        self.url = self.replacements['url']
+        self.language = None
 
-    def add_links(self, text, entry, site):
+    def add_links(self, text, entry):
         """
-        Add links to text, from
-        :precondition: text is a dictionary entry in Smeagol markdown.
+        Add links of the form
+            '<a href="http://grammar.tinellb.com/highlulani/morphology/nouns">noun</a>'
         """
-        current_language = ''
-        for language, word, url in zip(self.languages, self.words, self.urls):
-            page = ''
-            url = r'<a href="{0}">{1}</a>'.format(url, word)
-            for line in text.splitlines():
-                if line.startswith('[3]'):
-                    current_language = line[len('[3]'):]
-                elif word in line and url not in line and current_language == language:
-                    line = re.sub(r'(\[6\].*?)\b' + word + r'\b(.*?<)', r'\1' + url + r'\2', line)
-                page += line + '\n'
-            text = page
-        return text
+        div = ' <div class="definition">'
+        lang = '[3]' #language marker
+        wcs = '[6]' #word classes marker
+        output = []
+        for line in text.splitlines():
+            if line.startswith(lang):
+                self.language = line[len(lang):]
+            elif line.startswith(wcs):
+                pos, rest = line[len(wcs):].split(div, 1)
+                line = wcs + ' '.join(map(self._link, pos.split(' '))) + div + rest
+            output.append(line)
+        return '\n'.join(output)
 
-    @property
-    def name(self):
-        return 'externalgrammar'
+    def _link(self, pos):
+        with ignored(KeyError):
+            link = self.replacements['languages'][self.language][pos]
+            language = urlform(self.language)
+            return '<a href="{0}/{1}/{2}">{3}</a>'.format(self.url, language, link, pos)
+        return pos
+
+    def remove_links(self, text):
+        """
+        text: 'foo<a href="url/b/bar.html#language">bar</a>baz' =>
+                    'foo<link>bar</link>baz'
+
+        """
+        return '\n'.join(map(self._unlink, text.splitlines()))
+
+
+    def _unlink(self, line):
+        div = ' <div class="definition">'
+        wcs = '[6]'
+        if line.startswith(wcs):
+            pos, rest = line[len(wcs):].split(div, 1)
+            pos = re.sub(r'<a href=.*?>(.*?)</a>', r'\1', pos)
+            return wcs + pos + div + rest
+        else:
+            return line

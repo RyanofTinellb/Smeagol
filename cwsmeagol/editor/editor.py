@@ -494,7 +494,7 @@ class Editor(Tk.Frame, object):
         with conversion(self.markdown, 'to_markup') as converter:
             text = converter(text)
         with conversion(self.links, 'add_links') as converter:
-            text = converter(text, entry, self.site)
+            text = converter(text, entry)
         text = add_datestamp(text)
         return text
 

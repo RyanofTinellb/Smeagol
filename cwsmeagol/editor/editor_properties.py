@@ -116,8 +116,8 @@ class EditorProperties():
         try:
             linkadder = getattr(translation, linkadder)()
         except TypeError:
-            linkadder, filename = linkadder['type'], linkadder['filename']
-            linkadder = getattr(translation, linkadder)(filename)
+            linkadder, resource = linkadder['type'], linkadder['resource']
+            linkadder = getattr(translation, linkadder)(resource)
         return linkadder
 
     def _removelinkadder(self, kind):
@@ -129,10 +129,10 @@ class EditorProperties():
         links = self.config['links']
         self.config['links'] = [adder for adder in links if adder['type'] != kind]
 
-    def _addlinkadder(self, kind, filename):
+    def _addlinkadder(self, kind, resource):
         self.removelinkadder(kind)
-        if filename:
-            self.config['links'].append(dict(type=kind, filename=filename))
+        if resource:
+            self.config['links'].append(dict(type=kind, resource=resource))
         else:
             self.config['links'].append(dict(type=kind))
 

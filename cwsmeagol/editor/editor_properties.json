@@ -117,7 +117,8 @@
     "property": "ExternalDictionary",
     "owner": "links",
     "check": true,
-    "textbox": false,
+    "textbox": true,
+    "vartype": "string",
     "browse": false
   }
 ]
