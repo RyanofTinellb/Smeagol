@@ -214,7 +214,10 @@ class Site(object):
         :rtype: Analysis
         :class: Site
         """
-        words, sentences, urls, names = {}, [], [], []
+        words = {}
+        sentences = []
+        urls = []
+        names = []
         markdown = Markdown()
         for page_number, entry in enumerate(self):
             # line numbers in each Page are incremented by the current total number of sentences
@@ -224,7 +227,7 @@ class Site(object):
             # add results to appropriate lists and dictionaries
             new_words = analysis.words
             sentences += analysis.sentences
-            urls.append(entry.link(False))
+            urls.append(entry.link(extend=False))
             names.append(entry.name)
             for word in new_words:
                 # increment line numbers by base

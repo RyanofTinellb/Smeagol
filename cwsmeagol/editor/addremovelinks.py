@@ -111,8 +111,6 @@ class InternalStory:
         return re.sub(r'<span class="version.*?</span>', '', text)
 
 class InternalDictionary:
-    def __init__(self):
-
     """
     Replace links with hyperlinks to other entries in the same dictionary
     """
