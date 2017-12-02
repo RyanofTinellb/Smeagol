@@ -39,10 +39,9 @@ class TheCoelacanthQuartet(Story):
 class Default():
     def __init__(self):
         self.destination = 'c:/users/ryan/documents/tinellbianlanguages/'
-        files = namedtuple('files', ['source', 'template', 'markdown', 'searchjson'])
+        files = namedtuple('files', ['source', 'template', 'searchjson'])
         self.files = files(source='data.txt',
                            template='template.html',
-                           markdown='../replacements.mkd',
                            searchjson='searching.json')
 
 

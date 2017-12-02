@@ -97,10 +97,6 @@ class EditorProperties():
         self.site = Site(**dict_)
 
     @property
-    def markdown(self):
-        return self.files.markdown
-
-    @property
     def randomwords(self):
         """
         Create a RandomWords object from the config info

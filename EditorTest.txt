@@ -1,4 +1,0 @@
-[0]Testing
-This is a test page.
-[1]Next
-This is the next page.

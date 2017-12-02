@@ -46,6 +46,7 @@ class Editor(Tk.Frame, object):
         self.save_text.set('Save')
         self.language = Tk.StringVar()
         self.translator = Translator()
+        self.markdown = Markdown()
         self.entry = self.site.root
         self.top = self.winfo_toplevel()
 
@@ -58,10 +59,6 @@ class Editor(Tk.Frame, object):
     @property
     def site(self):
         return self.properties.site
-
-    @property
-    def markdown(self):
-        return self.properties.markdown
 
     @property
     def links(self):

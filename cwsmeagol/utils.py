@@ -3,6 +3,7 @@ import re
 import urllib
 from contextlib import contextmanager
 from datetime import datetime
+from translation.markdown import Markdown
 
 @contextmanager
 def ignored(*exceptions):
@@ -25,6 +26,7 @@ def conversion(converter, function):
         yield lambda x: x
 
 def urlform(text, markdown=None):
+    markdown = markdown or Markdown()
     name = text.lower()
     safe_punctuation = '\'.$_+!(),'
     # remove safe punctuations that should only be used to encode non-ascii characters

@@ -31,7 +31,7 @@ class Site(object):
         self.current = None
         self.length = 0
         if not self.files.source:
-            self.root = Page(self.name, leaf_level=self.leaf_level, markdown=self.markdown)
+            self.root = Page(self.name, leaf_level=self.leaf_level)
             return
 
         # break source text into pages, with the splits on square brackets before numbers <= leaf_level
@@ -41,7 +41,7 @@ class Site(object):
         source = split.split(source)
 
         # create page on appropriate level of hierarchy, with name taken from the source file
-        node = self.root = Page(self.name, content=source[0][1:], leaf_level=self.leaf_level, markdown=self.markdown)
+        node = self.root = Page(self.name, content=source[0][1:], leaf_level=self.leaf_level)
         for page in source[1:]:
             previous = node
             level, name = re.split('[]\n]', page, 2)[:2]
@@ -57,14 +57,12 @@ class Site(object):
                 'name="{1}", '
                 'source="{2}", '
                 'template="{3}", '
-                'markdown="{4}", '
                 'searchjson="{5}", '
                 'leaf_level={6})').format(
                 self.destination,
                 self.name,
                 self.files.source,
                 self.files.template_file,
-                self.files.markdown_file,
                 self.files.searchjson,
                 str(self.leaf_level))
 
@@ -75,10 +73,6 @@ class Site(object):
     @property
     def template(self):
         return self.files.template
-
-    @property
-    def markdown(self):
-        return self.files.markdown
 
     @property
     def searchjson(self):
@@ -185,7 +179,7 @@ class Site(object):
         :return (Page): the Page that was added
         :class: Site
         """
-        child = Page(name, parent, content, self.leaf_level, previous, self.markdown)
+        child = Page(name, parent, content, self.leaf_level, previous)
         if child not in parent.children:
             parent.children.append(child)
         else:
@@ -221,11 +215,12 @@ class Site(object):
         :class: Site
         """
         words, sentences, urls, names = {}, [], [], []
+        markdown = Markdown()
         for page_number, entry in enumerate(self):
             # line numbers in each Page are incremented by the current total number of sentences
             base = len(sentences)
             # analyse the Page
-            analysis = entry.analyse(self.markdown)
+            analysis = entry.analyse(markdown)
             # add results to appropriate lists and dictionaries
             new_words = analysis.words
             sentences += analysis.sentences

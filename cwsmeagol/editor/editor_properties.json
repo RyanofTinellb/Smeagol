@@ -23,12 +23,12 @@
     "owner": "files",
     "check": false,
     "textbox": true,
+    "vartype": "string",
     "browse": {
       "action": "save",
       "text": "Data File",
       "extension": ".txt"
-    },
-    "vartype": "string"
+    }
   },
   {
     "name": "Template",
@@ -41,19 +41,6 @@
       "text": "HTML Template",
       "action": "open",
       "extension": "*.html"
-    }
-  },
-  {
-    "name": "URL/JSON Markdown",
-    "property": "markdown",
-    "owner": "files",
-    "check": false,
-    "textbox": true,
-    "vartype": "string",
-    "browse": {
-      "text": "Markdown File",
-      "action": "open",
-      "extension": "*.mkd"
     }
   },
   {

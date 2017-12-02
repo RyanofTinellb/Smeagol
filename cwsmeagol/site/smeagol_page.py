@@ -12,14 +12,13 @@ class Page(Node):
     """
     A node in the hierarchy
     """
-    def __init__(self, name=None, parent=None, content='', leaf_level=3, previous=None, markdown=None):
+    def __init__(self, name=None, parent=None, content='', leaf_level=3, previous=None):
         """
         :param name (str): the name of the Page
         :param parent (Page): the Page's immediate ancestor
         :param content (str): text that will ultimately appear on the Page's webpage
         :param leaf_level (int): the level number of the outermost branches of the hierarchy
         :param previous (Page):
-        :param markdown (Markdown): the Markdown to be used when creating the url of the Page
 
         :attribute children (list): the Pages beneath self
         :attribute isLeaf (bool): is the Page at the lowest level of the hierarchy?
@@ -30,8 +29,7 @@ class Page(Node):
         self.isLeaf = (leaf_level == self.level)
         self.content = content
         self.previous = previous
-        self.markdown = markdown
-        self.flatname = FlatName(name, markdown)
+        self.flatname = FlatName(name)
 
     def __str__(self):
         return '[' + self.content
@@ -43,7 +41,7 @@ class Page(Node):
         Put the name in lower case, and remove tags
         Allowed punctuation: -'.$_+!()
         """
-        return urlform(self.name, self.markdown)
+        return urlform(self.name)
 
     def __eq__(self, other):
         """
@@ -195,7 +193,7 @@ class Page(Node):
         """
         level, name = text.split(']')
         level = int(level) - self.level + 1
-        url_id = Page(re.sub(r'\(.*?\)', '', name), markdown=self.markdown).urlform
+        url_id = urlform(re.sub(r'\(.*?\)', '', name)
         if url_id:
             return '<h{0} id="{1}">{2}</h{0}>\n'.format(str(level), url_id, name)
         else:
@@ -435,6 +433,7 @@ class Page(Node):
         os.remove(self.link())
 
     def analyse(self, markdown):
+        markdown = markdown or Markdown()
         wordlist = {}
         content = self.content[2:]
         """remove tags, and items between some tags"""

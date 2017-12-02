@@ -2,7 +2,7 @@ import re
 from cwsmeagol.utils import urlform
 
 class FlatName:
-    def __init__(self, name, markdown):
+    def __init__(self, name):
         """
         'flattens' the name to only include letters aiu'pbtdcjkgmnqlrfsxh
         Smallest number comes earlier in the ordering.
@@ -13,7 +13,7 @@ class FlatName:
         punctuation = "-'#"
         radix = len(punctuation)
 
-        name = urlform(name, markdown)
+        name = urlform(name)
         score = 0
         double_letter = re.compile(r'([{0}])\1'.format(alphabet))
         name = re.sub(double_letter, r'\1#', name, 1)
