@@ -1,3 +1,6 @@
+from editor import Editor, WidgetAmounts
+from cwsmeagol.utils import *
+
 class DictionaryEditor(Editor):
     def __init__(self, properties=None, master=None):
         """
@@ -8,7 +11,6 @@ class DictionaryEditor(Editor):
         super(DictionaryEditor, self).__init__(properties, widgets, font)
 
         # initialise instance variables
-        self.markdown = self.properties.files.markdown
         self.entry = ''
         self.history = []
         self.current = -1

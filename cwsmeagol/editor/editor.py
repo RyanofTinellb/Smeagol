@@ -4,6 +4,7 @@ import threading
 import os
 import webbrowser as web
 import Tkinter as Tk
+import tkFileDialog as fd
 from collections import namedtuple
 from editor_properties import EditorProperties
 from properties_window import PropertiesWindow
@@ -173,11 +174,11 @@ class Editor(Tk.Frame, object):
             textboxes.append(textbox)
         return tuple(textboxes)
 
+    @property
+    def words(self):
+        return self.properties.randomwords.words
+
     def configure_widgets(self):
-        try:
-            self.words = self.properties.randomwords.words
-        except TypeError:
-            self.words = None
         self.heading = self.headings[0]
         self.textbox = self.textboxes[0]
         self.infolabel, self.information, self.blanklabel = self.labels
@@ -191,7 +192,7 @@ class Editor(Tk.Frame, object):
         Show a certain number of random nonsense words using High Lulani phonotactics.
         """
         if self.words:
-            self.information.set('\n'.join(self.words()))
+            self.information.set('\n'.join(self.words))
         return 'break'
 
     def configure_headings(self, commands=None):
@@ -325,7 +326,7 @@ class Editor(Tk.Frame, object):
         """
         Loop until a valid file is passed back, or user cancels
         """
-        self.properties.open()
+        source = self.properties.open()
         self.reset()
         return 'break'
 
