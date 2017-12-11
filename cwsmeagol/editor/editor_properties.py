@@ -6,6 +6,7 @@ from addremovelinks import AddRemoveLinks
 from cwsmeagol.site.smeagol_site import Site
 from cwsmeagol.translation import *
 import tkFileDialog as fd
+import tkSimpleDialog as sd
 
 class EditorProperties():
     """
@@ -26,7 +27,8 @@ class EditorProperties():
         self.setup_template(template)
         self.setup_config(config)
         self.create_site()
-        self.linkadder = self.create_linkadder()
+        self.create_random_words()
+        self.create_linkadder()
 
     def setup_template(self, template):
         template = template or os.path.join(os.path.dirname(__file__),
@@ -49,15 +51,16 @@ class EditorProperties():
         return self.site.source
 
     def open(self):
-        """
-        Loop until a valid file is passed back, or user cancels
-        """
-        filetypes = [('Sm\xe9agol File', '*.smg')]
+        filetypes = [('Sm\xe9agol File', '*.smg'), ('Source Data File', '*.txt')]
         title = 'Open Site'
         filename = fd.askopenfilename(filetypes=filetypes, title=title)
-        if filename:
+        if filename.endswith('.smg'):
             self.setup_config(filename)
             self.create_site()
+            self.create_random_words()
+            self.create_linkadder()
+            return False
+        return filename
 
     def save(self, filename=None):
         self.config_filename = filename or self.config_filename
@@ -92,29 +95,29 @@ class EditorProperties():
         """
         Create a new Site object from the config info
         """
-        dict_ = self.config['site']
+        dict_ = dict(self.config['site'])
         dict_['files'] = self.collate_files()
         self.site = Site(**dict_)
 
-    @property
-    def randomwords(self):
+    def create_random_words(self):
         """
         Create a RandomWords object from the config info
         """
         if self.config['random words']:
-            return RandomWords(**self.config['random words'])
+            self.randomwords = RandomWords(**self.config['random words'])
         else:
-            return None
+            self.randomwords = None
 
     def create_linkadder(self):
         """
         Create an AddRemoveLinks instance from the config info
         """
-        return AddRemoveLinks(map(self._links, self.config['links']))
+        self.linkadder = AddRemoveLinks(map(self._links, self.config['links']))
 
     def _links(self, linkadder):
+        import addremovelinks as translation
         try:
-            linkadder = getattr(translation, linkadder)()
+            linkadder = getattr(translation, linkadder['type'])()
         except TypeError:
             linkadder, resource = linkadder['type'], linkadder['resource']
             linkadder = getattr(translation, linkadder)(resource)
@@ -130,7 +133,7 @@ class EditorProperties():
         self.config['links'] = [adder for adder in links if adder['type'] != kind]
 
     def _addlinkadder(self, kind, resource):
-        self.removelinkadder(kind)
+        self._removelinkadder(kind)
         if resource:
             self.config['links'].append(dict(type=kind, resource=resource))
         else:

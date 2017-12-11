@@ -67,7 +67,7 @@ class PropertyFrame:
             try:
                 text = value[self.property]
             except TypeError:
-                text = [prop['filename'] for prop in value if prop['type'] == self.property]
+                text = [prop['resource'] for prop in value if prop['type'] == self.property]
                 text = text[0] if text else ''
             self.entryvar.set(text)
             self.entry = Tk.Entry(master, width=50, textvariable=self.entryvar)

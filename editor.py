@@ -11,12 +11,12 @@ while True:
     except ValueError:
         pass
     if choice == 1:
-        from cwsmeagol import Editor
+        from cwsmeagol.editor.editor import Editor
         break
     elif choice == 2:
-        from cwsmeagol import DictionaryEditor as Editor
+        from cwsmeagol.editor.dictionary_editor import DictionaryEditor as Editor
         break
     elif choice == 3:
-        from cwsmeagol import StoryEditor as Editor
+        from cwsmeagol.editor.site_editor import StoryEditor as Editor
         break
 Editor().mainloop()
