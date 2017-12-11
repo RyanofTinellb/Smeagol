@@ -1,4 +1,5 @@
-from editor import Editor, WidgetAmounts
+from editor import Editor, WidgetAmounts, Tk
+from cwsmeagol.site.smeagol_page import Page
 from cwsmeagol.utils import *
 
 class DictionaryEditor(Editor):
@@ -51,8 +52,8 @@ class DictionaryEditor(Editor):
         Insert the markdown for entry definition, and move the insertion pointer to allow for immediate input of the definition.
         """
         widget = event.widget
-        self.insert_characters(widget, *self.markdown.find_formatting('div'))
-        self.insert_characters(widget, ' ' + self.markdown.find('class="definition">'))
+        m = self.markdown.to_markdown
+        self.insert_characters(widget, m('<div class="definition">'), m('</div>'))
         return 'break'
 
     def add_translation(self, event=None):
@@ -92,8 +93,8 @@ class DictionaryEditor(Editor):
         try:
             entry = site[heading]
         except KeyError:
-            initial = re.sub(r'.*?(\w).*', r'\1', urlform(heading, self.site.markdown)).capitalize()
-            entry = Page(heading, site[initial], '', site.leaf_level, None, site.markdown).insert()
+            initial = re.sub(r'.*?(\w).*', r'\1', urlform(heading)).capitalize()
+            entry = Page(heading, site[initial], '', site.leaf_level, None).insert()
         self.keep_history(heading)
         return entry
 

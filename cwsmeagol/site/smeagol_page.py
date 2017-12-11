@@ -237,7 +237,7 @@ class Page(Node):
                 try:
                     heading, rest = line.split('\n', 1)
                 except ValueError:
-                    raise ValueError(line)
+                    heading, rest = line, ''
                 line = self.change_to_heading(heading)
                 line += '<p>{0}</p>\n'.format('</p>\n<p>'.join(rest.splitlines())) if rest else ''
             else: # tag is non-numeric, i.e.: represents something other than a heading

@@ -29,7 +29,6 @@ class EditorProperties():
         self.create_site()
         self.create_random_words()
         self.create_linkadder()
-        self.linkadder = self.create_linkadder()
 
     def setup_template(self, template):
         template = template or os.path.join(os.path.dirname(__file__),

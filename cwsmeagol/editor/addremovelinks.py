@@ -132,14 +132,14 @@ class InternalDictionary:
     def _link(self, text):
         word = text.group(1).split(':')
         language = urlform(self.language if len(word) == 1 else word[0])
-        link = urlform(word)
+        link = urlform(word[-1])
         initial = re.findall(r'\w', link)[0]
         return '<a href="../{0}/{1}.html#{2}">{3}</a>'.format(
-                                            initial, link, language, word[1])
+                                            initial, link, language, word[-1])
 
     def remove_links(self, text):
-        regex = r'<a href="\.\./.*?">(.*?)</a>'
-        return re.sub(regex, r'\1', text)
+        regex = r'<a href="(?:\w+\.html|\.\./.*?)">(.*?)</a>'
+        return re.sub(regex, r'<{0}>\1</{0}>'.format('link'), text)
 
 class ExternalGrammar:
     """
@@ -165,7 +165,10 @@ class ExternalGrammar:
             if line.startswith(lang):
                 self.language = line[len(lang):]
             elif line.startswith(wcs):
-                pos, rest = line[len(wcs):].split(div, 1)
+                try:
+                    pos, rest = line[len(wcs):].split(div, 1)
+                except ValueError:
+                    pos, rest = line[len(wcs):], ''
                 line = wcs + ' '.join(map(self._link, pos.split(' '))) + div + rest
             output.append(line)
         return '\n'.join(output)
@@ -181,6 +184,8 @@ class ExternalGrammar:
         """
         text: 'foo<a href="url/b/bar.html#language">bar</a>baz' =>
                     'foo<link>bar</link>baz'
+
+        Grammar markdown file takes care of adding and removing links to the phonology page
 
         """
         return '\n'.join(map(self._unlink, text.splitlines()))

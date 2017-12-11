@@ -146,7 +146,7 @@ class Editor(Tk.Frame, object):
 
     def create_labels(self, master):
         information = Tk.StringVar()
-        info_label = Tk.Label(master=master, textvariable=information)
+        info_label = Tk.Label(master=master, textvariable=information, font=('Arial', 16))
         # blanklabel has enough height to push all other widgets to the top
         #   of the window.
         blank_label = Tk.Label(master=master, height=1000)
