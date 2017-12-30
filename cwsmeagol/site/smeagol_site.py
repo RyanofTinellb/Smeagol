@@ -179,11 +179,11 @@ class Site(object):
         :return (Page): the Page that was added
         :class: Site
         """
-        child = Page(name, parent, content, self.leaf_level, previous)
+        child = Page(name, parent, content, self.leaf_level)
         if child not in parent.children:
             parent.children.append(child)
         else:
-            return self.add_node(name + '2', parent, content, previous)
+            return self.add_node(name + '2', parent, content)
         return child
 
     def publish(self):

@@ -143,25 +143,37 @@ class Node(object):
             return self.children[0]
         else:
             try:
-                next_node = self.next_sister
+                return self.next_sister
             except IndexError:
-                next_node = self.next_node_iter(self.parent)
-        return next_node
+                return self.parent.next_node_iter
 
-    def next_node_iter(self, node):
+    @property
+    def next_node_iter(self):
         """
         Iterates over the Site to find the next Node
         :return (Node): the next Node in sequence
         :raises IndexError: the next Node does not exist
         """
-        if self.isRoot or node.parent is None:
+        if self.isRoot or self.parent is None:
             raise IndexError('No more nodes')
         try:
-            right = node.next_sister
-            return right
+            return self.next_sister
         except IndexError:
-            right = self.next_node_iter(node.parent)
-        return right
+            return self.parent.next_node_iter
+
+    @property
+    def previous(self):
+        try:
+            return self.previous_sister.last_grandchild
+        except IndexError:
+            if self.parent:
+                return self.parent
+            else:
+                raise IndexError('No more nodes')
+
+    @property
+    def last_grandchild(self):
+        return self.children[-1].last_grandchild if self.children else self
 
     @property
     def descendants(self):

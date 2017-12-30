@@ -12,7 +12,7 @@ class Page(Node):
     """
     A node in the hierarchy
     """
-    def __init__(self, name=None, parent=None, content='', leaf_level=3, previous=None):
+    def __init__(self, name=None, parent=None, content='', leaf_level=3):
         """
         :param name (str): the name of the Page
         :param parent (Page): the Page's immediate ancestor
@@ -28,7 +28,6 @@ class Page(Node):
         self.name = name
         self.isLeaf = (leaf_level == self.level)
         self.content = content
-        self.previous = previous
         self.flatname = FlatName(name)
 
     def __str__(self):
@@ -373,12 +372,10 @@ class Page(Node):
     @property
     def nav_footer(self):
         div = '<div>\n{0}\n</div>\n'
-        if self.previous:
+        try:
             output = div.format(self.hyperlink(self.previous, '&larr; Previous page'))
-        elif self is self.root:
+        except IndexError:
             output = div.format('<a href="http://www.tinellb.com">&uarr; Go to Main Page')
-        else:
-            output = div.format(self.hyperlink(self.root, '&uarr; Return to Menu'))
         try:
             output += div.format(self.hyperlink(self.next_node, 'Next page &rarr;'))
         except IndexError:
