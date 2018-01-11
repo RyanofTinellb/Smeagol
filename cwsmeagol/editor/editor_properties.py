@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import re
 from smeagol_files import Files
 from addremovelinks import AddRemoveLinks
 from cwsmeagol.site.smeagol_site import Site
@@ -25,7 +26,8 @@ class EditorProperties():
     """
     def __init__(self, config=None, template=None):
         self.setup_template(template)
-        self.setup_config(config)
+        self.config_filename = config
+        self.setup_config()
         self.create_site()
         self.create_random_words()
         self.create_linkadder()
@@ -36,10 +38,10 @@ class EditorProperties():
         with open(template) as template:
             self.template = json.load(template)
 
-    def setup_config(self, config):
-        self.config_filename = config or (
+    def setup_config(self, config=None):
+        config_filename = config or self.config_filename or (
             os.path.join(os.path.dirname(__file__), 'editor_properties.smg'))
-        with open(self.config_filename) as config:
+        with open(config_filename) as config:
             self.config = json.load(config)
 
     @property
@@ -54,8 +56,9 @@ class EditorProperties():
         filetypes = [('Sm\xe9agol File', '*.smg'), ('Source Data File', '*.txt')]
         title = 'Open Site'
         filename = fd.askopenfilename(filetypes=filetypes, title=title)
-        if filename.endswith('.smg'):
-            self.setup_config(filename)
+        if filename and filename.endswith('.smg'):
+            self.config_filename = filename
+            self.setup_config()
             self.create_site()
             self.create_random_words()
             self.create_linkadder()
@@ -64,16 +67,19 @@ class EditorProperties():
 
     def save(self, filename=None):
         self.config_filename = filename or self.config_filename
-        with open(self.config_filename, 'w') as config:
-            json.dump(self.config, config)
+        if self.config_filename:
+            with open(self.config_filename, 'w') as config:
+                json.dump(self.config, config, indent=2)
+        else:
+            self.saveas()
 
     def saveas(self):
         filetypes = [('Sm\xe9agol File', '*.smg')]
         title = 'Save Site'
-        filename = re.replace(r'(\.smg)?$', r'.smg', fd.asksaveasfilename(filetypes=filetypes, title=title))
-        raise ValueError(filename)
+        filename = re.sub(r'(\.smg)?$', r'.smg', fd.asksaveasfilename(filetypes=filetypes, title=title))
         if filename:
-            self.save(filename)
+            self.config_filename = filename
+            self.save()
 
     def collate_files(self):
         """

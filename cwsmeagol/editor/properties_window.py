@@ -109,13 +109,17 @@ class PropertyFrame:
 
             :param filetype: (str()) The usual tuple passed to a Tk.FileDialog
             """
-            if browse['action'] == "open":
-                action = fd.askopenfilename
-            elif browse['action'] == "save":
-                action = fd.asksaveasfilename
-            filename = action(filetypes=[filetype], title='Select File')
+            action = browse['action']
+            if action == 'open':
+                browser = fd.askopenfilename
+            elif action == 'save':
+                browser = fd.asksaveasfilename
+            filename = browser(filetypes=[filetype], title='Select File')
             self.insert(filename)
             if filename:
+                if action == 'save':
+                    with open(filename, 'a') as textfile:
+                        textfile.write
                 with ignored(AttributeError):
                     self.check.select()
             self.entry.focus_set()

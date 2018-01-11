@@ -13,7 +13,7 @@ class Analysis:
         self.string = json.dumps(dict(terms=self.words,
                                       sentences=self.sentences,
                                       urls=self.urls,
-                                      names=self.names))
+                                      names=self.names), indent=2)
 
     def __str__(self):
         return self.string

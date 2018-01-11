@@ -7,8 +7,8 @@ class Markdown:
         :param filename (String): the path to the replacements file
         :raise IOError: filename does not exist
         """
-        filename = filename or os.path.join(os.path.dirname(__file__),
-                                                'markdown.mkd')
+        if filename is None:
+            filename = os.path.join(os.path.dirname(__file__), 'markdown.mkd')
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None
@@ -59,7 +59,7 @@ class Markdown:
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None
-        if filename:
+        if self.filename:
             with open(self.filename) as replacements:
                 for line in replacements:
                     line = line.split(" ")
