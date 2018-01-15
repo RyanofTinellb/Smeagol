@@ -8,6 +8,7 @@ import tkFileDialog as fd
 from collections import namedtuple
 from editor_properties import EditorProperties
 from properties_window import PropertiesWindow
+from cwsmeagol.site.smeagol_page import Page
 from cwsmeagol.utils import *
 from cwsmeagol.translation import Translator
 
@@ -33,10 +34,13 @@ class Editor(Tk.Frame, object):
         self.font = font or ('Corbel', '14')
 
         self.buttonframe = Tk.Frame(self)
+        self.headingframe = Tk.Frame(self.buttonframe)
         self.textframe = Tk.Frame(self)
         self.headings = []
         self.radios = []
         self.texts = []
+        self.row = 0
+        self.new_page = False
         self.buttons = None
         self.load_button = None
         self.save_button = None
@@ -49,12 +53,14 @@ class Editor(Tk.Frame, object):
         self.translator = Translator()
         self.markdown = Markdown('')
         self.entry = self.site.root
+        self.entry.content = self.initial_content(self.entry)
         self.top = self.winfo_toplevel()
 
         self.create_widgets()
         self.configure_widgets()
         self.place_widgets()
         self.top.state('zoomed')
+        self.load()
         self.go_to_heading()
 
     @property
@@ -79,7 +85,7 @@ class Editor(Tk.Frame, object):
 
     def create_widgets(self):
         self.menu = self.create_menu(self.top, self.menu_commands)
-        self.headings = self.create_headings(self.buttonframe,
+        self.headings = self.create_headings(self.headingframe,
                 self.widgets.headings)
         self.radios = self.create_radios(self.buttonframe, self.widgets.radios)
         self.labels = self.create_labels(self.buttonframe)
@@ -130,6 +136,21 @@ class Editor(Tk.Frame, object):
             for (key, command) in commands:
                 heading.bind(key, command)
         return headings
+
+    def add_heading(self, event=None):
+        if len(self.headings) < 10:
+            heading = Tk.Entry(self.headingframe)
+            for (key, command) in self.heading_commands:
+                heading.bind(key, command)
+            heading.grid(column=0, columnspan=2, sticky=Tk.N)
+            self.headings.append(heading)
+        return 'break'
+
+    def remove_heading(self, event=None):
+        if len(self.headings) > 1:
+            heading = self.headings.pop()
+            heading.destroy()
+        return 'break'
 
     @staticmethod
     def create_buttons(master, commands, save_variable):
@@ -229,11 +250,11 @@ class Editor(Tk.Frame, object):
         self.top['menu'] = self.menu
         self.pack(expand=True, fill=Tk.BOTH)
         self.buttonframe.pack(side=Tk.LEFT)
+        self.headingframe.grid(row=0, column=0, columnspan=2, sticky=Tk.N)
         self.textframe.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
-        row = 0
         for heading in self.headings:
-            heading.grid(row=row, column=0, columnspan=2, sticky=Tk.N)
-            row += 1
+            heading.grid(column=0, columnspan=2, sticky=Tk.N)
+        row = 1
         for i, button in enumerate(self.buttons):
             button.grid(row=row, column=i)
         row += 1
@@ -257,6 +278,7 @@ class Editor(Tk.Frame, object):
         heading = event.widget
         level = self.headings.index(heading) + self.root.level + 1
         direction = 1 if event.keysym == 'Next' else -1
+        child = True
         # ascend hierarchy until correct level
         while self.entry.level > level:
             try:
@@ -272,11 +294,13 @@ class Editor(Tk.Frame, object):
             try:
                 self.entry = self.entry.children[0]
             except IndexError:
+                child = False
                 break
         for heading_ in self.headings[level - self.root.level - 1:]:
             heading_.delete(0, Tk.END)
-        heading.insert(Tk.INSERT, self.entry.name)
-        self.master.title('Editing ' + self.entry.name)
+        if child:
+            heading.insert(Tk.INSERT, self.entry.name)
+            self.master.title('Editing ' + self.entry.name)
         return 'break'
 
     def enter_headings(self, event):
@@ -374,14 +398,14 @@ class Editor(Tk.Frame, object):
         """
         properties_window = PropertiesWindow(self.properties)
         self.wait_window(properties_window)
-        self.entry = self.site.root
+        # self.entry = self.site.root
+        self.site.root.name = self.site.name
 
     def site_publish(self, event=None):
         """
         Publish every page in the Site using the Site's own method
         """
-        for _ in self.site.publish():
-            pass
+        self.site.publish()
 
     def load(self, event=None):
         """
@@ -402,10 +426,24 @@ class Editor(Tk.Frame, object):
         :return (Page):
         """
         entry = self.site.root
-        with ignored(KeyError):
-            for heading in headings:
-                entry = entry[heading]
+        for heading in headings:
+            if heading:
+                try:
+                    entry = entry[heading]
+                except KeyError:
+                    entry = Page(heading, entry, '', self.site.leaf_level).insert('end')
+                    entry.content = self.initial_content(entry)
+                    self.new_page = True
+            else:
+                break
         return entry
+
+    def list_pages(self, event=None):
+        def text_thing(page):
+            return '-' * page.level + page.name
+        text = '\n'.join(map(text_thing, self.site))
+        return 'break'
+
 
     def prepare_entry(self, entry):
         """
@@ -432,9 +470,6 @@ class Editor(Tk.Frame, object):
         else:   # set focus on final textbox
             textbox.focus_set()
             self.update_wordcount(widget=textbox)
-        with ignored(AttributeError):
-            if self.entry.content == '':
-                self.initial_content
 
     def save(self, event=None):
         """
@@ -448,7 +483,8 @@ class Editor(Tk.Frame, object):
         texts = map(self.get_text, self.textboxes)
         if self.entry:
             self.prepare_texts(texts)
-        self.publish(self.entry, self.site)
+        self.publish(self.entry, self.site, self.new_page)
+        self.new_page = False
         return 'break'
 
     @property
@@ -500,7 +536,7 @@ class Editor(Tk.Frame, object):
         return text
 
     @staticmethod
-    def publish(entry, site):
+    def publish(entry, site, allpages=False):
         """
         Put entry contents into datafile, publish appropriate Pages.
         This is the default method - other Editor programs may override this.
@@ -508,7 +544,9 @@ class Editor(Tk.Frame, object):
         :param entry (Page):
         :return (nothing):
         """
-        if entry is not None:
+        if allpages:
+            site.publish()
+        elif entry is not None:
             entry.publish(site.template)
         if site is not None:
             site.modify_source()
@@ -689,6 +727,7 @@ class Editor(Tk.Frame, object):
                         ('Save _As', self.site_saveas),
                         ('Open in _Browser', self.open_in_browser),
                         ('P_roperties', self.site_properties),
+                        ('S_ee All', self.list_pages),
                         ('Publish All', self.site_publish)]),
                 ('Markdown', [('Load', self.markdown_load),
                               ('Refresh', self.markdown_refresh),
@@ -714,6 +753,8 @@ class Editor(Tk.Frame, object):
         return [('<KeyPress>', self.edit_text_changed),
         ('<Control-a>', self.select_all),
         ('<Control-b>', self.bold),
+        ('<Control-d>', self.add_heading),
+        ('<Control-D>', self.remove_heading),
         ('<Control-i>', self.italic),
         ('<Control-l>', self.load),
         ('<Control-k>', self.small_caps),
@@ -731,13 +772,12 @@ class Editor(Tk.Frame, object):
         ('<Shift-Tab>', self.previous_window),
         ('<KeyPress-|>', self.insert_pipe)]
 
-    @property
-    def initial_content(self):
+    def initial_content(self, entry):
         """
         Return the content to be placed in a textbox if the page is new
         """
-        level = str(self.entry.level)
-        name = self.entry.name
+        level = str(entry.level)
+        name = entry.name
         return '{0}]{1}\n'.format(level, name)
 
 

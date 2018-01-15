@@ -1,5 +1,4 @@
 from editor import Editor, WidgetAmounts, Tk
-from cwsmeagol.site.smeagol_page import Page
 from cwsmeagol.utils import *
 
 class DictionaryEditor(Editor):

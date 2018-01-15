@@ -40,7 +40,7 @@
     "browse": {
       "text": "HTML Template",
       "action": "open",
-      "extension": "*.html"
+      "extension": ".html"
     }
   },
   {
@@ -53,7 +53,7 @@
     "browse": {
       "text": "JSON File",
       "action": "save",
-      "extension": "*.json"
+      "extension": ".json"
     }
   },
   {

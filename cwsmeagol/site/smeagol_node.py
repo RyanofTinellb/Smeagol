@@ -27,14 +27,17 @@ class Node(object):
         """
         try:
             self.parent.children.insert(index, self)
-        except TypeError:   # index is None
-            for index, node in enumerate(self.parent.children):
-                number = index
-                if self <= node:
-                    self.parent.children.insert(number, self)
-                    break
-            else:
+        except TypeError:   # index is None or 'end'
+            if index == 'end':
                 self.parent.children.append(self)
+            else:
+                for index, node in enumerate(self.parent.children):
+                    number = index
+                    if self <= node:
+                        self.parent.children.insert(number, self)
+                        break
+                else:
+                    self.parent.children.append(self)
             return self
 
     def remove_from_hierarchy(self):
@@ -141,6 +144,8 @@ class Node(object):
         """
         if self.has_children:
             return self.children[0]
+        elif self.isRoot:
+            raise IndexError('No more nodes')
         else:
             try:
                 return self.next_sister

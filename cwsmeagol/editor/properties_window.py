@@ -115,6 +115,8 @@ class PropertyFrame:
             elif action == 'save':
                 browser = fd.asksaveasfilename
             filename = browser(filetypes=[filetype], title='Select File')
+            extension = filetype[1]
+            filename = re.sub(r'(\.' + extension + ')?$', r'.' + extension, filename)
             self.insert(filename)
             if filename:
                 if action == 'save':

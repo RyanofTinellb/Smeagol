@@ -109,7 +109,7 @@ class EditorProperties():
         """
         Create a RandomWords object from the config info
         """
-        if self.config['random words']:
+        if 'random words' in self.config:
             self.randomwords = RandomWords(**self.config['random words'])
         else:
             self.randomwords = None
