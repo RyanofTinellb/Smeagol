@@ -431,7 +431,7 @@ class Editor(Tk.Frame, object):
                 try:
                     entry = entry[heading]
                 except KeyError:
-                    entry = Page(heading, entry, '', self.site.leaf_level).insert('end')
+                    entry = Page(heading, entry, '').insert('end')
                     entry.content = self.initial_content(entry)
                     self.new_page = True
             else:
@@ -776,9 +776,8 @@ class Editor(Tk.Frame, object):
         """
         Return the content to be placed in a textbox if the page is new
         """
-        level = str(entry.level)
         name = entry.name
-        return '{0}]{1}\n'.format(level, name)
+        return '1]{0}\n'.format(name)
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ class Dictionary(Site):
         name = 'dictionary/'
         files = Files(*map(lambda file_: d.destination + name + file_, d.files))
         super(Dictionary, self).__init__(d.destination + name, 'Dictionary',
-            files, 2)
+            files)
 
 
 class Grammar(Site):
@@ -19,7 +19,7 @@ class Grammar(Site):
         d = Default()
         name = 'grammar/'
         files = Files(*map(lambda file_: d.destination + name + file_, d.files))
-        super(Grammar, self).__init__(d.destination + name, 'Grammar', files, 3)
+        super(Grammar, self).__init__(d.destination + name, 'Grammar', files)
 
 
 class Story(Site):
@@ -28,7 +28,7 @@ class Story(Site):
         name = 'thecoelacanthquartet/'
         files = Files(*map(lambda file_: d.destination + name + file_, d.files))
         super(Story, self).__init__(d.destination + name,
-            'The Coelacanth Quartet', files, 3)
+            'The Coelacanth Quartet', files)
 
 
 class TheCoelacanthQuartet(Story):
@@ -52,5 +52,5 @@ if __name__ == '__main__':
         print(site.name + ': ')
         site.publish()
         newtime = datetime.now()
-        print('100% Done: ' + str(newtime - oldtime))
+        print('Done: ' + str(newtime - oldtime))
         oldtime = newtime

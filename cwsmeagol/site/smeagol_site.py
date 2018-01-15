@@ -9,47 +9,39 @@ class Site(object):
     """
     A hierarchy of Pages
     """
-    def __init__(self, destination=None, name=None, files=None, leaf_level=None):
+    def __init__(self, destination=None, name=None, files=None):
         """
         :param destination (str): the full path where the Site is to be located
         :param name (str): human-readable name of the Site
         :param files (Files):
-        :param leaf_level (int): the level of the lowermost pages in the hierarchy, where the root is at 0.
         """
         # initialize attributes and utility classes
         self.name = name
         self.files = files or Files()
         self.destination = destination
         self.change_destination()
-        try:
-            self.leaf_level = int(leaf_level)
-        except (ValueError, TypeError):
-            self.leaf_level = 1
         self.create_site()
 
     def create_site(self):
         self.current = None
         self.length = 0
         if not self.files.source:
-            self.root = Page(self.name, leaf_level=self.leaf_level)
+            self.root = Page(self.name)
             return
 
-        # break source text into pages, with the splits on square brackets before numbers <= leaf_level
         with open(self.files.source) as source:
-            source = source.read()
-        split = re.compile(r'\[(?=[{0}])'.format(''.join(map(lambda x: str(x + 1), range(self.leaf_level)))))
-        source = split.split(source)
+            source = source.read().split('-' * 50)
 
         # create page on appropriate level of hierarchy, with name taken from the source file
-        node = self.root = Page(self.name, content=source[0][1:], leaf_level=self.leaf_level)
+        node = self.root = Page(self.name, content=source[0])
         for page in source[1:]:
             previous = node
-            level, name = re.split('[]\n]', page, 2)[:2]
-            level = int(level)
+            level = int(page[0])
+            name = re.search(r'(?<=\]).*', page).group(0)
             while level != node.level + 1:
                 # climb back up the hierarchy to the appropriate level
                 node = node.parent
-            node = self.add_node(name, node, page, previous)
+            node = self.add_node(name, node, page[2:])
             self.length += 1
 
     def __repr__(self):
@@ -57,14 +49,12 @@ class Site(object):
                 'name="{1}", '
                 'source="{2}", '
                 'template="{3}", '
-                'searchjson="{5}", '
-                'leaf_level={6})').format(
+                'searchjson="{5}"').format(
                 self.destination,
                 self.name,
                 self.files.source,
                 self.files.template_file,
-                self.files.searchjson,
-                str(self.leaf_level))
+                self.files.searchjson)
 
     @property
     def source(self):
@@ -96,7 +86,7 @@ class Site(object):
         :rtype: str
         :class: Site
         """
-        return ''.join([str(page) for page in self if str(page)])
+        return ''.join([str(page) for page in self if page.content])
 
     def __len__(self):
         """
@@ -168,18 +158,17 @@ class Site(object):
                     raise KeyError(page)
         return node
 
-    def add_node(self, name, parent, content, previous):
+    def add_node(self, name, parent, content):
         """
         Add a Page to the appropriate location in the Site, and return that Page
         If another Page exists at the same point with the same name, a '2' is appended to the name
         :param name (str): human-readable name of the Page
         :param parent (Page): the parent node of the new Page
         :param content (str): the content of the Page, including the header line
-        :param previous (Page): the previous Page in the Site
         :return (Page): the Page that was added
         :class: Site
         """
-        child = Page(name, parent, content, self.leaf_level)
+        child = Page(name, parent, content)
         if child not in parent.children:
             parent.children.append(child)
         else:

@@ -47,10 +47,14 @@ class Node(object):
         self.parent.children.remove(self)
 
     @property
-    def has_children(self):
+    def isLeaf(self):
         """
         :return (bool): True iff self has children
         """
+        return not self.has_children
+
+    @property
+    def has_children(self):
         return len(self.children) > 0
 
     @property

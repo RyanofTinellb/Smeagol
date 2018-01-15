@@ -12,12 +12,11 @@ class Page(Node):
     """
     A node in the hierarchy
     """
-    def __init__(self, name=None, parent=None, content='', leaf_level=3):
+    def __init__(self, name=None, parent=None, content=''):
         """
         :param name (str): the name of the Page
         :param parent (Page): the Page's immediate ancestor
         :param content (str): text that will ultimately appear on the Page's webpage
-        :param leaf_level (int): the level number of the outermost branches of the hierarchy
         :param previous (Page):
 
         :attribute children (list): the Pages beneath self
@@ -26,12 +25,12 @@ class Page(Node):
         """
         super(Page, self).__init__(parent)
         self.name = name
-        self.isLeaf = (leaf_level == self.level)
         self.content = content
         self.flatname = FlatName(name)
 
     def __str__(self):
-        return '[' + self.content
+        output = '' if self.isRoot else '-' * 50 + str(self.level) + '\n'
+        return output + self.content + '\n'
 
     @cached_property
     def urlform(self):
@@ -191,12 +190,11 @@ class Page(Node):
         :return (str): an HTML heading with the id as the URL form of the name of the Page
         """
         level, name = text.split(']')
-        level = int(level) - self.level + 1
         url_id = urlform(re.sub(r'\(.*?\)', '', name))
         if url_id:
-            return '<h{0} id="{1}">{2}</h{0}>\n'.format(str(level), url_id, name)
+            return '<h{0} id="{1}">{2}</h{0}>\n'.format(level, url_id, name)
         else:
-            return '<h{0}>{1}</h{0}>\n'.format(str(level), name)
+            return '<h{0}>{1}</h{0}>\n'.format(level, name)
 
     @property
     def title(self):

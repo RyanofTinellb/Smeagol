@@ -93,7 +93,7 @@ class DictionaryEditor(Editor):
             entry = site[heading]
         except KeyError:
             initial = re.sub(r'.*?(\w).*', r'\1', urlform(heading)).capitalize()
-            entry = Page(heading, site[initial], '', site.leaf_level).insert()
+            entry = Page(heading, site[initial], '').insert()
         self.keep_history(heading)
         return entry
 
@@ -133,10 +133,10 @@ class DictionaryEditor(Editor):
         """
         name = self.heading.get()
         trans = self.translator
-        before = ('2]{0}\n[3]{1}\n').format(name, trans.name)
-        before += '' if self.language.get() == 'en' else '[4]{0}\n'.format(trans.convert_word(name))
-        before += '[5][p {0}]/'.format(trans.code)
-        after = '/[/p]\n[6]\n'
+        before = ('1]{0}\n[2]{1}\n').format(name, trans.name)
+        before += '' if self.language.get() == 'en' else '[3]{0}\n'.format(trans.convert_word(name))
+        before += '[4][p {0}]/'.format(trans.code)
+        after = '/[/p]\n[5]\n'
         self.insert_characters(self.textboxes[0], before, after)
         self.textboxes[0].focus_set()
 

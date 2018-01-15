@@ -57,15 +57,6 @@
     }
   },
   {
-    "name": "Leaf Level",
-    "property": "leaf_level",
-    "owner": "site",
-    "check": false,
-    "textbox": true,
-    "vartype": "integer",
-    "browse": false
-  },
-  {
     "name": "Number of Random Words",
     "property": "number",
     "owner": "random words",
