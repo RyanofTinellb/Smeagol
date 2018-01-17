@@ -30,8 +30,8 @@ class Editor(Tk.Frame, object):
         self.master.title('Page Editor')
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.properties = properties or EditorProperties()
-        self.widgets = widgets or WidgetAmounts(headings=3, textboxes=1, radios='languages')
-        self.font = font or ('Corbel', '14')
+        self.widgets = widgets or WidgetAmounts(headings=5, textboxes=1, radios='languages')
+        self.font = font or ('Consolas', '14')
 
         self.buttonframe = Tk.Frame(self)
         self.headingframe = Tk.Frame(self.buttonframe)
@@ -236,6 +236,7 @@ class Editor(Tk.Frame, object):
     def configure_textboxes(self, commands=None):
         if commands:
             for textbox in self.textboxes:
+                textbox.config(bg='black', fg='green', insertbackground='white')
                 for (key, command) in commands:
                     textbox.bind(key, command)
 
