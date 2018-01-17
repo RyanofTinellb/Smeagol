@@ -30,6 +30,14 @@ class Story(Site):
         super(Story, self).__init__(d.destination + name,
             'The Coelacanth Quartet', files)
 
+class Stories(Site):
+    def __init__(self):
+        d = Default()
+        name = 'stories/'
+        files = Files(*map(lambda file_: d.destination + name + file_, d.files))
+        super(Stories, self).__init__(d.destination + name,
+            'Short Stories', files)
+
 
 class TheCoelacanthQuartet(Story):
     def __init__(self):
@@ -47,7 +55,7 @@ class Default():
 
 if __name__ == '__main__':
     oldtime = datetime.now()
-    for site in Story, Grammar, Dictionary:
+    for site in Story, Grammar, Stories, Dictionary:
         site = site()
         print(site.name + ': ')
         site.publish()
