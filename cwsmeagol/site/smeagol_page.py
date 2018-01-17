@@ -30,7 +30,7 @@ class Page(Node):
 
     def __str__(self):
         output = '' if self.isRoot else '-' * 50 + str(self.level) + '\n'
-        return output + self.content + '\n'
+        return output + self.content
 
     @cached_property
     def urlform(self):
@@ -112,33 +112,34 @@ class Page(Node):
         return hash(self.name)
 
     @property
-    def fullUrlForm(self):
+    def urlname(self):
         """
         :return (str): the name and extension of the Page in a form suitable for URLs
         """
         # extension = '/index' if not self.isLeaf else ''
-        return '{0}{1}.html'.format(self.urlform, '/index' if not self.isLeaf else '')
+        return self.urlform if self.isLeaf else 'index'
 
     @property
     def folder(self):
         """
         :return (str): the folder in which the Page should appear, or an empty string if Page is the root
         """
-        if self.level:
-            text = "/".join([i.urlform for i in self.ancestors[1:-1]]) + '/'
-            text += self.urlform + '/' if not self.isLeaf else ''
-            return text if self.level != 1 else self.urlform + '/'
-        else:
-            return ''
+        return '/'.join(self.folder_as_list)
+
+    @property
+    def folder_as_list(self):
+        folder = [];
+        if self.level > 1:
+            folder.append('/'.join([i.urlform for i in self.ancestors[1:-1]]))
+        if not self.isLeaf and not self.isRoot:
+            folder.append(self.urlform)
+        return folder
 
     def link(self, extend=True):
-        """
-        :return (str): a link to self of the form 'highlulani/morphology/index.html'
-        """
-        if extend:
-            return self.folder + (self.fullUrlForm if self.isLeaf else 'index.html')
-        else:
-            return self.folder + (self.urlform if self.isLeaf else 'index')
+        link = self.folder_as_list
+        link.append(self.urlname)
+        link[-1] += '.html' if extend else ''
+        return '/'.join(link)
 
     def hyperlink(self, destination, template="{0}", needAnchorTags=True, fragment=''):
         """
@@ -427,10 +428,10 @@ class Page(Node):
     def delete_htmlfile(self):
         os.remove(self.link())
 
-    def analyse(self, markdown):
+    def analyse(self, markdown=None):
         markdown = markdown or Markdown()
         wordlist = {}
-        content = self.content[2:]
+        content = self.content
         """remove tags, and items between some tags"""
         content = re.sub(r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
         """remove datestamps"""
@@ -441,7 +442,7 @@ class Page(Node):
         content = re.sub(r'[_()]', ' ', content)
         """remove hidden text"""
         content = re.sub(r'\x05.*?(\x06\x06*)', '', content)
-        """remove bells, spaces at the beginnings and end of lines, and duplicate spaces and end-lines"""
+        """remove bells, spaces at the beginnings and end of lines, duplicate spaces and end-lines"""
         content = re.sub(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[\x07,:]', '', content)
         """remove duplicate end-lines"""
         content = re.sub(r'\n+(?=\n)', '', content)
@@ -450,7 +451,7 @@ class Page(Node):
         lines = content.splitlines()
         content = markdown.to_markdown(content).lower()
         """change punctuation, and tags in square brackets, into spaces"""
-        content = re.sub(r'\'\"|[!?`\"/{}\\;-]|\'($| )|\[.*?\]|&nbsp', ' ', content)
+        content = re.sub(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|&nbsp', ' ', content)
         """make glottal stops lower case where appropriate"""
         content = re.sub(r"(?<=[ \n])''", "'", content)
         for number, line in enumerate(content.splitlines()):

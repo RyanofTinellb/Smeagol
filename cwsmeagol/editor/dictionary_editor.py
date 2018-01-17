@@ -115,7 +115,7 @@ class DictionaryEditor(Editor):
             self.entry.parent.content = replace_datestamp(self.entry.parent.content)
 
     @staticmethod
-    def publish(entry, site):
+    def publish(entry, site, allpages=False):
         """
         Put entry contents into datafile, publish appropriate Pages.
         Overrides Editor.publish()

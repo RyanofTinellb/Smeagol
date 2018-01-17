@@ -120,7 +120,7 @@ class InternalDictionary:
             '<a href="../b/blah.html#highlulani">blah</a>'
         """
         div = ' <div class="definition">'
-        lang = '[3]' #language marker
+        lang = '[2]' #language marker
         output = []
         regex = r'<{0}>(.*?)</{0}>'.format('link')
         for line in text.splitlines():
@@ -158,8 +158,8 @@ class ExternalGrammar:
             '<a href="http://grammar.tinellb.com/highlulani/morphology/nouns">noun</a>'
         """
         div = ' <div class="definition">'
-        lang = '[3]' #language marker
-        wcs = '[6]' #word classes marker
+        lang = '[2]' #language marker
+        wcs = '[5]' #word classes marker
         output = []
         for line in text.splitlines():
             if line.startswith(lang):
@@ -193,9 +193,12 @@ class ExternalGrammar:
 
     def _unlink(self, line):
         div = ' <div class="definition">'
-        wcs = '[6]'
+        wcs = '[5]'
         if line.startswith(wcs):
-            pos, rest = line[len(wcs):].split(div, 1)
+            try:
+                pos, rest = line[len(wcs):].split(div, 1)
+            except ValueError:
+                pos, rest = line[len(wcs):], ''
             pos = re.sub(r'<a href=.*?>(.*?)</a>', r'\1', pos)
             return wcs + pos + div + rest
         else:
