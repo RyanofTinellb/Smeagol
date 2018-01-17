@@ -53,13 +53,13 @@ class Editor(Tk.Frame, object):
         self.translator = Translator()
         self.markdown = Markdown('')
         self.entry = self.site.root
-        self.entry.content = self.initial_content(self.entry)
         self.top = self.winfo_toplevel()
 
         self.create_widgets()
         self.configure_widgets()
         self.place_widgets()
         self.top.state('zoomed')
+        self.entry.content = self.initial_content(self.entry)
         self.load()
         self.go_to_heading()
 
@@ -399,8 +399,8 @@ class Editor(Tk.Frame, object):
         """
         properties_window = PropertiesWindow(self.properties)
         self.wait_window(properties_window)
-        # self.entry = self.site.root
         self.site.root.name = self.site.name
+        self.properties.save()
 
     def site_publish(self, event=None):
         """
@@ -442,7 +442,7 @@ class Editor(Tk.Frame, object):
     def list_pages(self, event=None):
         def text_thing(page):
             return '-' * page.level + page.name
-        text = '\n'.join(map(text_thing, self.site))
+        text = ''.join(map(text_thing, self.site))
         return 'break'
 
 

@@ -1,4 +1,5 @@
 from editor import Editor, WidgetAmounts, Tk
+from cwsmeagol.site.smeagol_page import Page
 from cwsmeagol.utils import *
 
 class DictionaryEditor(Editor):
@@ -8,13 +9,14 @@ class DictionaryEditor(Editor):
         """
         font = ('Courier New', '15')
         widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
-        super(DictionaryEditor, self).__init__(properties, widgets, font)
-
         # initialise instance variables
         self.entry = ''
         self.history = []
         self.current = -1
         self.page = None
+
+        super(DictionaryEditor, self).__init__(properties, widgets, font)
+
 
     def scroll_headings(self, event):
         if event.keysym == 'Prior':
@@ -94,6 +96,7 @@ class DictionaryEditor(Editor):
         except KeyError:
             initial = re.sub(r'.*?(\w).*', r'\1', urlform(heading)).capitalize()
             entry = Page(heading, site[initial], '').insert()
+            entry.content = self.initial_content(entry)
         self.keep_history(heading)
         return entry
 
@@ -125,20 +128,17 @@ class DictionaryEditor(Editor):
         site.modify_source()
         site.update_json()
 
-    @property
-    def initial_content(self):
+    def initial_content(self, entry):
         """
-        Insert the appropriate template for a new entry, and move the insertion pointer to allow for immediate input of the pronunciation.
-        :precondition: The name of the entry, and its language, are already selected.
+        Return the content to be placed in a textbox if the page is new
         """
-        name = self.heading.get()
+        name = entry.name
         trans = self.translator
         before = ('1]{0}\n[2]{1}\n').format(name, trans.name)
         before += '' if self.language.get() == 'en' else '[3]{0}\n'.format(trans.convert_word(name))
         before += '[4][p {0}]/'.format(trans.code)
         after = '/[/p]\n[5]\n'
-        self.insert_characters(self.textboxes[0], before, after)
-        self.textboxes[0].focus_set()
+        return before + after
 
     @property
     def heading_commands(self):
