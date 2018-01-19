@@ -59,7 +59,7 @@ class Editor(Tk.Frame, object):
         self.configure_widgets()
         self.place_widgets()
         self.top.state('zoomed')
-        self.entry.content = self.initial_content(self.entry)
+        self.entry.content = self.initial_content()
         self.load()
         self.go_to_heading()
 
@@ -638,6 +638,12 @@ class Editor(Tk.Frame, object):
         self.insert_characters(event.widget, ' | ')
         return 'break'
 
+    def insert_new(self, event):
+        self.entry.content = self.initial_content()
+        self.load()
+        return 'break'
+
+
     def backspace_word(self, event):
         widget = event.widget
         get = widget.get
@@ -768,6 +774,7 @@ class Editor(Tk.Frame, object):
         ('<Control-K>', self.delete_line),
         ('<Control-m>', self.markdown_refresh),
         ('<Control-n>', self.add_link),
+        ('<Control-N>', self.insert_new),
         ('<Control-o>', self.site_open),
         ('<Control-s>', self.save),
         ('<Control-Up>', self.move_line_up),
@@ -779,10 +786,12 @@ class Editor(Tk.Frame, object):
         ('<Shift-Tab>', self.previous_window),
         ('<KeyPress-|>', self.insert_pipe)]
 
-    def initial_content(self, entry):
+    def initial_content(self, entry=None):
         """
         Return the content to be placed in a textbox if the page is new
         """
+        if entry is None:
+            entry = self.entry
         name = entry.name
         return '1]{0}\n'.format(name)
 

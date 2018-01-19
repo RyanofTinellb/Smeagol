@@ -128,10 +128,12 @@ class DictionaryEditor(Editor):
         site.modify_source()
         site.update_json()
 
-    def initial_content(self, entry):
+    def initial_content(self, entry=None):
         """
         Return the content to be placed in a textbox if the page is new
         """
+        if entry is None:
+            entry = self.entry
         name = entry.name
         trans = self.translator
         before = ('1]{0}\n[2]{1}\n').format(name, trans.name)
