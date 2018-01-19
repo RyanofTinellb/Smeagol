@@ -30,7 +30,7 @@ class Editor(Tk.Frame, object):
         self.master.title('Page Editor')
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.properties = properties or EditorProperties()
-        self.widgets = widgets or WidgetAmounts(headings=5, textboxes=1, radios='languages')
+        self.widgets = widgets or WidgetAmounts(headings=2, textboxes=1, radios='languages')
         self.font = font or ('Consolas', '14')
 
         self.buttonframe = Tk.Frame(self)
@@ -140,8 +140,9 @@ class Editor(Tk.Frame, object):
     def add_heading(self, event=None):
         if len(self.headings) < 10:
             heading = Tk.Entry(self.headingframe)
-            for (key, command) in self.heading_commands:
-                heading.bind(key, command)
+            for (keys, command) in self.heading_commands:
+                for key in keys:
+                    heading.bind(key, command)
             heading.grid(column=0, columnspan=2, sticky=Tk.N)
             self.headings.append(heading)
         return 'break'
@@ -277,7 +278,8 @@ class Editor(Tk.Frame, object):
             traversed.
         """
         heading = event.widget
-        level = self.headings.index(heading) + self.root.level + 1
+        actual_level = self.headings.index(heading)
+        level = actual_level + self.root.level + 1
         direction = 1 if event.keysym == 'Next' else -1
         child = True
         # ascend hierarchy until correct level
@@ -299,6 +301,10 @@ class Editor(Tk.Frame, object):
                 break
         for heading_ in self.headings[level - self.root.level - 1:]:
             heading_.delete(0, Tk.END)
+        while len(self.headings) > actual_level + 2:
+            self.remove_heading()
+        while len(self.headings) < actual_level + 2 and len(self.headings) < 10:
+            self.add_heading()
         if child:
             heading.insert(Tk.INSERT, self.entry.name)
             self.master.title('Editing ' + self.entry.name)
