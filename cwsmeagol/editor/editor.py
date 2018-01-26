@@ -9,6 +9,7 @@ import tkFileDialog as fd
 from collections import namedtuple
 from editor_properties import EditorProperties
 from properties_window import PropertiesWindow
+from text_window import TextWindow
 from cwsmeagol.site.smeagol_page import Page
 from cwsmeagol.utils import *
 from cwsmeagol.translation import Translator
@@ -453,8 +454,12 @@ class Editor(Tk.Frame, object):
 
     def list_pages(self, event=None):
         def text_thing(page):
-            return '-' * page.level + page.name
-        text = ''.join(map(text_thing, self.site))
+            return ' ' * 2 * page.level + page.name
+        text = '\n'.join(map(text_thing, self.site))
+        with conversion(self.markdown, 'to_markdown') as converter:
+            text = converter(text)
+        textwindow = TextWindow(text)
+        self.wait_window(textwindow)
         return 'break'
 
     def prepare_entry(self, entry):
@@ -734,6 +739,19 @@ class Editor(Tk.Frame, object):
             self.information.set('No Markdown Found')
         return 'break'
 
+    def markdown_check(self, event=None):
+        filename = self.markdown.filename
+        with open(filename) as markdown:
+            original = markdown.read()
+        intermediate = self.markdown.to_markdown(original)
+        translated = self.markdown.to_markup(intermediate)
+        output = ''
+        for o, i, t in zip(*map(lambda x: x.splitlines(), [original, intermediate, translated])):
+            if o != t:
+                output += '{0} {3} {1} {3} {2}\n'.format(o, i, t, '-' * 5)
+        textwindow = TextWindow(output)
+        self.wait_window(textwindow)
+
     def quit(self):
         self.server.shutdown()
         self.master.destroy()
@@ -749,6 +767,7 @@ class Editor(Tk.Frame, object):
                         ('Publish All', self.site_publish)]),
                 ('Markdown', [('Load', self.markdown_load),
                               ('Refresh', self.markdown_refresh),
+                              ('Check', self.markdown_check),
                               ('Open as _Html', self.markdown_open)]
                               )]
 
