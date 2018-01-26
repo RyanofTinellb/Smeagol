@@ -5,10 +5,10 @@ from cwsmeagol.translation import Interlinear
 
 
 class StoryEditor(Editor):
-    def __init__(self, site=None, markdown=None, links=None, master=None):
+    def __init__(self, properties=None, widgets=None, font=None):
         font = ('Californian FB', 16)
         widgets = WidgetAmounts(headings=2, textboxes=4, radios='languages')
-        super(StoryEditor, self).__init__(site, markdown, links, widgets, font)
+        super(StoryEditor, self).__init__(properties, widgets, font)
         self.entry = self.root = self.site.root[0]
         self.paragraphs = self.count = self.current_paragraph = None
 
@@ -27,11 +27,16 @@ class StoryEditor(Editor):
         return texts
 
     def make_paragraphs(self, texts):
-        cousins = map(lambda x: x.splitlines(), texts)     # Str[][]
-        self.count = max(map(len, cousins))      # int
-        self.current_paragraph = abs(min(map(len, cousins)) - 1)    # int >= 0
-        cousins = map(self.add_padding, cousins, len(cousins) * [self.count])     # still Str[][], but now padded
-        self.paragraphs = map(None, *cousins) # str()[] (transposed)
+        if texts:
+            cousins = map(lambda x: x.splitlines(), texts)     # Str[][]
+            self.count = max(map(len, cousins))      # int
+            self.current_paragraph = abs(min(map(len, cousins)) - 1)    # int >= 0
+            cousins = map(self.add_padding, cousins, len(cousins) * [self.count])     # still Str[][], but now padded
+            self.paragraphs = map(None, *cousins) # str()[] (transposed)
+        else:
+            self.count = 0
+            self.current_paragraph = 0
+            self.paragraphs = [('',), ('',)]
 
     def add_padding(self, text, length):
             return text + (length - len(text)) * ['']

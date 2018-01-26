@@ -1,5 +1,6 @@
 import SimpleHTTPServer
 import SocketServer
+from socket import error as socket_error
 import threading
 import os
 import webbrowser as web
@@ -46,6 +47,7 @@ class Editor(Tk.Frame, object):
         self.save_button = None
         self.label = None
         self.server = None
+        self.PORT = 41809
         self.start_server()
         self.save_text = Tk.StringVar()
         self.save_text.set('Save')
@@ -362,9 +364,13 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def start_server(self):
-        self.PORT = 41809
         Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-        self.server = SocketServer.TCPServer(("", self.PORT), Handler)
+        while True:
+            try:
+                self.server = SocketServer.TCPServer(("", self.PORT), Handler)
+                break
+            except socket_error:
+                self.PORT += 1
         self.thread = threading.Thread(target=self.server.serve_forever)
         self.thread.start()
 
@@ -450,7 +456,6 @@ class Editor(Tk.Frame, object):
             return '-' * page.level + page.name
         text = ''.join(map(text_thing, self.site))
         return 'break'
-
 
     def prepare_entry(self, entry):
         """

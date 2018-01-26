@@ -44,7 +44,7 @@ class ExternalDictionary:
         self.language = entry.ancestors[1].urlform
         return re.sub(r'<{0}>(.*?)</{0}>'.format('link'), self._link, text)
 
-    def _link(matchobj):
+    def _link(self, matchobj):
         word = matchobj.group(1)
         link = urlform(word)
         initial = re.findall(r'\w', link)[0]

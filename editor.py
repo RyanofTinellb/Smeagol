@@ -17,6 +17,6 @@ while True:
         from cwsmeagol.editor.dictionary_editor import DictionaryEditor as Editor
         break
     elif choice == 3:
-        from cwsmeagol.editor.site_editor import StoryEditor as Editor
+        from cwsmeagol.editor.story_editor import StoryEditor as Editor
         break
 Editor().mainloop()
