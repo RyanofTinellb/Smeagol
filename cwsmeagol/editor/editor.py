@@ -450,6 +450,7 @@ class Editor(Tk.Frame, object):
                     self.new_page = True
             else:
                 break
+        self.master.title('Editing ' + self.entry.name)
         return entry
 
     def list_pages(self, event=None):

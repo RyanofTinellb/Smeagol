@@ -16,6 +16,7 @@ class DictionaryEditor(Editor):
         self.page = None
 
         super(DictionaryEditor, self).__init__(properties, widgets, font)
+        self.master.title('Editing Dictionary')
 
 
     def scroll_headings(self, event):
@@ -98,6 +99,7 @@ class DictionaryEditor(Editor):
             entry = Page(heading, site[initial], '').insert()
             entry.content = self.initial_content(entry)
         self.keep_history(heading)
+        self.master.title('Editing Dictionary: ' + self.entry.name)
         return entry
 
     def prepare_texts(self, texts):
