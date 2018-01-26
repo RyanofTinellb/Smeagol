@@ -295,11 +295,7 @@ class Page(Node):
         """
         :return (str):
         """
-        output = '''<ul>
-                  <li class="link"><a href="http://www.tinellb.com">&uarr; Main Page</a></li>
-                  <li class="link">$out$</li>
-                </ul>
-                <ul><li{0}>{1}</li>
+        output = '''<ul><li{0}>{1}</li>
                   <form id="search">
                     <li class="search">
                       <input type="text" name="term"></input> <button type="submit">Search</button>
@@ -308,10 +304,6 @@ class Page(Node):
                 $links$
                 </ul>'''.format(' class="normal"' if self == self.root else '',
                                 self.hyperlink(self.root))
-        for item, link in ( ['Grammar', 'grammar'],
-                            ['Dictionary', 'dictionary']):
-            if item != self.root.name:
-                output = output.replace('$out$', '<a href="http://{0}.tinellb.com">{1} &rarr;</a>'.format(link, item), 1)
         return output
 
     @property
@@ -374,7 +366,7 @@ class Page(Node):
         try:
             output = div.format(self.hyperlink(self.previous, '&larr; Previous page'))
         except IndexError:
-            output = div.format('<a href="http://www.tinellb.com">&uarr; Go to Main Page')
+            output = div.format('<a href="http://www.tinellb.com">&uarr; Go to Main Page</a>')
         try:
             output += div.format(self.hyperlink(self.next_node, 'Next page &rarr;'))
         except IndexError:
