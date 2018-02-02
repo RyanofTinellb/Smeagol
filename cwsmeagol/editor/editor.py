@@ -440,6 +440,32 @@ class Editor(Tk.Frame, object):
         self.save_text.set('Save')
         return 'break'
 
+    def add_translation(self, event=None):
+        """
+        Insert a transliteration of the selected text in the current language.
+        Do sentence conversion if there is a period in the text, and word conversion otherwise.
+        Insert an additional linebreak if the selection ends with a linebreak.
+        """
+        try:
+            text = self.textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
+        except Tk.TclError:
+            text = self.textbox.get(Tk.INSERT + ' wordstart', Tk.INSERT + ' wordend')
+        with conversion(self.markdown, 'to_markup') as converter:
+            text = converter(text)
+        converter = self.translator.convert_sentence if '.' in text else self.translator.convert_word
+        text = converter(text)
+        with conversion(self.markdown, 'to_markdown') as converter:
+            text = converter(text)
+        try:
+            text += '\n' if self.textbox.compare(Tk.SEL_LAST, '==', Tk.SEL_LAST + ' lineend') else ' '
+            self.textbox.insert(Tk.SEL_LAST + '+1c', text)
+        except Tk.TclError:
+            text += ' '
+            self.textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
+            self.textbox.insert(Tk.INSERT + '+1c', text)
+        self.textbox.mark_set(Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + 1)))
+        return 'break'
+
     def find_entry(self, headings):
         """
         Find the current entry based on what is in the heading boxes.
@@ -812,6 +838,7 @@ class Editor(Tk.Frame, object):
         ('<Control-N>', self.insert_new),
         ('<Control-o>', self.site_open),
         ('<Control-s>', self.save),
+        ('<Control-t>', self.add_translation),
         ('<Control-Up>', self.move_line_up),
         ('<Control-Down>', self.move_line_down),
         ('<Control-BackSpace>', self.backspace_word),

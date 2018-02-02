@@ -60,28 +60,6 @@ class DictionaryEditor(Editor):
         self.insert_characters(widget, m('<div class="definition">'), m('</div>'))
         return 'break'
 
-    def add_translation(self, event=None):
-        """
-        Insert a transliteration of the selected text in the current language.
-        Do sentence conversion if there is a period in the text, and word conversion otherwise.
-        Insert an additional linebreak if the selection ends with a linebreak.
-        """
-        try:
-            text = self.textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
-        except Tk.TclError:
-            text = self.textbox.get(Tk.INSERT + ' wordstart', Tk.INSERT + ' wordend')
-        converter = self.translator.convert_sentence if '.' in text else self.translator.convert_word
-        text = converter(text)
-        try:
-            text += '\n' if self.textbox.compare(Tk.SEL_LAST, '==', Tk.SEL_LAST + ' lineend') else ' '
-            self.textbox.insert(Tk.SEL_LAST + '+1c', text)
-        except Tk.TclError:
-            text += ' '
-            self.textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
-            self.textbox.insert(Tk.INSERT + '+1c', text)
-        self.textbox.mark_set(Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + 1)))
-        return 'break'
-
     def find_entry(self, headings):
         """
         Find the current entry based on what is in the heading boxes.
@@ -157,7 +135,6 @@ class DictionaryEditor(Editor):
         commands = super(DictionaryEditor, self).textbox_commands
         commands += [
         ('<Control-r>', self.refresh_random),
-        ('<Control-t>', self.add_translation),
         ('<Control-=>', self.add_definition),
         ('<Prior>', self.scroll_history),
         ('<Next>', self.scroll_history)]

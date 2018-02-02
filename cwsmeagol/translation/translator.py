@@ -58,10 +58,14 @@ class HighLulani:
         text = text.replace('.(', '(')
 
         # removes markdown tags, hyphens, dollars, parentheses and quote marks
-        text = re.sub("\[(|/)[bik]\]|-|[$()]|'\\\"|\\\"", "", text)
+        text = re.sub("\[(|/)[a-z]\]|-|[$()]|'\\\"|\\\"", "", text)
 
         # removes angle brackets
         text = re.sub(r'[<>]', '', text)
+
+        # replaces unicode
+        text = text.replace('&rsquo;', "'")
+        text = text.replace('&#294;', "''")
 
         # replaces "upper case" glottal stop with "lower case" apostrophe
         text = re.sub("(\"| |^)''", r"\1'", text)
@@ -96,10 +100,10 @@ class HighLulani:
 
     def convert_sentence(self, text):
         if text == '* **':
-            return '[hl]* **[/hl]'.format(text)
-        output = '[hl].{0}.[/hl]'.format(self.convert_text(text))
+            return '<high-lulani>* **</high-lulani>'.format(text)
+        output = '<high-lulani>.{0}.</high-lulani>'.format(self.convert_text(text))
         return output
 
     def convert_word(self, text):
-        output = r'[hl]\({0}\)[/hl]'.format(self.convert_text(text))
+        output = '<high-lulani>{0}</high-lulani>'.format(self.convert_text(text))
         return output
