@@ -1,4 +1,5 @@
 import os
+from cwsmeagol.defaults import default
 
 class Markdown:
     def __init__(self, filename=None):
@@ -7,8 +8,6 @@ class Markdown:
         :param filename (String): the path to the replacements file
         :raise IOError: filename does not exist
         """
-        if filename is None:
-            filename = os.path.join(os.path.dirname(__file__), 'markdown.mkd')
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None
@@ -16,9 +15,15 @@ class Markdown:
         if filename:
             with open(filename) as replacements:
                 for line in replacements:
-                    line = line.split(" ")
-                    self.markup.append(line[0])
-                    self.markdown.append(line[1])
+                    self.append_markdown(line)
+        else:
+            for line in default.markdown.splitlines():
+                self.append_markdown(line)
+
+    def append_markdown(self, line):
+        line = line.split(" ")
+        self.markup.append(line[0])
+        self.markdown.append(line[1])
 
     def to_markup(self, text):
         self.source, self.destination = self.markdown[::-1], self.markup[::-1]

@@ -7,6 +7,7 @@ from addremovelinks import AddRemoveLinks
 from cwsmeagol.site.smeagol_site import Site
 from cwsmeagol.translation import *
 from cwsmeagol.utils import ignored
+from cwsmeagol.defaults import default
 import tkFileDialog as fd
 import tkSimpleDialog as sd
 
@@ -36,10 +37,11 @@ class EditorProperties():
         self.create_linkadder()
 
     def setup_template(self, template):
-        template = template or os.path.join(os.path.dirname(__file__),
-                                                'editor_properties.json')
-        with open(template) as template:
-            self.template = json.load(template)
+        if template:
+            with open(template) as template:
+                self.template = json.load(template)
+        else:
+            self.template = json.loads(default.properties)
 
     def setup_config(self, config=None):
         self.config_filename = config or self.config_filename or self.fallback
@@ -47,8 +49,7 @@ class EditorProperties():
             with open(self.config_filename) as config:
                 self.config = json.load(config)
         except IOError:
-            with open(self.default_config) as config:
-                self.config = json.load(config)
+            self.config = json.loads(default.config)
 
     @property
     def fallback(self):
@@ -60,10 +61,6 @@ class EditorProperties():
                 return iniload.readlines()[0]
         except IOError:
             return ''
-
-    @property
-    def default_config(self):
-        return os.path.join(os.path.dirname(__file__), 'editor_properties.smg')
 
     @property
     def files(self):

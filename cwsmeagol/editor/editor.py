@@ -767,7 +767,7 @@ class Editor(Tk.Frame, object):
             texts = map(self.markdown.to_markup, texts)
             self.markdown.refresh()
             texts = map(self.markdown.to_markdown, texts)
-            for text, textbox in texts, self.textboxes:
+            for text, textbox in zip(texts, self.textboxes):
                 textbox.delete(1.0, Tk.END)
                 textbox.insert(1.0, text)
             self.information.set('Markdown Refreshed!')
