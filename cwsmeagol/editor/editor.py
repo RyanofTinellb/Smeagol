@@ -31,7 +31,7 @@ class Editor(Tk.Frame, object):
         super(Editor, self).__init__(None)
         self.master.title('Page Editor')
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
-        self.properties = properties or EditorProperties()
+        self.properties = properties or EditorProperties(caller=self.caller)
         self.widgets = widgets or WidgetAmounts(headings=2, textboxes=1, radios='languages')
         self.font = font or ('Consolas', '14')
 
@@ -62,9 +62,13 @@ class Editor(Tk.Frame, object):
         self.configure_widgets()
         self.place_widgets()
         self.top.state('zoomed')
-        self.entry.content = self.initial_content()
+        self.entry.content = self.entry.content or self.initial_content()
         self.load()
         self.go_to_heading()
+
+    @property
+    def caller(self):
+        return 'site'
 
     @property
     def site(self):
@@ -755,6 +759,7 @@ class Editor(Tk.Frame, object):
 
     def quit(self):
         self.server.shutdown()
+        self.site_save()
         self.master.destroy()
 
     @property

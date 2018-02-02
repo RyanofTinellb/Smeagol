@@ -10,14 +10,16 @@ class DictionaryEditor(Editor):
         font = ('Courier New', '15')
         widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
         # initialise instance variables
-        self.entry = ''
+        self.entry = None
         self.history = []
         self.current = -1
-        self.page = None
 
         super(DictionaryEditor, self).__init__(properties, widgets, font)
         self.master.title('Editing Dictionary')
 
+    @property
+    def caller(self):
+        return 'dictionary'
 
     def scroll_headings(self, event):
         if event.keysym == 'Prior':

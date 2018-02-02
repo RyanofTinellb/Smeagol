@@ -6,6 +6,7 @@ from smeagol_files import Files
 from addremovelinks import AddRemoveLinks
 from cwsmeagol.site.smeagol_site import Site
 from cwsmeagol.translation import *
+from cwsmeagol.utils import ignored
 import tkFileDialog as fd
 import tkSimpleDialog as sd
 
@@ -24,7 +25,9 @@ class EditorProperties():
         self.randomwords - a RandomWords object
         self.linkadder - a AddRemoveLinks object
     """
-    def __init__(self, config=None, template=None):
+
+    def __init__(self, config=None, template=None, caller=None):
+        self.caller = caller
         self.setup_template(template)
         self.config_filename = config
         self.setup_config()
@@ -39,10 +42,28 @@ class EditorProperties():
             self.template = json.load(template)
 
     def setup_config(self, config=None):
-        config_filename = config or self.config_filename or (
-            os.path.join(os.path.dirname(__file__), 'editor_properties.smg'))
-        with open(config_filename) as config:
-            self.config = json.load(config)
+        self.config_filename = config or self.config_filename or self.fallback
+        try:
+            with open(self.config_filename) as config:
+                self.config = json.load(config)
+        except IOError:
+            with open(self.default_config) as config:
+                self.config = json.load(config)
+
+    @property
+    def fallback(self):
+        folder = os.getenv('LOCALAPPDATA')
+        inifolder = os.path.join(folder, 'smeagol')
+        inifile = os.path.join(inifolder, self.caller + '.ini')
+        try:
+            with open(inifile) as iniload:
+                return iniload.readlines()[0]
+        except IOError:
+            return ''
+
+    @property
+    def default_config(self):
+        return os.path.join(os.path.dirname(__file__), 'editor_properties.smg')
 
     @property
     def files(self):
@@ -68,16 +89,25 @@ class EditorProperties():
     def save(self, filename=None):
         self.config_filename = filename or self.config_filename
         if self.config_filename:
-            with open(self.config_filename, 'w') as config:
-                json.dump(self.config, config, indent=2)
-        else:
-            self.saveas()
+            with ignored(IOError):
+                with open(self.config_filename, 'w') as config:
+                    json.dump(self.config, config, indent=2)
+                folder = os.getenv('LOCALAPPDATA')
+                inifolder = os.path.join(folder, 'smeagol')
+                inifile = os.path.join(inifolder, self.caller + '.ini')
+                with ignored(os.error): # folder already exists
+                    os.makedirs(inifolder)
+                with open(inifile, 'w') as inisave:
+                    inisave.write(self.config_filename)
+                return # successful save
+        self.saveas() # unsuccessful save
 
     def saveas(self):
         filetypes = [('Sm\xe9agol File', '*.smg')]
         title = 'Save Site'
-        filename = re.sub(r'(\.smg)?$', r'.smg', fd.asksaveasfilename(filetypes=filetypes, title=title))
+        filename = fd.asksaveasfilename(filetypes=filetypes, title=title)
         if filename:
+            filename = re.sub(r'(\.smg)?$', r'.smg', filename)
             self.config_filename = filename
             self.save()
 
