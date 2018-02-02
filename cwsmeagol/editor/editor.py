@@ -392,6 +392,7 @@ class Editor(Tk.Frame, object):
         """
         self.entry = self.site.root
         self.clear_interface()
+        self.load()
 
     def clear_interface(self):
         for heading in self.headings:
