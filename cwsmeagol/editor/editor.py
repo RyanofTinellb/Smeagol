@@ -369,10 +369,14 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def start_server(self):
-        Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+        handler = SimpleHTTPServer.SimpleHTTPRequestHandler
         while True:
             try:
-                self.server = SocketServer.TCPServer(("", self.PORT), Handler)
+                self.server = SocketServer.TCPServer(("", self.PORT), handler)
+                handler.error_message_format = '''
+                        <script>
+                            window.location.replace('404.html');
+                        </script>'''
                 break
             except socket_error:
                 self.PORT += 1
