@@ -1,5 +1,9 @@
 class default:
     markdown = '''<!DOCTYPE text/html>
+( &lparen; <br>
+) &rparen; <br>
+_ &under; <br>
+' &squot; <br>
 &aacute; (a <br>
 &eacute; (e <br>
 &iacute; (i <br>
@@ -20,16 +24,20 @@ class default:
 &iuml; :i <br>
 &ouml; :o <br>
 &uuml; :u <br>
+&#x323; :d <!--underdot--> <br>
 &#x101; _a <!--a macron--> <br>
 &#x113; _e <!--e macron--> <br>
 &#x12b; _i <!--i macron--> <br>
 &#x14d; _o <!--o macron--> <br>
 &#x16b; _u <!--u macron--> <br>
+&#x157; ,r <!-- r cedilla--> <br>
 &rsquo; ' <br>
 &#x294; '' <!--glottal stop--> <br>
-&#x323; :d <!--underdot--> <br>
-&#x157; ,r <!-- r cedilla--> <br>
-&middot; . <br>
+&middot; (.) <br>
+&lparen; \( <br>
+&rparen; )/ <br>
+&under; \\_ <br>
+&squot; \\' <br>
 '''
 
     config = '''

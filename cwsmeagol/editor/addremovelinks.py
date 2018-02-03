@@ -31,7 +31,7 @@ class ExternalDictionary:
     """
     def __init__(self, url):
         self.url = url
-        self.language = None
+        self.language = ''
 
     def add_links(self, text, entry):
         """
@@ -41,14 +41,16 @@ class ExternalDictionary:
             'foo<a href="url/b/bar.html#language">bar</a>baz'
 
         """
-        self.language = entry.ancestors[1].urlform
+        self.language = ''
+        with ignored(IndexError):
+            self.language = entry.ancestors[1].urlform
         return re.sub(r'<{0}>(.*?)</{0}>'.format('link'), self._link, text)
 
     def _link(self, matchobj):
         word = matchobj.group(1)
         link = urlform(word)
         initial = re.findall(r'\w', link)[0]
-        return '<a href="{0}/{1}/{2}.html#{3}">{4}</a>'.format(
+        return '<a href="{0}/{1}/{2}.html{3}">{4}</a>'.format(
                 self.url, initial, link, self.language, word)
 
     def remove_links(self, text):
