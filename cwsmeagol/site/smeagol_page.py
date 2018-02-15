@@ -7,6 +7,7 @@ from flatname import FlatName
 from smeagol_node import Node
 from cwsmeagol.translation import *
 from cwsmeagol.utils import *
+from cwsmeagol.defaults import default
 
 class Page(Node):
     """
@@ -393,7 +394,7 @@ class Page(Node):
             page = template.template
         except AttributeError:
             # template is a string or None
-            page = template or self.default_template
+            page = template or default.template
         for (section, function) in [
             ('{title}', 'title'),
             ('{stylesheet}', 'stylesheet_and_icon'),
@@ -454,21 +455,3 @@ class Page(Node):
                 except KeyError:
                     wordlist[word] = [number]
         return Analysis(wordlist, lines)
-
-    @property
-    def default_template(self):
-        return """<!DOCTYPE html>
-        <html>
-          <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <meta charset="utf-8">
-            <title>
-              {category-title}
-            </title>
-          </head>
-          <body>
-            {family-links}
-              {nav-footer}
-              {content}
-              {nav-footer}
-              {copyright}"""

@@ -770,9 +770,9 @@ class Editor(Tk.Frame, object):
             for text, textbox in zip(texts, self.textboxes):
                 textbox.delete(1.0, Tk.END)
                 textbox.insert(1.0, text)
-            self.information.set('Markdown Refreshed!')
+            self.information.set('OK')
         except AttributeError:
-            self.information.set('No Markdown Found')
+            self.information.set('Not OK')
         return 'break'
 
     def markdown_check(self, event=None):

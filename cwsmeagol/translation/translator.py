@@ -60,8 +60,8 @@ class HighLulani:
         # removes markdown tags, hyphens, dollars, parentheses and quote marks
         text = re.sub("\[(|/)[a-z]\]|-|[$()]|'\\\"|\\\"", "", text)
 
-        # removes angle brackets
-        text = re.sub(r'[<>]', '', text)
+        # removes angle brackets and information between them
+        text = re.sub(r'<.*?>', '', text)
 
         # replaces unicode
         text = text.replace('&rsquo;', "'")

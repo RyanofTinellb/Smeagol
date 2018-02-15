@@ -1,4 +1,5 @@
 from cwsmeagol.translation import Markdown
+from cwsmeagol.defaults import default
 
 class Files:
     def __init__(self, source='', template='', searchjson=''):
@@ -7,9 +8,9 @@ class Files:
         """
         self.source = source
         self.template_file = template
-        if template:
+        try:
             with open(self.template_file) as template:
                 self.template = template.read()
-        else:
+        except IOError:
             self.template = None
         self.searchjson = searchjson
