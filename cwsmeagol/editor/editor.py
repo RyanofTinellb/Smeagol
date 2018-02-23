@@ -54,7 +54,7 @@ class Editor(Tk.Frame, object):
         self.save_text.set('Save')
         self.language = Tk.StringVar()
         self.translator = Translator()
-        self.markdown = Markdown('')
+        self.markdown = Markdown(self.properties.markdown)
 
         self.entry = self.site.root
         self.top = self.winfo_toplevel()
@@ -419,6 +419,8 @@ class Editor(Tk.Frame, object):
         self.go_to_heading()
 
     def site_save(self, event=None):
+        current_page = [heading.get() for heading in self.headings]
+        self.properties.update_current_page(current_page)
         self.properties.save()
         return 'break'
 
@@ -766,6 +768,7 @@ class Editor(Tk.Frame, object):
                 texts = map(self.get_text, self.textboxes)
                 texts = map(self.markdown.to_markup, texts)
                 self.markdown = Markdown(filename)
+                self.properties.update_markdown(filename)
                 texts = map(self.markdown.to_markdown, texts)
                 for text, textbox in zip(texts, self.textboxes):
                     textbox.delete(1.0, Tk.END)

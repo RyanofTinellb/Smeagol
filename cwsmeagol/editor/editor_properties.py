@@ -115,6 +115,13 @@ class EditorProperties():
     def current_page(self):
         return self.config['current page']
 
+    def update_markdown(self, markdown):
+        self.config['markdown'] = markdown
+
+    @property
+    def markdown(self):
+        return self.config['markdown']
+
     def collate_files(self):
         """
         Create a File object from the config info
