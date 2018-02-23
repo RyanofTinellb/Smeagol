@@ -19,9 +19,9 @@ class Markdown:
             with open(filename) as replacements:
                 for line in replacements:
                     self.append_markdown(line)
-                else:
-                    for line in default.markdown.splitlines():
-                        self.append_markdown(line)
+        else:
+            for line in default.markdown.splitlines():
+                self.append_markdown(line)
 
     def append_markdown(self, line):
         line = line.split(' | ')
