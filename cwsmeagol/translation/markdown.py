@@ -21,9 +21,12 @@ class Markdown:
                 self.append_markdown(line)
 
     def append_markdown(self, line):
-        line = line.split(" ")
-        self.markup.append(line[0])
-        self.markdown.append(line[1])
+        line = line.split(' | ')
+        try:
+            self.markdown.append(line[1])
+            self.markup.append(line[0])
+        except IndexError:
+            pass
 
     def to_markup(self, text):
         self.source, self.destination = self.markdown[::-1], self.markup[::-1]

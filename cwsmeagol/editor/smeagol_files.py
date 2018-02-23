@@ -1,4 +1,3 @@
-from cwsmeagol.translation import Markdown
 from cwsmeagol.defaults import default
 
 class Files:

@@ -25,8 +25,10 @@ def conversion(converter, function):
     except AttributeError:
         yield lambda x: x
 
+url_markdown = Markdown()
+
 def urlform(text, markdown=None):
-    markdown = markdown or Markdown()
+    markdown = markdown or url_markdown
     name = text.lower()
     safe_punctuation = '\'.$_+!(),'
     # remove safe punctuations that should only be used to encode non-ascii characters
