@@ -108,6 +108,13 @@ class EditorProperties():
             self.config_filename = filename
             self.save()
 
+    def update_current_page(self, page):
+        self.config['current page'] = page
+
+    @property
+    def current_page(self):
+        return self.config['current page']
+
     def collate_files(self):
         """
         Create a File object from the config info

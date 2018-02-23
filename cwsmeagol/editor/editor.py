@@ -55,6 +55,7 @@ class Editor(Tk.Frame, object):
         self.language = Tk.StringVar()
         self.translator = Translator()
         self.markdown = Markdown('')
+
         self.entry = self.site.root
         self.top = self.winfo_toplevel()
 
@@ -63,6 +64,7 @@ class Editor(Tk.Frame, object):
         self.place_widgets()
         self.top.state('zoomed')
         self.entry.content = self.entry.content or self.initial_content()
+        self.fill_headings(self.properties.current_page)
         self.load()
         self.go_to_heading()
 
@@ -285,8 +287,8 @@ class Editor(Tk.Frame, object):
             traversed.
         """
         heading = event.widget
-        actual_level = self.headings.index(heading)
-        level = actual_level + self.root.level + 1
+        actual_level = self.headings.index(heading) + 2
+        level = actual_level + self.root.level - 1
         direction = 1 if event.keysym == 'Next' else -1
         child = True
         # ascend hierarchy until correct level
@@ -308,14 +310,23 @@ class Editor(Tk.Frame, object):
                 break
         for heading_ in self.headings[level - self.root.level - 1:]:
             heading_.delete(0, Tk.END)
-        while len(self.headings) > actual_level + 2:
+        while len(self.headings) > actual_level:
             self.remove_heading()
-        while len(self.headings) < actual_level + 2 and len(self.headings) < 10:
+        while child and len(self.headings) < min(actual_level, 10):
             self.add_heading()
         if child:
             heading.insert(Tk.INSERT, self.entry.name)
             self.master.title('Editing ' + self.entry.name)
         return 'break'
+
+    def fill_headings(self, entries):
+        while len(self.headings) < len(entries):
+            self.add_heading()
+        while len(self.headings) > len(entries):
+            self.remove_heading()
+        for heading, entry in zip(self.headings, entries):
+            heading.delete(0, Tk.END)
+            heading.insert(Tk.INSERT, entry)
 
     def enter_headings(self, event):
         """
@@ -396,6 +407,7 @@ class Editor(Tk.Frame, object):
         """
         self.entry = self.site.root
         self.clear_interface()
+        self.fill_headings(self.properties.current_page)
         self.load()
 
     def clear_interface(self):
@@ -790,6 +802,8 @@ class Editor(Tk.Frame, object):
 
     def quit(self):
         self.server.shutdown()
+        current_page = [heading.get() for heading in self.headings]
+        self.properties.update_current_page(current_page)
         self.site_save()
         self.master.destroy()
 
