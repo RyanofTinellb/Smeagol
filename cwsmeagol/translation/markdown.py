@@ -12,13 +12,16 @@ class Markdown:
         self.source = None
         self.destination = None
         self.filename = filename
+        self.setup(filename)
+
+    def setup(self, filename):
         if filename:
             with open(filename) as replacements:
                 for line in replacements:
                     self.append_markdown(line)
-        else:
-            for line in default.markdown.splitlines():
-                self.append_markdown(line)
+                else:
+                    for line in default.markdown.splitlines():
+                        self.append_markdown(line)
 
     def append_markdown(self, line):
         line = line.split(' | ')
@@ -67,9 +70,4 @@ class Markdown:
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None
-        if self.filename:
-            with open(self.filename) as replacements:
-                for line in replacements:
-                    line = line.split(" ")
-                    self.markup.append(line[0])
-                    self.markdown.append(line[1])
+        self.setup(self.filename)
