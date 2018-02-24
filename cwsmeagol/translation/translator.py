@@ -10,7 +10,7 @@ class Translator:
         try:
             language = language.lower()
             self.converter = languages[language]()
-        except (IndexError, AttributeError):
+        except (IndexError, AttributeError, KeyError):
             self.converter = English()
         self.name = self.converter.name
         self.code = language

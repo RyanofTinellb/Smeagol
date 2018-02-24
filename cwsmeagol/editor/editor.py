@@ -53,7 +53,8 @@ class Editor(Tk.Frame, object):
         self.save_text = Tk.StringVar()
         self.save_text.set('Save')
         self.language = Tk.StringVar()
-        self.translator = Translator()
+        self.language.set(self.properties.current_language)
+        self.translator = Translator(self.language.get())
         self.markdown = Markdown(self.properties.markdown)
 
         self.entry = self.site.root
@@ -66,7 +67,8 @@ class Editor(Tk.Frame, object):
         self.entry.content = self.entry.content or self.initial_content()
         self.fill_headings(self.properties.current_page)
         self.load()
-        self.go_to_heading()
+        self.textboxes[0].mark_set(Tk.INSERT, self.properties.current_position)
+        self.textboxes[0].see(Tk.INSERT)
 
     @property
     def caller(self):
@@ -240,8 +242,6 @@ class Editor(Tk.Frame, object):
             for radio, (code, language) in settings:
                 radio.configure(text=language().name, variable=self.language,
                         value=code, command=self.change_language)
-            self.language.set(self.translator.languages.keys()[0])
-            self.translator = Translator(self.language.get())
 
     def configure_textboxes(self, commands=None):
         if commands:
@@ -778,6 +778,7 @@ class Editor(Tk.Frame, object):
 
     def markdown_refresh(self, event=None):
         try:
+            position = self.textboxes[0].index(Tk.INSERT)
             texts = map(self.get_text, self.textboxes)
             texts = map(self.markdown.to_markup, texts)
             self.markdown.refresh()
@@ -785,6 +786,9 @@ class Editor(Tk.Frame, object):
             for text, textbox in zip(texts, self.textboxes):
                 textbox.delete(1.0, Tk.END)
                 textbox.insert(1.0, text)
+            self.textboxes[0].mark_set(Tk.INSERT, position)
+            self.textboxes[0].mark_set(Tk.CURRENT, position)
+            self.textboxes[0].see(Tk.INSERT)
             self.information.set('OK')
         except AttributeError:
             self.information.set('Not OK')
@@ -807,6 +811,8 @@ class Editor(Tk.Frame, object):
         self.server.shutdown()
         current_page = [heading.get() for heading in self.headings]
         self.properties.update_current_page(current_page)
+        self.properties.update_current_language(self.language.get())
+        self.properties.update_current_position(self.textboxes[0].index(Tk.INSERT))
         self.site_save()
         self.master.destroy()
 

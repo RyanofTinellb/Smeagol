@@ -113,14 +113,29 @@ class EditorProperties():
 
     @property
     def current_page(self):
-        return self.config['current page']
+        return self.config.get('current page', [''])
+
+    def update_current_language(self, language):
+        self.config['current language'] = language
+
+    @property
+    def current_language(self):
+        return self.config.get('current language', '')
+
+    def update_current_position(self, position):
+        self.config['current position'] = position
+
+    @property
+    def current_position(self):
+        return self.config.get('current position', '0.0')
+
 
     def update_markdown(self, markdown):
         self.config['markdown'] = markdown
 
     @property
     def markdown(self):
-        return self.config['markdown']
+        return self.config.get('markdown', '')
 
     def collate_files(self):
         """
