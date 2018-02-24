@@ -466,8 +466,11 @@ class Editor(Tk.Frame, object):
             text = self.textbox.get(Tk.INSERT + ' wordstart', Tk.INSERT + ' wordend')
         with conversion(self.markdown, 'to_markup') as converter:
             text = converter(text)
+        example = re.match(r'\[[ef]\]', text) # line has 'example' formatting
         converter = self.translator.convert_sentence if '.' in text else self.translator.convert_word
         text = converter(text)
+        if example:
+            text = '[e]' + text
         with conversion(self.markdown, 'to_markdown') as converter:
             text = converter(text)
         try:
