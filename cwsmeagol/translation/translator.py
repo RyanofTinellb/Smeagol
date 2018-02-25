@@ -63,10 +63,11 @@ class HighLulani:
         # removes angle brackets and information between them
         text = re.sub(r'<.*?>', '', text)
 
+
         # replaces unicode
         text = text.replace('&rsquo;', "'")
-        text = text.replace('&#294;', "''")
-
+        text = text.replace('&#x294;', "''")
+        
         # replaces "upper case" glottal stop with "lower case" apostrophe
         text = re.sub("(\"| |^)''", r"\1'", text)
         text = text.lower()
