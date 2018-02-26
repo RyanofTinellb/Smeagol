@@ -170,6 +170,19 @@ _ | &under; | <br>
         }
       },
       {
+        "name": "Glossing Abbreviation Tooltips",
+        "property": "Glossary",
+        "owner": "links",
+        "check": true,
+        "textbox": true,
+        "vartype": "string",
+        "browse": {
+          "text": "Glossary File",
+          "action": "open",
+          "extension": "*.gls"
+        }
+      },
+      {
         "name": "Links to an external Dictionary",
         "property": "ExternalDictionary",
         "owner": "links",

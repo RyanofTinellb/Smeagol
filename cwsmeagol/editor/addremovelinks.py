@@ -22,6 +22,31 @@ class AddRemoveLinks:
             text = link_adder.remove_links(text)
         return text
 
+class Glossary:
+    def __init__(self, filename):
+        try:
+            with open(filename) as glossary:
+                self.glossary = json.load(glossary)
+        except IOError:
+            self.glossary = {}
+        self.tooltip = ('<span class="tooltip">'
+                        '<small-caps>{0}</small-caps>'
+                        '<span class="tooltip-text">{1}</span>'
+                        '</span>')
+
+    def add_links(self, text, entry):
+        for abbrev, full_form in self.glossary.iteritems():
+            text = text.replace('<small-caps>{0}</small-caps>'.format(abbrev),
+                                    self.tooltip.format(abbrev, full_form))
+        return text
+
+    def remove_links(self, text):
+        for abbrev, full_form in self.glossary.iteritems():
+            text = text.replace(self.tooltip.format(abbrev, full_form),
+                                '<small-caps>{0}</small-caps>'.format(abbrev))
+        return text
+
+
 class ExternalDictionary:
     """
     Move between markdown links and links to an external dictionary site
