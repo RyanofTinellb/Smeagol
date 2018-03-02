@@ -246,6 +246,7 @@ class Page(Node):
                     try:
                         line = mode.replacements[category] + text
                     except KeyError: # something's gone wrong
+                        print(self.content)
                         raise KeyError('{0}]{1}. Please check source file'.format(category, line))
                     if not mode.table():
                         line = line.replace('</tr><tr><td>', '<' + mode.delimiter + '>')

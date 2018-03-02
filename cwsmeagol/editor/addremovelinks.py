@@ -193,7 +193,7 @@ class ExternalGrammar:
                 self.language = line[len(lang):]
             elif line.startswith(wcs):
                 try:
-                    pos, rest = line[len(wcs):].split(div, 1)
+                    pos, rest = line[len(wcs):].split(div, 1) # part of speech
                 except ValueError:
                     pos, rest = line[len(wcs):], ''
                 line = wcs + ' '.join(map(self._link, pos.split(' '))) + div + rest

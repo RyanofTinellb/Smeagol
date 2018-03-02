@@ -386,7 +386,7 @@ class Editor(Tk.Frame, object):
                 self.server = SocketServer.TCPServer(("", self.PORT), handler)
                 handler.error_message_format = '''
                         <script>
-                            window.location.replace('404.html');
+                            window.location.replace('/404.html');
                         </script>'''
                 break
             except socket_error:

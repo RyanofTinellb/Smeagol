@@ -129,7 +129,6 @@ class EditorProperties():
     def current_position(self):
         return self.config.get('current position', '0.0')
 
-
     def update_markdown(self, markdown):
         self.config['markdown'] = markdown
 
