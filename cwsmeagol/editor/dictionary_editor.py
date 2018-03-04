@@ -14,7 +14,7 @@ class DictionaryEditor(Editor):
         self.history = []
         self.current = -1
 
-        super(DictionaryEditor, self).__init__(properties, widgets, font)
+        super(DictionaryEditor, self).__init__(properties, widgets, font, master)
         self.master.title('Editing Dictionary')
 
     @property

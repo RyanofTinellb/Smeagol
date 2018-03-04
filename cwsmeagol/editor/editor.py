@@ -3,6 +3,7 @@ import SocketServer
 from socket import error as socket_error
 import threading
 import os
+import random
 import webbrowser as web
 import Tkinter as Tk
 import tkFileDialog as fd
@@ -19,16 +20,16 @@ WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
 
 class Editor(Tk.Frame, object):
     """
-    Base class for DictionaryEditor and StoryEditor
+    Base class for DictionaryEditor and TranslationEditor
     """
-    def __init__(self, properties=None, widgets=None, font=None):
+    def __init__(self, properties=None, widgets=None, font=None, master=None):
         """
         Initialise an instance of the Editor class.
         :param directory (str):
         :param widgets (WidgetAmounts): number of each of headings, textboxes,
             radiobuttons to create.
         """
-        super(Editor, self).__init__(None)
+        super(Editor, self).__init__(master)
         self.master.title('Page Editor')
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.properties = properties or EditorProperties(caller=self.caller)
@@ -73,6 +74,15 @@ class Editor(Tk.Frame, object):
     @property
     def caller(self):
         return 'site'
+
+    @property
+    def colour(self):
+        colours = {
+            'site': 'green',
+            'dictionary': 'yellow',
+            'translation': 'white'
+        }
+        return colours[self.caller]
 
     @property
     def site(self):
@@ -246,7 +256,7 @@ class Editor(Tk.Frame, object):
     def configure_textboxes(self, commands=None):
         if commands:
             for textbox in self.textboxes:
-                textbox.config(bg='black', fg='green', insertbackground='white')
+                textbox.config(bg='black', fg=self.colour, insertbackground='white')
                 for (key, command) in commands:
                     textbox.bind(key, command)
 
@@ -885,4 +895,4 @@ class Editor(Tk.Frame, object):
 
 
 if __name__ == '__main__':
-    Editor().mainloop()
+    e = Editor()
