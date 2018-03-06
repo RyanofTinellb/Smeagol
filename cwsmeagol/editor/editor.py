@@ -769,6 +769,20 @@ class Editor(Tk.Frame, object):
         textbox.mark_set(Tk.INSERT, Tk.INSERT + ' lineend +1c')
         return 'break'
 
+    def change_fontsize(self, event):
+        face, size = self.font
+        sign = 1 if event.delta > 0 else -1
+        size = str(int(size) + sign)
+        self.font = (face, size)
+        for textbox in self.textboxes:
+            textbox.config(font=self.font)
+        return 'break'
+
+    def scroll_textbox(self, event):
+        for textbox in self.textboxes:
+            textbox.yview_scroll(-1*(event.delta/20), Tk.UNITS)
+        return 'break'
+
     def markdown_open(self, event=None):
         web.open_new_tab(self.markdown.filename)
 
@@ -861,6 +875,8 @@ class Editor(Tk.Frame, object):
     @property
     def textbox_commands(self):
         return [('<KeyPress>', self.edit_text_changed),
+        ('<MouseWheel>', self.scroll_textbox),
+        ('<Control-MouseWheel>', self.change_fontsize),
         ('<Control-a>', self.select_all),
         ('<Control-b>', self.bold),
         ('<Control-d>', self.add_heading),
