@@ -6,11 +6,13 @@ import os
 import random
 import webbrowser as web
 import Tkinter as Tk
+import tkFont
 import tkFileDialog as fd
 from collections import namedtuple
 from editor_properties import EditorProperties
 from properties_window import PropertiesWindow
 from text_window import TextWindow
+from itertools import izip
 from cwsmeagol.site.smeagol_page import Page
 from cwsmeagol.utils import *
 from cwsmeagol.translation import Translator
@@ -34,7 +36,7 @@ class Editor(Tk.Frame, object):
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.properties = properties or EditorProperties(caller=self.caller)
         self.widgets = widgets or WidgetAmounts(headings=2, textboxes=1, radios='languages')
-        self.font = font or ('Consolas', '14')
+        self.font = font or tkFont.Font(family='Calibri', size=14)
 
         self.buttonframe = Tk.Frame(self)
         self.headingframe = Tk.Frame(self.buttonframe)
@@ -256,9 +258,33 @@ class Editor(Tk.Frame, object):
     def configure_textboxes(self, commands=None):
         if commands:
             for textbox in self.textboxes:
-                textbox.config(bg='black', fg=self.colour, insertbackground='white')
+                textbox.config(bg='white', fg='black', insertbackground='black')
+                for (name, style) in self.text_styles:
+                    textbox.tag_config(name, **style)
                 for (key, command) in commands:
                     textbox.bind(key, command)
+
+    @property
+    def text_styles(self):
+        strong = self.font.copy()
+        strong.configure(weight='bold')
+        em = self.font.copy()
+        em.configure(slant='italic')
+        underline = self.font.copy()
+        underline.configure(underline=True)
+        small_caps = self.font.copy()
+        size = small_caps.actual(option='size') - 3
+        small_caps.configure(size=size, family='Algerian')
+        highlulani = self.font.copy()
+        size = highlulani.actual(option='size') + 3
+        highlulani.configure(family='Lulani', size=size)
+        return [
+            ('strong', {'font': strong}),
+            ('em', {'font': em}),
+            ('small-caps', {'font': small_caps}),
+            ('link', {'foreground': 'blue', 'font': underline}),
+            ('high-lulani', {'font': highlulani})
+        ]
 
     def place_widgets(self):
         """
@@ -547,9 +573,38 @@ class Editor(Tk.Frame, object):
             textbox.delete(1.0, Tk.END)
             textbox.insert(1.0, text)
             textbox.edit_modified(False)
+            self.html_to_tkinter(textbox)
         else:   # set focus on final textbox
             textbox.focus_set()
             self.update_wordcount(widget=textbox)
+
+    def html_to_tkinter(self, textbox):
+        count = Tk.IntVar()
+        for (style, _) in self.text_styles:
+            while True:
+                try:
+                    start = textbox.search(
+                            '<{0}>.*?</{0}>'.format(style),
+                            '1.0',
+                            regexp=True,
+                            count=count
+                        )
+                    end = start + '+' + str(count.get()) + 'c'
+                    text = textbox.get(start, end)
+                    text = text[len(style) + 2:-3-len(style)]
+                    textbox.delete(start, end)
+                    textbox.insert(start, text)
+                    textbox.tag_add(style, start, start + '+' + str(len(text)) + 'c')
+                except Tk.TclError:
+                    break
+
+    def tkinter_to_html(self, textbox):
+        for (style, _) in self.text_styles:
+            for end, start in izip(*[reversed(textbox.tag_ranges(style))] * 2):
+                text = textbox.get(start, end)
+                text = '<{1}>{0}</{1}>'.format(text, style)
+                textbox.delete(start, end)
+                textbox.insert(start, text)
 
     def save(self, event=None):
         """
@@ -559,12 +614,15 @@ class Editor(Tk.Frame, object):
             self.site_properties()
         for textbox in self.textboxes:
             textbox.edit_modified(False)
+            self.tkinter_to_html(textbox)
         self.save_text.set('Save')
         texts = map(self.get_text, self.textboxes)
         if self.entry:
             self.prepare_texts(texts)
         self.publish(self.entry, self.site, self.new_page)
         self.new_page = False
+        for textbox in self.textboxes:
+            self.html_to_tkinter(textbox)
         return 'break'
 
     @property
@@ -682,25 +740,38 @@ class Editor(Tk.Frame, object):
         with conversion(self.markdown, 'find_formatting') as converter:
             self.insert_characters(event.widget, *converter(tag))
 
+    def change_style(self, event, style):
+        textbox = event.widget
+        if style in textbox.tag_names(Tk.INSERT):
+            try:
+                textbox.tag_remove(style, Tk.SEL_FIRST, Tk.SEL_LAST)
+            except Tk.TclError:
+                textbox.tag_remove(style, Tk.INSERT)
+        else:
+            try:
+                textbox.tag_add(style, Tk.SEL_FIRST, Tk.SEL_LAST)
+            except Tk.TclError:
+                textbox.tag_add(style, Tk.INSERT)
+
     def bold(self, event):
         """
-        Insert markdown for bold tags, and place insertion point between them.
+        Use tags to bold and un-bold selected text
         """
-        self.insert_formatting(event, 'strong')
+        self.change_style(event, 'strong')
         return 'break'
 
     def italic(self, event):
         """
         Insert markdown for italic tags, and place insertion point between them.
         """
-        self.insert_formatting(event, 'em')
+        self.change_style(event, 'em')
         return 'break'
 
     def small_caps(self, event):
         """
         Insert markdown for small-caps tags, and place insertion point between them.
         """
-        self.insert_formatting(event, 'small-caps')
+        self.change_style(event, 'small-caps')
         return 'break'
 
     def add_link(self, event):
@@ -715,7 +786,6 @@ class Editor(Tk.Frame, object):
         self.entry.content = self.initial_content()
         self.load()
         return 'break'
-
 
     def backspace_word(self, event):
         widget = event.widget
@@ -770,12 +840,13 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def change_fontsize(self, event):
-        face, size = self.font
         sign = 1 if event.delta > 0 else -1
-        size = str(int(size) + sign)
-        self.font = (face, size)
+        size = self.font.actual(option='size') + sign
+        self.font.config(size=size)
         for textbox in self.textboxes:
             textbox.config(font=self.font)
+            for (name, font) in self.text_styles:
+                textbox.tag_config(name, font=font)
         return 'break'
 
     def scroll_textbox(self, event):

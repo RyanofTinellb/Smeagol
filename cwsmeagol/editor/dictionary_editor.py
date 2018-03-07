@@ -1,4 +1,4 @@
-from editor import Editor, WidgetAmounts, Tk
+from editor import Editor, WidgetAmounts, Tk, tkFont
 from cwsmeagol.site.smeagol_page import Page
 from cwsmeagol.utils import *
 
@@ -7,7 +7,7 @@ class DictionaryEditor(Editor):
         """
 
         """
-        font = ('Courier New', '15')
+        font = tkFont.Font(family='Courier New', size=15)
         widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
         # initialise instance variables
         self.entry = None
