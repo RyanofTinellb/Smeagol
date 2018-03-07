@@ -55,7 +55,7 @@ class Default():
 
 if __name__ == '__main__':
     oldtime = datetime.now()
-    for site in Story, Grammar, Stories, Dictionary:
+    for site in Grammar, Dictionary:
         site = site()
         print(site.name + ': ')
         site.publish()

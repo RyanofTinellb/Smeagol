@@ -25,7 +25,7 @@ class Page(Node):
         :attribute level (int): how low the Page is on the hierarchy
         """
         super(Page, self).__init__(parent)
-        self.name = name
+        self.name = name or ''
         self.content = content
         self.flatname = FlatName(name)
 
@@ -246,12 +246,15 @@ class Page(Node):
                     try:
                         line = mode.replacements[category] + text
                     except KeyError: # something's gone wrong
-                        print(self.content)
-                        raise KeyError('{0}]{1}. Please check source file'.format(category, line))
+                        raise KeyError('{0}\n{1}]{2}. Please check source file'.format(self.content, category, line))
                     if not mode.table():
-                        line = line.replace('</tr><tr><td>', '<' + mode.delimiter + '>')
+                        line = line.replace(
+                                '</tr><tr><td>',
+                                '<' + mode.delimiter + '>\n'
+                            )
                     line = re.sub('\n$', '</' + mode.delimiter + '>', line)
-                    line = '</d>\n<d>'.replace('d', mode.delimiter).join(line.splitlines())
+                    linebreak = '</d>\n<d>'.replace('d', mode.delimiter)
+                    line = linebreak.join(line.splitlines()) + '\n'
                 except ValueError:
                     raise ValueError(line + ': ' + self.name)
             output += line
