@@ -271,7 +271,7 @@ class Editor(Tk.Frame, object):
         em = self.font.copy()
         em.configure(slant='italic')
         underline = self.font.copy()
-        underline.configure(underline=True)
+        underline.configure(underline=True, family='Calibri')
         small_caps = self.font.copy()
         size = small_caps.actual(option='size') - 3
         small_caps.configure(size=size, family='Algerian')
@@ -490,16 +490,18 @@ class Editor(Tk.Frame, object):
         self.save_text.set('Save')
         return 'break'
 
-    def add_translation(self, event=None):
+    def add_translation(self, event):
         """
         Insert a transliteration of the selected text in the current language.
         Do sentence conversion if there is a period in the text, and word conversion otherwise.
         Insert an additional linebreak if the selection ends with a linebreak.
         """
+        textbox = event.widget
         try:
-            text = self.textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
+            text = textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
         except Tk.TclError:
-            text = self.textbox.get(Tk.INSERT + ' wordstart', Tk.INSERT + ' wordend')
+            text = textbox.get(Tk.INSERT + ' wordstart', Tk.INSERT + ' wordend')
+        length = len(text)
         with conversion(self.markdown, 'to_markup') as converter:
             text = converter(text)
         example = re.match(r'\[[ef]\]', text) # line has 'example' formatting
@@ -510,13 +512,14 @@ class Editor(Tk.Frame, object):
         with conversion(self.markdown, 'to_markdown') as converter:
             text = converter(text)
         try:
-            text += '\n' if self.textbox.compare(Tk.SEL_LAST, '==', Tk.SEL_LAST + ' lineend') else ' '
-            self.textbox.insert(Tk.SEL_LAST + '+1c', text)
+            text += '\n' if textbox.compare(Tk.SEL_LAST, '==', Tk.SEL_LAST + ' lineend') else ' '
+            textbox.insert(Tk.SEL_LAST + '+1c', text)
         except Tk.TclError:
             text += ' '
-            self.textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
-            self.textbox.insert(Tk.INSERT + '+1c', text)
-        self.textbox.mark_set(Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + 1)))
+            textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
+            textbox.insert(Tk.INSERT + '+1c', text)
+        textbox.mark_set(Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + length)))
+        self.html_to_tkinter(textbox)
         return 'break'
 
     def find_entry(self, headings):
@@ -613,9 +616,7 @@ class Editor(Tk.Frame, object):
         if self.is_new:
             self.site_properties()
         for textbox in self.textboxes:
-            textbox.edit_modified(False)
             self.tkinter_to_html(textbox)
-        self.save_text.set('Save')
         texts = map(self.get_text, self.textboxes)
         if self.entry:
             self.prepare_texts(texts)
@@ -623,6 +624,8 @@ class Editor(Tk.Frame, object):
         self.new_page = False
         for textbox in self.textboxes:
             self.html_to_tkinter(textbox)
+            textbox.edit_modified(False)
+        self.save_text.set('Save')
         return 'break'
 
     @property
@@ -697,7 +700,9 @@ class Editor(Tk.Frame, object):
         Deactivates after a save or a load action.
         """
         self.update_wordcount(event)
-        if event.widget.edit_modified():
+        if event.keycode in (37, 109):
+            event.widget.edit_modified(False)
+        elif event.widget.edit_modified():
             self.save_text.set('*Save')
 
     def update_wordcount(self, event=None, widget=None):
@@ -775,7 +780,7 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def add_link(self, event):
-        self.insert_formatting(event, 'link')
+        self.change_style(event, 'link')
         return 'break'
 
     def insert_pipe(self, event):
@@ -845,8 +850,8 @@ class Editor(Tk.Frame, object):
         self.font.config(size=size)
         for textbox in self.textboxes:
             textbox.config(font=self.font)
-            for (name, font) in self.text_styles:
-                textbox.tag_config(name, font=font)
+            for (name, style) in self.text_styles:
+                textbox.tag_config(name, **style)
         return 'break'
 
     def scroll_textbox(self, event):
@@ -877,6 +882,8 @@ class Editor(Tk.Frame, object):
     def markdown_refresh(self, event=None):
         try:
             position = self.textboxes[0].index(Tk.INSERT)
+            for textbox in self.textboxes:
+                self.tkinter_to_html(textbox)
             texts = map(self.get_text, self.textboxes)
             texts = map(self.markdown.to_markup, texts)
             self.markdown.refresh()
@@ -884,6 +891,7 @@ class Editor(Tk.Frame, object):
             for text, textbox in zip(texts, self.textboxes):
                 textbox.delete(1.0, Tk.END)
                 textbox.insert(1.0, text)
+                self.html_to_tkinter(textbox)
             self.textboxes[0].mark_set(Tk.INSERT, position)
             self.textboxes[0].mark_set(Tk.CURRENT, position)
             self.textboxes[0].see(Tk.INSERT)

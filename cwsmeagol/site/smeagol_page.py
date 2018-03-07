@@ -361,7 +361,7 @@ class Page(Node):
     def elder_links(self):
         links = '<ul>'
         for elder in self.elders:
-            links += '<li{0}>{1}</li>'.format(
+            links += '<li{0}>{1}</li>\n'.format(
                 (' class="normal"' if elder in [self, self.parent] else ''), self.hyperlink(elder))
         return self.links.replace('$links$', links + '</ul>')
 
