@@ -259,7 +259,11 @@ class Editor(Tk.Frame, object):
     def configure_textboxes(self, commands=None):
         if commands:
             for textbox in self.textboxes:
-                textbox.config(bg='white', fg='black', insertbackground='black')
+                scrollbar = Tk.Scrollbar(self.textframe)
+                scrollbar.pack(side=Tk.RIGHT, fill=Tk.Y)
+                scrollbar.config(command=textbox.yview)
+                textbox.config(bg='white', fg='black', insertbackground='black',
+                    yscrollcommand=scrollbar.set)
                 for (name, style) in self.text_styles:
                     textbox.tag_config(name, **style)
                 for (key, command) in commands:
@@ -812,6 +816,10 @@ class Editor(Tk.Frame, object):
         self.insert_characters(event.widget, ' | ')
         return 'break'
 
+    def insert_spaces(self, event):
+        self.insert_characters(event.widget, ' ' * 10)
+        return 'break'
+
     def insert_new(self, event):
         self.entry.content = self.initial_content()
         self.load()
@@ -1003,7 +1011,7 @@ class Editor(Tk.Frame, object):
         ('<Control-BackSpace>', self.backspace_word),
         ('<Control-Delete>', self.delete_word),
         ('<Alt-d>', self.go_to_heading),
-        ('<Tab>', self.next_window),
+        ('<Tab>', self.insert_spaces),
         ('<Shift-Tab>', self.previous_window),
         ('<KeyPress-|>', self.insert_pipe)]
 
