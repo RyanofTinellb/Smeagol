@@ -198,6 +198,17 @@ class Page(Node):
         else:
             return '<h{0}>{1}</h{0}>\n'.format(level, name)
 
+    def change_to_div(self, text):
+        """
+        Transform '[/d]' --> '</div>'
+            and '[d blah]' --> '<div class="blah">'
+        """
+        if text.startswith('/'):
+            return '</div>'
+        else:
+            divclass = text[2:-1]
+            return '<div class="{0}">'.format(divclass)
+
     @property
     def title(self):
         """
@@ -232,12 +243,19 @@ class Page(Node):
         for line in content.split('['):
             if line == '':
                 continue
-            if re.match(r'\d\]', line):
+            elif re.match(r'\d\]', line):
                 try:
                     heading, rest = line.split('\n', 1)
                 except ValueError:
                     heading, rest = line, ''
                 line = self.change_to_heading(heading)
+                line += '<p>{0}</p>\n'.format('</p>\n<p>'.join(rest.splitlines())) if rest else ''
+            elif re.match(r'\/*d', line): # start of div replacement
+                try:
+                    divclass, rest = line.split('\n', 1)
+                except ValueError:
+                    divclass, rest = line, ''
+                line = self.change_to_div(divclass)
                 line += '<p>{0}</p>\n'.format('</p>\n<p>'.join(rest.splitlines())) if rest else ''
             else: # tag is non-numeric, i.e.: represents something other than a heading
                 try:
