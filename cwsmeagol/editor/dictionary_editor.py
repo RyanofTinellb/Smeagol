@@ -7,14 +7,14 @@ class DictionaryEditor(Editor):
         """
 
         """
-        font = tkFont.Font(family='Courier New', size=15)
         widgets = WidgetAmounts(headings=1, textboxes=1, radios='languages')
         # initialise instance variables
         self.entry = None
         self.history = []
         self.current = -1
 
-        super(DictionaryEditor, self).__init__(properties, widgets, font, master)
+        super(DictionaryEditor, self).__init__(properties, widgets, None, master)
+        self.font.config(family='Courier New')
         self.master.title('Editing Dictionary')
 
     @property

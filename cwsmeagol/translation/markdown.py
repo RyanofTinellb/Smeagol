@@ -24,6 +24,7 @@ class Markdown:
                 self.append_markdown(line)
 
     def append_markdown(self, line):
+        line = line.replace(r'\n', '\n')
         line = line.split(' | ')
         try:
             self.markdown.append(line[1])

@@ -36,7 +36,8 @@ class Editor(Tk.Frame, object):
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.properties = properties or EditorProperties(caller=self.caller)
         self.widgets = widgets or WidgetAmounts(headings=2, textboxes=1, radios='languages')
-        self.font = font or tkFont.Font(family='Calibri', size=14)
+        size = self.properties.current_fontsize or 14
+        self.font = font or tkFont.Font(family='Calibri', size=size)
 
         self.buttonframe = Tk.Frame(self)
         self.headingframe = Tk.Frame(self.buttonframe)
@@ -625,6 +626,9 @@ class Editor(Tk.Frame, object):
         for textbox in self.textboxes:
             self.html_to_tkinter(textbox)
             textbox.edit_modified(False)
+            textbox.config(font=self.font)
+            for (name, style) in self.text_styles:
+                textbox.tag_config(name, **style)
         self.save_text.set('Save')
         return 'break'
 
@@ -744,6 +748,27 @@ class Editor(Tk.Frame, object):
         """
         with conversion(self.markdown, 'find_formatting') as converter:
             self.insert_characters(event.widget, *converter(tag))
+
+    def insert_markdown(self, event, tag):
+        """
+        Insert markdown for tags
+        """
+        with conversion(self.markdown, 'find') as converter:
+            self.insert_characters(event.widget, converter(tag))
+
+    def example_no_lines(self, event):
+        """
+        Insert markdown for paragraph marking
+        """
+        self.insert_markdown(event, '[e]')
+        return 'break'
+
+    def example(self, event):
+        """
+        Insert markdown for paragraph marking
+        """
+        self.insert_markdown(event, '[f]')
+        return 'break'
 
     def change_style(self, event, style):
         textbox = event.widget
@@ -919,6 +944,7 @@ class Editor(Tk.Frame, object):
         self.properties.update_current_page(current_page)
         self.properties.update_current_language(self.language.get())
         self.properties.update_current_position(self.textboxes[0].index(Tk.INSERT))
+        self.properties.update_current_fontsize(self.font.actual(option='size'))
         self.site_save()
         self.master.destroy()
 
@@ -960,6 +986,8 @@ class Editor(Tk.Frame, object):
         ('<Control-b>', self.bold),
         ('<Control-d>', self.add_heading),
         ('<Control-D>', self.remove_heading),
+        ('<Control-e>', self.example_no_lines),
+        ('<Control-f>', self.example),
         ('<Control-i>', self.italic),
         ('<Control-l>', self.load),
         ('<Control-k>', self.small_caps),

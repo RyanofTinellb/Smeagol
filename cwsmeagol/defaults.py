@@ -41,26 +41,32 @@ _ | &under; | <br>
 '''
 
     config = '''
-    {
-      "site": {
-        "name": "",
-        "destination": ""
-      },
-      "files": {
-        "searchjson": "",
-        "source": "",
-        "template": ""
-      },
-      "random words": {
-        "number": 0,
-        "geminate": 1
-      },
-      "current page": [
-      ]
-      "markdown": "",
-      "links": [
-      ]
-    }
+{
+  "site": {
+    "name": "",
+    "destination": ""
+  },
+  "files": {
+    "searchjson": "",
+    "source": "",
+    "template": ""
+  },
+  "random words": {
+    "number": 0,
+    "geminate": 1
+  },
+  "current": {
+    "page": [
+      ""
+    ],
+    "markdown": "",
+    "language": "en",
+    "position": "1.0",
+    "fontsize": 14
+  },
+  "links": [
+  ]
+}
     '''
 
     properties = '''
