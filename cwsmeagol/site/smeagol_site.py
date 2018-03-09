@@ -49,7 +49,7 @@ class Site(object):
                 'name="{1}", '
                 'source="{2}", '
                 'template="{3}", '
-                'searchjson="{5}"').format(
+                'searchjson="{4}"').format(
                 self.destination,
                 self.name,
                 self.files.source,

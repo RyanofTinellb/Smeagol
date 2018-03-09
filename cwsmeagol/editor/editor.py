@@ -87,25 +87,13 @@ class Editor(Tk.Frame, object):
         }
         return colours[self.caller]
 
-    @property
-    def site(self):
-        return self.properties.site
-
-    @property
-    def links(self):
-        return self.properties.linkadder
-
-    @property
-    def source(self):
-        return self.properties.source
-
-    @property
-    def root(self):
-        return self.site.root
-
-    @property
-    def destination(self):
-        return self.site.destination
+    def __getattr__(self, name):
+        if name in {'site', 'linkadder', 'source'}:
+            return getattr(self.properties, name)
+        elif name in {'root', 'destination'}:
+            return getattr(self.site, name)
+        else:
+            raise AttributeError
 
     def create_widgets(self):
         self.menu = self.create_menu(self.top, self.menu_commands)
@@ -570,7 +558,7 @@ class Editor(Tk.Frame, object):
         """
         text = entry.content
         text = remove_datestamp(text)
-        with conversion(self.links, 'remove_links') as converter:
+        with conversion(self.linkadder, 'remove_links') as converter:
             text = converter(text)
         with conversion(self.markdown, 'to_markdown') as converter:
             text = converter(text)
@@ -679,7 +667,7 @@ class Editor(Tk.Frame, object):
         """
         with conversion(self.markdown, 'to_markup') as converter:
             text = converter(text)
-        with conversion(self.links, 'add_links') as converter:
+        with conversion(self.linkadder, 'add_links') as converter:
             text = converter(text, entry)
         text = add_datestamp(text)
         return text
