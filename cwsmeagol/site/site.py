@@ -1,6 +1,6 @@
 import os
-from smeagol_page import Page
-from cwsmeagol.editor.smeagol_files import Files
+from page import Page
+from cwsmeagol.editor.files import Files
 from text_analysis import Analysis
 from cwsmeagol.translation import *
 from cwsmeagol.utils import *

@@ -1,7 +1,7 @@
 import json
-from cwsmeagol.site.smeagol_site import Site
-from cwsmeagol.site.smeagol_page import Page
-from cwsmeagol.editor.smeagol_files import Files
+from cwsmeagol.site.site import Site
+from cwsmeagol.site.page import Page
+from cwsmeagol.editor.files import Files
 from datetime import datetime
 from collections import namedtuple
 

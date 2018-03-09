@@ -13,7 +13,7 @@ from editor_properties import EditorProperties
 from properties_window import PropertiesWindow
 from text_window import TextWindow
 from itertools import izip
-from cwsmeagol.site.smeagol_page import Page
+from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 from cwsmeagol.translation import Translator
 

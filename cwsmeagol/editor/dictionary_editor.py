@@ -1,5 +1,5 @@
 from editor import Editor, WidgetAmounts, Tk, tkFont
-from cwsmeagol.site.smeagol_page import Page
+from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 
 class DictionaryEditor(Editor):

@@ -4,7 +4,7 @@ from collections import deque
 from contents_mode import ContentsMode
 from text_analysis import Analysis
 from flatname import FlatName
-from smeagol_node import Node
+from node import Node
 from cwsmeagol.translation import *
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
