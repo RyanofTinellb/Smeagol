@@ -65,10 +65,7 @@ class EditorProperties(object):
     def __getattr__(self, name):
         if name in ['files', 'source']:
             return getattr(self.site, name)
-        elif name == 'markdown':
-            return self.config['current']['markdown']
-        elif name.startswith('current_'):
-            name = name[len('current_'):]
+        elif name in {'page', 'language', 'position', 'markdown', 'fontsize'}:
             return self.config['current'][name]
         else:
             raise AttributeError

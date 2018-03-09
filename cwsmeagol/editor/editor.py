@@ -36,7 +36,7 @@ class Editor(Tk.Frame, object):
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.properties = properties or EditorProperties(caller=self.caller)
         self.widgets = widgets or WidgetAmounts(headings=2, textboxes=1, radios='languages')
-        size = self.properties.current_fontsize or 14
+        size = self.properties.fontsize or 14
         self.font = font or tkFont.Font(family='Calibri', size=size)
 
         self.buttonframe = Tk.Frame(self)
@@ -57,7 +57,7 @@ class Editor(Tk.Frame, object):
         self.save_text = Tk.StringVar()
         self.save_text.set('Save')
         self.language = Tk.StringVar()
-        self.language.set(self.properties.current_language)
+        self.language.set(self.properties.language)
         self.translator = Translator(self.language.get())
         self.markdown = Markdown(self.properties.markdown)
 
@@ -69,9 +69,9 @@ class Editor(Tk.Frame, object):
         self.place_widgets()
         self.top.state('zoomed')
         self.entry.content = self.entry.content or self.initial_content()
-        self.fill_headings(self.properties.current_page)
+        self.fill_headings(self.properties.page)
         self.load()
-        self.textboxes[0].mark_set(Tk.INSERT, self.properties.current_position)
+        self.textboxes[0].mark_set(Tk.INSERT, self.properties.position)
         self.textboxes[0].see(Tk.INSERT)
 
     @property
@@ -448,7 +448,7 @@ class Editor(Tk.Frame, object):
         """
         self.entry = self.site.root
         self.clear_interface()
-        self.fill_headings(self.properties.current_page)
+        self.fill_headings(self.properties.page)
         self.load()
 
     def clear_interface(self):
@@ -460,8 +460,8 @@ class Editor(Tk.Frame, object):
         self.go_to_heading()
 
     def site_save(self, event=None):
-        current_page = [heading.get() for heading in self.headings]
-        self.properties.page = current_page
+        page = [heading.get() for heading in self.headings]
+        self.properties.page = page
         self.properties.save()
         return 'break'
 
