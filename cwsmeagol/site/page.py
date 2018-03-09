@@ -240,39 +240,31 @@ class Page(Node):
             '''
         """
         text = text[2:]
-        rows = ''
-        for row in text.splitlines():
-            cells = ''
-            for cell in row.split('|'):
-                heading = 'd'
-                row = ''
-                col = ''
-                if cell == '':
-                    continue
-                elif cell.startswith(' '):
-                    if cell.endswith(' '):
-                        cell = cell[1:-1]
-                    else:
-                        cell = cell[1:]
-                else:
-                    if cell.endswith(' '):
-                        cell = cell[:-1]
-                    form, cell = cell.split(' ', 1)
-                    if 'h' in form:
-                        heading = 'h'
-                    try:
-                        row = ' rowspan="{0}"'.format(
-                            re.search(r'(?<=r)\d*', form).group(0))
-                    except AttributeError:
-                        pass
-                    try:
-                        col = ' colspan="{0}"'.format(
-                            re.search(r'(?<=c)\d*', form).group(0))
-                    except AttributeError:
-                        pass
-                cells += '<t{0}{1}{2}>\n{3}\n</t{0}>\n'.format(heading, row, col, cell)
-            rows += '<{0}>\n{1}\n</{0}>\n'.format('tr', cells)
+        rows = ''.join(map(self.table_row, text.splitlines()))
         return '<{0}>\n{1}</{0}>\n'.format('table', rows)
+
+    def table_row(self, row):
+        cells = ''.join(map(self.table_cell, row.split('|')))
+        return '<{0}>\n{1}\n</{0}>\n'.format('tr', cells)
+
+    def table_cell(self, cell):
+        cell = re.sub(' *$', '', cell)
+        if cell.startswith(' ') or cell == '':
+            form, cell = '', cell[1:]
+        else:
+            form, cell = cell.split(' ', 1)
+        heading = 'h' if 'h' in form else 'd'
+        rowcol = map(self.check_rowcol, [
+            ['rowspan', r'(?<=r)\d*', form],
+            ['colspan', r'(?<=c)\d*', form]
+        ])
+        return '<t{0}{2}{3}>\n{1}\n</t{0}>\n'.format(heading, cell, *rowcol)
+
+    def check_rowcol(self, info):
+        try:
+            return ' {0}="{1}"'.format(info.pop(), re.search(*info).group(0))
+        except AttributeError:
+            return ''
 
     @property
     def title(self):
