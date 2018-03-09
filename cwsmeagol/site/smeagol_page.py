@@ -403,7 +403,7 @@ class Page(Node):
         except ValueError:
             return ''
         suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else ["st", "nd", "rd"][date.day % 10 - 1]
-        output = datetime.strftime(date, '<span class="no-breaks">&copy;%Y Ryan Eakins.</span> <span class="no-breaks">Last updated: %A, %B %#d' + suffix + ',%Y.')
+        output = datetime.strftime(date, '<span class="no-breaks">&copy;%Y Ryan Eakins.</span> <span class="no-breaks">Last updated: %A, %B %#d' + suffix + ', %Y.')
         return output
 
     def publish(self, template=None):

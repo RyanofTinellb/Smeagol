@@ -39,6 +39,16 @@ class DictionaryEditor(Editor):
         self.load()
         return 'break'
 
+    def previous_entry(self, event):
+        self.heading.delete(0, Tk.END)
+        self.heading.insert(0, self.entry.previous.name)
+        self.load()
+
+    def next_entry(self, event):
+        self.heading.delete(0, Tk.END)
+        self.heading.insert(0, self.entry.next_node.name)
+        self.load()
+
     def keep_history(self, heading):
         """
         Keep track of which entries have been loaded
@@ -137,7 +147,10 @@ class DictionaryEditor(Editor):
         ('<Control-r>', self.refresh_random),
         ('<Control-=>', self.add_definition),
         ('<Prior>', self.scroll_history),
-        ('<Next>', self.scroll_history)]
+        ('<Next>', self.scroll_history),
+        ('<Control-Prior>', self.previous_entry),
+        ('<Control-Next>', self.next_entry),
+        ]
         return commands
 
 
