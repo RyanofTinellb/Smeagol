@@ -800,10 +800,6 @@ class Editor(Tk.Frame, object):
         self.change_style(event, 'link')
         return 'break'
 
-    def insert_pipe(self, event):
-        self.insert_characters(event.widget, ' | ')
-        return 'break'
-
     def insert_spaces(self, event):
         self.insert_characters(event.widget, ' ' * 10)
         return 'break'
@@ -1000,8 +996,7 @@ class Editor(Tk.Frame, object):
         ('<Control-Delete>', self.delete_word),
         ('<Alt-d>', self.go_to_heading),
         ('<Tab>', self.insert_spaces),
-        ('<Shift-Tab>', self.previous_window),
-        ('<KeyPress-|>', self.insert_pipe)]
+        ('<Shift-Tab>', self.previous_window)]
 
     def initial_content(self, entry=None):
         """

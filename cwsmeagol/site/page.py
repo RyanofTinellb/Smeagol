@@ -209,6 +209,71 @@ class Page(Node):
             divclass = text[2:-1]
             return '<div class="{0}">'.format(divclass)
 
+    def change_to_table(self, text):
+        """
+        Transform:
+            '''
+              [t]| table |h heading1 |hr2 heading2 |hc2 heading3
+              |h heading4 | data1 |r2 data2 |c2 data3
+              | data4 |hr2c2 heading5
+            '''
+                ==>
+            '''
+                <table>
+                  <tr>
+                    <td>table</td>
+                    <th>heading1</th>
+                    <th rowspan="2">heading2</th>
+                    <th colspan="2">heading3</th>
+                  </tr>
+                  <tr>
+                    <th>heading4</th>
+                    <td>data1</td>
+                    <td rowspan="2">data2</td>
+                    <td colspan="2">data3</td>
+                  </tr>
+                  <tr>
+                    <td>data4</td>
+                    <th rowspan="2" colspan="2">heading5</th>
+                  </tr>
+                </table>
+            '''
+        """
+        text = text[2:]
+        rows = ''
+        for row in text.splitlines():
+            cells = ''
+            for cell in row.split('|'):
+                heading = 'd'
+                row = ''
+                col = ''
+                if cell == '':
+                    continue
+                elif cell.startswith(' '):
+                    if cell.endswith(' '):
+                        cell = cell[1:-1]
+                    else:
+                        cell = cell[1:]
+                else:
+                    if cell.endswith(' '):
+                        cell = cell[:-1]
+                    form, cell = cell.split(' ', 1)
+                    if 'h' in form:
+                        heading = 'h'
+                    try:
+                        row = ' rowspan="{0}"'.format(
+                            re.search(r'(?<=r)\d*', form).group(0))
+                    except AttributeError:
+                        pass
+                    try:
+                        col = ' colspan="{0}"'.format(
+                            re.search(r'(?<=c)\d*', form).group(0))
+                    except AttributeError:
+                        pass
+                cells += '<t{0}{1}{2}>\n{3}\n</t{0}>\n'.format(heading, row, col, cell)
+            rows += '<{0}>\n{1}\n</{0}>\n'.format('tr', cells)
+        return '<{0}>\n{1}</{0}>\n'.format('table', rows)
+
     @property
     def title(self):
         """
@@ -239,8 +304,7 @@ class Page(Node):
         """
         mode = ContentsMode()
         output = ''
-        content = self.content.replace(' | ', '\n')
-        for line in content.split('['):
+        for line in self.content.split('['):
             if line == '':
                 continue
             elif re.match(r'\d\]', line):
@@ -249,22 +313,31 @@ class Page(Node):
                 except ValueError:
                     heading, rest = line, ''
                 line = self.change_to_heading(heading)
-                line += '<p>{0}</p>\n'.format('</p>\n<p>'.join(rest.splitlines())) if rest else ''
-            elif re.match(r'\/*d', line): # start of div replacement
+                line += self.paragraphs(rest)
+            elif re.match(r'\/*d', line): # start of html div
                 try:
                     divclass, rest = line.split('\n', 1)
                 except ValueError:
                     divclass, rest = line, ''
                 line = self.change_to_div(divclass)
-                line += '<p>{0}</p>\n'.format('</p>\n<p>'.join(rest.splitlines())) if rest else ''
-            else: # tag is non-numeric, i.e.: represents something other than a heading
+                line += self.paragraphs(rest)
+            elif line.startswith('t'): # html table
+                line = self.change_to_table(line)
+            elif line.startswith('/t]'):
+                try:
+                    rest = line.split('\n', 1)[1]
+                except IndexError:
+                    rest = ''
+                line = self.paragraphs(rest)
+            else:
                 try:
                     category, text = line.split(']', 1)
                     mode.set(category)
                     try:
                         line = mode.replacements[category] + text
                     except KeyError: # something's gone wrong
-                        raise KeyError('{0}\n{1}]{2}. Please check source file'.format(self.content, category, line))
+                        print(self.content)
+                        raise KeyError('{0}\n{1}]{2}. Please check source file'.format(category, line))
                     if not mode.table():
                         line = line.replace(
                                 '</tr><tr><td>',
@@ -277,6 +350,9 @@ class Page(Node):
                     raise ValueError(line + ': ' + self.name)
             output += line
         return output
+
+    def paragraphs(self, text):
+        return '<p>{0}</p>\n'.format('</p>\n<p>'.join(text.splitlines())) if text else ''
 
     @property
     def stylesheet_and_icon(self):
