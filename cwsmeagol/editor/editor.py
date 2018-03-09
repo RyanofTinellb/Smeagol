@@ -461,7 +461,7 @@ class Editor(Tk.Frame, object):
 
     def site_save(self, event=None):
         current_page = [heading.get() for heading in self.headings]
-        self.properties.update_current_page(current_page)
+        self.properties.page = current_page
         self.properties.save()
         return 'break'
 
@@ -904,7 +904,7 @@ class Editor(Tk.Frame, object):
                 texts = map(self.get_text, self.textboxes)
                 texts = map(self.markdown.to_markup, texts)
                 self.markdown = Markdown(filename)
-                self.properties.update_markdown(filename)
+                self.properties.markdown = filename
                 texts = map(self.markdown.to_markdown, texts)
                 for text, textbox in zip(texts, self.textboxes):
                     textbox.delete(1.0, Tk.END)
@@ -948,11 +948,11 @@ class Editor(Tk.Frame, object):
 
     def quit(self):
         self.server.shutdown()
-        current_page = [heading.get() for heading in self.headings]
-        self.properties.update_current_page(current_page)
-        self.properties.update_current_language(self.language.get())
-        self.properties.update_current_position(self.textboxes[0].index(Tk.INSERT))
-        self.properties.update_current_fontsize(self.font.actual(option='size'))
+        page = [heading.get() for heading in self.headings]
+        self.properties.page = page
+        self.properties.language = self.language.get()
+        self.properties.position = self.textboxes[0].index(Tk.INSERT)
+        self.properties.fontsize = self.font.actual(option='size')
         self.site_save()
         self.master.destroy()
 

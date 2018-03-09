@@ -11,7 +11,7 @@ from cwsmeagol.defaults import default
 import tkFileDialog as fd
 import tkSimpleDialog as sd
 
-class EditorProperties():
+class EditorProperties(object):
     """
 
     :param config: (str) name of a .smg Smeagol configuration file
@@ -62,13 +62,22 @@ class EditorProperties():
         except IOError:
             return ''
 
-    @property
-    def files(self):
-        return self.site.files
+    def __getattr__(self, name):
+        if name in ['files', 'source']:
+            return getattr(self.site, name)
+        elif name == 'markdown':
+            return self.config['current']['markdown']
+        elif name.startswith('current_'):
+            name = name[len('current_'):]
+            return self.config['current'][name]
+        else:
+            raise AttributeError
 
-    @property
-    def source(self):
-        return self.site.source
+    def __setattr__(self, name, value):
+        if name in {'page', 'language', 'position', 'markdown', 'fontsize'}:
+            self.config['current'][name] = value
+        else:
+            object.__setattr__(self, name, value)
 
     def open(self):
         filetypes = [('Sm\xe9agol File', '*.smg'), ('Source Data File', '*.txt')]
@@ -107,41 +116,6 @@ class EditorProperties():
             filename = re.sub(r'(\.smg)?$', r'.smg', filename)
             self.config_filename = filename
             self.save()
-
-    def update_current_page(self, page):
-        self.config['current']['page'] = page
-
-    @property
-    def current_page(self):
-        return self.config['current'].get('page', [''])
-
-    def update_current_language(self, language):
-        self.config['current']['language'] = language
-
-    @property
-    def current_language(self):
-        return self.config['current'].get('language', 'en')
-
-    def update_current_position(self, position):
-        self.config['current']['position'] = position
-
-    @property
-    def current_position(self):
-        return self.config['current'].get('position', '1.0')
-
-    def update_current_fontsize(self, fontsize):
-        self.config['current']['fontsize'] = fontsize
-
-    @property
-    def current_fontsize(self):
-        return self.config['current'].get('fontsize', 14)
-
-    def update_markdown(self, markdown):
-        self.config['current']['markdown'] = markdown
-
-    @property
-    def markdown(self):
-        return self.config['current'].get('markdown', '')
 
     def collate_files(self):
         """
