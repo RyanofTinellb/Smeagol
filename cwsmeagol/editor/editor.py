@@ -281,7 +281,7 @@ class Editor(Tk.Frame, object):
             textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
             textbox.insert(Tk.INSERT + '+1c', text)
         textbox.mark_set(Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + length)))
-        self.html_to_tkinter(textbox)
+        self.html_to_tkinter()
         return 'break'
 
     def find_entry(self, headings):
@@ -334,42 +334,40 @@ class Editor(Tk.Frame, object):
         return [text]
 
     def display(self, texts):
-        for text, textbox in zip(texts, self.textboxes):
-            textbox.delete(1.0, Tk.END)
-            textbox.insert(1.0, text)
-            textbox.edit_modified(False)
-            self.html_to_tkinter(textbox)
-        else:   # set focus on final textbox
-            textbox.focus_set()
-            self.update_wordcount(widget=textbox)
+        map(self.widgets.replace, self.textboxes, texts)
+        self.html_to_tkinter()
+        self.textboxes[-1].focus_set()
+        self.update_wordcount(widget=self.textboxes[-1])
 
-    def html_to_tkinter(self, textbox):
+    def html_to_tkinter(self):
         count = Tk.IntVar()
-        for (style, _) in self.text_styles:
-            while True:
-                try:
-                    start = textbox.search(
-                            '<{0}>.*?</{0}>'.format(style),
-                            '1.0',
-                            regexp=True,
-                            count=count
-                        )
-                    end = start + '+' + str(count.get()) + 'c'
+        for textbox in self.textboxes:
+            for (style, _) in self.text_styles:
+                while True:
+                    try:
+                        start = textbox.search(
+                                '<{0}>.*?</{0}>'.format(style),
+                                '1.0',
+                                regexp=True,
+                                count=count
+                            )
+                        end = start + '+' + str(count.get()) + 'c'
+                        text = textbox.get(start, end)
+                        text = text[len(style) + 2:-3-len(style)]
+                        textbox.delete(start, end)
+                        textbox.insert(start, text)
+                        textbox.tag_add(style, start, start + '+' + str(len(text)) + 'c')
+                    except Tk.TclError:
+                        break
+
+    def tkinter_to_html(self):
+        for textbox in self.textboxes:
+            for (style, _) in self.text_styles:
+                for end, start in izip(*[reversed(textbox.tag_ranges(style))] * 2):
                     text = textbox.get(start, end)
-                    text = text[len(style) + 2:-3-len(style)]
+                    text = '<{1}>{0}</{1}>'.format(text, style)
                     textbox.delete(start, end)
                     textbox.insert(start, text)
-                    textbox.tag_add(style, start, start + '+' + str(len(text)) + 'c')
-                except Tk.TclError:
-                    break
-
-    def tkinter_to_html(self, textbox):
-        for (style, _) in self.text_styles:
-            for end, start in izip(*[reversed(textbox.tag_ranges(style))] * 2):
-                text = textbox.get(start, end)
-                text = '<{1}>{0}</{1}>'.format(text, style)
-                textbox.delete(start, end)
-                textbox.insert(start, text)
 
     def save(self, event=None):
         """
@@ -377,15 +375,14 @@ class Editor(Tk.Frame, object):
         """
         if self.is_new:
             self.site_properties()
-        for textbox in self.textboxes:
-            self.tkinter_to_html(textbox)
+        self.tkinter_to_html()
         texts = map(self.get_text, self.textboxes)
         if self.entry:
             self.prepare_texts(texts)
         self.publish(self.entry, self.site, self.new_page)
         self.new_page = False
+        self.html_to_tkinter()
         for textbox in self.textboxes:
-            self.html_to_tkinter(textbox)
             textbox.edit_modified(False)
             textbox.config(font=self.font)
             for (name, style) in self.text_styles:
@@ -649,28 +646,19 @@ class Editor(Tk.Frame, object):
                 self.markdown = Markdown(filename)
                 self.properties.markdown = filename
                 texts = map(self.markdown.to_markdown, texts)
-                for text, textbox in zip(texts, self.textboxes):
-                    textbox.delete(1.0, Tk.END)
-                    textbox.insert(1.0, text)
+                map(self.widgets.replace, self.textboxes, texts)
             except IndexError:
                 mb.showerror('Invalid File', 'Please select a valid *.mkd file.')
 
     def markdown_refresh(self, event=None):
         try:
-            position = self.textboxes[0].index(Tk.INSERT)
-            for textbox in self.textboxes:
-                self.tkinter_to_html(textbox)
+            self.tkinter_to_html()
             texts = map(self.get_text, self.textboxes)
             texts = map(self.markdown.to_markup, texts)
             self.markdown.refresh()
             texts = map(self.markdown.to_markdown, texts)
-            for text, textbox in zip(texts, self.textboxes):
-                textbox.delete(1.0, Tk.END)
-                textbox.insert(1.0, text)
-                self.html_to_tkinter(textbox)
-            self.textboxes[0].mark_set(Tk.INSERT, position)
-            self.textboxes[0].mark_set(Tk.CURRENT, position)
-            self.textboxes[0].see(Tk.INSERT)
+            map(self.widgets.replace, self.textboxes, texts)
+            self.html_to_tkinter()
             self.widgets.information.set('OK')
         except AttributeError:
             self.widgets.information.set('Not OK')

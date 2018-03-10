@@ -242,3 +242,14 @@ class Widgets(object):
             row += 1
         self.info_label.grid(row=row, column=0, columnspan=2)
         self.blank_label.grid(row=row+1, column=0, columnspan=2)
+
+    def replace(self, textbox, text):
+        """
+        Clears textbox and inserts text
+        """
+        position = textbox.index(Tk.INSERT)
+        textbox.delete(1.0, Tk.END)
+        textbox.insert(1.0, text)
+        textbox.mark_set(Tk.INSERT, position)
+        textbox.mark_set(Tk.CURRENT, position)
+        textbox.see(Tk.INSERT)
