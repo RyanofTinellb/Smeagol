@@ -6,18 +6,15 @@ import os
 import random
 import webbrowser as web
 import Tkinter as Tk
-import tkFont
 import tkFileDialog as fd
-from collections import namedtuple
 from editor_properties import EditorProperties
 from properties_window import PropertiesWindow
+from widgets import Widgets
 from text_window import TextWindow
 from itertools import izip
 from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 from cwsmeagol.translation import Translator
-
-WidgetAmounts = namedtuple('WidgetAmounts', ['headings', 'textboxes', 'radios'])
 
 
 class Editor(Tk.Frame, object):
@@ -34,45 +31,25 @@ class Editor(Tk.Frame, object):
         super(Editor, self).__init__(master)
         self.master.title('Page Editor')
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
+        self.top = self.winfo_toplevel()
         self.properties = properties or EditorProperties(caller=self.caller)
-        self.widgets = widgets or WidgetAmounts(headings=2, textboxes=1, radios='languages')
-        size = self.properties.fontsize or 14
-        self.font = font or tkFont.Font(family='Calibri', size=size)
 
-        self.buttonframe = Tk.Frame(self)
-        self.headingframe = Tk.Frame(self.buttonframe)
-        self.textframe = Tk.Frame(self)
-        self.headings = []
-        self.radios = []
-        self.texts = []
-        self.row = 0
+        self.widgets = widgets or Widgets(self, headings=2, textboxes=1, font=font)
+
         self.new_page = False
-        self.buttons = None
-        self.load_button = None
-        self.save_button = None
-        self.label = None
         self.server = None
         self.PORT = 41809
         self.start_server()
-        self.save_text = Tk.StringVar()
-        self.save_text.set('Save')
+        self.widgets.save_text.set('Save')
         self.language = Tk.StringVar()
-        self.language.set(self.properties.language)
+        self.language.set(self.language_code)
         self.translator = Translator(self.language.get())
-        self.markdown = Markdown(self.properties.markdown)
-
         self.entry = self.site.root
-        self.top = self.winfo_toplevel()
-
-        self.create_widgets()
-        self.configure_widgets()
-        self.place_widgets()
-        self.top.state('zoomed')
+        self.widgets.ready()
         self.entry.content = self.entry.content or self.initial_content()
-        self.fill_headings(self.properties.page)
+        self.widgets.fill_headings(self.page)
         self.load()
-        self.textboxes[0].mark_set(Tk.INSERT, self.properties.position)
-        self.textboxes[0].see(Tk.INSERT)
+        self.widgets.go_to(self.position)
 
     @property
     def caller(self):
@@ -88,224 +65,25 @@ class Editor(Tk.Frame, object):
         return colours[self.caller]
 
     def __getattr__(self, name):
-        if name in {'site', 'linkadder', 'source'}:
-            return getattr(self.properties, name)
+        if name in {'site', 'linkadder', 'source', 'position', 'page', 'markdown', 'fontsize'}:
+            obj = self.properties
         elif name in {'root', 'destination'}:
-            return getattr(self.site, name)
-        else:
-            raise AttributeError
-
-    def create_widgets(self):
-        self.menu = self.create_menu(self.top, self.menu_commands)
-        self.headings = self.create_headings(self.headingframe,
-                self.widgets.headings)
-        self.radios = self.create_radios(self.buttonframe, self.widgets.radios)
-        self.labels = self.create_labels(self.buttonframe)
-        self.buttons = self.create_buttons(self.buttonframe,
-                self.button_commands, self.save_text)
-        self.textboxes = self.create_textboxes(self.textframe,
-                self.widgets.textboxes, self.font)
-
-    def create_menu(self, master, menus=None):
-        """
-        Create a menu.
-
-        :param master: (widget)
-        :param menus: ((str, options=[])[]) A list of tuples of the form
-                (label, options)
-            :param label: (str): The name of the menu that the user will see.
-            :param options: ((str, method)[]) A list of tuples of the form
-                    (label, command)
-                :param label: (str): The name of the menubutton that the user
-                    will see. The letter following an underscore will be
-                :param command: (method) The function to be run when this
-                    option is selected from the menu.
-        :returns: (widget)
-        """
-        if menus is None:
-            menus = []
-        menubar = Tk.Menu(master)
-        for menu in menus:
-            submenu = Tk.Menu(menubar, tearoff=0)
-            label, options = menu
-            menubar.add_cascade(label=label, menu=submenu)
-            for option in options:
-                label, command = option
-                underline = label.find('_')
-                underline = 0 if underline == -1 else underline
-                label = label.replace('_', '')
-                submenu.add_command(label=label, command=command,
-                    underline=underline)
-                submenu.bind('<KeyPress-{0}>'.format(label[underline]), command)
-        return menubar
-
-    @staticmethod
-    def create_headings(master, number, commands=None):
-        if not commands:
-            commands = []
-        headings = [Tk.Entry(master) for _ in range(number)]
-        for heading in headings:
-            for (key, command) in commands:
-                heading.bind(key, command)
-        return headings
-
-    def add_heading(self, event=None):
-        if len(self.headings) < 10:
-            heading = Tk.Entry(self.headingframe)
-            for (keys, command) in self.heading_commands:
-                for key in keys:
-                    heading.bind(key, command)
-            heading.grid(column=0, columnspan=2, sticky=Tk.N)
-            self.headings.append(heading)
-        return 'break'
-
-    def remove_heading(self, event=None):
-        if len(self.headings) > 1:
-            heading = self.headings.pop()
-            heading.destroy()
-        return 'break'
-
-    @staticmethod
-    def create_buttons(master, commands, save_variable):
-        """
-        Create a Load and a Save button.
-        :param master (widget): which widget window to place the buttons in.
-        :param commands (function(,)): pointer to the 'load' and 'save' methods.
-        :param save_variable (Tk.StringVar): the textvariable for the 'save' button.
-        """
-        load_button = Tk.Button(master, text='Load', command=commands[0])
-        save_button = Tk.Button(master, command=commands[1],
-        textvariable=save_variable)
-        return load_button, save_button
-
-    def create_labels(self, master):
-        information = Tk.StringVar()
-        info_label = Tk.Label(master=master, textvariable=information, font=('Arial', 16))
-        # blanklabel has enough height to push all other widgets to the top
-        #   of the window.
-        blank_label = Tk.Label(master=master, height=1000)
-        return info_label, information, blank_label
-
-    def create_radios(self, master, number):
-        radios = []
-        try:
-            number = int(number)
-        except ValueError:
-            number = self.translator.number
-        for _ in range(number):
-            radio = Tk.Radiobutton(master)
-            radios.append(radio)
-        return tuple(radios)
-
-    @staticmethod
-    def create_textboxes(master, number, font=None):
-        if font is None:
-            font = self.font
-        textboxes = []
-        for _ in range(number):
-            textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
-                    undo=True, font=font)
-            textboxes.append(textbox)
-        return tuple(textboxes)
-
-    @property
-    def words(self):
-        return self.properties.randomwords.words
-
-    def configure_widgets(self):
-        self.heading = self.headings[0]
-        self.textbox = self.textboxes[0]
-        self.infolabel, self.information, self.blanklabel = self.labels
-        self.load_button, self.save_button = self.buttons
-        self.configure_headings(self.heading_commands)
-        self.configure_radios(self.radio_settings)
-        self.configure_textboxes(self.textbox_commands)
+            obj = self.site
+        elif name in {'headings', 'textboxes', 'radios', 'text_styles', 'font'}:
+            obj = self.widgets
+        elif name == 'language_code':
+            obj, name = self.properties, 'language'
+        # else:
+        #     raise AttributeError(name)
+        return getattr(obj, name)
 
     def refresh_random(self, event=None):
         """
         Show a certain number of random nonsense words using High Lulani phonotactics.
         """
         if self.words:
-            self.information.set('\n'.join(self.words))
+            self.widgets.information.set('\n'.join(self.words))
         return 'break'
-
-    def configure_headings(self, commands=None):
-        if commands:
-            for heading in self.headings:
-                for command in commands:
-                    keys, command = command
-                    for key in keys:
-                        heading.bind(key, command)
-
-    def configure_radios(self, settings=None):
-        if settings:
-            settings = zip(self.radios, settings)
-            for radio, (code, language) in settings:
-                radio.configure(text=language().name, variable=self.language,
-                        value=code, command=self.change_language)
-
-    def configure_textboxes(self, commands=None):
-        if commands:
-            for textbox in self.textboxes:
-                scrollbar = Tk.Scrollbar(self.textframe)
-                scrollbar.pack(side=Tk.RIGHT, fill=Tk.Y)
-                scrollbar.config(command=textbox.yview)
-                textbox.config(bg='white', fg='black', insertbackground='black',
-                    yscrollcommand=scrollbar.set)
-                for (name, style) in self.text_styles:
-                    textbox.tag_config(name, **style)
-                for (key, command) in commands:
-                    textbox.bind(key, command)
-
-    @property
-    def text_styles(self):
-        strong = self.font.copy()
-        strong.configure(weight='bold')
-        em = self.font.copy()
-        em.configure(slant='italic')
-        underline = self.font.copy()
-        underline.configure(underline=True, family='Calibri')
-        small_caps = self.font.copy()
-        size = small_caps.actual(option='size') - 3
-        small_caps.configure(size=size, family='Algerian')
-        highlulani = self.font.copy()
-        size = highlulani.actual(option='size') + 3
-        highlulani.configure(family='Lulani', size=size)
-        return [
-            ('strong', {'font': strong}),
-            ('em', {'font': em}),
-            ('small-caps', {'font': small_caps}),
-            ('link', {'foreground': 'blue', 'font': underline}),
-            ('high-lulani', {'font': highlulani})
-        ]
-
-    def place_widgets(self):
-        """
-        Place all widgets in GUI window.
-        Stack the textboxes on the right-hand side, taking as much
-            room as possible.
-        Stack the heading boxes, the buttons, radiobuttons and a
-            label in the top-left corner.
-        """
-        self.top['menu'] = self.menu
-        self.pack(expand=True, fill=Tk.BOTH)
-        self.buttonframe.pack(side=Tk.LEFT)
-        self.headingframe.grid(row=0, column=0, columnspan=2, sticky=Tk.N)
-        self.textframe.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
-        for heading in self.headings:
-            heading.grid(column=0, columnspan=2, sticky=Tk.N)
-        row = 1
-        for i, button in enumerate(self.buttons):
-            button.grid(row=row, column=i)
-        row += 1
-        for radio in self.radios:
-            radio.grid(row=row, column=0, columnspan=2)
-            row += 1
-        for textbox in self.textboxes:
-            textbox.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
-            row += 1
-        self.infolabel.grid(row=row, column=0, columnspan=2)
-        self.blanklabel.grid(row=row+1, column=0, columnspan=2)
 
     def scroll_headings(self, event):
         """
@@ -347,15 +125,6 @@ class Editor(Tk.Frame, object):
             heading.insert(Tk.INSERT, self.entry.name)
             self.master.title('Editing ' + self.entry.name)
         return 'break'
-
-    def fill_headings(self, entries):
-        while len(self.headings) < len(entries):
-            self.add_heading()
-        while len(self.headings) > len(entries):
-            self.remove_heading()
-        for heading, entry in zip(self.headings, entries):
-            heading.delete(0, Tk.END)
-            heading.insert(Tk.INSERT, entry)
 
     def enter_headings(self, event):
         """
@@ -444,7 +213,7 @@ class Editor(Tk.Frame, object):
             heading.delete(0, Tk.END)
         for textbox in self.textboxes:
             textbox.delete(1.0, Tk.END)
-        self.information.set('')
+        self.widgets.information.set('')
         self.go_to_heading()
 
     def site_save(self, event=None):
@@ -480,7 +249,7 @@ class Editor(Tk.Frame, object):
         self.entry = self.find_entry(map(lambda x: x.get(), self.headings))
         texts = self.prepare_entry(self.entry)
         self.display(texts)
-        self.save_text.set('Save')
+        self.widgets.save_text.set('Save')
         return 'break'
 
     def add_translation(self, event):
@@ -621,7 +390,7 @@ class Editor(Tk.Frame, object):
             textbox.config(font=self.font)
             for (name, style) in self.text_styles:
                 textbox.tag_config(name, **style)
-        self.save_text.set('Save')
+        self.widgets.save_text.set('Save')
         return 'break'
 
     @property
@@ -699,13 +468,13 @@ class Editor(Tk.Frame, object):
         if event.keycode in (37, 109):
             event.widget.edit_modified(False)
         elif event.widget.edit_modified():
-            self.save_text.set('*Save')
+            self.widgets.save_text.set('*Save')
 
     def update_wordcount(self, event=None, widget=None):
         if event is not None:
             widget = event.widget
         text = widget.get(1.0, Tk.END)
-        self.information.set(str(text.count(' ') + text.count('\n') - text.count(' | ')))
+        self.widgets.information.set(str(text.count(' ') + text.count('\n') - text.count(' | ')))
 
     @staticmethod
     def select_all(event):
@@ -861,16 +630,6 @@ class Editor(Tk.Frame, object):
         textbox.mark_set(Tk.INSERT, Tk.INSERT + ' lineend +1c')
         return 'break'
 
-    def change_fontsize(self, event):
-        sign = 1 if event.delta > 0 else -1
-        size = self.font.actual(option='size') + sign
-        self.font.config(size=size)
-        for textbox in self.textboxes:
-            textbox.config(font=self.font)
-            for (name, style) in self.text_styles:
-                textbox.tag_config(name, **style)
-        return 'break'
-
     def scroll_textbox(self, event):
         for textbox in self.textboxes:
             textbox.yview_scroll(-1*(event.delta/20), Tk.UNITS)
@@ -912,9 +671,9 @@ class Editor(Tk.Frame, object):
             self.textboxes[0].mark_set(Tk.INSERT, position)
             self.textboxes[0].mark_set(Tk.CURRENT, position)
             self.textboxes[0].see(Tk.INSERT)
-            self.information.set('OK')
+            self.widgets.information.set('OK')
         except AttributeError:
-            self.information.set('Not OK')
+            self.widgets.information.set('Not OK')
         return 'break'
 
     def markdown_check(self, event=None):
@@ -939,64 +698,6 @@ class Editor(Tk.Frame, object):
         self.properties.fontsize = self.font.actual(option='size')
         self.site_save()
         self.master.destroy()
-
-    @property
-    def menu_commands(self):
-        return [('Site', [('Open', self.site_open),
-                        ('Save', self.site_save),
-                        ('Save _As', self.site_saveas),
-                        ('Open in _Browser', self.open_in_browser),
-                        ('P_roperties', self.site_properties),
-                        ('S_ee All', self.list_pages),
-                        ('Publish All', self.site_publish)]),
-                ('Markdown', [('Load', self.markdown_load),
-                              ('Refresh', self.markdown_refresh),
-                              ('Check', self.markdown_check),
-                              ('Open as _Html', self.markdown_open)]
-                              )]
-
-    @property
-    def heading_commands(self):
-        return [(['<Prior>', '<Next>'], self.scroll_headings),
-                (['<Return>'], self.enter_headings)]
-
-    @property
-    def radio_settings(self):
-        if self.widgets.radios == 'languages':
-            return self.translator.languages.items()
-
-    @property
-    def button_commands(self):
-        return self.load, self.save
-
-    @property
-    def textbox_commands(self):
-        return [('<KeyPress>', self.edit_text_changed),
-        ('<MouseWheel>', self.scroll_textbox),
-        ('<Control-MouseWheel>', self.change_fontsize),
-        ('<Control-a>', self.select_all),
-        ('<Control-b>', self.bold),
-        ('<Control-d>', self.add_heading),
-        ('<Control-D>', self.remove_heading),
-        ('<Control-e>', self.example_no_lines),
-        ('<Control-f>', self.example),
-        ('<Control-i>', self.italic),
-        ('<Control-l>', self.load),
-        ('<Control-k>', self.small_caps),
-        ('<Control-K>', self.delete_line),
-        ('<Control-m>', self.markdown_refresh),
-        ('<Control-n>', self.add_link),
-        ('<Control-N>', self.insert_new),
-        ('<Control-o>', self.site_open),
-        ('<Control-s>', self.save),
-        ('<Control-t>', self.add_translation),
-        ('<Control-Up>', self.move_line_up),
-        ('<Control-Down>', self.move_line_down),
-        ('<Control-BackSpace>', self.backspace_word),
-        ('<Control-Delete>', self.delete_word),
-        ('<Alt-d>', self.go_to_heading),
-        ('<Tab>', self.insert_spaces),
-        ('<Shift-Tab>', self.previous_window)]
 
     def initial_content(self, entry=None):
         """

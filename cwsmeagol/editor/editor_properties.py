@@ -35,6 +35,7 @@ class EditorProperties(object):
         self.create_site()
         self.create_random_words()
         self.create_linkadder()
+        self.markdown = Markdown(self.markdown_file)
 
     def setup_template(self, template):
         if template:
@@ -65,14 +66,18 @@ class EditorProperties(object):
     def __getattr__(self, name):
         if name in ['files', 'source']:
             return getattr(self.site, name)
-        elif name in {'page', 'language', 'position', 'markdown', 'fontsize'}:
+        elif name in {'page', 'language', 'position', 'fontsize'}:
             return self.config['current'][name]
+        elif name == 'markdown_file':
+            return self.config['current']['markdown']
         else:
             raise AttributeError
 
     def __setattr__(self, name, value):
-        if name in {'page', 'language', 'position', 'markdown', 'fontsize'}:
+        if name in {'page', 'language', 'position', 'fontsize'}:
             self.config['current'][name] = value
+        elif name == 'markdown_file':
+            self.config['current']['markdown'] = value
         else:
             object.__setattr__(self, name, value)
 
