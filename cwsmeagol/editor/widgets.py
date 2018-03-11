@@ -283,7 +283,6 @@ class Widgets(object):
             self.save_text = '*Save'
 
     def scroll_textbox(self, event):
-        print(event.widget)
         for textbox in self.textboxes:
             textbox.yview_scroll(-1*(event.delta/20), Tk.UNITS)
         return 'break'
@@ -325,24 +324,35 @@ class Widgets(object):
         return 'break'
 
     def move_line(self, event):
+        self.tkinter_to_tkinter(self._move_line, [event])
+
+    def _move_line(self, event):
         if event.keysym == 'Up':
-            correction = '-1c linestart'
+            direction = ' -1 lines'
+            correction = ' -1c linestart'
         elif event.keysym == 'Down':
+            direction = ' +1 lines'
             correction = ' lineend +1c'
         else:
             return 'break'
         textbox = event.widget
+        position = textbox.index(Tk.INSERT)
         try:
             ends = (Tk.SEL_FIRST + ' linestart',
                     Tk.SEL_LAST + ' lineend +1c')
             text = textbox.get(*ends)
+            selected = map(textbox.index, (Tk.SEL_FIRST, Tk.SEL_LAST))
+            select = True
         except Tk.TclError:
             ends = (Tk.INSERT + ' linestart',
                     Tk.INSERT + ' lineend +1c')
             text = textbox.get(*ends)
+            select = False
         textbox.delete(*ends)
         textbox.insert(Tk.INSERT + correction, text)
-        textbox.mark_set(Tk.INSERT, Tk.INSERT + correction * 2)
+        if select:
+            textbox.tag_add('sel', *map(lambda x: x + direction, selected))
+        textbox.mark_set(Tk.INSERT, position + direction)
 
     def delete_line(self, event=None):
         try:
@@ -365,6 +375,16 @@ class Widgets(object):
         else:
             textbox.focus_set()
             self.update_wordcount(widget=textbox)
+        self.html_to_tkinter()
+
+    def html_to_html(self, function, args=(), kwargs={}):
+        self.html_to_tkinter()
+        function(*args, **kwargs)
+        self.tkinter_to_html()
+
+    def tkinter_to_tkinter(self, function, args=(), kwargs={}):
+        self.tkinter_to_html()
+        function(*args, **kwargs)
         self.html_to_tkinter()
 
     def html_to_tkinter(self):

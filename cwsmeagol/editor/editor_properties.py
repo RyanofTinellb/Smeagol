@@ -76,6 +76,11 @@ class EditorProperties(object):
             self.config['current'][name] = value
         elif name == 'markdown_file':
             self.config['current']['markdown'] = value
+        elif name == 'markdown':
+            try:
+                object.__setattr__(self, name, Markdown(value))
+            except TypeError: # value is already a Markdown instance
+                object.__setattr__(self, name, value)
         else:
             object.__setattr__(self, name, value)
 

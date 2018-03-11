@@ -316,16 +316,17 @@ class Editor(Tk.Frame, object):
         """
         if self.is_new:
             self.site_properties()
-        self.widgets.tkinter_to_html()
+        self.widgets.tkinter_to_tkinter(self._save)
+        self.widgets.reset_textboxes()
+        self.widgets.save_text.set('Save')
+        return 'break'
+
+    def _save(self):
         texts = map(self.get_text, self.widgets.textboxes)
         if self.entry:
             self.prepare_texts(texts)
         self.publish(self.entry, self.properties.site, self.new_page)
         self.new_page = False
-        self.widgets.html_to_tkinter()
-        self.widgets.reset_textboxes()
-        self.widgets.save_text.set('Save')
-        return 'break'
 
     @property
     def is_new(self):
@@ -502,30 +503,33 @@ class Editor(Tk.Frame, object):
         title='Load Markdown')
         if filename:
             try:
-                texts = map(self.get_text, self.widgets.textboxes)
-                texts = map(self.properties.markdown.to_markup, texts)
-                self.properties.markdown = Markdown(filename)
-                self.properties.markdown = filename
-                texts = map(self.properties.markdown.to_markdown, texts)
-                for textbox, text in izip(self.widgets.textboxes, texts):
-                    self.widgets.replace(textbox, text)
+                self.widgets.tkinter_to_tkinter(self._markdown_load, [filename])
             except IndexError:
                 mb.showerror('Invalid File', 'Please select a valid *.mkd file.')
 
+    def _markdown_load(self, filename):
+        texts = map(self.get_text, self.widgets.textboxes)
+        texts = map(self.properties.markdown.to_markup, texts)
+        self.properties.markdown = filename
+        texts = map(self.properties.markdown.to_markdown, texts)
+        for textbox, text in izip(self.widgets.textboxes, texts):
+            self.widgets.replace(textbox, text)
+
     def markdown_refresh(self, event=None):
         try:
-            self.widgets.tkinter_to_html()
-            texts = map(self.get_text, self.widgets.textboxes)
-            texts = map(self.properties.markdown.to_markup, texts)
-            self.properties.markdown.refresh()
-            texts = map(self.properties.markdown.to_markdown, texts)
-            for textbox, text in self.widgets.textboxes, texts:
-                self.widgets.replace(textbox, text)
-            self.widgets.html_to_tkinter()
+            self.widgets.tkinter_to_tkinter(self._markdown_refresh)
             self.widgets.information.set('OK')
         except AttributeError:
             self.widgets.information.set('Not OK')
         return 'break'
+
+    def _markdown_refresh(self):
+        texts = map(self.get_text, self.widgets.textboxes)
+        texts = map(self.properties.markdown.to_markup, texts)
+        self.properties.markdown.refresh()
+        texts = map(self.properties.markdown.to_markdown, texts)
+        for textbox, text in izip(self.widgets.textboxes, texts):
+            self.widgets.replace(textbox, text)
 
     def markdown_check(self, event=None):
         filename = self.properties.markdown.filename
