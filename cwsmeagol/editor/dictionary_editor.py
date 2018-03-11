@@ -13,7 +13,16 @@ class DictionaryEditor(Editor):
         self.current = -1
 
         super(DictionaryEditor, self).__init__(master)
-        self.font.config(family='Courier New')
+        commands = [
+                ('<Control-r>', self.refresh_random),
+                ('<Control-=>', self.add_definition),
+                ('<Prior>', self.scroll_history),
+                ('<Next>', self.scroll_history),
+                ('<Control-Prior>', self.previous_entry),
+                ('<Control-Next>', self.next_entry),
+              ]
+        self.widgets.add_commands('Text', commands)
+        self.widgets.font.config(family='Courier New')
         self.master.title('Editing Dictionary')
 
     @property
@@ -25,12 +34,12 @@ class DictionaryEditor(Editor):
             if self.current > 0:
                 self.current -= 1
                 self.heading.delete(0, Tk.END)
-                self.heading.insert(0, self.markdown.to_markdown(self.history[self.current]))
+                self.heading.insert(0, self.properties.markdown.to_markdown(self.history[self.current]))
         elif event.keysym == 'Next':
             if self.current < len(self.history) - 1:
                 self.current += 1
                 self.heading.delete(0, Tk.END)
-                self.heading.insert(0, self.markdown.to_markdown(self.history[self.current]))
+                self.heading.insert(0, self.properties.markdown.to_markdown(self.history[self.current]))
         return 'break'
 
     def scroll_history(self, event):
@@ -65,7 +74,7 @@ class DictionaryEditor(Editor):
         Insert the markdown for entry definition, and move the insertion pointer to allow for immediate input of the definition.
         """
         widget = event.widget
-        m = self.markdown.to_markdown
+        m = self.properties.markdown.to_markdown
         self.insert_characters(widget, m('<div class="definition">'), m('</div>'))
         return 'break'
 
@@ -78,8 +87,8 @@ class DictionaryEditor(Editor):
         :return (Page):
         """
         heading = headings[0]
-        site = self.site
-        with conversion(self.markdown, 'to_markup') as converter:
+        site = self.properties.site
+        with conversion(self.properties.markdown, 'to_markup') as converter:
             heading = converter(heading)
         try:
             entry = site[heading]
@@ -138,20 +147,6 @@ class DictionaryEditor(Editor):
         commands = super(DictionaryEditor, self).heading_commands
         commands += [(['<Control-r>'], self.refresh_random)]
         return commands
-
-    @property
-    def textbox_commands(self):
-        commands = super(DictionaryEditor, self).textbox_commands
-        commands += [
-        ('<Control-r>', self.refresh_random),
-        ('<Control-=>', self.add_definition),
-        ('<Prior>', self.scroll_history),
-        ('<Next>', self.scroll_history),
-        ('<Control-Prior>', self.previous_entry),
-        ('<Control-Next>', self.next_entry),
-        ]
-        return commands
-
 
 if __name__ == '__main__':
     links = [ExternalGrammar('c:/users/ryan/documents/'

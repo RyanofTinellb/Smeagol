@@ -50,7 +50,7 @@ class Editor(Tk.Frame, object):
                 ('<Control-e>', self.example_no_lines),
                 ('<Control-f>', self.example),
                 ('<Control-t>', self.add_translation),
-                ('<Control-o>', self.properties.site_open),
+                ('<Control-o>', self.site_open),
                 ('<Control-s>', self.save),
                 ('<Control-l>', self.load),
                 ('<Control-m>', self.properties.markdown_refresh)
@@ -189,13 +189,12 @@ class Editor(Tk.Frame, object):
         Reset the program.
         """
         self.entry = self.properties.site.root
-        self.clear_interface()
-        self.fill_headings(self.properties.page)
+        self.widgets.clear_interface()
+        self.widgets.fill_headings(self.properties.page)
         self.load()
 
     def site_save(self, event=None):
-        page = [heading.get() for heading in self.headings]
-        self.properties.page = page
+        self.properties.page = list(self.widgets.heading_contents)
         self.properties.save()
         return 'break'
 
@@ -316,7 +315,7 @@ class Editor(Tk.Frame, object):
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages.
         """
         if self.is_new:
-            self.properties.site_properties()
+            self.site_properties()
         self.widgets.tkinter_to_html()
         texts = map(self.get_text, self.widgets.textboxes)
         if self.entry:
@@ -548,7 +547,7 @@ class Editor(Tk.Frame, object):
         self.properties.language = self.language.get()
         self.properties.position = self.widgets.textboxes[0].index(Tk.INSERT)
         self.properties.fontsize = self.widgets.font.actual(option='size')
-        self.properties.site_save()
+        self.site_save()
         self.master.destroy()
 
     def initial_content(self, entry=None):
