@@ -64,14 +64,12 @@ class EditorProperties(object):
             return ''
 
     def __getattr__(self, name):
-        if name in ['files', 'source']:
+        if name in {'files', 'source', 'destination'}:
             return getattr(self.site, name)
         elif name in {'page', 'language', 'position', 'fontsize'}:
             return self.config['current'][name]
         elif name == 'markdown_file':
             return self.config['current']['markdown']
-        else:
-            raise AttributeError
 
     def __setattr__(self, name, value):
         if name in {'page', 'language', 'position', 'fontsize'}:

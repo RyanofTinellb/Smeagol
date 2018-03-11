@@ -21,7 +21,7 @@ class Editor(Tk.Frame, object):
     """
     Base class for DictionaryEditor and TranslationEditor
     """
-    def __init__(self, properties=None, widgets=None, font=None, master=None):
+    def __init__(self, master=None):
         """
         Initialise an instance of the Editor class.
         :param directory (str):
@@ -32,50 +32,58 @@ class Editor(Tk.Frame, object):
         self.master.title('Page Editor')
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.top = self.winfo_toplevel()
-        self.properties = properties or EditorProperties(caller=self.caller)
 
-        self.widgets = widgets or Widgets(self, headings=2, textboxes=1, font=font)
+        self.properties = EditorProperties(caller=self.caller)
+
+        self.language = Tk.StringVar()
+        self.language.set(self.properties.language)
+        self.translator = Translator(self.language.get())
+
+        self.widgets = Widgets(self, headings=2, textboxes=1,
+                                fontsize=self.properties.fontsize)
+        commands = [
+                ('<Control-N>', self.insert_new),
+                ('<Control-b>', self.bold),
+                ('<Control-i>', self.italic),
+                ('<Control-k>', self.small_caps),
+                ('<Control-n>', self.add_link),
+                ('<Control-e>', self.example_no_lines),
+                ('<Control-f>', self.example),
+                ('<Control-t>', self.add_translation),
+                ('<Control-o>', self.properties.site_open),
+                ('<Control-s>', self.save),
+                ('<Control-l>', self.load),
+                ('<Control-m>', self.properties.markdown_refresh)
+              ]
+        self.widgets.add_commands('Text', commands)
+        self.widgets.save_text = 'Save'
+        commands = [
+            (('<Prior>', '<Next>'), self.scroll_headings),
+            ('<Return>', self.enter_headings)
+          ]
+        self.widgets.add_commands('Entry', commands)
 
         self.new_page = False
+
         self.server = None
         self.PORT = 41809
         self.start_server()
-        self.widgets.save_text.set('Save')
-        self.language = Tk.StringVar()
-        self.language.set(self.language_code)
-        self.translator = Translator(self.language.get())
-        self.entry = self.site.root
-        self.widgets.ready()
+
+        self.entry = self.properties.site.root
         self.entry.content = self.entry.content or self.initial_content()
-        self.widgets.fill_headings(self.page)
+        self.widgets.fill_headings(self.properties.page)
         self.load()
-        self.widgets.go_to(self.position)
+        self.widgets.go_to(self.properties.position)
+
+    def __getattr__(self, name):
+        if name == 'language_code':
+            return getattr(self.properties, 'language')
+        else:
+            raise AttributeError(name)
 
     @property
     def caller(self):
         return 'site'
-
-    @property
-    def colour(self):
-        colours = {
-            'site': 'green',
-            'dictionary': 'yellow',
-            'translation': 'white'
-        }
-        return colours[self.caller]
-
-    def __getattr__(self, name):
-        if name in {'site', 'linkadder', 'source', 'position', 'page', 'markdown', 'fontsize'}:
-            obj = self.properties
-        elif name in {'root', 'destination'}:
-            obj = self.site
-        elif name in {'headings', 'textboxes', 'radios', 'text_styles', 'font'}:
-            obj = self.widgets
-        elif name == 'language_code':
-            obj, name = self.properties, 'language'
-        # else:
-        #     raise AttributeError(name)
-        return getattr(obj, name)
 
     def refresh_random(self, event=None):
         """
@@ -93,9 +101,10 @@ class Editor(Tk.Frame, object):
         :param level (int): the level of the hierarchy that is being
             traversed.
         """
+        root = self.properties.site.root
         heading = event.widget
-        actual_level = self.headings.index(heading) + 2
-        level = actual_level + self.root.level - 1
+        actual_level = self.widgets.headings.index(heading) + 2
+        level = actual_level + root.level - 1
         direction = 1 if event.keysym == 'Next' else -1
         child = True
         # ascend hierarchy until correct level
@@ -115,12 +124,12 @@ class Editor(Tk.Frame, object):
             except IndexError:
                 child = False
                 break
-        for heading_ in self.headings[level - self.root.level - 1:]:
+        for heading_ in self.widgets.headings[level - root.level - 1:]:
             heading_.delete(0, Tk.END)
-        while len(self.headings) > actual_level:
-            self.remove_heading()
-        while child and len(self.headings) < min(actual_level, 10):
-            self.add_heading()
+        while len(self.widgets.headings) > actual_level:
+            self.widgets.remove_heading()
+        while child and len(self.widgets.headings) < min(actual_level, 10):
+            self.widgets.add_heading()
         if child:
             heading.insert(Tk.INSERT, self.entry.name)
             self.master.title('Editing ' + self.entry.name)
@@ -130,21 +139,12 @@ class Editor(Tk.Frame, object):
         """
         Go to the next heading, or load the entry
         """
-        level = self.headings.index(event.widget)
+        headings = self.widgets.headings
+        level = headings.index(event.widget)
         try:
-            self.headings[level + 1].focus_set()
+            headings[level + 1].focus_set()
         except IndexError:
             self.load()
-        return 'break'
-
-    def go_to_heading(self, event=None):
-        """
-        Move focus to the heading textbox, and select all the text therein
-        """
-        with ignored(IndexError):
-            heading = self.headings[0]
-            heading.focus_set()
-            heading.select_range(0, Tk.END)
         return 'break'
 
     def change_language(self, event=None):
@@ -152,21 +152,6 @@ class Editor(Tk.Frame, object):
         Change the entry language to whatever is in the StringVar 'self.language'
         """
         self.translator = Translator(self.language.get())
-        return 'break'
-
-    def previous_window(self, event):
-        textbox = self.textboxes[(self.textboxes.index(event.widget) - 1)]
-        textbox.focus_set()
-        self.update_wordcount(widget=textbox)
-        return 'break'
-
-    def next_window(self, event):
-        try:
-            textbox = self.textboxes[(self.textboxes.index(event.widget) + 1)]
-        except IndexError:
-            textbox = self.textboxes[0]
-        textbox.focus_set()
-        self.update_wordcount(widget=textbox)
         return 'break'
 
     def site_open(self, event=None):
@@ -203,18 +188,10 @@ class Editor(Tk.Frame, object):
         """
         Reset the program.
         """
-        self.entry = self.site.root
+        self.entry = self.properties.site.root
         self.clear_interface()
         self.fill_headings(self.properties.page)
         self.load()
-
-    def clear_interface(self):
-        for heading in self.headings:
-            heading.delete(0, Tk.END)
-        for textbox in self.textboxes:
-            textbox.delete(1.0, Tk.END)
-        self.widgets.information.set('')
-        self.go_to_heading()
 
     def site_save(self, event=None):
         page = [heading.get() for heading in self.headings]
@@ -233,23 +210,24 @@ class Editor(Tk.Frame, object):
         """
         properties_window = PropertiesWindow(self.properties)
         self.wait_window(properties_window)
-        self.site.root.name = self.site.name
+        self.properties.site.root.name = self.properties.site.name
         self.properties.save()
 
     def site_publish(self, event=None):
         """
         Publish every page in the Site using the Site's own method
         """
-        self.site.publish()
+        self.properties.site.publish()
 
     def load(self, event=None):
         """
         Find entry, manipulate entry to fit boxes, place in boxes.
         """
-        self.entry = self.find_entry(map(lambda x: x.get(), self.headings))
+        widgets = self.widgets
+        self.entry = self.find_entry(widgets.heading_contents)
         texts = self.prepare_entry(self.entry)
-        self.display(texts)
-        self.widgets.save_text.set('Save')
+        widgets.display(texts)
+        widgets.save_text = 'Save'
         return 'break'
 
     def add_translation(self, event):
@@ -264,14 +242,14 @@ class Editor(Tk.Frame, object):
         except Tk.TclError:
             text = textbox.get(Tk.INSERT + ' wordstart', Tk.INSERT + ' wordend')
         length = len(text)
-        with conversion(self.markdown, 'to_markup') as converter:
+        with conversion(self.properties.markdown, 'to_markup') as converter:
             text = converter(text)
         example = re.match(r'\[[ef]\]', text) # line has 'example' formatting
         converter = self.translator.convert_sentence if '.' in text else self.translator.convert_word
         text = converter(text)
         if example:
             text = '[e]' + text
-        with conversion(self.markdown, 'to_markdown') as converter:
+        with conversion(self.properties.markdown, 'to_markdown') as converter:
             text = converter(text)
         try:
             text += '\n' if textbox.compare(Tk.SEL_LAST, '==', Tk.SEL_LAST + ' lineend') else ' '
@@ -281,7 +259,7 @@ class Editor(Tk.Frame, object):
             textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
             textbox.insert(Tk.INSERT + '+1c', text)
         textbox.mark_set(Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + length)))
-        self.html_to_tkinter()
+        self.widgets.html_to_tkinter()
         return 'break'
 
     def find_entry(self, headings):
@@ -292,7 +270,7 @@ class Editor(Tk.Frame, object):
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
         """
-        entry = self.site.root
+        entry = self.properties.site.root
         for heading in headings:
             if heading:
                 try:
@@ -309,8 +287,8 @@ class Editor(Tk.Frame, object):
     def list_pages(self, event=None):
         def text_thing(page):
             return ' ' * 2 * page.level + page.name
-        text = '\n'.join(map(text_thing, self.site))
-        with conversion(self.markdown, 'to_markdown') as converter:
+        text = '\n'.join(map(text_thing, self.properties.site))
+        with conversion(self.properties.markdown, 'to_markdown') as converter:
             text = converter(text)
         textwindow = TextWindow(text)
         self.wait_window(textwindow)
@@ -327,76 +305,36 @@ class Editor(Tk.Frame, object):
         """
         text = entry.content
         text = remove_datestamp(text)
-        with conversion(self.linkadder, 'remove_links') as converter:
+        with conversion(self.properties.linkadder, 'remove_links') as converter:
             text = converter(text)
-        with conversion(self.markdown, 'to_markdown') as converter:
+        with conversion(self.properties.markdown, 'to_markdown') as converter:
             text = converter(text)
         return [text]
-
-    def display(self, texts):
-        map(self.widgets.replace, self.textboxes, texts)
-        self.html_to_tkinter()
-        self.textboxes[-1].focus_set()
-        self.update_wordcount(widget=self.textboxes[-1])
-
-    def html_to_tkinter(self):
-        count = Tk.IntVar()
-        for textbox in self.textboxes:
-            for (style, _) in self.text_styles:
-                while True:
-                    try:
-                        start = textbox.search(
-                                '<{0}>.*?</{0}>'.format(style),
-                                '1.0',
-                                regexp=True,
-                                count=count
-                            )
-                        end = start + '+' + str(count.get()) + 'c'
-                        text = textbox.get(start, end)
-                        text = text[len(style) + 2:-3-len(style)]
-                        textbox.delete(start, end)
-                        textbox.insert(start, text)
-                        textbox.tag_add(style, start, start + '+' + str(len(text)) + 'c')
-                    except Tk.TclError:
-                        break
-
-    def tkinter_to_html(self):
-        for textbox in self.textboxes:
-            for (style, _) in self.text_styles:
-                for end, start in izip(*[reversed(textbox.tag_ranges(style))] * 2):
-                    text = textbox.get(start, end)
-                    text = '<{1}>{0}</{1}>'.format(text, style)
-                    textbox.delete(start, end)
-                    textbox.insert(start, text)
 
     def save(self, event=None):
         """
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages.
         """
         if self.is_new:
-            self.site_properties()
-        self.tkinter_to_html()
-        texts = map(self.get_text, self.textboxes)
+            self.properties.site_properties()
+        self.widgets.tkinter_to_html()
+        texts = map(self.get_text, self.widgets.textboxes)
         if self.entry:
             self.prepare_texts(texts)
-        self.publish(self.entry, self.site, self.new_page)
+        self.publish(self.entry, self.properties.site, self.new_page)
         self.new_page = False
-        self.html_to_tkinter()
-        for textbox in self.textboxes:
-            textbox.edit_modified(False)
-            textbox.config(font=self.font)
-            for (name, style) in self.text_styles:
-                textbox.tag_config(name, **style)
+        self.widgets.html_to_tkinter()
+        self.widgets.reset_textboxes()
         self.widgets.save_text.set('Save')
         return 'break'
 
     @property
     def is_new(self):
-        if self.site is None:
+        if self.properties.site is None:
             return True
-        elif not self.source:
+        elif not self.properties.source:
             return True
-        elif self.destination is None:
+        elif self.properties.destination is None:
             return True
         return False
 
@@ -431,9 +369,9 @@ class Editor(Tk.Frame, object):
         """
         Run conversions over text
         """
-        with conversion(self.markdown, 'to_markup') as converter:
+        with conversion(self.properties.markdown, 'to_markup') as converter:
             text = converter(text)
-        with conversion(self.linkadder, 'add_links') as converter:
+        with conversion(self.properties.linkadder, 'add_links') as converter:
             text = converter(text, entry)
         text = add_datestamp(text)
         return text
@@ -454,29 +392,6 @@ class Editor(Tk.Frame, object):
         if site is not None:
             site.modify_source()
             site.update_json()
-
-    def edit_text_changed(self, event):
-        """
-        Notify the user that the edittext has been changed.
-        Activates after each keypress.
-        Deactivates after a save or a load action.
-        """
-        self.update_wordcount(event)
-        if event.keycode in (37, 109):
-            event.widget.edit_modified(False)
-        elif event.widget.edit_modified():
-            self.widgets.save_text.set('*Save')
-
-    def update_wordcount(self, event=None, widget=None):
-        if event is not None:
-            widget = event.widget
-        text = widget.get(1.0, Tk.END)
-        self.widgets.information.set(str(text.count(' ') + text.count('\n') - text.count(' | ')))
-
-    @staticmethod
-    def select_all(event):
-        event.widget.tag_add('sel', '1.0', 'end')
-        return 'break'
 
     @staticmethod
     def insert_characters(textbox, before, after=''):
@@ -504,14 +419,14 @@ class Editor(Tk.Frame, object):
         Insert markdown for tags, and place insertion point between
         them.
         """
-        with conversion(self.markdown, 'find_formatting') as converter:
+        with conversion(self.properties.markdown, 'find_formatting') as converter:
             self.insert_characters(event.widget, *converter(tag))
 
     def insert_markdown(self, event, tag):
         """
         Insert markdown for tags
         """
-        with conversion(self.markdown, 'find') as converter:
+        with conversion(self.properties.markdown, 'find') as converter:
             self.insert_characters(event.widget, converter(tag))
 
     def example_no_lines(self, event):
@@ -575,65 +490,12 @@ class Editor(Tk.Frame, object):
         self.load()
         return 'break'
 
-    def backspace_word(self, event):
-        widget = event.widget
-        get = widget.get
-        delete = widget.delete
-        if get(Tk.INSERT + '-1c') in '.,;:?! ':
-            delete(Tk.INSERT + '-2c wordstart', Tk.INSERT)
-        elif get(Tk.INSERT) in ' ':
-            delete(Tk.INSERT + '-1c wordstart -1c', Tk.INSERT)
-        else:
-            delete(Tk.INSERT + '-1c wordstart', Tk.INSERT)
-        self.update_wordcount(event)
-        return 'break'
-
-    def delete_word(self, event):
-        widget = event.widget
-        get = widget.get
-        delete = widget.delete
-        if get(Tk.INSERT + '-1c') in ' .,;:?!\n' or widget.compare(Tk.INSERT, '==', '1.0'):
-            delete(Tk.INSERT, Tk.INSERT + ' wordend +1c')
-        elif get(Tk.INSERT) == ' ':
-            delete(Tk.INSERT, Tk.INSERT + '+1c wordend')
-        elif get(Tk.INSERT) in '.,;:?!':
-            delete(Tk.INSERT, Tk.INSERT + '+1c')
-        else:
-            delete(Tk.INSERT, Tk.INSERT + ' wordend')
-        self.update_wordcount(event)
-        return 'break'
-
     def select_paragraph(self, event=None):
         event.widget.tag_add('sel', Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
         return 'break'
 
-    def delete_line(self, event=None):
-        event.widget.delete(Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
-        return 'break'
-
-    def move_line_up(self, event=None):
-        textbox = event.widget
-        text = textbox.get(Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
-        textbox.delete(Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
-        textbox.insert(Tk.INSERT + '-1c linestart', text)
-        textbox.mark_set(Tk.INSERT, Tk.INSERT + '-1c linestart -1c linestart')
-        return 'break'
-
-    def move_line_down(self, event=None):
-        textbox = event.widget
-        text = textbox.get(Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
-        textbox.delete(Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
-        textbox.insert(Tk.INSERT + ' lineend +1c', text)
-        textbox.mark_set(Tk.INSERT, Tk.INSERT + ' lineend +1c')
-        return 'break'
-
-    def scroll_textbox(self, event):
-        for textbox in self.textboxes:
-            textbox.yview_scroll(-1*(event.delta/20), Tk.UNITS)
-        return 'break'
-
     def markdown_open(self, event=None):
-        web.open_new_tab(self.markdown.filename)
+        web.open_new_tab(self.properties.markdown.filename)
 
     def markdown_load(self, event=None):
         filename = fd.askopenfilename(
@@ -641,37 +503,39 @@ class Editor(Tk.Frame, object):
         title='Load Markdown')
         if filename:
             try:
-                texts = map(self.get_text, self.textboxes)
-                texts = map(self.markdown.to_markup, texts)
-                self.markdown = Markdown(filename)
+                texts = map(self.get_text, self.widgets.textboxes)
+                texts = map(self.properties.markdown.to_markup, texts)
+                self.properties.markdown = Markdown(filename)
                 self.properties.markdown = filename
-                texts = map(self.markdown.to_markdown, texts)
-                map(self.widgets.replace, self.textboxes, texts)
+                texts = map(self.properties.markdown.to_markdown, texts)
+                for textbox, text in izip(self.widgets.textboxes, texts):
+                    self.widgets.replace(textbox, text)
             except IndexError:
                 mb.showerror('Invalid File', 'Please select a valid *.mkd file.')
 
     def markdown_refresh(self, event=None):
         try:
-            self.tkinter_to_html()
-            texts = map(self.get_text, self.textboxes)
-            texts = map(self.markdown.to_markup, texts)
-            self.markdown.refresh()
-            texts = map(self.markdown.to_markdown, texts)
-            map(self.widgets.replace, self.textboxes, texts)
-            self.html_to_tkinter()
+            self.widgets.tkinter_to_html()
+            texts = map(self.get_text, self.widgets.textboxes)
+            texts = map(self.properties.markdown.to_markup, texts)
+            self.properties.markdown.refresh()
+            texts = map(self.properties.markdown.to_markdown, texts)
+            for textbox, text in self.widgets.textboxes, texts:
+                self.widgets.replace(textbox, text)
+            self.widgets.html_to_tkinter()
             self.widgets.information.set('OK')
         except AttributeError:
             self.widgets.information.set('Not OK')
         return 'break'
 
     def markdown_check(self, event=None):
-        filename = self.markdown.filename
+        filename = self.properties.markdown.filename
         with open(filename) as markdown:
             original = markdown.read()
-        intermediate = self.markdown.to_markdown(original)
-        translated = self.markdown.to_markup(intermediate)
+        intermediate = self.properties.markdown.to_markdown(original)
+        translated = self.properties.markdown.to_markup(intermediate)
         output = ''
-        for o, i, t in zip(*map(lambda x: x.splitlines(), [original, intermediate, translated])):
+        for o, i, t in izip(*map(lambda x: x.splitlines(), [original, intermediate, translated])):
             if o != t:
                 output += '{0} {3} {1} {3} {2}\n'.format(o, i, t, '-' * 5)
         textwindow = TextWindow(output)
@@ -679,12 +543,12 @@ class Editor(Tk.Frame, object):
 
     def quit(self):
         self.server.shutdown()
-        page = [heading.get() for heading in self.headings]
+        page = [heading.get() for heading in self.widgets.headings]
         self.properties.page = page
         self.properties.language = self.language.get()
-        self.properties.position = self.textboxes[0].index(Tk.INSERT)
-        self.properties.fontsize = self.font.actual(option='size')
-        self.site_save()
+        self.properties.position = self.widgets.textboxes[0].index(Tk.INSERT)
+        self.properties.fontsize = self.widgets.font.actual(option='size')
+        self.properties.site_save()
         self.master.destroy()
 
     def initial_content(self, entry=None):

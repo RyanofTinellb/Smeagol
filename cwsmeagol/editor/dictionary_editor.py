@@ -3,7 +3,7 @@ from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 
 class DictionaryEditor(Editor):
-    def __init__(self, properties=None, master=None):
+    def __init__(self, master=None):
         """
 
         """
@@ -12,10 +12,7 @@ class DictionaryEditor(Editor):
         self.history = []
         self.current = -1
 
-        super(DictionaryEditor, self).__init__(
-                                properties=properties,
-                                master=master
-                            )
+        super(DictionaryEditor, self).__init__(master)
         self.font.config(family='Courier New')
         self.master.title('Editing Dictionary')
 
