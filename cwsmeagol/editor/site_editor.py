@@ -17,20 +17,20 @@ from cwsmeagol.utils import *
 from cwsmeagol.translation import Translator
 
 
-class Editor(Tk.Frame, object):
+class SiteEditor(Tk.Frame, object):
     """
     Base class for DictionaryEditor and TranslationEditor
     """
 
     def __init__(self, master=None):
         """
-        Initialise an instance of the Editor class.
+        Initialise an instance of the SiteEditor class.
         :param directory (str):
         :param widgets (WidgetAmounts): number of each of headings, textboxes,
             radiobuttons to create.
         """
-        super(Editor, self).__init__(master)
-        self.master.title('Page Editor')
+        super(SiteEditor, self).__init__(master)
+        self.master.title('Site Editor')
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.top = self.winfo_toplevel()
 
@@ -119,7 +119,7 @@ class Editor(Tk.Frame, object):
             with ignored(IndexError):
                 self.entry = self.entry.sister(direction)
         # descend hierarchy until correct level
-        while self.entry.level < level:
+        while self.entry.level < level:SiteEditor
             try:
                 self.entry = self.entry.children[0]
             except IndexError:
@@ -305,7 +305,7 @@ class Editor(Tk.Frame, object):
         Default method, other Editors will override this.
         :param entry (Page): A Page instance carrying text.
         :param return (str):
-        :called by: Editor.load()
+        :called by: SiteEditor.load()
         """
         text = entry.content
         text = remove_datestamp(text)

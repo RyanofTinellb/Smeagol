@@ -1,7 +1,7 @@
 import unittest
 from translation import *
 from smeagol import *
-from editor import *
+from site_editor import *
 
 def testExternalDictionaryAddLinks():
     grammar = Grammar()

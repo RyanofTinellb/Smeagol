@@ -13,11 +13,9 @@ class Smeagol(Tk.Frame, object):
         for i, (editor, text) in enumerate(zip(editors, texts)):
             button = Tk.Button(command=editor, text=text, height=8, width=14)
             button.grid(column=i, row=0)
-        self.all_editors = []
 
     def open_editor(self, editor):
         top = Tk.Toplevel()
-        self.all_editors.append(editor(master=top))
 
     def open_site(self):
         self.open_editor(Editor)

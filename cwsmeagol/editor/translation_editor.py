@@ -1,10 +1,10 @@
-from editor import *
+from site_editor import *
 from random import choice
 from string import printable
 from cwsmeagol.translation import Interlinear
 
 
-class TranslationEditor(Editor):
+class TranslationEditor(SiteEditor):
     def __init__(self, properties=None, widgets=None, font=None, master=None):
         font = ('Californian FB', 16)
         widgets = WidgetAmounts(headings=2, textboxes=4, radios='languages')
@@ -75,7 +75,7 @@ class TranslationEditor(Editor):
     def get_text(textbox):
         """
         Retrieves text from textbox and removes line-breaks.
-        Overrides Editor.get_text()
+        Overrides SiteEditor.get_text()
         """
         return str(textbox.get(1.0, Tk.END + '-1c')).replace('\n', ' | ')
 
@@ -101,7 +101,7 @@ class TranslationEditor(Editor):
         :param entry (Page):
         :param texts (str[]):
         :param markdown (Markdown):
-        :called by: Editor.save()
+        :called by: SiteEditor.save()
         """
         paragraphs = [None] * 5
         literal = texts.pop()

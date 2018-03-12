@@ -1,8 +1,8 @@
-from editor import Editor, Tk, Widgets
+from site_editor import SiteEditor, Tk, Widgets
 from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 
-class DictionaryEditor(Editor):
+class DictionaryEditor(SiteEditor):
     def __init__(self, master=None):
         """
 
@@ -81,7 +81,7 @@ class DictionaryEditor(Editor):
     def find_entry(self, headings):
         """
         Find the current entry based on what is in the heading boxes.
-        Overrides Editor.find_entry.
+        Overrides SiteEditor.find_entry.
         Subroutine of self.load().
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
@@ -104,7 +104,7 @@ class DictionaryEditor(Editor):
         """
         Modify entry with manipulated texts.
         Subroutine of self.save().
-        Overrides Editor.prepare_texts()
+        Overrides SiteEditor.prepare_texts()
         :param entry (Page): the entry in the datafile to be modified.
         :param texts (str[]): the texts to be manipulated and inserted.
         :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
@@ -118,7 +118,7 @@ class DictionaryEditor(Editor):
     def publish(entry, site, allpages=False):
         """
         Put entry contents into datafile, publish appropriate Pages.
-        Overrides Editor.publish()
+        Overrides SiteEditor.publish()
         Subroutine of self.save()
         """
         if entry.content:
