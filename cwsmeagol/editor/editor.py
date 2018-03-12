@@ -21,6 +21,7 @@ class Editor(Tk.Frame, object):
     """
     Base class for DictionaryEditor and TranslationEditor
     """
+
     def __init__(self, master=None):
         """
         Initialise an instance of the Editor class.
@@ -40,27 +41,27 @@ class Editor(Tk.Frame, object):
         self.translator = Translator(self.language.get())
 
         self.widgets = Widgets(self, headings=2, textboxes=1,
-                                fontsize=self.properties.fontsize)
+                               fontsize=self.properties.fontsize)
         commands = [
-                ('<Control-N>', self.insert_new),
-                ('<Control-b>', self.bold),
-                ('<Control-i>', self.italic),
-                ('<Control-k>', self.small_caps),
-                ('<Control-n>', self.add_link),
-                ('<Control-e>', self.example_no_lines),
-                ('<Control-f>', self.example),
-                ('<Control-t>', self.add_translation),
-                ('<Control-o>', self.site_open),
-                ('<Control-s>', self.save),
-                ('<Control-l>', self.load),
-                ('<Control-m>', self.properties.markdown_refresh)
-              ]
+            ('<Control-N>', self.insert_new),
+            ('<Control-b>', self.bold),
+            ('<Control-i>', self.italic),
+            ('<Control-k>', self.small_caps),
+            ('<Control-n>', self.add_link),
+            ('<Control-e>', self.example_no_lines),
+            ('<Control-f>', self.example),
+            ('<Control-t>', self.add_translation),
+            ('<Control-o>', self.site_open),
+            ('<Control-s>', self.save),
+            ('<Control-l>', self.load),
+            ('<Control-m>', self.properties.markdown_refresh)
+        ]
         self.widgets.add_commands('Text', commands)
         self.widgets.save_text = 'Save'
         commands = [
             (('<Prior>', '<Next>'), self.scroll_headings),
             ('<Return>', self.enter_headings)
-          ]
+        ]
         self.widgets.add_commands('Entry', commands)
 
         self.new_page = False
@@ -180,7 +181,8 @@ class Editor(Tk.Frame, object):
     def open_in_browser(self, event=None):
         self.server.shutdown()
         self.server.server_close()
-        web.open_new_tab(os.path.join('http://localhost:' + str(self.PORT), self.entry.link()))
+        web.open_new_tab(os.path.join('http://localhost:' +
+                                      str(self.PORT), self.entry.link()))
         self.start_server()
         return 'break'
 
@@ -239,11 +241,12 @@ class Editor(Tk.Frame, object):
         try:
             text = textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
         except Tk.TclError:
-            text = textbox.get(Tk.INSERT + ' wordstart', Tk.INSERT + ' wordend')
+            text = textbox.get(Tk.INSERT + ' wordstart',
+                               Tk.INSERT + ' wordend')
         length = len(text)
         with conversion(self.properties.markdown, 'to_markup') as converter:
             text = converter(text)
-        example = re.match(r'\[[ef]\]', text) # line has 'example' formatting
+        example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
         converter = self.translator.convert_sentence if '.' in text else self.translator.convert_word
         text = converter(text)
         if example:
@@ -251,13 +254,15 @@ class Editor(Tk.Frame, object):
         with conversion(self.properties.markdown, 'to_markdown') as converter:
             text = converter(text)
         try:
-            text += '\n' if textbox.compare(Tk.SEL_LAST, '==', Tk.SEL_LAST + ' lineend') else ' '
+            text += '\n' if textbox.compare(Tk.SEL_LAST,
+                                            '==', Tk.SEL_LAST + ' lineend') else ' '
             textbox.insert(Tk.SEL_LAST + '+1c', text)
         except Tk.TclError:
             text += ' '
             textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
             textbox.insert(Tk.INSERT + '+1c', text)
-        textbox.mark_set(Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + length)))
+        textbox.mark_set(
+            Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + length)))
         self.widgets.html_to_tkinter()
         return 'break'
 
@@ -491,7 +496,8 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def select_paragraph(self, event=None):
-        event.widget.tag_add('sel', Tk.INSERT + ' linestart', Tk.INSERT + ' lineend +1c')
+        event.widget.tag_add('sel', Tk.INSERT + ' linestart',
+                             Tk.INSERT + ' lineend +1c')
         return 'break'
 
     def markdown_open(self, event=None):
@@ -499,13 +505,15 @@ class Editor(Tk.Frame, object):
 
     def markdown_load(self, event=None):
         filename = fd.askopenfilename(
-        filetypes=[('Sm\xe9agol Markdown File', '*.mkd')],
-        title='Load Markdown')
+            filetypes=[('Sm\xe9agol Markdown File', '*.mkd')],
+            title='Load Markdown')
         if filename:
             try:
-                self.widgets.tkinter_to_tkinter(self._markdown_load, [filename])
+                self.widgets.tkinter_to_tkinter(
+                    self._markdown_load, [filename])
             except IndexError:
-                mb.showerror('Invalid File', 'Please select a valid *.mkd file.')
+                mb.showerror('Invalid File',
+                             'Please select a valid *.mkd file.')
 
     def _markdown_load(self, filename):
         texts = map(self.get_text, self.widgets.textboxes)
@@ -546,8 +554,7 @@ class Editor(Tk.Frame, object):
 
     def quit(self):
         self.server.shutdown()
-        page = [heading.get() for heading in self.widgets.headings]
-        self.properties.page = page
+        self.properties.page = self.widgets.heading_contents
         self.properties.language = self.language.get()
         self.properties.position = self.widgets.textboxes[0].index(Tk.INSERT)
         self.properties.fontsize = self.widgets.font.actual(option='size')

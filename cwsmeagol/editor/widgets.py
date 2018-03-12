@@ -3,6 +3,7 @@ import tkFont
 from itertools import izip
 from cwsmeagol.utils import ignored
 
+
 class Widgets(object):
     def __init__(self, master, headings=2, textboxes=1, fontsize=18):
         self.headings = headings
@@ -19,7 +20,7 @@ class Widgets(object):
 
     def __setattr__(self, name, value):
         if name == 'save_text' and hasattr(self, 'save_text'):
-                self.save_text.set(value)
+            self.save_text.set(value)
         else:
             object.__setattr__(self, name, value)
 
@@ -39,17 +40,17 @@ class Widgets(object):
         """
         self.menu = Tk.Menu(self.top)
         menu_commands = [('Site', [('Open', self.master.site_open),
-                        ('Save', self.master.site_save),
-                        ('Save _As', self.master.site_saveas),
-                        ('Open in _Browser', self.master.open_in_browser),
-                        ('P_roperties', self.master.site_properties),
-                        ('S_ee All', self.master.list_pages),
-                        ('Publish All', self.master.site_publish)]),
-                ('Markdown', [('Load', self.master.markdown_load),
-                              ('Refresh', self.master.markdown_refresh),
-                              ('Check', self.master.markdown_check),
-                              ('Open as _Html', self.master.markdown_open)]
-                              )]
+                                   ('Save', self.master.site_save),
+                                   ('Save _As', self.master.site_saveas),
+                                   ('Open in _Browser', self.master.open_in_browser),
+                                   ('P_roperties', self.master.site_properties),
+                                   ('S_ee All', self.master.list_pages),
+                                   ('Publish All', self.master.site_publish)]),
+                         ('Markdown', [('Load', self.master.markdown_load),
+                                       ('Refresh', self.master.markdown_refresh),
+                                       ('Check', self.master.markdown_check),
+                                       ('Open as _Html', self.master.markdown_open)]
+                          )]
         for menu in menu_commands:
             submenu = Tk.Menu(self.menu, tearoff=0)
             label, options = menu
@@ -60,13 +61,15 @@ class Widgets(object):
                 underline = 0 if underline == -1 else underline
                 label = label.replace('_', '')
                 submenu.add_command(label=label, command=command,
-                    underline=underline)
-                submenu.bind('<KeyPress-{0}>'.format(label[underline]), command)
+                                    underline=underline)
+                submenu.bind(
+                    '<KeyPress-{0}>'.format(label[underline]), command)
 
     def ready_labels(self):
         master = self.buttonframe
         self.information = Tk.StringVar()
-        self.info_label = Tk.Label(master=master, textvariable=self.information, font=('Arial', 14))
+        self.info_label = Tk.Label(
+            master=master, textvariable=self.information, font=('Arial', 14))
         # blanklabel has enough height to push all other widgets to the top
         #   of the window.
         self.blank_label = Tk.Label(master=master, height=1000)
@@ -80,14 +83,14 @@ class Widgets(object):
         settings = zip(self.radios, settings)
         for radio, (code, language) in settings:
             radio.configure(text=language().name, variable=self.master.language,
-                                    value=code, command=self.master.change_language)
+                            value=code, command=self.master.change_language)
 
     def ready_buttons(self):
         master = self.buttonframe
         commands = self.master.load, self.master.save
         self.load_button = Tk.Button(master, text='Load', command=commands[0])
         self.save_button = Tk.Button(master, command=commands[1],
-        textvariable=self.save_text)
+                                     textvariable=self.save_text)
         self.buttons = [self.load_button, self.save_button]
 
     def ready_textboxes(self):
@@ -95,20 +98,20 @@ class Widgets(object):
         number = self.textboxes
         font = self.font
         self.textboxes = [Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
-                            undo=True, font=font) for _ in xrange(number)]
+                                  undo=True, font=font) for _ in xrange(number)]
         commands = [
-                ('<MouseWheel>', self.scroll_textbox),
-                ('<Control-MouseWheel>', self.change_fontsize),
-                ('<Control-0>', self.reset_fontsize),
-                ('<Control-a>', self.select_all),
-                ('<Control-d>', self.add_heading),
-                ('<Control-D>', self.remove_heading),
-                ('<Control-BackSpace>', self.backspace_word),
-                ('<Control-Delete>', self.delete_word),
-                (('<Control-Up>', '<Control-Down>'), self.move_line),
-                ('<Control-K>', self.delete_line),
-                ('<Alt-d>', self.go_to_heading)
-            ]
+            ('<MouseWheel>', self.scroll_textbox),
+            ('<Control-MouseWheel>', self.change_fontsize),
+            ('<Control-0>', self.reset_fontsize),
+            ('<Control-a>', self.select_all),
+            ('<Control-d>', self.add_heading),
+            ('<Control-D>', self.remove_heading),
+            ('<Control-BackSpace>', self.backspace_word),
+            ('<Control-Delete>', self.delete_word),
+            (('<Control-Up>', '<Control-Down>'), self.move_line),
+            ('<Control-K>', self.delete_line),
+            ('<Alt-d>', self.go_to_heading)
+        ]
         self.add_commands('Text', commands)
         for textbox in self.textboxes:
             textbox.bind('<KeyPress>', self.edit_text_changed)
@@ -139,11 +142,11 @@ class Widgets(object):
 
     @property
     def text_styles(self):
-        ( strong,
-          em,
-          underline,
-          small_caps,
-          highlulani ) = iter([self.font.copy() for _ in xrange(5)])
+        (strong,
+         em,
+         underline,
+         small_caps,
+         highlulani) = iter([self.font.copy() for _ in xrange(5)])
         strong.configure(weight='bold')
         em.configure(slant='italic')
         underline.configure(underline=True, family='Calibri')
@@ -159,7 +162,7 @@ class Widgets(object):
             ('small-caps', {'font': small_caps}),
             ('link', {'foreground': 'blue', 'font': underline}),
             ('high-lulani', {'font': highlulani})
-         ]
+        ]
 
     def modify_fontsize(self, size):
         self.font.config(size=size)
@@ -216,7 +219,7 @@ class Widgets(object):
             textbox.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
             row += 1
         self.info_label.grid(row=row, column=0, columnspan=2)
-        self.blank_label.grid(row=row+1, column=0, columnspan=2)
+        self.blank_label.grid(row=row + 1, column=0, columnspan=2)
 
     def add_heading(self):
         if len(self.headings) < 10:
@@ -235,14 +238,14 @@ class Widgets(object):
         """
         Clears textbox and inserts text
         """
-        try: # textbox
+        try:  # textbox
             position = widget.index(Tk.INSERT)
             widget.delete(1.0, Tk.END)
             widget.insert(1.0, text)
             widget.mark_set(Tk.INSERT, position)
             widget.mark_set(Tk.CURRENT, position)
             widget.see(Tk.INSERT)
-        except Tk.TclError: # heading
+        except Tk.TclError:  # heading
             widget.delete(0, Tk.END)
             widget.insert(0, text)
 
@@ -284,7 +287,7 @@ class Widgets(object):
 
     def scroll_textbox(self, event):
         for textbox in self.textboxes:
-            textbox.yview_scroll(-1*(event.delta/20), Tk.UNITS)
+            textbox.yview_scroll(-1 * (event.delta / 20), Tk.UNITS)
         return 'break'
 
     @staticmethod
@@ -311,7 +314,7 @@ class Widgets(object):
         if (
             get(Tk.INSERT + '-1c') in ' .,;:?!\n' or
             widget.compare(Tk.INSERT, '==', '1.0')
-           ):
+        ):
             correction = ' wordend +1c'
         elif get(Tk.INSERT) == ' ':
             correction = '+1c wordend'
@@ -367,7 +370,8 @@ class Widgets(object):
         if event is not None:
             widget = event.widget
         text = widget.get(1.0, Tk.END)
-        self.information.set(str(text.count(' ') + text.count('\n') - text.count(' | ')))
+        self.information.set(
+            str(text.count(' ') + text.count('\n') - text.count(' | ')))
 
     def display(self, texts):
         for textbox, text in izip(self.textboxes, texts):
@@ -394,18 +398,18 @@ class Widgets(object):
                 while True:
                     try:
                         start = textbox.search(
-                                '<{0}>.*?</{0}>'.format(style),
-                                '1.0',
-                                regexp=True,
-                                count=count
-                            )
+                            '<{0}>.*?</{0}>'.format(style),
+                            '1.0',
+                            regexp=True,
+                            count=count
+                        )
                         end = '{0}+{1}c'.format(start, count.get())
                         text = textbox.get(start, end)
-                        text = text[len(style) + 2:-3-len(style)]
+                        text = text[len(style) + 2:-3 - len(style)]
                         textbox.delete(start, end)
                         textbox.insert(start, text)
                         textbox.tag_add(style, start,
-                                '{0}+{1}c'.format(start, len(text)))
+                                        '{0}+{1}c'.format(start, len(text)))
                     except Tk.TclError:
                         break
 
