@@ -4,24 +4,27 @@ from itertools import izip
 from cwsmeagol.utils import ignored
 
 
-class Widgets(object):
-    def __init__(self, master, headings=2, textboxes=1, fontsize=18):
-        self.headings = headings
-        self.textboxes = textboxes
+class Editor(Tk.Frame, object):
+    def __init__(self, master=None):
+        super(Editor, self).__init__(master)
+        self.headings = 2
+        self.textboxes = 1
         self.buttonframe = Tk.Frame(master)
         self.headingframe = Tk.Frame(self.buttonframe)
         self.textframe = Tk.Frame(master)
         self.row = 0
         self.save_text = Tk.StringVar()
-        self.master = master or Tk.Tk(None)
-        self.top = self.master.top
-        self.font = tkFont.Font(family='Calibri', size=fontsize)
+        self.font = tkFont.Font(family='Calibri', size=18)
+        self.top = self.winfo_toplevel()
         self.ready()
 
     def __setattr__(self, name, value):
         if name == 'save_text' and hasattr(self, 'save_text'):
+            print(value)
             self.save_text.set(value)
         else:
+            if name == 'save_text':
+                print(value)
             object.__setattr__(self, name, value)
 
     def ready(self):
@@ -39,17 +42,17 @@ class Widgets(object):
         Ready the top menu.
         """
         self.menu = Tk.Menu(self.top)
-        menu_commands = [('Site', [('Open', self.master.site_open),
-                                   ('Save', self.master.site_save),
-                                   ('Save _As', self.master.site_saveas),
-                                   ('Open in _Browser', self.master.open_in_browser),
-                                   ('P_roperties', self.master.site_properties),
-                                   ('S_ee All', self.master.list_pages),
-                                   ('Publish All', self.master.site_publish)]),
-                         ('Markdown', [('Load', self.master.markdown_load),
-                                       ('Refresh', self.master.markdown_refresh),
-                                       ('Check', self.master.markdown_check),
-                                       ('Open as _Html', self.master.markdown_open)]
+        menu_commands = [('Site', [('Open', self.site_open),
+                                   ('Save', self.site_save),
+                                   ('s _As', self.site_saveas),
+                                   ('Open in _Browser', self.open_in_browser),
+                                   ('P_roperties', self.site_properties),
+                                   ('S_ee All', self.list_pages),
+                                   ('Publish All', self.site_publish)]),
+                         ('Markdown', [('Load', self.markdown_load),
+                                       ('Refresh', self.markdown_refresh),
+                                       ('Check', self.markdown_check),
+                                       ('Open as _Html', self.markdown_open)]
                           )]
         for menu in menu_commands:
             submenu = Tk.Menu(self.menu, tearoff=0)
@@ -76,18 +79,18 @@ class Widgets(object):
 
     def ready_radios(self):
         master = self.buttonframe
-        translator = self.master.translator
+        translator = self.translator
         settings = translator.languages.items()
         number = translator.number
         self.radios = [Tk.Radiobutton(master) for _ in xrange(number)]
         settings = zip(self.radios, settings)
         for radio, (code, language) in settings:
-            radio.configure(text=language().name, variable=self.master.language,
-                            value=code, command=self.master.change_language)
+            radio.configure(text=language().name, variable=self.language,
+                            value=code, command=self.change_language)
 
     def ready_buttons(self):
         master = self.buttonframe
-        commands = self.master.load, self.master.save
+        commands = self.load, self.save
         self.load_button = Tk.Button(master, text='Load', command=commands[0])
         self.save_button = Tk.Button(master, command=commands[1],
                                      textvariable=self.save_text)
@@ -135,10 +138,10 @@ class Widgets(object):
     def add_commands(self, tkclass, commands):
         for (keys, command) in commands:
             if isinstance(keys, basestring):
-                self.master.bind_class(tkclass, keys, command)
+                self.bind_class(tkclass, keys, command)
             else:
                 for key in keys:
-                    self.master.bind_class(tkclass, key, command)
+                    self.bind_class(tkclass, key, command)
 
     @property
     def text_styles(self):
@@ -201,8 +204,8 @@ class Widgets(object):
         Stack the heading boxes, the buttons, radiobuttons and a
             label in the top-left corner.
         """
-        self.master.top['menu'] = self.menu
-        self.master.pack(expand=True, fill=Tk.BOTH)
+        self.top['menu'] = self.menu
+        self.pack(expand=True, fill=Tk.BOTH)
         self.buttonframe.pack(side=Tk.LEFT)
         self.headingframe.grid(row=0, column=0, columnspan=2, sticky=Tk.N)
         self.textframe.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
@@ -283,7 +286,7 @@ class Widgets(object):
         if event.keysym.startswith('CONTROL_'):
             event.widget.edit_modified(False)
         elif event.widget.edit_modified():
-            self.save_text = '*Save'
+            self.save_text.set('*Save')
 
     def scroll_textbox(self, event):
         for textbox in self.textboxes:

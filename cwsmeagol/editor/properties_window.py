@@ -1,17 +1,17 @@
 import Tkinter as Tk
 import tkFileDialog as fd
-from editor_properties import EditorProperties
+from properties import Properties
 from cwsmeagol.utils import *
 
 class PropertiesWindow(Tk.Toplevel, object):
 
     """
 
-    :param properties: (EditorProperties)
+    :param properties: (Properties)
     """
     def __init__(self, properties=None, master=None):
         super(PropertiesWindow, self).__init__(master)
-        self.properties = properties or EditorProperties()
+        self.properties = properties or Properties()
         commands = dict(done=self.finish_window, cancel=self.cancel_window)
         self.property_frames = []
         for row, property_ in enumerate(self.properties.template):

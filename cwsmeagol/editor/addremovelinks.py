@@ -107,8 +107,8 @@ class InternalStory:
             if paragraph == '<span class="stars">* * *</span>':
                 pass
             elif version == 'Gloss':
-                paragraph = ('{0}'
-                             paragraphs[uid].replace(' | [r]', '{1} | [r]'))
+                paragraph = '{0}' + \
+                    paragraphs[uid].replace(' | [r]', '{1} | [r]')
             elif version == 'Interlinear':
                 paragraph = '[t]{0}'
                 regex = r'(?= \| \[r\]<div class=\"literal\">)'

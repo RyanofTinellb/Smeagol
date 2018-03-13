@@ -11,7 +11,7 @@ from cwsmeagol.defaults import default
 import tkFileDialog as fd
 import tkSimpleDialog as sd
 
-class EditorProperties(object):
+class Properties(object):
     """
 
     :param config: (str) name of a .smg Smeagol configuration file
@@ -27,22 +27,16 @@ class EditorProperties(object):
         self.linkadder - a AddRemoveLinks object
     """
 
-    def __init__(self, config=None, template=None, caller=None):
-        self.caller = caller
-        self.setup_template(template)
-        self.config_filename = config
+    def __init__(self, master):
+        self.template = json.loads(default.properties)
+        self.config_filename = None
         self.setup_config()
         self.create_site()
         self.create_random_words()
         self.create_linkadder()
+        self.translator = Translator(self.language)
         self.markdown = Markdown(self.markdown_file)
-
-    def setup_template(self, template):
-        if template:
-            with open(template) as template:
-                self.template = json.load(template)
-        else:
-            self.template = json.loads(default.properties)
+        super(Properties, self).__init__(master)
 
     def setup_config(self, config=None):
         self.config_filename = config or self.config_filename or self.fallback

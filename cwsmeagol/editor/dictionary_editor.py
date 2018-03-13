@@ -1,4 +1,4 @@
-from site_editor import SiteEditor, Tk, Widgets
+from site_editor import SiteEditor, Tk
 from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 

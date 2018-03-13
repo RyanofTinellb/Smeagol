@@ -1,5 +1,5 @@
 import Tkinter as Tk
-from cwsmeagol.editor.editor import Editor
+from cwsmeagol.editor.site_editor import SiteEditor
 from cwsmeagol.editor.dictionary_editor import DictionaryEditor
 from cwsmeagol.editor.translation_editor import TranslationEditor
 
@@ -16,9 +16,10 @@ class Smeagol(Tk.Frame, object):
 
     def open_editor(self, editor):
         top = Tk.Toplevel()
+        editor(top)
 
     def open_site(self):
-        self.open_editor(Editor)
+        self.open_editor(SiteEditor)
 
     def open_dictionary(self):
         self.open_editor(DictionaryEditor)
