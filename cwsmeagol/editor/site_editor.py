@@ -42,7 +42,7 @@ class SiteEditor(Properties, Editor, object):
             ('<Control-N>', self.insert_new),
             ('<Control-n>', self.add_link),
             ('<Control-o>', self.site_open),
-            ('<Control-s>', self.save),
+            ('<Control-s>', self.save_page),
             ('<Control-t>', self.add_translation),
             (('<Control-[>', '<Control-]>'), self.set_indent)
         ]
@@ -65,6 +65,9 @@ class SiteEditor(Properties, Editor, object):
         self.fill_headings(self.page)
         self.load()
         self.go_to(self.position)
+
+    def __setattr__(self, name, value):
+        super(SiteEditor, self).__setattr__(name, value)
 
     @property
     def caller(self):
@@ -179,15 +182,6 @@ class SiteEditor(Properties, Editor, object):
         self.fill_headings(self.page)
         self.load()
 
-    def site_save(self, event=None):
-        self.page = list(self.heading_contents)
-        self.save()
-        return 'break'
-
-    def site_saveas(self, event=None):
-        self.saveas()
-        return 'break'
-
     def site_properties(self, event=None):
         """
         Pass current site details to a new Properties Window, and then
@@ -196,7 +190,7 @@ class SiteEditor(Properties, Editor, object):
         properties_window = PropertiesWindow(self.properties)
         self.wait_window(properties_window)
         self.site.root.name = self.site.name
-        self.save()
+        self.save_site()
 
     def site_publish(self, event=None):
         """
@@ -298,18 +292,19 @@ class SiteEditor(Properties, Editor, object):
             text = converter(text)
         return [text]
 
-    def save(self, event=None):
+    def save_page(self, event=None):
         """
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages.
         """
         if self.is_new:
             self.site_properties()
-        self.tkinter_to_tkinter(self._save)
+        self.tkinter_to_tkinter(self._save_page)
         self.reset_textboxes()
         self.save_text.set('Save')
+        self.save_site()
         return 'break'
 
-    def _save(self):
+    def _save_page(self):
         texts = map(self.get_text, self.textboxes)
         if self.entry:
             self.prepare_texts(texts)
@@ -337,7 +332,7 @@ class SiteEditor(Properties, Editor, object):
     def prepare_texts(self, texts):
         """
         Modify entry with manipulated texts.
-        Subroutine of self.save().
+        Subroutine of self.save_page().
         Overrides parent method.
         :param texts (str[]): the texts to be manipulated and inserted.
         :param return (Nothing):
@@ -369,7 +364,7 @@ class SiteEditor(Properties, Editor, object):
         """
         Put entry contents into datafile, publish appropriate Pages.
         This is the default method - other Editor programs may override this.
-        Subroutine of self.save()
+        Subroutine of self.save_page()
         :param entry (Page):
         :return (nothing):
         """
@@ -567,7 +562,7 @@ class SiteEditor(Properties, Editor, object):
         self.language = self.languagevar.get()
         self.position = self.textboxes[0].index(Tk.INSERT)
         self.fontsize = self.font.actual(option='size')
-        self.site_save()
+        self.save_site()
         self.master.destroy()
 
     def initial_content(self, entry=None):

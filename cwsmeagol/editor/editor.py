@@ -34,8 +34,8 @@ class Editor(Tk.Frame, object):
         """
         self.menu = Tk.Menu(self.top)
         menu_commands = [('Site', [('Open', self.site_open),
-                                   ('Save', self.site_save),
-                                   ('Save _As', self.site_saveas),
+                                   ('Save', self.save_site),
+                                   ('Save _As', self.save_site_as),
                                    ('Open in _Browser', self.open_in_browser),
                                    ('P_roperties', self.site_properties),
                                    ('S_ee All', self.list_pages),
@@ -81,7 +81,7 @@ class Editor(Tk.Frame, object):
 
     def ready_buttons(self):
         master = self.buttonframe
-        commands = self.load, self.save
+        commands = self.load, self.save_page
         self.load_button = Tk.Button(master, text='Load', command=commands[0])
         self.save_button = Tk.Button(master, command=commands[1],
                                      textvariable=self.save_text)

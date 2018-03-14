@@ -72,11 +72,11 @@ class Properties(object):
             self.config['current']['markdown'] = value
         elif name == 'markdown':
             try:
-                object.__setattr__(self, name, Markdown(value))
+                super(Properties, self).__setattr__(name, Markdown(value))
             except TypeError: # value is already a Markdown instance
-                object.__setattr__(self, name, value)
+                super(Properties, self).__setattr__(name, value)
         else:
-            object.__setattr__(self, name, value)
+            super(Properties, self).__setattr__(name, value)
 
     def open(self):
         filetypes = [('Sm\xe9agol File', '*.smg'), ('Source Data File', '*.txt')]
@@ -91,7 +91,8 @@ class Properties(object):
             return False
         return filename
 
-    def save(self, filename=None):
+    def save_site(self, filename=None):
+        self.page = list(self.heading_contents)
         self.config_filename = filename or self.config_filename
         if self.config_filename:
             with ignored(IOError):
@@ -105,16 +106,16 @@ class Properties(object):
                 with open(inifile, 'w') as inisave:
                     inisave.write(self.config_filename)
                 return # successful save
-        self.saveas() # unsuccessful save
+        self.save_site_as() # unsuccessful save
 
-    def saveas(self):
+    def save_site_as(self):
         filetypes = [('Sm\xe9agol File', '*.smg')]
         title = 'Save Site'
         filename = fd.asksaveasfilename(filetypes=filetypes, title=title)
         if filename:
             filename = re.sub(r'(\.smg)?$', r'.smg', filename)
             self.config_filename = filename
-            self.save()
+            self.save_site()
 
     def collate_files(self):
         """
