@@ -18,15 +18,6 @@ class Editor(Tk.Frame, object):
         self.top = self.winfo_toplevel()
         self.ready()
 
-    def __setattr__(self, name, value):
-        if name == 'save_text' and hasattr(self, 'save_text'):
-            print(value)
-            self.save_text.set(value)
-        else:
-            if name == 'save_text':
-                print(value)
-            object.__setattr__(self, name, value)
-
     def ready(self):
         for obj in ['headings', 'menus', 'labels', 'radios', 'buttons', 'textboxes']:
             getattr(self, 'ready_' + obj)()
@@ -44,7 +35,7 @@ class Editor(Tk.Frame, object):
         self.menu = Tk.Menu(self.top)
         menu_commands = [('Site', [('Open', self.site_open),
                                    ('Save', self.site_save),
-                                   ('s _As', self.site_saveas),
+                                   ('Save _As', self.site_saveas),
                                    ('Open in _Browser', self.open_in_browser),
                                    ('P_roperties', self.site_properties),
                                    ('S_ee All', self.list_pages),
@@ -348,15 +339,14 @@ class Editor(Tk.Frame, object):
                     Tk.SEL_LAST + ' lineend +1c')
             text = textbox.get(*ends)
             selected = map(textbox.index, (Tk.SEL_FIRST, Tk.SEL_LAST))
-            select = True
         except Tk.TclError:
             ends = (Tk.INSERT + ' linestart',
                     Tk.INSERT + ' lineend +1c')
             text = textbox.get(*ends)
-            select = False
+            selected = None
         textbox.delete(*ends)
         textbox.insert(Tk.INSERT + correction, text)
-        if select:
+        if selected:
             textbox.tag_add('sel', *map(lambda x: x + direction, selected))
         textbox.mark_set(Tk.INSERT, position + direction)
 

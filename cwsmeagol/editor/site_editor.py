@@ -33,18 +33,18 @@ class SiteEditor(Properties, Editor, object):
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
 
         commands = [
-            ('<Control-N>', self.insert_new),
             ('<Control-b>', self.bold),
-            ('<Control-i>', self.italic),
-            ('<Control-k>', self.small_caps),
-            ('<Control-n>', self.add_link),
             ('<Control-e>', self.example_no_lines),
             ('<Control-f>', self.example),
-            ('<Control-t>', self.add_translation),
+            ('<Control-i>', self.italic),
+            ('<Control-k>', self.small_caps),
+            ('<Control-m>', self.markdown_refresh),
+            ('<Control-N>', self.insert_new),
+            ('<Control-n>', self.add_link),
             ('<Control-o>', self.site_open),
             ('<Control-s>', self.save),
-            ('<Control-l>', self.load),
-            ('<Control-m>', self.markdown_refresh)
+            ('<Control-t>', self.add_translation),
+            (('<Control-[>', '<Control-]>'), self.set_indent)
         ]
         self.add_commands('Text', commands)
         self.save_text.set('Save')
@@ -468,6 +468,32 @@ class SiteEditor(Properties, Editor, object):
     def add_link(self, event):
         self.change_style(event, 'link')
         return 'break'
+
+    def set_indent(self, event):
+        self.tkinter_to_tkinter(self._set_indent, [event])
+        return 'break'
+
+    def _set_indent(self, event):
+        direction = +1 if event.keysym == 'bracketright' else -1
+        textbox = event.widget
+        try:
+            ends = (Tk.SEL_FIRST + ' linestart', Tk.SEL_LAST + ' lineend')
+            text = textbox.get(*ends)
+            selected = map(textbox.index, (Tk.SEL_FIRST, Tk.SEL_LAST))
+        except Tk.TclError:
+            ends = (Tk.INSERT + ' linestart', Tk.INSERT + ' lineend')
+            text = textbox.get(*ends)
+            selected = None
+        text = re.sub(
+            r'\[\d\]', lambda x: self.move_indent(x, direction), text)
+        textbox.delete(*ends)
+        textbox.insert(Tk.INSERT, text)
+        if selected:
+            textbox.tag_add('sel', *selected)
+
+    def move_indent(self, match, direction):
+        number = max(min(int(match.group(0)[1]) + direction, 9), 1)
+        return '[{0}]'.format(number)
 
     def insert_spaces(self, event):
         self.insert_characters(event.widget, ' ' * 10)
