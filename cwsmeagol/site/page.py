@@ -232,7 +232,7 @@ class Page(Node):
                     <td rowspan="2">data2</td>
                     <td colspan="2">data3</td>
                   </tr>
-                  <tr>
+                    <tr>
                     <td>data4</td>
                     <th rowspan="2" colspan="2">heading5</th>
                   </tr>
@@ -252,7 +252,10 @@ class Page(Node):
         if cell.startswith(' ') or cell == '':
             form, cell = '', cell[1:]
         else:
-            form, cell = cell.split(' ', 1)
+            try:
+                form, cell = cell.split(' ', 1)
+            except ValueError:
+                raise ValueError(cell)
         heading = 'h' if 'h' in form else 'd'
         rowcol = map(self.check_rowcol, [
             ['rowspan', r'(?<=r)\d*', form],
@@ -262,7 +265,7 @@ class Page(Node):
 
     def check_rowcol(self, info):
         try:
-            return ' {0}="{1}"'.format(info.pop(), re.search(*info).group(0))
+            return ' {0}="{1}"'.format(info.pop(0), re.search(*info).group(0))
         except AttributeError:
             return ''
 
