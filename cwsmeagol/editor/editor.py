@@ -13,7 +13,6 @@ class Editor(Tk.Frame, object):
         self.headingframe = Tk.Frame(self.buttonframe)
         self.textframe = Tk.Frame(master)
         self.row = 0
-        self.save_text = Tk.StringVar()
         self.font = tkFont.Font(family='Calibri', size=18)
         self.top = self.winfo_toplevel()
         self.ready()
@@ -76,12 +75,13 @@ class Editor(Tk.Frame, object):
         self.radios = [Tk.Radiobutton(master) for _ in xrange(number)]
         settings = zip(self.radios, settings)
         for radio, (code, language) in settings:
-            radio.configure(text=language().name, variable=self.language,
+            radio.configure(text=language().name, variable=self.languagevar,
                             value=code, command=self.change_language)
 
     def ready_buttons(self):
         master = self.buttonframe
         commands = self.load, self.save_page
+        self.save_text = Tk.StringVar()
         self.load_button = Tk.Button(master, text='Load', command=commands[0])
         self.save_button = Tk.Button(master, command=commands[1],
                                      textvariable=self.save_text)

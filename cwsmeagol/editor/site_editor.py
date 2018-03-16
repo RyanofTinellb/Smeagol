@@ -23,11 +23,8 @@ class SiteEditor(Properties, Editor, object):
     """
 
     def __init__(self, master=None):
-        """
-        Initialise an instance of the SiteEditor class.
-        """
-        super(SiteEditor, self).__init__(master)
         self.languagevar = Tk.StringVar()
+        super(SiteEditor, self).__init__(master)
         self.languagevar.set(self.language)
         self.master.title('Site Editor')
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
@@ -65,9 +62,6 @@ class SiteEditor(Properties, Editor, object):
         self.fill_headings(self.page)
         self.load()
         self.go_to(self.position)
-
-    def __setattr__(self, name, value):
-        super(SiteEditor, self).__setattr__(name, value)
 
     @property
     def caller(self):
@@ -137,9 +131,10 @@ class SiteEditor(Properties, Editor, object):
 
     def change_language(self, event=None):
         """
-        Change the entry language to whatever is in the StringVar 'self.language'
+        Change the entry language to whatever is in the StringVar 'self.languagevar'
         """
-        self.translator = Translator(self.language.get())
+        self.language = self.languagevar.get()
+        self.translator = Translator(self.language)
         return 'break'
 
     def site_open(self, event=None):

@@ -13,10 +13,6 @@ import tkSimpleDialog as sd
 
 class Properties(object):
     """
-
-    :param config: (str) name of a .smg Smeagol configuration file
-    :param template: (str) name of a file containing all possible properties
-
     properties:
         self.template
         self.config_filename - to save changes to
@@ -64,6 +60,8 @@ class Properties(object):
             return self.config['current'][name]
         elif name == 'markdown_file':
             return self.config['current']['markdown']
+        else:
+            return getattr(super(Properties, self), name)
 
     def __setattr__(self, name, value):
         if name in {'page', 'language', 'position', 'fontsize'}:
