@@ -11,7 +11,7 @@ from editor import Editor
 from properties import Properties
 from properties_window import PropertiesWindow
 from text_window import TextWindow
-from itertools import izip
+from itertools import izip, izip_longest
 from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 from cwsmeagol.translation import Translator
@@ -41,7 +41,9 @@ class SiteEditor(Properties, Editor, object):
             ('<Control-o>', self.site_open),
             ('<Control-s>', self.save_page),
             ('<Control-t>', self.add_translation),
-            (('<Control-[>', '<Control-]>'), self.set_indent)
+            (('<Control-[>', '<Control-]>'), self.set_indent),
+            ('<Control-Prior>', self.previous_entry),
+            ('<Control-Next>', self.next_entry)
         ]
         self.add_commands('Text', commands)
         self.save_text.set('Save')
@@ -128,6 +130,26 @@ class SiteEditor(Properties, Editor, object):
         except IndexError:
             self.load()
         return 'break'
+
+    def previous_entry(self, event):
+        self.load_entry(self.entry.previous)
+        return 'break'
+
+    def next_entry(self, event):
+        self.load_entry(self.entry.next_node)
+        return 'break'
+
+    def load_entry(self, entry):
+        ancestors = entry.ancestors[1:]
+        actual_level = len(ancestors)
+        while len(self.headings) > max(1, actual_level):
+            self.remove_heading()
+        while len(self.headings) < min(actual_level, 10):
+            self.add_heading()
+        for heading, ancestor in izip(self.headings, ancestors):
+            heading.delete(0, Tk.END)
+            heading.insert(0, ancestor.name)
+        self.load()
 
     def change_language(self, event=None):
         """
@@ -297,7 +319,21 @@ class SiteEditor(Properties, Editor, object):
         self.reset_textboxes()
         self.save_text.set('Save')
         self.save_site()
+        self.save_wholepage()
         return 'break'
+
+    def save_wholepage(self):
+        with open('wholetemplate.html') as template:
+            template = template.read()
+        g = self.site
+        k = '\n'.join(map(lambda x: x.contents, g))
+        k = re.sub(r'&date=\d{8}', '', k)
+        page = template.replace('{toc}', g[0].family_links).replace(
+            '{content}', k).replace(
+            '{stylesheet}', g[0].stylesheet_and_icon).replace(
+            '{copyright}', g[0].copyright)
+        with open('wholepage.html', 'w') as p:
+            p.write(page)
 
     def _save_page(self):
         texts = map(self.get_text, self.textboxes)

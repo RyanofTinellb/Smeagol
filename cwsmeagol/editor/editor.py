@@ -353,10 +353,10 @@ class Editor(Tk.Frame, object):
     def delete_line(self, event=None):
         try:
             event.widget.delete(Tk.SEL_FIRST + ' linestart',
-                                Tk.SEL_LAST + 'lineend +1c')
+                                Tk.SEL_LAST + ' lineend +1c')
         except Tk.TclError:
             event.widget.delete(Tk.INSERT + ' linestart',
-                                Tk.INSERT + 'lineend +1c')
+                                Tk.INSERT + ' lineend +1c')
         return 'break'
 
     def update_wordcount(self, event=None, widget=None):
