@@ -15,15 +15,14 @@ class DictionaryEditor(SiteEditor):
 
         super(DictionaryEditor, self).__init__(master)
         commands = [
-                ('<Control-r>', self.refresh_random),
-                ('<Control-=>', self.add_definition),
-                ('<Prior>', self.scroll_history),
-                ('<Next>', self.scroll_history),
-                ('<Control-Prior>', self.previous_entry),
-                ('<Control-Next>', self.next_entry),
-              ]
-        self.widgets.add_commands('Text', commands)
-        self.widgets.font.config(family='Courier New')
+            ('<Control-r>', self.refresh_random),
+            ('<Control-=>', self.add_definition),
+            ('<Prior>', self.scroll_history),
+            ('<Next>', self.scroll_history)
+        ]
+        self.add_commands('Text', commands)
+        self.heading = self.headings[0]
+        self.font.config(family='Courier New')
         self.master.title('Editing Dictionary')
 
     @property
