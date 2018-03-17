@@ -38,6 +38,7 @@ class Editor(Tk.Frame, object):
                                    ('Open in _Browser', self.open_in_browser),
                                    ('P_roperties', self.site_properties),
                                    ('S_ee All', self.list_pages),
+                                   ('Publish WholePage', self.save_wholepage),
                                    ('Publish All', self.site_publish)]),
                          ('Markdown', [('Load', self.markdown_load),
                                        ('Refresh', self.markdown_refresh),
