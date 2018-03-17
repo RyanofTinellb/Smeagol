@@ -43,6 +43,9 @@ class Editor(Tk.Frame, object):
                          ('Markdown', [('Load', self.markdown_load),
                                        ('Refresh', self.markdown_refresh),
                                        ('Check', self.markdown_check),
+                                       ('Change to _Tkinter',
+                                        self.html_to_tkinter),
+                                       ('Change to Ht_ml', self.tkinter_to_html),
                                        ('Open as _Html', self.markdown_open)]
                           )]
         for menu in menu_commands:
