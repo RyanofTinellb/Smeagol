@@ -355,8 +355,10 @@ class Page(Node):
         :class: Page:
         """
         output = '''<link rel="stylesheet" type="text/css" href="{0}">
-    <link rel="icon" type="image/png" href="{1}">'''.format(
+                    <link rel="stylesheet" type="text/css" href="{1}">
+                    <link rel="icon" type="image/png" href="{1}">'''.format(
             self.hyperlink('style.css', needAnchorTags=False),
+            self.hyperlink('basic_style.css', needAnchorTags=False),
             self.hyperlink('favicon.png', needAnchorTags=False))
         return output
 

@@ -180,8 +180,14 @@ class Site(object):
         Create / modify all .html files, and create search JSON file.
         :class: Site
         """
+        errors = 0
         for page in self:
-            page.publish(self.template)
+            try:
+                page.publish(self.template)
+            except:
+                print('Error in ' + page.name)
+                errors += 1
+        print('{0} errors\n{1}'.format(errors, '-' * 10))
         self.update_json()
         self.modify_source()
 
