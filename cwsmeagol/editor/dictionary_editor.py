@@ -2,6 +2,7 @@ from site_editor import SiteEditor, Tk
 from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 
+
 class DictionaryEditor(SiteEditor):
     def __init__(self, master=None):
         """
@@ -34,12 +35,14 @@ class DictionaryEditor(SiteEditor):
             if self.current > 0:
                 self.current -= 1
                 self.heading.delete(0, Tk.END)
-                self.heading.insert(0, self.properties.markdown.to_markdown(self.history[self.current]))
+                self.heading.insert(0, self.markdown.to_markdown(
+                    self.history[self.current]))
         elif event.keysym == 'Next':
             if self.current < len(self.history) - 1:
                 self.current += 1
                 self.heading.delete(0, Tk.END)
-                self.heading.insert(0, self.properties.markdown.to_markdown(self.history[self.current]))
+                self.heading.insert(0, self.markdown.to_markdown(
+                    self.history[self.current]))
         return 'break'
 
     def scroll_history(self, event):
@@ -74,8 +77,9 @@ class DictionaryEditor(SiteEditor):
         Insert the markdown for entry definition, and move the insertion pointer to allow for immediate input of the definition.
         """
         widget = event.widget
-        m = self.properties.markdown.to_markdown
-        self.insert_characters(widget, m('<div class="definition">'), m('</div>'))
+        m = self.markdown.to_markdown
+        self.insert_characters(
+            widget, m('<div class="definition">'), m('</div>'))
         return 'break'
 
     def find_entry(self, headings):
@@ -87,13 +91,14 @@ class DictionaryEditor(SiteEditor):
         :return (Page):
         """
         heading = headings[0]
-        site = self.properties.site
-        with conversion(self.properties.markdown, 'to_markup') as converter:
+        site = self.site
+        with conversion(self.markdown, 'to_markup') as converter:
             heading = converter(heading)
         try:
             entry = site[heading]
         except KeyError:
-            initial = re.sub(r'.*?(\w).*', r'\1', urlform(heading)).capitalize()
+            initial = re.sub(r'.*?(\w).*', r'\1',
+                             urlform(heading)).capitalize()
             entry = Page(heading, site[initial], '').insert()
             entry.content = self.initial_content(entry)
         self.keep_history(heading)
@@ -112,7 +117,8 @@ class DictionaryEditor(SiteEditor):
         """
         texts = super(DictionaryEditor, self).prepare_texts(texts)
         with ignored(AttributeError):
-            self.entry.parent.content = replace_datestamp(self.entry.parent.content)
+            self.entry.parent.content = replace_datestamp(
+                self.entry.parent.content)
 
     @staticmethod
     def publish(entry, site, allpages=False):
@@ -137,7 +143,8 @@ class DictionaryEditor(SiteEditor):
         name = entry.name
         trans = self.translator
         before = ('[1]{0}\n[2]{1}\n').format(name, trans.name)
-        before += '' if self.language.get() == 'en' else '[3]{0}\n'.format(trans.convert_word(name))
+        before += '' if self.language.get() == 'en' else '[3]{0}\n'.format(
+            trans.convert_word(name))
         before += '[4][p {0}]/'.format(trans.code)
         after = '/[/p]\n[5]\n'
         return before + after
@@ -148,14 +155,15 @@ class DictionaryEditor(SiteEditor):
         commands += [(['<Control-r>'], self.refresh_random)]
         return commands
 
+
 if __name__ == '__main__':
     links = [ExternalGrammar('c:/users/ryan/documents/'
-            'tinellbianlanguages/dictionarylinks.txt'),
-            InternalDictionary()]
+                             'tinellbianlanguages/dictionarylinks.txt'),
+             InternalDictionary()]
     app = DictionaryEditor(site=Dictionary(),
-    markdown=Markdown('c:/users/ryan/documents/'
-        'tinellbianlanguages/dictionaryreplacements.mkd'),
-    links=AddRemoveLinks(links),
-    randomwords=RandomWords(20,3))
+                           markdown=Markdown('c:/users/ryan/documents/'
+                                             'tinellbianlanguages/dictionaryreplacements.mkd'),
+                           links=AddRemoveLinks(links),
+                           randomwords=RandomWords(20, 3))
     app.master.title('Dictionary Editor')
     app.mainloop()

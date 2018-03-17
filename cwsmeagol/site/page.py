@@ -248,7 +248,6 @@ class Page(Node):
         return '<{0}>\n{1}\n</{0}>\n'.format('tr', cells)
 
     def table_cell(self, cell):
-        cell = re.sub(' *$', '', cell)
         if cell.startswith(' ') or cell == '':
             form, cell = '', cell[1:]
         else:

@@ -14,6 +14,7 @@ from text_window import TextWindow
 from itertools import izip, izip_longest
 from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
+from cwsmeagol.defaults import default
 from cwsmeagol.translation import Translator
 
 
@@ -172,10 +173,14 @@ class SiteEditor(Properties, Editor, object):
         while True:
             try:
                 self.server = SocketServer.TCPServer(("", self.PORT), handler)
-                handler.error_message_format = '''
-                        <script>
-                            window.location.replace('/404.html');
-                        </script>'''
+                name = self.site.name
+                page404 = default.page404.format(
+                    self.site[0].elder_links).replace(
+                        '<li class="normal">{0}</li>'.format(name),
+                        '<li><a href="/index.html">{0}</a></li>'.format(name)
+                )
+                page404 = re.sub(r'href="/*', 'href="/', page404)
+                handler.error_message_format = page404
                 break
             except socket_error:
                 self.PORT += 1
