@@ -142,7 +142,7 @@ class DictionaryEditor(SiteEditor):
         name = entry.name
         trans = self.translator
         before = ('[1]{0}\n[2]{1}\n').format(name, trans.name)
-        before += '' if self.language.get() == 'en' else '[3]{0}\n'.format(
+        before += '' if self.languagevar.get() == 'en' else '[3]{0}\n'.format(
             trans.convert_word(name))
         before += '[4][p {0}]/'.format(trans.code)
         after = '/[/p]\n[5]\n'

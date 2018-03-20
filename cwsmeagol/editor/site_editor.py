@@ -40,6 +40,7 @@ class SiteEditor(Properties, Editor, object):
             ('<Control-N>', self.insert_new),
             ('<Control-n>', self.add_link),
             ('<Control-o>', self.site_open),
+            ('<Control-r>', self.refresh_random),
             ('<Control-s>', self.save_page),
             ('<Control-t>', self.add_translation),
             (('<Control-[>', '<Control-]>'), self.set_indent),
@@ -74,8 +75,8 @@ class SiteEditor(Properties, Editor, object):
         """
         Show a certain number of random nonsense words using High Lulani phonotactics.
         """
-        if self.words:
-            self.information.set('\n'.join(self.words))
+        if self.randomwords:
+            self.information.set('\n'.join(self.randomwords.words))
         return 'break'
 
     def scroll_headings(self, event):
@@ -344,8 +345,8 @@ class SiteEditor(Properties, Editor, object):
         page = template.replace('{toc}', g[0].family_links).replace(
             '{content}', k).replace(
             '{stylesheet}', g[0].stylesheet_and_icon).replace(
-            '{copyright}', self.copyright())
-        print('{0} errors\n{1}'.format(self.errors, '-' * 10)
+            '{copyright}', self.copyright)
+        print('{0} errors\n{1}'.format(self.errors, '-' * 10))
         with open('wholepage.html', 'w') as p:
             p.write(page)
 
@@ -357,7 +358,7 @@ class SiteEditor(Properties, Editor, object):
             self.errors += 1
             return ''
 
-    # @property
+    @property
     def copyright(self):
         try:
             date = datetime.today()
