@@ -229,6 +229,7 @@ class SiteEditor(Properties, Editor, object):
         texts = self.prepare_entry(self.entry)
         self.display(texts)
         self.save_text.set('Save')
+        self.master.title('Editing ' + self.entry.name)
         return 'break'
 
     def add_translation(self, event):
@@ -285,7 +286,6 @@ class SiteEditor(Properties, Editor, object):
                     self.new_page = True
             else:
                 break
-        self.master.title('Editing ' + self.entry.name)
         return entry
 
     def list_pages(self, event=None):

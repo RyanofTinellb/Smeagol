@@ -9,10 +9,12 @@ from cwsmeagol.translation import *
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 
+
 class Page(Node):
     """
     A node in the hierarchy
     """
+
     def __init__(self, name=None, parent=None, content=''):
         """
         :param name (str): the name of the Page
@@ -129,7 +131,7 @@ class Page(Node):
 
     @property
     def folder_as_list(self):
-        folder = [];
+        folder = []
         if self.level > 1:
             folder.append('/'.join([i.urlform for i in self.ancestors[1:-1]]))
         if not self.isLeaf and not self.isRoot:
@@ -160,11 +162,13 @@ class Page(Node):
         # :variable link (str): a hyperlink of the form '<a href="../../phonology/consonants/index.html>Consonants</a>'
         try:
             extension = ".html" if destination.isLeaf else "/index.html"
-            ancestors = {'self': self.ancestors, 'destination': destination.ancestors}
+            ancestors = {'self': self.ancestors,
+                         'destination': destination.ancestors}
             isDirect = destination in ancestors['self']
             # :variable (int) common: the number of nodes common to both source and destination ancestries
             try:
-                common = [i != j for i, j in zip(*[x for x in ancestors.values()])].index(True)
+                common = [i != j for i, j in zip(
+                    *[x for x in ancestors.values()])].index(True)
             except ValueError:
                 common = min(map(len, ancestors.values()))
             # :variable (int) up: the number of levels the common ancestor is above the source
@@ -174,15 +178,18 @@ class Page(Node):
                 down = "index"
                 extension = ".html"
             else:
-                up = self.level + change - (destination.level if isDirect else common)
+                up = self.level + change - \
+                    (destination.level if isDirect else common)
                 down = destination.urlform if isDirect else \
                     "/".join([ancestor.urlform for ancestor in ancestors['destination'][common:]])
             address = (up * '../') + down + extension + fragment
-            link = '<a href="{0}">{1}</a>'.format(address, template.format(destination.name))
+            link = '<a href="{0}">{1}</a>'.format(
+                address, template.format(destination.name))
         except AttributeError:  # destination is a string
             up = self.level + change - 1
             address = (up * '../') + destination + fragment
-            link = '<a {0}>{1}</a>'.format(address, template.format(destination))
+            link = '<a {0}>{1}</a>'.format(address,
+                                           template.format(destination))
         return link if needAnchorTags else address
 
     def change_to_heading(self, text):
@@ -308,14 +315,14 @@ class Page(Node):
                     heading, rest = line, ''
                 line = self.change_to_heading(heading)
                 line += self.paragraphs(rest)
-            elif re.match(r'\/*d', line): # start of html div
+            elif re.match(r'\/*d', line):  # start of html div
                 try:
                     divclass, rest = line.split('\n', 1)
                 except ValueError:
                     divclass, rest = line, ''
                 line = self.change_to_div(divclass)
                 line += self.paragraphs(rest)
-            elif line.startswith('t'): # html table
+            elif line.startswith('t'):  # html table
                 line = self.change_to_table(line)
             elif line.startswith('/t]'):
                 try:
@@ -329,14 +336,15 @@ class Page(Node):
                     mode.set(category)
                     try:
                         line = mode.replacements[category] + text
-                    except KeyError: # something's gone wrong
+                    except KeyError:  # something's gone wrong
                         print(self.content)
-                        raise KeyError('{0}\n{1}]{2}. Please check source file'.format(category, line))
+                        raise KeyError(
+                            '{0}\n{1}]{2}. Please check source file'.format(category, line))
                     if not mode.table():
                         line = line.replace(
-                                '</tr><tr><td>',
-                                '<' + mode.delimiter + '>\n'
-                            )
+                            '</tr><tr><td>',
+                            '<' + mode.delimiter + '>\n'
+                        )
                     line = re.sub('\n$', '</' + mode.delimiter + '>', line)
                     linebreak = '</d>\n<d>'.replace('d', mode.delimiter)
                     line = linebreak.join(line.splitlines()) + '\n'
@@ -356,7 +364,7 @@ class Page(Node):
         """
         output = '''<link rel="stylesheet" type="text/css" href="{0}">
                     <link rel="stylesheet" type="text/css" href="{1}">
-                    <link rel="icon" type="image/png" href="{1}">'''.format(
+                    <link rel="icon" type="image/png" href="{2}">'''.format(
             self.hyperlink('style.css', needAnchorTags=False),
             self.hyperlink('basic_style.css', needAnchorTags=False),
             self.hyperlink('favicon.png', needAnchorTags=False))
@@ -380,8 +388,8 @@ class Page(Node):
         """
         :return (str): a table of contents in HTML
         """
-        if self.level: # self not root nor leaf
-            return "".join(['<p>{0}</p>\n'.format(self.hyperlink(child)) for child  in self.children])
+        if self.level:  # self not root nor leaf
+            return "".join(['<p>{0}</p>\n'.format(self.hyperlink(child)) for child in self.children])
         else:
             return ''
 
@@ -415,7 +423,8 @@ class Page(Node):
                 elif level < old_level:
                     links += (old_level - level) * '</ul>\n'
                 if page == self:
-                    links += '<li class="normal">{0}</li>\n'.format(self.hyperlink(page))
+                    links += '<li class="normal">{0}</li>\n'.format(
+                        self.hyperlink(page))
                 else:
                     links += '<li>{0}</li>\n'.format(self.hyperlink(page))
         links += (level) * '</ul>\n'
@@ -435,15 +444,18 @@ class Page(Node):
                 elif level < old_level:
                     links += (old_level - level) * '</ul>\n'
                 if page == self:
-                    links += '<li class="normal">{0}</li>\n'.format(self.hyperlink(page))
+                    links += '<li class="normal">{0}</li>\n'.format(
+                        self.hyperlink(page))
                 else:
                     links += '<li>{0}</li>\n'.format(self.hyperlink(page))
-        links += (level + 1) * '</ul>\n' + '<p>Other Versions:</p>\n<ul class="level-1">'
+        links += (level + 1) * '</ul>\n' + \
+            '<p>Other Versions:</p>\n<ul class="level-1">'
         categories = [node.name for node in self.elders]
         cousins = self.cousins
         for cousin, category in zip(cousins, categories):
             if cousin and cousin is not self:
-                links += '<li>{0}</li>\n'.format(self.hyperlink(cousin, category))
+                links += '<li>{0}</li>\n'.format(
+                    self.hyperlink(cousin, category))
         links += '</ul><ul>'
         return self.links.replace('$links$', links)
 
@@ -459,23 +471,30 @@ class Page(Node):
     def nav_footer(self):
         div = '<div>\n{0}\n</div>\n'
         try:
-            output = div.format(self.hyperlink(self.previous, '&larr; Previous page'))
+            output = div.format(self.hyperlink(
+                self.previous, '&larr; Previous page'))
         except IndexError:
-            output = div.format('<a href="http://www.tinellb.com">&uarr; Go to Main Page</a>')
+            output = div.format(
+                '<a href="http://www.tinellb.com">&uarr; Go to Main Page</a>')
         try:
-            output += div.format(self.hyperlink(self.next_node, 'Next page &rarr;'))
+            output += div.format(self.hyperlink(self.next_node,
+                                                'Next page &rarr;'))
         except IndexError:
-            output += div.format(self.hyperlink(self.root, 'Return to Menu &uarr;'))
+            output += div.format(self.hyperlink(self.root,
+                                                'Return to Menu &uarr;'))
         return output
 
     @property
     def copyright(self):
         try:
-            date = datetime.strptime(max(re.findall(r'(?<=&date=)\d{8}', self.content)), '%Y%m%d')
+            date = datetime.strptime(
+                max(re.findall(r'(?<=&date=)\d{8}', self.content)), '%Y%m%d')
         except ValueError:
             return ''
-        suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else ["st", "nd", "rd"][date.day % 10 - 1]
-        output = datetime.strftime(date, '<span class="no-breaks">&copy;%Y Ryan Eakins.</span> <span class="no-breaks">Last updated: %A, %B %#d' + suffix + ', %Y.')
+        suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else [
+            "st", "nd", "rd"][date.day % 10 - 1]
+        output = datetime.strftime(
+            date, '<span class="no-breaks">&copy;%Y Ryan Eakins.</span> <span class="no-breaks">Last updated: %A, %B %#d' + suffix + ', %Y.')
         return output
 
     def publish(self, template=None):
@@ -520,7 +539,8 @@ class Page(Node):
         wordlist = {}
         content = self.content
         """remove tags, and items between some tags"""
-        content = re.sub(r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
+        content = re.sub(
+            r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
         """remove datestamps"""
         content = re.sub(r'&date=\d{8}', '', content)
         """change punctuation to paragraph marks, so that splitlines works"""
@@ -530,7 +550,8 @@ class Page(Node):
         """remove hidden text"""
         content = re.sub(r'\x05.*?(\x06\x06*)', '', content)
         """remove bells, spaces at the beginnings and end of lines, duplicate spaces and end-lines"""
-        content = re.sub(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[\x07,:]', '', content)
+        content = re.sub(
+            r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[\x07,:]', '', content)
         """remove duplicate end-lines"""
         content = re.sub(r'\n+(?=\n)', '', content)
         """remove tags in square brackets"""
@@ -538,7 +559,8 @@ class Page(Node):
         lines = content.splitlines()
         content = markdown.to_markdown(content).lower()
         """change punctuation, and tags in square brackets, into spaces"""
-        content = re.sub(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|&nbsp', ' ', content)
+        content = re.sub(
+            r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|&nbsp', ' ', content)
         """make glottal stops lower case where appropriate"""
         content = re.sub(r"(?<=[ \n])''", "'", content)
         for number, line in enumerate(content.splitlines()):
