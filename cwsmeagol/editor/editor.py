@@ -144,7 +144,9 @@ class Editor(Tk.Frame, object):
          em,
          underline,
          small_caps,
-         highlulani) = iter([self.font.copy() for _ in xrange(5)])
+         highlulani,
+         example,
+         example_no_lines) = iter([self.font.copy() for _ in xrange(7)])
         strong.configure(weight='bold')
         em.configure(slant='italic')
         underline.configure(underline=True, family='Calibri')
@@ -154,7 +156,11 @@ class Editor(Tk.Frame, object):
         highlulani.configure(
             size=highlulani.actual(option='size') + 3,
             family='Lulani')
+        example.configure(size=-1)
+        example_no_lines.configure(size=-1)
         return [
+            ('example', {'lmargin1': '2c', 'spacing1': '1c', 'font': example}),
+            ('example-no-lines', {'lmargin1': '2c', 'font': example_no_lines}),
             ('strong', {'font': strong}),
             ('em', {'font': em}),
             ('small-caps', {'font': small_caps}),
@@ -394,19 +400,35 @@ class Editor(Tk.Frame, object):
             for (style, _) in self.text_styles:
                 while True:
                     try:
-                        start = textbox.search(
-                            '<{0}>.*?</{0}>'.format(style),
-                            '1.0',
-                            regexp=True,
-                            count=count
-                        )
-                        end = '{0}+{1}c'.format(start, count.get())
-                        text = textbox.get(start, end)
-                        text = text[len(style) + 2:-3 - len(style)]
-                        textbox.delete(start, end)
-                        textbox.insert(start, text)
-                        textbox.tag_add(style, start,
-                                        '{0}+{1}c'.format(start, len(text)))
+                        if style.startswith('example'):
+                            letter = 'e' if style.endswith('lines') else 'f'
+                            start = textbox.search(
+                                '\[[{0}]\]'.format(letter),
+                                '1.0',
+                                regexp=True,
+                                count=count
+                            )
+                            end = '{0}+3c'.format(start)
+                            text = textbox.get(start, end)
+                            text = text[1]
+                            textbox.delete(start, end)
+                            textbox.insert(start, text)
+                            textbox.tag_add(
+                                style, start, '{0}+{1}c'.format(start, len(text)))
+                        else:
+                            start = textbox.search(
+                                '<{0}>.*?</{0}>'.format(style),
+                                '1.0',
+                                regexp=True,
+                                count=count
+                            )
+                            end = '{0}+{1}c'.format(start, count.get())
+                            text = textbox.get(start, end)
+                            text = text[(len(style) + 2):(-3 - len(style))]
+                            textbox.delete(start, end)
+                            textbox.insert(start, text)
+                            textbox.tag_add(style, start,
+                                            '{0}+{1}c'.format(start, len(text)))
                     except Tk.TclError:
                         break
 
@@ -414,8 +436,12 @@ class Editor(Tk.Frame, object):
         for textbox in self.textboxes:
             for (style, _) in self.text_styles:
                 for end, start in izip(*[reversed(textbox.tag_ranges(style))] * 2):
-                    text = textbox.get(start, end)
-                    text = '<{1}>{0}</{1}>'.format(text, style)
+                    if style.startswith('example'):
+                        text = textbox.get(start, end)
+                        text = '[{0}]'.format(text)
+                    else:
+                        text = textbox.get(start, end)
+                        text = '<{1}>{0}</{1}>'.format(text, style)
                     textbox.delete(start, end)
                     textbox.insert(start, text)
 

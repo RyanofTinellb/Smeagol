@@ -471,16 +471,21 @@ class SiteEditor(Properties, Editor, object):
 
     def example_no_lines(self, event):
         """
-        Insert markdown for paragraph marking
+        Format paragraph with this marking
         """
-        self.insert_markdown(event, '[e]')
+        self.format_paragraph('example-no-lines', 'e', event.widget)
         return 'break'
+
+    def format_paragraph(self, style, code, textbox):
+        linestart = Tk.INSERT + ' linestart'
+        textbox.insert(linestart, code)
+        textbox.tag_add(style, linestart, linestart + '+1c')
 
     def example(self, event):
         """
-        Insert markdown for paragraph marking
+        Format paragraph with this marking
         """
-        self.insert_markdown(event, '[f]')
+        self.format_paragraph('example', 'f', event.widget)
         return 'break'
 
     def change_style(self, event, style):
