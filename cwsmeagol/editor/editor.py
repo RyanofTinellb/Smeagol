@@ -38,7 +38,7 @@ class Editor(Tk.Frame, object):
                                    ('Open in _Browser', self.open_in_browser),
                                    ('P_roperties', self.site_properties),
                                    ('S_ee All', self.list_pages),
-                                   ('Publish WholePage', self.save_wholepage),
+                                   ('Publish _WholePage', self.save_wholepage),
                                    ('Publish All', self.site_publish)]),
                          ('Markdown', [('Load', self.markdown_load),
                                        ('Refresh', self.markdown_refresh),
@@ -291,9 +291,12 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(event)
         if event.keysym.startswith('Control_'):
             event.widget.edit_modified(False)
+        elif event.keysym in ['Left', 'Right', 'Up', 'Down', 'Return']:
+            event.widget.edit_modified(False)
+            self.current_style.set('')
         elif event.widget.edit_modified():
             self.save_text.set('*Save')
-            event.widget.tag_add(self.current_style,
+            event.widget.tag_add(self.current_style.get(),
                                  Tk.INSERT + '-1c', Tk.INSERT)
 
     def scroll_textbox(self, event):
