@@ -69,6 +69,10 @@ class Editor(Tk.Frame, object):
             master=master, textvariable=self.information, font=('Arial', 14))
         # blanklabel has enough height to push all other widgets to the top
         #   of the window.
+        self.current_style = Tk.StringVar()
+        self.current_style.set('')
+        self.style_label = Tk.Label(
+            master=master, textvariable=self.current_style, font=('Arial', 12))
         self.blank_label = Tk.Label(master=master, height=1000)
 
     def ready_radios(self):
@@ -157,10 +161,9 @@ class Editor(Tk.Frame, object):
             size=highlulani.actual(option='size') + 3,
             family='Lulani')
         example.configure(size=-1)
-        example_no_lines.configure(size=-1)
         return [
-            ('example', {'lmargin1': '2c', 'spacing1': '1c', 'font': example}),
-            ('example-no-lines', {'lmargin1': '2c', 'font': example_no_lines}),
+            ('example', {'lmargin1': '2c', 'spacing1': '5m', 'font': example}),
+            ('example-no-lines', {'lmargin1': '2c', 'font': example}),
             ('strong', {'font': strong}),
             ('em', {'font': em}),
             ('small-caps', {'font': small_caps}),
@@ -215,6 +218,8 @@ class Editor(Tk.Frame, object):
         row = 1
         for i, button in enumerate(self.buttons):
             button.grid(row=row, column=i)
+        row += 1
+        self.style_label.grid(row=row, column=0, columnspan=2)
         row += 1
         for radio in self.radios:
             radio.grid(row=row, column=0, columnspan=2)
@@ -284,10 +289,12 @@ class Editor(Tk.Frame, object):
         Deactivates after a save or a load action.
         """
         self.update_wordcount(event)
-        if event.keysym.startswith('CONTROL_'):
+        if event.keysym.startswith('Control_'):
             event.widget.edit_modified(False)
         elif event.widget.edit_modified():
             self.save_text.set('*Save')
+            event.widget.tag_add(self.current_style,
+                                 Tk.INSERT + '-1c', Tk.INSERT)
 
     def scroll_textbox(self, event):
         for textbox in self.textboxes:

@@ -495,11 +495,13 @@ class SiteEditor(Properties, Editor, object):
                 textbox.tag_remove(style, Tk.SEL_FIRST, Tk.SEL_LAST)
             except Tk.TclError:
                 textbox.tag_remove(style, Tk.INSERT)
+                self.current_style.set('')
         else:
             try:
                 textbox.tag_add(style, Tk.SEL_FIRST, Tk.SEL_LAST)
             except Tk.TclError:
                 textbox.tag_add(style, Tk.INSERT)
+                self.current_style.set(style)
 
     def bold(self, event):
         """
