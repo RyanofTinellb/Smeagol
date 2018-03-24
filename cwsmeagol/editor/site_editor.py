@@ -219,7 +219,7 @@ class SiteEditor(Properties, Editor, object):
         """
         Publish every page in the Site using the Site's own method
         """
-        self.site.publish()
+        self.information.set(self.site.publish())
 
     def load(self, event=None):
         """
@@ -327,7 +327,6 @@ class SiteEditor(Properties, Editor, object):
         self.save_site()
         return 'break'
 
-
     def _save_page(self):
         texts = map(self.get_text, self.textboxes)
         if self.entry:
@@ -340,13 +339,19 @@ class SiteEditor(Properties, Editor, object):
             template = template.read()
         g = self.site
         self.errors = 0
+        self.errorstring = ''
         k = '\n'.join(map(self._save_wholepage, g))
         k = re.sub(r'&date=\d{8}', '', k)
         page = template.replace('{toc}', g[0].family_links).replace(
             '{content}', k).replace(
             '{stylesheet}', g[0].stylesheet_and_icon).replace(
             '{copyright}', self.copyright)
-        print('{0} errors\n{1}'.format(self.errors, '-' * 10))
+        self.information.set('{3}{0} error{2}\n{1}'.format(
+                self.errors,
+                '-' * 10,
+                '' if self.errors == 1 else 's',
+                self.errorstring
+            ))
         with open('wholepage.html', 'w') as p:
             p.write(page)
 
@@ -354,7 +359,7 @@ class SiteEditor(Properties, Editor, object):
         try:
             return page.contents
         except:
-            print('Error in ' + page.folder + '/' + page.name)
+            self.errorstring += 'Error in ' + page.folder + '/' + page.name + '\n'
             self.errors += 1
             return ''
 
@@ -364,8 +369,10 @@ class SiteEditor(Properties, Editor, object):
             date = datetime.today()
         except ValueError:
             return ''
-        suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else ["st", "nd", "rd"][date.day % 10 - 1]
-        output = datetime.strftime(date, '<span class="no-breaks">&copy;%Y Ryan Eakins.</span> <span class="no-breaks">Last updated: %A, %B %#d' + suffix + ', %Y.')
+        suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else [
+            "st", "nd", "rd"][date.day % 10 - 1]
+        output = datetime.strftime(
+            date, '<span class="no-breaks">&copy;%Y Ryan Eakins.</span> <span class="no-breaks">Last updated: %A, %B %#d' + suffix + ', %Y.')
         return output
 
     @property

@@ -181,15 +181,21 @@ class Site(object):
         :class: Site
         """
         errors = 0
+        errorstring = ''
         for page in self:
             try:
                 page.publish(self.template)
             except:
-                print('Error in ' + page.name)
+                errorstring += 'Error in ' + page.name + '\n'
                 errors += 1
-        print('{0} errors\n{1}'.format(errors, '-' * 10))
         self.update_json()
         self.modify_source()
+        return '{2}{0} error{3}\n{1}'.format(
+                errors,
+                '-' * 10,
+                errorstring,
+                '' if errors == 1 else 's'
+            )
 
     def modify_source(self):
         """
