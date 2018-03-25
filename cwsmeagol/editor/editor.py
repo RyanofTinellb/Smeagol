@@ -117,6 +117,7 @@ class Editor(Tk.Frame, object):
         self.add_commands('Text', commands)
         for textbox in self.textboxes:
             textbox.bind('<KeyPress>', self.edit_text_changed)
+            textbox.bind('<Any-Button>', self.edit_text_changed)
             self.ready_scrollbar(textbox)
             for (name, style) in self.text_styles:
                 textbox.tag_config(name, **style)
@@ -285,14 +286,15 @@ class Editor(Tk.Frame, object):
     def edit_text_changed(self, event):
         """
         Notify the user that the edittext has been changed.
-        Activates after each keypress.
+        Activates after each keypress or mouseclick
         Deactivates after a save or a load action.
         """
         self.update_wordcount(event)
         if event.keysym.startswith('Control_'):
             event.widget.edit_modified(False)
-        elif event.keysym in ['Left', 'Right', 'Up', 'Down', 'Return']:
+        elif event.keysym in ['Left', 'Right', 'Up', 'Down', 'Return'] or event.num:
             event.widget.edit_modified(False)
+            event.widget.tag_remove(self.current_style.get(), Tk.INSERT)
             self.current_style.set('')
         elif event.widget.edit_modified():
             self.save_text.set('*Save')
