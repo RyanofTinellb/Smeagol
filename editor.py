@@ -7,7 +7,6 @@ from cwsmeagol.editor.translation_editor import TranslationEditor
 class Smeagol(Tk.Frame, object):
     def __init__(self):
         super(Smeagol, self).__init__(master=None)
-        self.master.protocol('WM_DELETE_WINDOW', self.quit)
         editors = [self.open_site, self.open_dictionary, self.open_translation]
         texts = ['Site', 'Dictionary', 'Translation']
         for i, (editor, text) in enumerate(zip(editors, texts)):
@@ -17,6 +16,7 @@ class Smeagol(Tk.Frame, object):
     def open_editor(self, editor):
         top = Tk.Toplevel()
         editor(top)
+        self.master.withdraw()
 
     def open_site(self):
         self.open_editor(SiteEditor)
