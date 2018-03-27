@@ -534,7 +534,8 @@ class Page(Node):
             f.write(page)
 
     def delete_htmlfile(self):
-        os.remove(self.link())
+        with ignored(WindowsError):
+            os.remove(self.link())
 
     def analyse(self, markdown=None):
         markdown = markdown or Markdown()

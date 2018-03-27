@@ -289,10 +289,11 @@ class Editor(Tk.Frame, object):
         Activates after each keypress or mouseclick
         Deactivates after a save or a load action.
         """
+        cancelkeys = ['Left', 'Right', 'Up', 'Down', 'Return']
         self.update_wordcount(event)
         if event.keysym.startswith('Control_'):
             event.widget.edit_modified(False)
-        elif event.keysym in ['Left', 'Right', 'Up', 'Down', 'Return'] or event.num:
+        elif event.keysym in cancelkeys or event.num == 1:
             event.widget.edit_modified(False)
             event.widget.tag_remove(self.current_style.get(), Tk.INSERT)
             self.current_style.set('')
@@ -300,7 +301,7 @@ class Editor(Tk.Frame, object):
             self.save_text.set('*Save')
             event.widget.tag_add(self.current_style.get(),
                                  Tk.INSERT + '-1c', Tk.INSERT)
-
+    
     def scroll_textbox(self, event):
         for textbox in self.textboxes:
             textbox.yview_scroll(-1 * (event.delta / 20), Tk.UNITS)
