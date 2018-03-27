@@ -324,6 +324,7 @@ class SiteEditor(Properties, Editor, object):
         self.tkinter_to_tkinter(self._save_page)
         self.reset_textboxes()
         self.save_text.set('Save')
+        self.information.set('Saved!')
         self.save_site()
         return 'break'
 

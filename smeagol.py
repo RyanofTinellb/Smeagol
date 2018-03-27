@@ -58,7 +58,7 @@ if __name__ == '__main__':
     for site in Grammar, Dictionary:
         site = site()
         print(site.name + ': ')
-        site.publish()
+        print(site.publish())
         newtime = datetime.now()
         print('Done: ' + str(newtime - oldtime))
         oldtime = newtime

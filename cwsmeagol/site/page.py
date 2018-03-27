@@ -365,8 +365,8 @@ class Page(Node):
         output = '''<link rel="stylesheet" type="text/css" href="{0}">
                     <link rel="stylesheet" type="text/css" href="{1}">
                     <link rel="icon" type="image/png" href="{2}">'''.format(
-            self.hyperlink('style.css', needAnchorTags=False),
             self.hyperlink('basic_style.css', needAnchorTags=False),
+            self.hyperlink('style.css', needAnchorTags=False),
             self.hyperlink('favicon.png', needAnchorTags=False))
         return output
 
@@ -399,11 +399,13 @@ class Page(Node):
         :return (str):
         """
         output = '''<ul><li{0}>{1}</li>
+                <div class="javascript">
                   <form id="search">
                     <li class="search">
                       <input type="text" name="term"></input> <button type="submit">Search</button>
                     </li>
                   </form>
+                </div>
                 $links$
                 </ul>'''.format(' class="normal"' if self == self.root else '',
                                 self.hyperlink(self.root))
