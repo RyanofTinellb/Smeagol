@@ -339,7 +339,7 @@ class Page(Node):
                     except KeyError:  # something's gone wrong
                         print(self.content)
                         raise KeyError(
-                            '{0}\n{1}]{2}. Please check source file'.format(category, line))
+                            '{0}\n{1}]{2}. Please check source file'.format(category, line, text))
                     if not mode.table():
                         line = line.replace(
                             '</tr><tr><td>',
