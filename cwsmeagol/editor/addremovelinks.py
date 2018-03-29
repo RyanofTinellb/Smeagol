@@ -156,7 +156,7 @@ class InternalDictionary:
         Add links of the form
             '<a href="../b/blah.html#highlulani">blah</a>'
         """
-        div = ' [d definition]'
+        div = ' <div class="definition">'
         lang = '[2]'  # language marker
         output = []
         regex = r'<{0}>(.*?)</{0}>'.format('link')
@@ -196,7 +196,7 @@ class ExternalGrammar:
         Add links of the form
             '<a href="http://grammar.tinellb.com/highlulani/morphology/nouns">noun</a>'
         """
-        div = ' [d definition]'
+        div = ' <div class="definition">'
         lang = '[2]'  # language marker
         wcs = '[5]'  # word classes marker
         output = []
@@ -231,7 +231,7 @@ class ExternalGrammar:
         return '\n'.join(map(self._unlink, text.splitlines()))
 
     def _unlink(self, line):
-        div = ' [d definition]'
+        div = ' <div class="definition">'
         wcs = '[5]'
         if line.startswith(wcs):
             try:

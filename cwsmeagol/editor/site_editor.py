@@ -319,8 +319,14 @@ class SiteEditor(Properties, Editor, object):
         """
         Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages.
         """
+        try:
+            widget = event.widget
+        except AttributeError:
+            widget = self.textboxes[0]
         if self.is_new:
             self.site_properties()
+        widget.tag_remove(self.current_style.get(), Tk.INSERT)
+        self.current_style.set('')
         self.tkinter_to_tkinter(self._save_page)
         self.reset_textboxes()
         self.save_text.set('Save')
