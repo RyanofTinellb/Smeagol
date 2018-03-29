@@ -156,7 +156,7 @@ class InternalDictionary:
         Add links of the form
             '<a href="../b/blah.html#highlulani">blah</a>'
         """
-        div = ' <div class="definition">'
+        div = ' [d definition]'
         lang = '[2]'  # language marker
         output = []
         regex = r'<{0}>(.*?)</{0}>'.format('link')
@@ -231,7 +231,7 @@ class ExternalGrammar:
         return '\n'.join(map(self._unlink, text.splitlines()))
 
     def _unlink(self, line):
-        div = ' <div class="definition">'
+        div = ' [d definition]'
         wcs = '[5]'
         if line.startswith(wcs):
             try:

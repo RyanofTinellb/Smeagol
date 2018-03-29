@@ -50,13 +50,15 @@ class DictionaryEditor(SiteEditor):
         return 'break'
 
     def previous_entry(self, event):
+        m = self.markdown.to_markdown
         self.heading.delete(0, Tk.END)
-        self.heading.insert(0, self.entry.previous.name)
+        self.heading.insert(0, m(self.entry.previous.name))
         self.load()
 
     def next_entry(self, event):
+        m = self.markdown.to_markdown
         self.heading.delete(0, Tk.END)
-        self.heading.insert(0, self.entry.next_node.name)
+        self.heading.insert(0, m(self.entry.next_node.name))
         self.load()
 
     def keep_history(self, heading):
@@ -114,7 +116,7 @@ class DictionaryEditor(SiteEditor):
         :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
         :param return (Nothing):
         """
-        texts = super(DictionaryEditor, self).prepare_texts(texts)
+        super(DictionaryEditor, self).prepare_texts(texts)
         with ignored(AttributeError):
             self.entry.parent.content = replace_datestamp(
                 self.entry.parent.content)
