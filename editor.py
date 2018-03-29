@@ -27,5 +27,4 @@ class Smeagol(Tk.Frame, object):
     def open_translation(self):
         self.open_editor(TranslationEditor)
 
-
 Smeagol().mainloop()

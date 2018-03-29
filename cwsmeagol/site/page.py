@@ -208,7 +208,7 @@ class Page(Node):
     def change_to_div(self, text):
         """
         Transform '[/d]' --> '</div>'
-            and '[d blah]' --> '<div class="blah">'
+            and '[d blah]\n' --> '<div class="blah">'
         """
         if text.startswith('/'):
             return '</div>'

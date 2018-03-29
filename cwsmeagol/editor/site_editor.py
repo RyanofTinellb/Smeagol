@@ -635,7 +635,7 @@ class SiteEditor(Properties, Editor, object):
         self.position = self.textboxes[0].index(Tk.INSERT)
         self.fontsize = self.font.actual(option='size')
         self.save_site()
-        self.master.destroy()
+        self.master.quit()
 
     def initial_content(self, entry=None):
         """

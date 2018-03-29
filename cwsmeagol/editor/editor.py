@@ -301,7 +301,7 @@ class Editor(Tk.Frame, object):
             self.save_text.set('*Save')
             event.widget.tag_add(self.current_style.get(),
                                  Tk.INSERT + '-1c', Tk.INSERT)
-    
+
     def scroll_textbox(self, event):
         for textbox in self.textboxes:
             textbox.yview_scroll(-1 * (event.delta / 20), Tk.UNITS)
