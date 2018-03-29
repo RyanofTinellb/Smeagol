@@ -156,6 +156,10 @@ class InternalDictionary:
         Add links of the form
             '<a href="../b/blah.html#highlulani">blah</a>'
         """
+<<<<<<< HEAD
+=======
+        div = ' [d definition]'
+>>>>>>> 929e43e90dd898243a9c790a923d69ec88c368ac
         lang = '[2]'  # language marker
         output = []
         regex = r'<{0}>(.*?)</{0}>'.format('link')
