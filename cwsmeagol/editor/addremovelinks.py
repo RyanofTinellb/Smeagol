@@ -208,12 +208,14 @@ class ExternalGrammar:
                     pos, rest = line[len(wcs):].split(div, 1)  # part of speech
                 except ValueError:
                     pos, rest = line[len(wcs):], ''
-                line = wcs + \
-                    ' '.join(map(self._link, pos.split(' '))) + div + rest
+                pos = ''.join(map(self._link, re.split(r'(\W+)', pos)))
+                line = wcs + pos + div + rest
             output.append(line)
         return '\n'.join(output)
 
     def _link(self, pos):
+        if re.match('\W+|rarr', pos):
+            return pos
         with ignored(KeyError):
             link = self.replacements['languages'][self.language][pos]
             language = urlform(self.language)
