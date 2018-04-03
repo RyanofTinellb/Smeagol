@@ -353,14 +353,16 @@ class SiteEditor(Properties, Editor, object):
             '{content}', k).replace(
             '{stylesheet}', g[0].stylesheet_and_icon).replace(
             '{copyright}', self.copyright)
-        self.information.set('{3}{0} error{2}\n{1}'.format(
+        information = '{3}{0} error{2}\n{1}'.format(
                 self.errors,
                 '-' * 10,
                 '' if self.errors == 1 else 's',
                 self.errorstring
-            ))
+            )
+        self.information.set(information)
         with open('wholepage.html', 'w') as p:
             p.write(page)
+        return self.errors
 
     def _save_wholepage(self, page):
         try:
@@ -410,6 +412,8 @@ class SiteEditor(Properties, Editor, object):
         """
         text = ''.join(texts)
         if self.entry.level and not text:
+            if self.page == self.heading_contents:
+                self.page = [""]
             self.entry.delete_htmlfile()
             self.entry.remove_from_hierarchy()
             self.reset()
@@ -635,6 +639,8 @@ class SiteEditor(Properties, Editor, object):
         self.wait_window(textwindow)
 
     def quit(self):
+        if self.save_wholepage():
+            return
         self.server.shutdown()
         self.page = self.heading_contents
         self.language = self.languagevar.get()
