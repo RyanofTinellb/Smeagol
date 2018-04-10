@@ -423,7 +423,7 @@ class Editor(Tk.Frame, object):
                             )
                             end = '{0}+3c'.format(start)
                             text = textbox.get(start, end)
-                            text = text[1]
+                            text = text[1] + ' '
                             textbox.delete(start, end)
                             textbox.insert(start, text)
                             textbox.tag_add(
@@ -450,7 +450,7 @@ class Editor(Tk.Frame, object):
             for (style, _) in self.text_styles:
                 for end, start in izip(*[reversed(textbox.tag_ranges(style))] * 2):
                     if style.startswith('example'):
-                        text = textbox.get(start, end)
+                        text = textbox.get(start, end)[0]
                         text = '[{0}]'.format(text)
                     else:
                         text = textbox.get(start, end)

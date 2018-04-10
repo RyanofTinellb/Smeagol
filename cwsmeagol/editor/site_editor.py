@@ -189,11 +189,8 @@ class SiteEditor(Properties, Editor, object):
         self.thread.start()
 
     def open_in_browser(self, event=None):
-        self.server.shutdown()
-        self.server.server_close()
         web.open_new_tab(os.path.join('http://localhost:' +
                                       str(self.PORT), self.entry.link()))
-        self.start_server()
         return 'break'
 
     def reset(self, event=None):
@@ -491,19 +488,31 @@ class SiteEditor(Properties, Editor, object):
         """
         Format paragraph with this marking
         """
-        self.format_paragraph('example-no-lines', 'e', event.widget)
+        self.format_paragraph('example-no-lines', 'e ', event.widget)
         return 'break'
 
     def format_paragraph(self, style, code, textbox):
         linestart = Tk.INSERT + ' linestart'
+        text = textbox.get(linestart, linestart + '+2c')
+        self.remove_paragraph_formatting(textbox)
+        if text == code or text == '[' + code[0]:
+            return
         textbox.insert(linestart, code)
-        textbox.tag_add(style, linestart, linestart + '+1c')
+        textbox.tag_add(style, linestart, linestart + '+2c')
+
+    def remove_paragraph_formatting(self, textbox):
+        linestart = Tk.INSERT + ' linestart'
+        text = textbox.get(linestart, linestart + '+2c')
+        if text in ('e ', 'f '):
+            textbox.delete(linestart, linestart + '+2c')
+        elif text in ('[e', '[f'):
+            textbox.delete(linestart, linestart + '+3c')
 
     def example(self, event):
         """
         Format paragraph with this marking
         """
-        self.format_paragraph('example', 'f', event.widget)
+        self.format_paragraph('example', 'f ', event.widget)
         return 'break'
 
     def change_style(self, event, style):
