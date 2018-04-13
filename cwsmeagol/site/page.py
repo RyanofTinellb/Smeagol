@@ -261,7 +261,7 @@ class Page(Node):
             try:
                 form, cell = cell.split(' ', 1)
             except ValueError:
-                raise ValueError(cell)
+                form, cell = cell, ''
         heading = 'h' if 'h' in form else 'd'
         rowcol = map(self.check_rowcol, [
             ['rowspan', r'(?<=r)\d*', form],

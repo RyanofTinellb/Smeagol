@@ -15,6 +15,7 @@ class Editor(Tk.Frame, object):
         self.row = 0
         self.font = tkFont.Font(family='Calibri', size=18)
         self.top = self.winfo_toplevel()
+        self.clipboard = ''
         self.ready()
 
     def ready(self):
@@ -106,8 +107,11 @@ class Editor(Tk.Frame, object):
             ('<Control-MouseWheel>', self.change_fontsize),
             ('<Control-0>', self.reset_fontsize),
             ('<Control-a>', self.select_all),
+            ('<Control-c>', self.copy_text),
             ('<Control-d>', self.add_heading),
             ('<Control-D>', self.remove_heading),
+            ('<Control-v>', self.paste_text),
+            ('<Control-x>', self.cut_text),
             ('<Control-BackSpace>', self.backspace_word),
             ('<Control-Delete>', self.delete_word),
             (('<Control-Up>', '<Control-Down>'), self.move_line),
@@ -406,6 +410,33 @@ class Editor(Tk.Frame, object):
         self.tkinter_to_html()
         function(*args, **kwargs)
         self.html_to_tkinter()
+
+    def copy_text(self, event):
+        self.tkinter_to_tkinter(self._copy_text, [event.widget])
+        return 'break'
+
+    def cut_text(self, event):
+        self.tkinter_to_tkinter(self._cut_text, [event.widget])
+        return 'break'
+
+    def paste_text(self, event):
+        self.tkinter_to_tkinter(self._paste_text, [event.widget])
+        return 'break'
+
+    def _copy_text(self, textbox):
+        with ignored(Tk.TclError):
+            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
+            self.clipboard = textbox.get(*borders)
+        return borders
+
+    def _cut_text(self, textbox):
+        textbox.delete(*self._copy_text(event))
+
+    def _paste_text(self, textbox):
+        with ignored(Tk.TclError):
+            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
+            textbox.delete(*borders)
+        textbox.insert(Tk.INSERT, self.clipboard)
 
     def html_to_tkinter(self):
         count = Tk.IntVar()

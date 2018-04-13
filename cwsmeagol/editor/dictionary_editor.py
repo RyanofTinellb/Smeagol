@@ -18,12 +18,22 @@ class DictionaryEditor(SiteEditor):
             ('<Control-r>', self.refresh_random),
             ('<Control-=>', self.add_definition),
             ('<Prior>', self.scroll_history),
-            ('<Next>', self.scroll_history)
+            ('<Next>', self.scroll_history),
+            ('<Control-Return>', self.jump_to_entry)
+
         ]
         self.add_commands('Text', commands)
         self.heading = self.headings[0]
         self.font.config(family='Courier New')
         self.master.title('Editing Dictionary')
+
+    def jump_to_entry(self, event):
+        with ignored(Tk.TclError):
+            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
+            entry = event.widget.get(*borders)
+            self.heading.delete(0, Tk.END)
+            self.heading.insert(0, entry)
+            self.load()
 
     @property
     def caller(self):
