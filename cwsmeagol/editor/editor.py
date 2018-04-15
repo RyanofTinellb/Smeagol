@@ -15,7 +15,6 @@ class Editor(Tk.Frame, object):
         self.row = 0
         self.font = tkFont.Font(family='Calibri', size=18)
         self.top = self.winfo_toplevel()
-        self.clipboard = ''
         self.ready()
 
     def ready(self):
@@ -426,7 +425,8 @@ class Editor(Tk.Frame, object):
     def _copy_text(self, textbox):
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
-            self.clipboard = textbox.get(*borders)
+            self.clipboard_clear()
+            self.clipboard_append(textbox.get(*borders))
         return borders
 
     def _cut_text(self, textbox):
@@ -436,7 +436,7 @@ class Editor(Tk.Frame, object):
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             textbox.delete(*borders)
-        textbox.insert(Tk.INSERT, self.clipboard)
+        textbox.insert(Tk.INSERT, self.clipboard_get())
 
     def html_to_tkinter(self):
         count = Tk.IntVar()
@@ -475,6 +475,7 @@ class Editor(Tk.Frame, object):
                                             '{0}+{1}c'.format(start, len(text)))
                     except Tk.TclError:
                         break
+        self.reset_textboxes()
 
     def tkinter_to_html(self):
         for textbox in self.textboxes:

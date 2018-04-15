@@ -225,6 +225,7 @@ class SiteEditor(Properties, Editor, object):
         self.entry = self.find_entry(self.heading_contents)
         texts = self.prepare_entry(self.entry)
         self.display(texts)
+        self.reset_textboxes()
         self.save_text.set('Save')
         self.master.title('Editing ' + self.entry.name)
         return 'break'
@@ -325,7 +326,6 @@ class SiteEditor(Properties, Editor, object):
         widget.tag_remove(self.current_style.get(), Tk.INSERT)
         self.current_style.set('')
         self.tkinter_to_tkinter(self._save_page)
-        self.reset_textboxes()
         self.save_text.set('Save')
         self.information.set('Saved!')
         self.save_site()
