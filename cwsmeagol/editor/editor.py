@@ -430,7 +430,7 @@ class Editor(Tk.Frame, object):
         return borders
 
     def _cut_text(self, textbox):
-        textbox.delete(*self._copy_text(event))
+        textbox.delete(*self._copy_text(textbox))
 
     def _paste_text(self, textbox):
         with ignored(Tk.TclError):

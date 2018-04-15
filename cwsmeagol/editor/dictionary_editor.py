@@ -28,12 +28,24 @@ class DictionaryEditor(SiteEditor):
         self.master.title('Editing Dictionary')
 
     def jump_to_entry(self, event):
-        with ignored(Tk.TclError):
+        textbox = event.widget
+        try:
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
-            entry = event.widget.get(*borders)
-            self.heading.delete(0, Tk.END)
-            self.heading.insert(0, entry)
-            self.load()
+            entry = textbox.get(*borders)
+        except Tk.TclError:
+            pattern = r'[^a-zA-Z0-9_\'-]'
+            borders = (
+                textbox.search(
+                    pattern, Tk.INSERT, backwards=True, regexp=True
+                ) + '+1c' or Tk.INSERT + ' linestart',
+                textbox.search(
+                    pattern, Tk.INSERT, regexp=True
+                ) or Tk.INSERT + ' lineend'
+            )
+            entry = textbox.get(*borders)
+        self.heading.delete(0, Tk.END)
+        self.heading.insert(0, entry)
+        self.load()
 
     @property
     def caller(self):
