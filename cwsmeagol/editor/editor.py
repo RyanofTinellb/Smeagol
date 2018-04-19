@@ -100,7 +100,7 @@ class Editor(Tk.Frame, object):
         number = self.textboxes
         font = self.font
         self.textboxes = [Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
-                                  undo=True, font=font) for _ in xrange(number)]
+                                  undo=False, font=font) for _ in xrange(number)]
         commands = [
             ('<MouseWheel>', self.scroll_textbox),
             ('<Control-MouseWheel>', self.change_fontsize),
@@ -121,7 +121,7 @@ class Editor(Tk.Frame, object):
         self.add_commands('Text', commands)
         for textbox in self.textboxes:
             textbox.bind('<KeyPress>', self.edit_text_changed)
-            textbox.bind('<Any-Button>', self.edit_text_changed)
+            textbox.bind('<Button-1>', self.edit_text_changed)
             self.ready_scrollbar(textbox)
             for (name, style) in self.text_styles:
                 textbox.tag_config(name, **style)

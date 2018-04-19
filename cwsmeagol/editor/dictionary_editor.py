@@ -19,6 +19,7 @@ class DictionaryEditor(SiteEditor):
             ('<Control-=>', self.add_definition),
             ('<Prior>', self.scroll_history),
             ('<Next>', self.scroll_history),
+            ('<Button-2>', self.set_jump_to_entry),
             ('<Control-Return>', self.jump_to_entry)
 
         ]
@@ -33,10 +34,16 @@ class DictionaryEditor(SiteEditor):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             entry = textbox.get(*borders)
         except Tk.TclError:
-            text = self.select_word(event)
+            entry = self.select_word(event)
         self.heading.delete(0, Tk.END)
         self.heading.insert(0, entry)
         self.load()
+
+    def set_jump_to_entry(self, event):
+        textbox = event.widget
+        textbox.mark_set(Tk.INSERT, Tk.CURRENT)
+        self.jump_to_entry(event)
+        return 'break'
 
     @property
     def caller(self):
