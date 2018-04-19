@@ -208,7 +208,7 @@ class ExternalGrammar:
                     pos, rest = line[len(wcs):].split(div, 1)  # part of speech
                 except ValueError:
                     pos, rest = line[len(wcs):], ''
-                pos = ''.join(map(self._link, re.split(r'(\W+)', pos)))
+                pos = ''.join(map(self._link, re.split(r'([^a-zA-Z0-9_\'-])', pos)))
                 line = wcs + pos + div + rest
             output.append(line)
         return '\n'.join(output)

@@ -238,10 +238,19 @@ class SiteEditor(Properties, Editor, object):
         """
         textbox = event.widget
         try:
-            text = textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
+            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
+            text = textbox.get(*borders)
         except Tk.TclError:
-            text = textbox.get(Tk.INSERT + ' wordstart',
-                               Tk.INSERT + ' wordend')
+            pattern = r'[^a-zA-Z0-9_\'-]'
+            borders = (
+                textbox.search(
+                    pattern, Tk.INSERT, backwards=True, regexp=True
+                ) + '+1c' or Tk.INSERT + ' linestart',
+                textbox.search(
+                    pattern, Tk.INSERT, regexp=True
+                ) or Tk.INSERT + ' lineend'
+            )
+            text = textbox.get(*borders)
         length = len(text)
         with conversion(self.markdown, 'to_markup') as converter:
             text = converter(text)

@@ -496,7 +496,7 @@ class Page(Node):
         suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else [
             "st", "nd", "rd"][date.day % 10 - 1]
         output = datetime.strftime(
-            date, '<span class="no-breaks">&copy;%Y Ryan Eakins.</span> <span class="no-breaks">Last updated: %A, %B %#d' + suffix + ', %Y.')
+            date, '<span class="no-breaks">&copy;%Y <a href="http://www.tinellb.com/about.html">Ryan Eakins</a>.</span> <span class="no-breaks">Last updated: %A, %B %#d' + suffix + ', %Y.')
         return output
 
     def publish(self, template=None):
