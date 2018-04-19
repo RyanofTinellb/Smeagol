@@ -33,16 +33,7 @@ class DictionaryEditor(SiteEditor):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             entry = textbox.get(*borders)
         except Tk.TclError:
-            pattern = r'[^a-zA-Z0-9_\'-]'
-            borders = (
-                textbox.search(
-                    pattern, Tk.INSERT, backwards=True, regexp=True
-                ) + '+1c' or Tk.INSERT + ' linestart',
-                textbox.search(
-                    pattern, Tk.INSERT, regexp=True
-                ) or Tk.INSERT + ' lineend'
-            )
-            entry = textbox.get(*borders)
+            text = self.select_word(event)
         self.heading.delete(0, Tk.END)
         self.heading.insert(0, entry)
         self.load()

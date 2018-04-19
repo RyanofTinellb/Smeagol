@@ -241,16 +241,7 @@ class SiteEditor(Properties, Editor, object):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             text = textbox.get(*borders)
         except Tk.TclError:
-            pattern = r'[^a-zA-Z0-9_\'-]'
-            borders = (
-                textbox.search(
-                    pattern, Tk.INSERT, backwards=True, regexp=True
-                ) + '+1c' or Tk.INSERT + ' linestart',
-                textbox.search(
-                    pattern, Tk.INSERT, regexp=True
-                ) or Tk.INSERT + ' lineend'
-            )
-            text = textbox.get(*borders)
+            text = self.select_word(event)
         length = len(text)
         with conversion(self.markdown, 'to_markup') as converter:
             text = converter(text)

@@ -110,6 +110,7 @@ class Editor(Tk.Frame, object):
             ('<Control-d>', self.add_heading),
             ('<Control-D>', self.remove_heading),
             ('<Control-v>', self.paste_text),
+            ('<Control-w>', self.select_word),
             ('<Control-x>', self.cut_text),
             ('<Control-BackSpace>', self.backspace_word),
             ('<Control-Delete>', self.delete_word),
@@ -195,6 +196,20 @@ class Editor(Tk.Frame, object):
     def go_to(self, position):
         self.textboxes[0].mark_set(Tk.INSERT, position)
         self.textboxes[0].see(Tk.INSERT)
+
+    def select_word(self, event):
+        textbox = event.widget
+        pattern = r'\n|[^a-zA-Z0-9_\'-]'
+        borders = (
+            textbox.search(
+                pattern, Tk.INSERT, backwards=True, regexp=True
+            ) + '+1c' or Tk.INSERT + ' linestart',
+            textbox.search(
+                pattern, Tk.INSERT, regexp=True
+            ) or Tk.INSERT + ' lineend'
+        )
+        textbox.tag_add('sel', *borders)
+        return textbox.get(*borders)
 
     def fill_headings(self, entries):
         while len(self.headings) < len(entries):
