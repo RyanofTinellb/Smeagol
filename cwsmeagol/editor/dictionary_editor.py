@@ -35,6 +35,7 @@ class DictionaryEditor(SiteEditor):
             entry = textbox.get(*borders)
         except Tk.TclError:
             entry = self.select_word(event)
+        self.save_page()
         self.heading.delete(0, Tk.END)
         self.heading.insert(0, entry)
         self.load()

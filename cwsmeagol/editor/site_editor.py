@@ -242,6 +242,7 @@ class SiteEditor(Properties, Editor, object):
             text = textbox.get(*borders)
         except Tk.TclError:
             text = self.select_word(event)
+            textbox.tag_remove('sel', '1.0', Tk.END)
         length = len(text)
         with conversion(self.markdown, 'to_markup') as converter:
             text = converter(text)
