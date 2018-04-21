@@ -43,6 +43,7 @@ class SiteEditor(Properties, Editor, object):
             ('<Control-r>', self.refresh_random),
             ('<Control-s>', self.save_page),
             ('<Control-t>', self.add_translation),
+            ('[', self.dup_bracket),
             (('<Control-[>', '<Control-]>'), self.set_indent),
             ('<Control-Prior>', self.previous_entry),
             ('<Control-Next>', self.next_entry)
@@ -70,6 +71,11 @@ class SiteEditor(Properties, Editor, object):
     @property
     def caller(self):
         return 'site'
+
+    def dup_bracket(self, event):
+        textbox = event.widget
+        textbox.insert(Tk.INSERT, '[]')
+        textbox.mark_set(Tk.INSERT, Tk.INSERT + '-1c')
 
     def refresh_random(self, event=None):
         """
