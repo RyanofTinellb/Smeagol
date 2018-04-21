@@ -15,7 +15,7 @@ class Page(Node):
     A node in the hierarchy
     """
 
-    def __init__(self, name=None, parent=None, content=''):
+    def __init__(self, name=None, parent=None, content='', newpage=False):
         """
         :param name (str): the name of the Page
         :param parent (Page): the Page's immediate ancestor
@@ -30,6 +30,7 @@ class Page(Node):
         self.name = name or ''
         self.content = content
         self.flatname = FlatName(name)
+        self.newpage = newpage
 
     def __str__(self):
         output = '' if self.isRoot else '-' * 50 + str(self.level) + '\n'
@@ -532,6 +533,7 @@ class Page(Node):
         page = re.sub(r'&date=\d{8}', '', page)
         with open(self.link(), "w") as f:
             f.write(page)
+        self.newpage = False
 
     def delete_htmlfile(self):
         with ignored(WindowsError):

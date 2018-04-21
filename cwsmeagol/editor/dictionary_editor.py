@@ -121,7 +121,7 @@ class DictionaryEditor(SiteEditor):
         except KeyError:
             initial = re.sub(r'.*?(\w).*', r'\1',
                              urlform(heading)).capitalize()
-            entry = Page(heading, site[initial], '').insert()
+            entry = Page(heading, site[initial], '', newpage=True)
             entry.content = self.initial_content(entry)
         self.keep_history(heading)
         self.master.title('Editing Dictionary: ' + self.entry.name)

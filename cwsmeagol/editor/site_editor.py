@@ -324,6 +324,8 @@ class SiteEditor(Properties, Editor, object):
             widget = self.textboxes[0]
         if self.is_new:
             self.site_properties()
+        if self.entry.newpage:
+            self.entry.insert()
         widget.tag_remove(self.current_style.get(), Tk.INSERT)
         self.current_style.set('')
         self.tkinter_to_tkinter(self._save_page)
