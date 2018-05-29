@@ -88,63 +88,7 @@ class ExternalDictionary:
 
         """
         return re.sub(r'<a href="{0}.*?>(.*?)</a>'.format(self.url), r'<{0}>\1</{0}>'.format('link'), text)
-
-
-class InternalStory:
-    def add_links(self, text, entry):
-        """
-        Add version links to the each paragraph of the text
-
-        :param entry: (Page)
-        :param text: (str)
-        :return: (str)
-        """
-        if entry.name is None:
-            return ''
-        paragraphs = text.splitlines()
-        version = entry.ancestors[1].name
-        for uid, paragraph in enumerate(paragraphs[1:], start=1):
-            if paragraph == '<span class="stars">* * *</span>':
-                pass
-            elif version == 'Gloss':
-                paragraph = '{0}' + \
-                    paragraphs[uid].replace(' | [r]', '{1} | [r]')
-            elif version == 'Interlinear':
-                paragraph = '[t]{0}'
-                regex = r'(?= \| \[r\]<div class=\"literal\">)'
-                paragraph += re.sub(regex, '{1}', paragraphs[uid][3:])
-            else:
-                paragraph = '{{0}}{0}{{1}}'.format(paragraphs[uid])
-            paragraphs[uid] = self._version_links(
-                paragraph, version, entry, uid)
-        return '\n'.join(paragraphs)
-
-    @staticmethod
-    def _version_links(paragraph, version, entry, uid):
-        """
-        Adds version link information to a paragraph and its cousins
-
-        :param paragraph (str[]):
-        :param index (int):
-        :param entry (Page):
-        :return (nothing):
-        """
-        links = ''
-        anchor = ('<span class="version-anchor" '
-                  'aria-hidden="true" id="{0}"></span>').format(str(uid))
-        categories = [node.name for node in entry.elders]
-        cousins = entry.cousins
-        for cousin, category in zip(cousins, categories):
-            if version != category and cousin.name is not None:
-                links += entry.hyperlink(cousin, category,
-                                         fragment='#' + str(uid)) + ' '
-        links = (
-            '<span class="version-links" ' 'aria-hidden="true">{0}</span>').format(links)
-        return paragraph.format(anchor, links)
-
-    def remove_links(self, text):
-        return re.sub(r'<span class="version.*?</span>', '', text)
-
+        
 
 class InternalDictionary:
     """

@@ -43,7 +43,6 @@ class SiteEditor(Properties, Editor, object):
             ('<Control-r>', self.refresh_random),
             ('<Control-s>', self.save_page),
             ('<Control-t>', self.add_translation),
-            ('[', self.dup_bracket),
             (('<Control-[>', '<Control-]>'), self.set_indent),
             ('<Control-Prior>', self.previous_entry),
             ('<Control-Next>', self.next_entry)
@@ -71,11 +70,6 @@ class SiteEditor(Properties, Editor, object):
     @property
     def caller(self):
         return 'site'
-
-    def dup_bracket(self, event):
-        textbox = event.widget
-        textbox.insert(Tk.INSERT, '[]')
-        textbox.mark_set(Tk.INSERT, Tk.INSERT + '-1c')
 
     def refresh_random(self, event=None):
         """
@@ -253,7 +247,11 @@ class SiteEditor(Properties, Editor, object):
         with conversion(self.markdown, 'to_markup') as converter:
             text = converter(text)
         example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
-        converter = self.translator.convert_sentence if '.' in text else self.translator.convert_word
+        converter = self.translator.convert_word # default setting
+        for mark in '.!?':
+            if mark in text:
+                converter = self.translator.convert_word
+                break
         text = converter(text)
         if example:
             text = '[e]' + text
@@ -267,8 +265,6 @@ class SiteEditor(Properties, Editor, object):
             text += ' '
             textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
             textbox.insert(Tk.INSERT + '+1c', text)
-        textbox.mark_set(
-            Tk.INSERT, '{0}+{1}c'.format(Tk.INSERT, str(len(text) + length)))
         self.html_to_tkinter()
         return 'break'
 
