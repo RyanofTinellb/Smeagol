@@ -67,7 +67,7 @@ class HighLulani:
         # replaces unicode
         text = text.replace('&rsquo;', "'")
         text = text.replace('&#x294;', "''")
-        
+
         # replaces "upper case" glottal stop with "lower case" apostrophe
         text = re.sub("(\"| |^)''", r"\1'", text)
         text = text.lower()

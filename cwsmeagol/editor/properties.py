@@ -19,7 +19,6 @@ class Properties(object):
         self.config
         self.files - a Files object
         self.site - a Site object
-        self.randomwords - a RandomWords object
         self.linkadder - a AddRemoveLinks object
     """
 
@@ -28,9 +27,9 @@ class Properties(object):
         self.config_filename = None
         self.setup_config()
         self.create_site()
-        self.create_random_words()
         self.create_linkadder()
         self.translator = Translator(self.language)
+        self.randomwords = RandomWords(self.language)
         self.markdown = Markdown(self.markdown_file)
         super(Properties, self).__init__(master)
 
@@ -84,7 +83,6 @@ class Properties(object):
             self.config_filename = filename
             self.setup_config()
             self.create_site()
-            self.create_random_words()
             self.create_linkadder()
             return False
         return filename
@@ -138,15 +136,6 @@ class Properties(object):
         dict_ = dict(self.config['site'])
         dict_['files'] = self.collate_files()
         self.site = Site(**dict_)
-
-    def create_random_words(self):
-        """
-        Create a RandomWords object from the config info
-        """
-        if 'random words' in self.config:
-            self.randomwords = RandomWords(**self.config['random words'])
-        else:
-            self.randomwords = None
 
     def create_linkadder(self):
         """

@@ -16,6 +16,7 @@ from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 from cwsmeagol.translation import Translator
+from cwsmeagol.translation import RandomWords
 
 
 class SiteEditor(Properties, Editor, object):
@@ -159,6 +160,7 @@ class SiteEditor(Properties, Editor, object):
         """
         self.language = self.languagevar.get()
         self.translator = Translator(self.language)
+        self.randomwords = RandomWords(self.language)
         return 'break'
 
     def site_open(self, event=None):
