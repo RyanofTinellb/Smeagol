@@ -220,6 +220,13 @@ class Node(object):
             cousins.append(cousin)
         return cousins
 
+    def cousin_degree(self, ancestors):
+        try:
+            return [i != j for i, j in zip(
+                *[x for x in ancestors.values()])].index(True)
+        except ValueError:
+            return min(map(len, ancestors.values()))
+
     @property
     def family(self):
         """

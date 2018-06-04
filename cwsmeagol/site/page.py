@@ -154,44 +154,37 @@ class Page(Node):
         :param fragment (str): allows for a # fragment. Must include the hash sign.
         :return (str):
         """
-        # returns plain text (i.e.: not a hyperlink) if source and destination are the same
         if destination is self:
             return template.format(destination.name)
-        # :variable change (int): accounts for the fact that an internal node has one less level than expected
-        change = int(not self.isLeaf)
-        # :variable address (str): a hyperlink reference of the form '../../phonology/consonants/index.html'
-        # :variable link (str): a hyperlink of the form '<a href="../../phonology/consonants/index.html>Consonants</a>'
         try:
-            extension = ".html" if destination.isLeaf else "/index.html"
-            ancestors = {'self': self.ancestors,
-                         'destination': destination.ancestors}
-            isDirect = destination in ancestors['self']
-            # :variable (int) common: the number of nodes common to both source and destination ancestries
-            try:
-                common = [i != j for i, j in zip(
-                    *[x for x in ancestors.values()])].index(True)
-            except ValueError:
-                common = min(map(len, ancestors.values()))
-            # :variable (int) up: the number of levels the common ancestor is above the source
-            # :variable (str) down: the hyperlink address from the common ancestor to the descendant
-            if destination == self.root:
-                up = self.level + change - 1
-                down = "index"
-                extension = ".html"
-            else:
-                up = self.level + change - \
-                    (destination.level if isDirect else common)
-                down = destination.urlform if isDirect else \
-                    "/".join([ancestor.urlform for ancestor in ancestors['destination'][common:]])
-            address = (up * '../') + down + extension + fragment
-            link = '<a href="{0}">{1}</a>'.format(
-                address, template.format(destination.name))
+            address, link = self.direct_hyperlink(destination, template, fragment)
         except AttributeError:  # destination is a string
-            up = self.level + change - 1
+            up = self.level + int(not self.isLeaf) - 1
             address = (up * '../') + destination + fragment
             link = '<a {0}>{1}</a>'.format(address,
                                            template.format(destination))
         return link if needAnchorTags else address
+
+    def direct_hyperlink(self, destination, template, fragment):
+        change = int(not self.isLeaf)
+        extension = ".html" if destination.isLeaf else "/index.html"
+        ancestors = {'self': self.ancestors,
+                     'destination': destination.ancestors}
+        isDirect = destination in ancestors['self']
+        common = self.cousin_degree(ancestors)
+        if destination == self.root:
+            up = self.level + change - 1
+            down = "index"
+            extension = ".html"
+        else:
+            up = self.level + change - \
+                (destination.level if isDirect else common)
+            down = destination.urlform if isDirect else \
+                "/".join([ancestor.urlform for ancestor in ancestors['destination'][common:]])
+        address = (up * '../') + down + extension + fragment
+        link = '<a href="{0}">{1}</a>'.format(
+            address, template.format(destination.name))
+        return (link, address)
 
     def change_to_heading(self, text):
         """
