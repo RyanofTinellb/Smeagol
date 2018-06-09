@@ -1,7 +1,10 @@
 import shutil
 
 paths = ['C:/Users/Ryan/Documents/TinellbianLanguages/grammar/',
-            'C:/Users/Ryan/Documents/TinellbianLanguages/dictionary/']
+            'C:/Users/Ryan/Documents/TinellbianLanguages/dictionary/',
+            'C:/Users/Ryan/Documents/TinellbianLanguages/coelacanth/',
+            'C:/Users/Ryan/Documents/TinellbianLanguages/shortstories/',
+            ]
 src = 'C:/Users/Ryan/Documents/TinellbianLanguages/main/'
 files = ['highlulani.ttf', '404search.js',
          'favicon.png', 'search.js', 'searchterms.js', 'basic_style.css']

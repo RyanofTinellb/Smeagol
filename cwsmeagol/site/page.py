@@ -31,6 +31,7 @@ class Page(Node):
         self.content = content
         self.flatname = FlatName(name)
         self.newpage = newpage
+        self.divclass = None
 
     def __str__(self):
         output = '' if self.isRoot else '-' * 50 + str(self.level) + '\n'
@@ -184,7 +185,7 @@ class Page(Node):
         address = (up * '../') + down + extension + fragment
         link = '<a href="{0}">{1}</a>'.format(
             address, template.format(destination.name))
-        return (link, address)
+        return (address, link)
 
     def change_to_heading(self, text):
         """
@@ -205,10 +206,16 @@ class Page(Node):
             and '[d blah]\n' --> '<div class="blah">'
         """
         if text.startswith('/'):
+            if self.divclass == 'folding':
+                return '</div></label>'
             return '</div>'
         else:
-            divclass = text[2:-1]
-            return '<div class="{0}">'.format(divclass)
+            self.divclass = text[2:-1]
+            if self.divclass == 'folding':
+                return ('<label class="folder">'
+                        '<input type="checkbox" class="folder">'
+                        '<div class="folding">')
+            return '<div class="{0}">'.format(self.divclass)
 
     def change_to_table(self, text):
         """
@@ -392,7 +399,9 @@ class Page(Node):
         """
         :return (str):
         """
-        output = '''<ul><li{0}>{1}</li>
+        output = '''<label>
+                    <input type="checkbox" class="menu">
+                    <ul><li{0}>{1}</li>
                 <div class="javascript">
                   <form id="search">
                     <li class="search">
@@ -401,7 +410,7 @@ class Page(Node):
                   </form>
                 </div>
                 $links$
-                </ul>'''.format(' class="normal"' if self == self.root else '',
+                </ul><label>'''.format(' class="normal"' if self == self.root else '',
                                 self.hyperlink(self.root))
         return output
 

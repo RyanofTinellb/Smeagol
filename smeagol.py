@@ -25,7 +25,7 @@ class Grammar(Site):
 class Story(Site):
     def __init__(self):
         d = Default()
-        name = 'thecoelacanthquartet/'
+        name = 'coelacanth/'
         files = Files(*map(lambda file_: d.destination + name + file_, d.files))
         super(Story, self).__init__(d.destination + name,
             'The Coelacanth Quartet', files)
@@ -33,7 +33,7 @@ class Story(Site):
 class Stories(Site):
     def __init__(self):
         d = Default()
-        name = 'stories/'
+        name = 'shortstories/'
         files = Files(*map(lambda file_: d.destination + name + file_, d.files))
         super(Stories, self).__init__(d.destination + name,
             'Short Stories', files)
@@ -55,7 +55,7 @@ class Default():
 
 if __name__ == '__main__':
     oldtime = datetime.now()
-    for site in Grammar, Dictionary:
+    for site in Grammar, Story, Stories, Dictionary:
         site = site()
         print(site.name + ': ')
         print(site.publish())
