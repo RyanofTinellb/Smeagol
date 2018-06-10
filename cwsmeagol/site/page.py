@@ -410,7 +410,7 @@ class Page(Node):
                   </form>
                 </div>
                 $links$
-                </ul><label>'''.format(' class="normal"' if self == self.root else '',
+                </ul></label>'''.format(' class="normal"' if self == self.root else '',
                                 self.hyperlink(self.root))
         return output
 
