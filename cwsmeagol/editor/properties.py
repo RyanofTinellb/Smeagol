@@ -22,9 +22,9 @@ class Properties(object):
         self.linkadder - a AddRemoveLinks object
     """
 
-    def __init__(self, master):
+    def __init__(self, master, current):
         self.template = json.loads(default.properties)
-        self.config_filename = None
+        self.config_filename = current
         self.setup_config()
         self.create_site()
         self.create_linkadder()
@@ -34,23 +34,12 @@ class Properties(object):
         super(Properties, self).__init__(master)
 
     def setup_config(self, config=None):
-        self.config_filename = config or self.config_filename or self.fallback
+        self.config_filename = config or self.config_filename
         try:
             with open(self.config_filename) as config:
                 self.config = json.load(config)
-        except IOError:
+        except (IOError, TypeError):
             self.config = json.loads(default.config)
-
-    @property
-    def fallback(self):
-        folder = os.getenv('LOCALAPPDATA')
-        inifolder = os.path.join(folder, 'smeagol')
-        inifile = os.path.join(inifolder, self.caller + '.ini')
-        try:
-            with open(inifile) as iniload:
-                return iniload.readlines()[0]
-        except IOError:
-            return ''
 
     def __getattr__(self, name):
         if name in {'files', 'source', 'destination'}:
@@ -84,6 +73,7 @@ class Properties(object):
             self.setup_config()
             self.create_site()
             self.create_linkadder()
+            self.markdown = Markdown(self.markdown_file)
             return False
         return filename
 
@@ -99,8 +89,20 @@ class Properties(object):
                 inifile = os.path.join(inifolder, self.caller + '.ini')
                 with ignored(os.error): # folder already exists
                     os.makedirs(inifolder)
+                with open(inifile, 'a') as inisave:
+                    pass    # ensure file exists
+                try:
+                    with open(inifile, 'r') as inisave:
+                        sites = json.load(inisave)
+                except ValueError:
+                    sites = dict()
                 with open(inifile, 'w') as inisave:
-                    inisave.write(self.config_filename)
+                    name = re.match(
+                            r'.*/(.*?)\.',
+                            self.config_filename
+                        ).group(1).capitalize()
+                    sites[name] = self.config_filename
+                    json.dump(sites, inisave)
                 return # successful save
         self.save_site_as() # unsuccessful save
 

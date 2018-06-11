@@ -24,9 +24,9 @@ class SiteEditor(Properties, Editor, object):
     Base class for DictionaryEditor and TranslationEditor
     """
 
-    def __init__(self, master=None):
+    def __init__(self, master=None, current=None):
         self.languagevar = Tk.StringVar()
-        super(SiteEditor, self).__init__(master)
+        super(SiteEditor, self).__init__(master, current)
         self.languagevar.set(self.language)
         self.master.title('Site Editor')
         self.master.protocol('WM_DELETE_WINDOW', self.quit)

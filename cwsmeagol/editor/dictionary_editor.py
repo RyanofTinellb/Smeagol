@@ -4,7 +4,7 @@ from cwsmeagol.utils import *
 
 
 class DictionaryEditor(SiteEditor):
-    def __init__(self, master=None):
+    def __init__(self, master=None, current=None):
         """
 
         """
@@ -13,7 +13,7 @@ class DictionaryEditor(SiteEditor):
         self.history = []
         self.current = -1
 
-        super(DictionaryEditor, self).__init__(master)
+        super(DictionaryEditor, self).__init__(master, current)
         commands = [
             ('<Control-r>', self.refresh_random),
             ('<Control-=>', self.add_definition),
