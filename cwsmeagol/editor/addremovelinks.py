@@ -77,7 +77,11 @@ class ExternalDictionary:
     def _link(self, matchobj):
         word = matchobj.group(1)
         link = urlform(word)
-        initial = re.findall(r'\w', link)[0]
+        try:
+            initial = re.findall(r'\w', link)[0]
+        except IndexError:
+            print(link)
+            return word
         return '<a href="{0}/{1}/{2}.html{3}">{4}</a>'.format(
             self.url, initial, link, self.language, word)
 
@@ -88,7 +92,7 @@ class ExternalDictionary:
 
         """
         return re.sub(r'<a href="{0}.*?>(.*?)</a>'.format(self.url), r'<{0}>\1</{0}>'.format('link'), text)
-        
+
 
 class InternalDictionary:
     """

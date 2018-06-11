@@ -338,9 +338,7 @@ class Page(Node):
                     try:
                         line = mode.replacements[category] + text
                     except KeyError:  # something's gone wrong
-                        print(self.content)
-                        raise KeyError(
-                            '{0}\n{1}]{2}. Please check source file'.format(category, line, text))
+                        line = category
                     if not mode.table():
                         line = line.replace(
                             '</tr><tr><td>',
@@ -350,7 +348,7 @@ class Page(Node):
                     linebreak = '</d>\n<d>'.replace('d', mode.delimiter)
                     line = linebreak.join(line.splitlines()) + '\n'
                 except ValueError:
-                    raise ValueError(line + ': ' + self.name)
+                    pass
             output += line
         return output
 
