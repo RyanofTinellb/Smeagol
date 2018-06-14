@@ -31,7 +31,7 @@ class Page(Node):
         self.content = content
         self.flatname = FlatName(name)
         self.newpage = newpage
-        self.divclass = None
+        self.divclass = []
 
     def __str__(self):
         output = '' if self.isRoot else '-' * 50 + str(self.level) + '\n'
@@ -206,16 +206,23 @@ class Page(Node):
             and '[d blah]\n' --> '<div class="blah">'
         """
         if text.startswith('/'):
-            if self.divclass == 'folding':
+            if self.divclass and self.divclass.pop() == 'folding':
                 return '</div></label>'
             return '</div>'
         else:
-            self.divclass = text[2:-1]
-            if self.divclass == 'folding':
+            divclass = text[2:-1]
+            self.divclass.append(divclass)
+            if divclass == 'folding':
                 return ('<label class="folder">'
                         '<input type="checkbox" class="folder">'
                         '<div class="folding">')
-            return '<div class="{0}">'.format(self.divclass)
+            elif divclass == 'interlinear':
+                return '''<div class="interlinear">
+        <input class="version" type="radio" name="version" id="All" checked>All
+        <input class="version" type="radio" name="version" id="English">English
+        <input class="version" type="radio" name="version" id="Tinellbian">Tinellbian
+        <input class="version" type="radio" name="version" id="Transliteration">Transliteration'''
+            return '<div class="{0}">'.format(divclass)
 
     def change_to_table(self, text):
         """
