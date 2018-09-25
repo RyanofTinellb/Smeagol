@@ -18,6 +18,7 @@ class regexString:
 
     def __str__(self):
         return re.sub(r'\d', '', self.string)
+        return self.string
 
 
 def evolve(text):
@@ -26,12 +27,12 @@ def evolve(text):
         ('&rsquo;', "'"),
         ('&middot;', '.'),
         ('&#x294;', '"'),
+        ('&eth;', 'D'),
         ('&uuml;', 'U'),
         ('&ntilde;', 'N'),
-        ('&#x6c;&#x303', 'L'),
+        ('&#x6c;&#x303;', 'L'),
         ('&ccedil;', 'H'),
-        ('&eth;', 'D'),
-        ('&#x259;', 'Z'),
+        ('&#x17e;', 'Z'),
         ('&#x2c8;', '1'),
         ('&#x2cc;', '2'),
     ]
@@ -45,10 +46,6 @@ def evolve(text):
         ('ll', 'LL'),
         ("''", "yy"),
         ("hh", "HH")],
-        # anticipatory dissimilation of palatals
-        [(r'j(?=[aiu](?:[cjx]|[NL]{2}))', 'd'),
-        (r'c(?=[aiu](?:[cjx]|[NL]{2}))', 't'),
-        (r'x(?=[aiu](?:[cjx]|[NL]{2}))', 's')],
         # frication of geminate voiced plosives, and
         # voicing of geminate voiceless plosives
         [(r'bb', r'vv'),
@@ -69,12 +66,10 @@ def evolve(text):
         (r'd(?=i|di)', 'j'),
         (r'n(?=i|ni)', 'N'),
         (r'l(?=i|li)', 'L')],
-        # degemination
-        [(r'((\w)\2)i$', r'\2'),
-        (r'([pbtdDcjkg\'mnqrlfsxhNLHy])\1', r'\1')],
         # stress markers
-        [(r'([aiueU.][pbtdDcjkg\'mnqrlfsxhNLHy])([aiueU.])$', r'\g<1>2\2'),
-        (r'([pbtdDcjkg\'mnqrlfsxhNLHy][aiueO\.][pbtdDcjkg\'mnqrlfsxhNLHy]+2)', r'1\1'),
+        [(r'((\w)\2)', r'\g<1>2'),
+        (r'([aiueU.][pbtdDcjkg\'mnqrlfsxhNLHy])([aiueU.])$', r'\g<1>2\2'),
+        (r'([pbtdDcjkg\'mnqrlfsxhNLHy][aiueU.][pbtdDcjkg\'mnqrlfsxhNLHy]+2)', r'1\1'),
         (r'([aiueU.][pbtdDcjkg\'mnqrlfsxhNLHy]{1,2})([aiueO\.]1)', r'\g<1>2\2'),
         (r'([pbtdDcjkg\'mnqrlfsxhNLHy]{1,2})([aiueU.]1)', r'\g<1>2\2'),
         (r'^([pbtdDcjkg\'mnqrlfsxhNLHy][aiueU.][pbtdDcjkg\'mnqrlfsxhNLHy]{1,2}2)', r'1\1'),
@@ -82,14 +77,49 @@ def evolve(text):
         (r'(^|[aiueU.])([pbtdDcjkg\'mnqrlfsxhNLHy][aiueU.][pbtdDcjkg\'mnqrlfsxhNLHy]2)', r'\g<1>1\2'),
         (r'([pbtdDcjkg\'mnqrlfsxhNLHy])([aiueU.]1)', r'\g<1>2\2'),
         (r'([aiueU.]([pbtdDcjkg\'mnqrlfsxhNLHy])2)[aiueU.](1\2)', r'\1.\3')],
+        # degemination
+        [(r'((\w)\2)i$', r'\2'),
+        (r'([pbtdDcjkg\'mnqrlfsxhNLHy])\1', r'\1')],
         # fortition of unstressed high vowels
-        [(r'2i1\'', 'y\''),
-        (r'2[uU]1\'', 'w\'')],
-        # elision of schwa and glottal stop
+        [(r'2i1\'', 'y'),
+        (r'2[uU]1\'', 'w'),
+        ('1', '')],
+        # elision of schwa and glottal stop, and simplification of some clusters
         [(r'2[ae.]', r''),
+        (r'h(?=[pbtdDcjkg\'mnqrlfsxhNLHy])', ''),
+        (r'(?<=[pbtdDcjkg\'mnqrlfsxhNLHy])h', ''),
+        (r'p(?=[bdjgmnNq])', r'b'),
+        (r't(?=[bdjgmnNq])', r'd'),
+        (r'c(?=[bdjgmnNq])', r'j'),
+        (r'k(?=[bdjgmnNq])', r'g'),
+        (r'^b(?=[ptck])', r'p'),
+        (r'^d(?=[ptck])', r't'),
+        (r'^j(?=[ptck])', r'c'),
+        (r'^g(?=[ptck])', r'k'),
+        (r'^L(?=[bdjgptck])', 'l'),
+        (r'(?<=^[bdjgptck])L', 'l'),
+        (r'(?<=b)[mnNq]', r'm'),
+        (r'(?<=d)[mnNq]', r'n'),
+        (r'(?<=j)[mnNq]', r''),
+        (r'(?<=g)[mnNq]', r'q'),
+        (r'^pt', 'p\'t'),    # protect pt
+        (r'([bdjgptck])([bdjgptck])', r'\1\1'),
+        (r'^[mnNq](?=[pbmftdDcjkgnqsxNLH])', 'm'),
+        (r'(?<=.)[mnNq](?=[pbfv])', 'm'),
+        (r'(?<=.)[mnNq](?=[tdsz])', 'n'),
+        (r'(?<=.)[mnNq](?=[cjxZ])', 'N'),
+        (r'(?<=.)[mnNq](?=[kg])', 'q'),
+        (r'[jd][jx]', 'j'),
+        (r'[ct][cx]', r'c'),
+        (r'^[cj](?=[fvsz])', r''),
+        (r'(?<=^[bdjg])f', r'v'),
+        (r'(?<=^[bdjg])s', r'z'),
+        (r'(?<=^[bdjg])x', r'Z'),
+        (r'(?<=^[cj])[rl]', r''),
+        (r'^((\w)\2)', r'\2'),
         (r'\'', '')],
-        # reduction of lax high vowels
-        [(r'2[iuU]', 'Z')],
+        # shortening of long vowels
+        [(r'([aiueU])2\1', r'\1')],
     ]
     for rewrite in rewrites:
         text.sub(*rewrite)
@@ -109,6 +139,7 @@ with open('c:/users/ryan/documents/tinellbianlanguages'
     wordlist = map(lambda entry: entry['t'],
                 filter(lambda entry: entry['l'] == 'High Lulani',
                     json.load(f)))
+
     wordlist = map(evolve, wordlist)
 with open('c:/users/ryan/documents/tinellbianlanguages'
                 '/dictionary/vulgarlulani.json', 'w') as f:
