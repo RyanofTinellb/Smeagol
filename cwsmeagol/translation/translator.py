@@ -63,7 +63,6 @@ class HighLulani:
         # removes angle brackets and information between them
         text = re.sub(r'<.*?>', '', text)
 
-
         # replaces unicode
         text = text.replace('&rsquo;', "'")
         text = text.replace('&#x294;', "''")
