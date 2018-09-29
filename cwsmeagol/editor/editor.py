@@ -107,8 +107,6 @@ class Editor(Tk.Frame, object):
             ('<Control-0>', self.reset_fontsize),
             ('<Control-a>', self.select_all),
             ('<Control-c>', self.copy_text),
-            ('<Control-d>', self.add_heading),
-            ('<Control-D>', self.remove_heading),
             ('<Control-v>', self.paste_text),
             ('<Control-w>', self.select_word),
             ('<Control-x>', self.cut_text),

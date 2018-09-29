@@ -53,6 +53,3 @@ def remove_datestamp(text):
 
 def replace_datestamp(text):
     return add_datestamp(remove_datestamp(text))
-
-def unique(lst):
-    return [lst[0]] + [y for x,y in zip(lst, lst[1:]) if x != y]

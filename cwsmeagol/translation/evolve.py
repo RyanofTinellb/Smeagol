@@ -1,5 +1,7 @@
 import re
-from cwsmeagol.utils import unique
+
+def unique(lst):
+    return [lst[0]] + [y for x,y in zip(lst, lst[1:]) if x != y]
 
 class EMString:
     # Encodable mutable string
@@ -150,7 +152,7 @@ class HighToVulgarLulani:
             (r'(?<=d)[mnNq]', r'n'),
             (r'(?<=j)[mnNq]', r''),
             (r'(?<=g)[mnNq]', r'q'),
-            (r'^pt', 'p\'t'),    # protect pt
+            (r'pt', 'p\'t'),    # protect pt
             (r'([bdjgptck])([bdjgptck])', r'\1\1'),
             (r'^[mnNq](?=[pbmftdDcjkgnqsxNLH])', 'm'),
             (r'(?<=.)[mnNq](?=[pbfv])', 'm'),

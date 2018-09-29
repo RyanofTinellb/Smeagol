@@ -17,11 +17,12 @@ from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 from cwsmeagol.translation import Translator
 from cwsmeagol.translation import RandomWords
+from cwsmeagol.translation import HighToVulgarLulani
 
 
 class SiteEditor(Properties, Editor, object):
     """
-    Base class for DictionaryEditor and TranslationEditor
+    Base class for DictionaryEditor
     """
 
     def __init__(self, master=None, current=None):
@@ -33,6 +34,7 @@ class SiteEditor(Properties, Editor, object):
 
         commands = [
             ('<Control-b>', self.bold),
+            ('<Control-d>', self.add_descendant),
             ('<Control-e>', self.example_no_lines),
             ('<Control-f>', self.example),
             ('<Control-i>', self.italic),
@@ -255,6 +257,35 @@ class SiteEditor(Properties, Editor, object):
                 converter = self.translator.convert_word
                 break
         text = converter(text)
+        if example:
+            text = '[e]' + text
+        with conversion(self.markdown, 'to_markdown') as converter:
+            text = converter(text)
+        try:
+            text += '\n' if textbox.compare(Tk.SEL_LAST,
+                                            '==', Tk.SEL_LAST + ' lineend') else ' '
+            textbox.insert(Tk.SEL_LAST + '+1c', text)
+        except Tk.TclError:
+            text += ' '
+            textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
+            textbox.insert(Tk.INSERT + '+1c', text)
+        self.html_to_tkinter()
+        return 'break'
+
+    def add_descendant(self, event):
+        textbox = event.widget
+        try:
+            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
+            text = textbox.get(*borders)
+        except Tk.TclError:
+            text = self.select_word(event)
+            textbox.tag_remove('sel', '1.0', Tk.END)
+        length = len(text)
+        with conversion(self.markdown, 'to_markup') as converter:
+            text = converter(text)
+        example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
+        converter = self.evolver.evolve # default setting
+        text = converter(text)[-1]
         if example:
             text = '[e]' + text
         with conversion(self.markdown, 'to_markdown') as converter:

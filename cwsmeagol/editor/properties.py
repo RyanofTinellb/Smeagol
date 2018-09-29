@@ -29,6 +29,7 @@ class Properties(object):
         self.create_site()
         self.create_linkadder()
         self.translator = Translator(self.language)
+        self.evolver = HighToVulgarLulani()
         self.randomwords = RandomWords(self.language)
         self.markdown = Markdown(self.markdown_file)
         super(Properties, self).__init__(master)

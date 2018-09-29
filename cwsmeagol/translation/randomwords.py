@@ -38,8 +38,6 @@ class English:
         filenames = [
             'coelacanth',
             'shortstories',
-            'grammar',
-            'dictionary'
         ]
         for filename in filenames:
             with open(folder.format(filename)) as page:
