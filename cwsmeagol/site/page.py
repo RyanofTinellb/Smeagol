@@ -9,6 +9,8 @@ from cwsmeagol.translation import *
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 
+def buyCaps(word):
+    return word[1:].capitalize() if word.startswith('$') else word
 
 class Page(Node):
     """
@@ -142,8 +144,9 @@ class Page(Node):
 
     def link(self, extend=True):
         link = self.folder_as_list
-        link.append(self.urlname)
-        link[-1] += '.html' if extend else ''
+        url = self.urlname
+        url += '.html' if extend else ''
+        link.append(url)
         return '/'.join(link)
 
     def hyperlink(self, destination, template="{0}", needAnchorTags=True, fragment=''):
@@ -184,7 +187,7 @@ class Page(Node):
                 "/".join([ancestor.urlform for ancestor in ancestors['destination'][common:]])
         address = (up * '../') + down + extension + fragment
         link = '<a href="{0}">{1}</a>'.format(
-            address, template.format(destination.name))
+            address, template.format(buyCaps(destination.name)))
         return (address, link)
 
     def change_to_heading(self, text):
@@ -194,6 +197,7 @@ class Page(Node):
         :return (str): an HTML heading with the id as the URL form of the name of the Page
         """
         level, name = text.split(']')
+        name = buyCaps(name)
         url_id = urlform(re.sub(r'\(.*?\)', '', name))
         if url_id:
             return '<h{0} id="{1}">{2}</h{0}>\n'.format(level, url_id, name)
@@ -289,7 +293,7 @@ class Page(Node):
         :return (str): its own name, suitable for HTML titles
         """
         # remove tags from names
-        return re.sub(r'[[<].*?[]>]', '', self.name)
+        return re.sub(r'[[<].*?[]>]', '', buyCaps(self.name))
 
     @property
     def category_title(self):

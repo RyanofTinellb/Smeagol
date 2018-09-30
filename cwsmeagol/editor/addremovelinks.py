@@ -2,6 +2,8 @@ import re
 import json
 from cwsmeagol.utils import urlform, ignored
 
+def buyCaps(word):
+    return word[1:].capitalize() if word.startswith('$') else word
 
 class AddRemoveLinks:
     def __init__(self, link_adders):
@@ -98,6 +100,8 @@ class InternalDictionary:
     """
     Replace links with hyperlinks to other entries in the same dictionary
     """
+    def __init__(self):
+        self.language = 'also'
 
     def add_links(self, text, entry):
         """
@@ -120,7 +124,7 @@ class InternalDictionary:
         link = urlform(word[-1])
         initial = re.findall(r'\w', link)[0]
         return '<a href="../{0}/{1}.html#{2}">{3}</a>'.format(
-            initial, link, language, word[-1])
+            initial, link, language, buyCaps(word[-1]))
 
     def remove_links(self, text):
         regex = r'<a href="(?:\w+\.html|\.\./.*?)">(.*?)</a>'

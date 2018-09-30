@@ -30,7 +30,7 @@ url_markdown = Markdown()
 def urlform(text, markdown=None):
     markdown = markdown or url_markdown
     name = text.lower()
-    safe_punctuation = '\'.$_+!(),'
+    safe_punctuation = '\'._+!(),'
     # remove safe punctuations that should only be used to encode non-ascii characters
     name = re.sub(r'[{0}]'.format(safe_punctuation), '', name)
     with conversion(markdown, 'to_markdown') as converter:
@@ -41,7 +41,7 @@ def urlform(text, markdown=None):
     name = re.sub(r'<(div|ipa).*?\1>', '', name)
     # remove tags, spaces and punctuation
     name = re.sub(r'<.*?>|[/*;: ]', '', name)
-    name = urllib.quote(name, safe_punctuation)
+    name = urllib.quote(name, safe_punctuation + '$')
     return name
 
 def add_datestamp(text):

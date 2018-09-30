@@ -2,6 +2,9 @@ from site_editor import SiteEditor, Tk
 from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 
+def sellCaps(word):
+    # get it, changing capital letters into dollar signs...?
+    return '$' + word.lower() if re.match(r'[A-Z]', word) else word
 
 class DictionaryEditor(SiteEditor):
     def __init__(self, master=None, current=None):
@@ -112,7 +115,7 @@ class DictionaryEditor(SiteEditor):
         :param headings (str[]): the texts from the heading boxes
         :return (Page):
         """
-        heading = headings[0]
+        heading = sellCaps(headings[0])
         site = self.site
         with conversion(self.markdown, 'to_markup') as converter:
             heading = converter(heading)
@@ -120,7 +123,7 @@ class DictionaryEditor(SiteEditor):
             entry = site[heading]
         except KeyError:
             initial = re.sub(r'.*?(\w).*', r'\1',
-                             urlform(heading)).capitalize()
+                urlform(heading)).capitalize()
             entry = Page(heading, site[initial], '', newpage=True)
             entry.content = self.initial_content(entry)
         self.keep_history(heading)

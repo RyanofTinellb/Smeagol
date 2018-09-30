@@ -19,11 +19,11 @@ _ | &under; | <br>
 &icirc; | $i | <br>
 &ocirc; | $o | <br>
 &ucirc; | $u | <br>
-&auml; | +a | <br>
-&euml; | +e | <br>
-&iuml; | +i | <br>
-&ouml; | +o | <br>
-&uuml; | +u | <br>
+&auml; | !a | <br>
+&euml; | !e | <br>
+&iuml; | !i | <br>
+&ouml; | !o | <br>
+&uuml; | !u | <br>
 &#x323; | :d | <!--underdot--> <br>
 &#x101; | _a | <!--a macron--> <br>
 &#x113; | _e | <!--e macron--> <br>
