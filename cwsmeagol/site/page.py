@@ -10,7 +10,10 @@ from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 
 def buyCaps(word):
-    return word[1:].capitalize() if word.startswith('$') else word
+    return re.sub(r'[$](.)', _buy, word)
+
+def _buy(regex):
+    return regex.group(1).capitalize()
 
 class Page(Node):
     """

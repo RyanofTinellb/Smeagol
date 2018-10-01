@@ -61,8 +61,7 @@ class Evolver:
         output = [str(word)]
         for i, replacement in enumerate(self.replacements):
             evolution = self.evolution(word, replacement)
-            output += ['{0}. {1}'.format(i, evolution)
-                if self.debug else evolution]
+            output += [evolution]
         return output
 
 class HighToVulgarLulani:
@@ -99,29 +98,31 @@ class HighToVulgarLulani:
             (r'a(?=.{1,2}i)', 'e'),
             (r'u(?=.{1,2}i)', 'U'),
             # palatalisation of segments before /i/
-            (r's(?=i|si)', 'x'),
-            (r't(?=i|ti)', 'c'),
-            (r'd(?=i|di)', 'j'),
-            (r'n(?=i|ni)', 'N'),
-            (r'l(?=i|li)', 'L'),
+            (r's(?=s*i)', 'x'),
+            (r't(?=t*i)', 'c'),
+            (r'd(?=d*i)', 'j'),
+            (r'n(?=n*i)', 'N'),
+            (r'l(?=l*i)', 'L'),
             # stress markers
-            (r'((\w)\2)', r'\g<1>2'),
-            (r'([aiueU.][pbtdDcjkg\'mnqrlfsxhNLHy])([aiueU.])$', r'\g<1>2\2'),
-            (r'([pbtdDcjkg\'mnqrlfsxhNLHy][aiueU.][pbtdDcjkg\'mnqrlfsxhNLHy]+2)', r'1\1'),
-            (r'([aiueU.][pbtdDcjkg\'mnqrlfsxhNLHy]{1,2})([aiueO\.]1)', r'\g<1>2\2'),
-            (r'([pbtdDcjkg\'mnqrlfsxhNLHy]{1,2})([aiueU.]1)', r'\g<1>2\2'),
-            (r'^([pbtdDcjkg\'mnqrlfsxhNLHy][aiueU.][pbtdDcjkg\'mnqrlfsxhNLHy]{1,2}2)', r'1\1'),
-            (r'(2[aiueU.])([pbtdDcjkg\'mnqrlfsxhNLHy])2', r'\g<1>1\2'),
-            (r'(^|[aiueU.])([pbtdDcjkg\'mnqrlfsxhNLHy][aiueU.][pbtdDcjkg\'mnqrlfsxhNLHy]2)', r'\g<1>1\2'),
-            (r'([pbtdDcjkg\'mnqrlfsxhNLHy])([aiueU.]1)', r'\g<1>2\2'),
+                # C* => C*2 :: unstressed after a geminate
+                # VC*V$ => VC*2V$ :: unstressed at end of word
+                # 2VC*2 => 2VC* :: restress after unstressed  (*)
+                # CVC*VC*2 => C2VC*VC*2 :: propagate (**)
+                # (*) , (**) , (*)
+            (r'(([pbvtdDcjkg\'mnqrlfsxhNLHy])\2)', r'\g<1>2'),
+            (r'([aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)([aiueU.])$', r'\g<1>2\2'),
+            (r'(2[aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
+            (r'([pbvtdDcjkg\'mnqrlfsxhNLHy])([aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+[aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+2)', r'\g<1>2\2'),
+            (r'(2[aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
+            (r'([pbvtdDcjkg\'mnqrlfsxhNLHy])([aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+[aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+2)', r'\g<1>2\2'),
+            (r'(2[aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
             # elision of syllable final /h/
             (r'(?<=.)h(?=2)', '\''),
             # fortition of unstressed high vowels
-            (r'2i1\'', 'y'),
-            (r'2[uU]1\'', 'w'),
-            ('1', ''),
+            (r'2i\'', 'y'),
+            (r'2[uU]\'', 'w'),
             # haplology middle dot
-            (r'([aiueU.]([pbtdDcjkg\'mnqrlfsxhNLHy])2)[aiueU.](1\2)', r'\1.\3'),
+            (r'([aiueU.]([pbtdDcjkg\'mnqrlfsxhNLHy])2)[aiueU.](\2)', r'\1.\3'),
             # degemination
             (r'((\w)\2)2i$', r'\2'),
             (r'([pbvtdDcjkg\'mnqrlfsxhNLHy])\1', r'\1'),
@@ -179,7 +180,8 @@ class HighToVulgarLulani:
             (r'([aiueU])2\1,*', r'\1'),
             # re-writing word-final semivowels
             (r'(?<=[^i])y$', 'i'),
-            (r'w$', 'u')]
+            (r'w$', 'u')
+            ]
         self.evolver = Evolver(replacements, debug)
         self.debug = debug
 

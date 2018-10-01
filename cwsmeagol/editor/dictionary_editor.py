@@ -2,10 +2,6 @@ from site_editor import SiteEditor, Tk
 from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 
-def sellCaps(word):
-    # get it, changing capital letters into dollar signs...?
-    return '$' + word.lower() if re.match(r'[A-Z]', word) else word
-
 class DictionaryEditor(SiteEditor):
     def __init__(self, master=None, current=None):
         """

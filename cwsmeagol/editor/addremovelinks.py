@@ -1,9 +1,6 @@
 import re
 import json
-from cwsmeagol.utils import urlform, ignored
-
-def buyCaps(word):
-    return word[1:].capitalize() if word.startswith('$') else word
+from cwsmeagol.utils import urlform, ignored, buyCaps, sellCaps
 
 class AddRemoveLinks:
     def __init__(self, link_adders):
@@ -100,14 +97,12 @@ class InternalDictionary:
     """
     Replace links with hyperlinks to other entries in the same dictionary
     """
-    def __init__(self):
-        self.language = 'also'
-
     def add_links(self, text, entry):
         """
         Add links of the form
             '<a href="../b/blah.html#highlulani">blah</a>'
         """
+        self.language = 'also'
         div = ' <div class="definition">'
         lang = '[2]'  # language marker
         output = []
@@ -128,7 +123,10 @@ class InternalDictionary:
 
     def remove_links(self, text):
         regex = r'<a href="(?:\w+\.html|\.\./.*?)">(.*?)</a>'
-        return re.sub(regex, r'<{0}>\1</{0}>'.format('link'), text)
+        return re.sub(regex, self._unlink, text)
+
+    def _unlink(self, regex):
+        return r'<{0}>{1}</{0}>'.format('link', sellCaps(regex.group(1)))
 
 
 class ExternalGrammar:

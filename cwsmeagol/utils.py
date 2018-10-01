@@ -25,6 +25,18 @@ def conversion(converter, function):
     except AttributeError:
         yield lambda x: x
 
+def buyCaps(word):
+    return re.sub(r'[$](.)', _buy, word)
+
+def _buy(regex):
+    return regex.group(1).capitalize()
+
+def sellCaps(word):
+    return re.sub(r'^([A-Z])', _sell, word)
+
+def _sell(regex):
+    return '$' + regex.group(1).lower()
+
 url_markdown = Markdown()
 
 def urlform(text, markdown=None):
