@@ -229,7 +229,7 @@ class Site(object):
             new_words = analysis.words
             sentences += analysis.sentences
             urls.append(entry.link(extend=False))
-            names.append(entry.name)
+            names.append(buyCaps(entry.name))
             for word in new_words:
                 # increment line numbers by base
                 # use str(page_number) because search.js relies on that

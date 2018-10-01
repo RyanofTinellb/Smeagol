@@ -141,12 +141,17 @@ class DictionaryEditor(SiteEditor):
             self.entry.parent.content = replace_datestamp(
                 self.entry.parent.content)
 
+    def _save_page(self):
+        """Override method in SiteEditor"""
+        super(DictionaryEditor, self)._save_page()
+        self.serialise()
+
     @staticmethod
     def publish(entry, site, allpages=False):
         """
         Put entry contents into datafile, publish appropriate Pages.
         Overrides SiteEditor.publish()
-        Subroutine of self.save()
+        Subroutine of self.save_page()
         """
         if entry.content:
             entry.publish(site.template)
@@ -154,6 +159,39 @@ class DictionaryEditor(SiteEditor):
             entry.parent.publish(site.template)
         site.modify_source()
         site.update_json()
+
+    def serialise(self):
+        output = []
+        transliteration = None
+        language = None
+        partofspeech = None
+        for entry in map(lambda entry: self.linkadder.remove_links(remove_datestamp(entry.content)),
+                         self.site):
+            for line in entry.splitlines():
+                if line.startswith('[1]'):
+                    transliteration = line[len('[1]'):]
+                elif line.startswith('[2]'):
+                    language = line[len('[2]'):]
+                elif line.startswith('[5]'):
+                    line = re.sub(r'\[5\](.*?) <div class="definition">(.*?)</div>',
+                                  r'\1\n\2', line)
+                    try:
+                        newpos, meaning = line.splitlines()
+                    except:
+                        continue
+                    if newpos:
+                        partofspeech = re.sub(r'\(.*?\)', '', newpos).split(' ')
+                    definition = re.split(r'\W*', re.sub(r'<.*?>', '', meaning))
+                    output.append(dict(
+                        t=buyCaps(transliteration),
+                        l=language,
+                        p=partofspeech,
+                        d=definition,
+                        m=meaning
+                    ))
+        with open('c:/users/ryan/documents/tinellbianlanguages'
+                        '/dictionary/wordlist.json', 'w') as f:
+            json.dump(output, f, indent=2)
 
     def initial_content(self, entry=None):
         """

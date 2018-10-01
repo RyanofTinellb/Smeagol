@@ -14,11 +14,11 @@ _ | &under; | <br>
 &igrave; | )i | <br>
 &ograve; | )o | <br>
 &ugrave; | )u | <br>
-&acirc; | $a | <br>
-&ecirc; | $e | <br>
-&icirc; | $i | <br>
-&ocirc; | $o | <br>
-&ucirc; | $u | <br>
+&acirc; | )(a | <br>
+&ecirc; | )(e | <br>
+&icirc; | )(i | <br>
+&ocirc; | )(o | <br>
+&ucirc; | )(u | <br>
 &auml; | !a | <br>
 &euml; | !e | <br>
 &iuml; | !i | <br>

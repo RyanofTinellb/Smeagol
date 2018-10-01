@@ -575,6 +575,7 @@ class Page(Node):
         content = re.sub(r'\n+(?=\n)', '', content)
         """remove tags in square brackets"""
         content = re.sub(r'\[.*?\]', '', content)
+        content = buyCaps(content)
         lines = content.splitlines()
         content = markdown.to_markdown(content).lower()
         """change punctuation, and tags in square brackets, into spaces"""
