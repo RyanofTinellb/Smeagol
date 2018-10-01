@@ -37,14 +37,15 @@ class Glossary:
 
     def add_links(self, text, entry):
         for abbrev, full_form in self.glossary.iteritems():
-            text = text.replace('<small-caps>{0}</small-caps>'.format(abbrev),
+            text = text.replace(
+                '<small-caps>{0}</small-caps>'.format(abbrev),
                                 self.tooltip.format(abbrev, full_form))
         return text
 
     def remove_links(self, text):
         for abbrev, full_form in self.glossary.iteritems():
             text = text.replace(self.tooltip.format(abbrev, full_form),
-                                '<small-caps>{0}</small-caps>'.format(abbrev))
+                '<small-caps>{0}</small-caps>'.format(abbrev))
         return text
 
 
@@ -79,7 +80,6 @@ class ExternalDictionary:
         try:
             initial = re.findall(r'\w', link)[0]
         except IndexError:
-            print(link)
             return word
         return '<a href="{0}/{1}/{2}.html{3}">{4}</a>'.format(
             self.url, initial, link, self.language, word)
@@ -103,7 +103,6 @@ class InternalDictionary:
             '<a href="../b/blah.html#highlulani">blah</a>'
         """
         self.language = 'also'
-        div = ' <div class="definition">'
         lang = '[2]'  # language marker
         output = []
         regex = r'<{0}>(.*?)</{0}>'.format('link')
@@ -116,17 +115,17 @@ class InternalDictionary:
     def _link(self, text):
         word = text.group(1).split(':')
         language = urlform(self.language if len(word) == 1 else word[0])
-        link = urlform(word[-1])
+        link = urlform(sellCaps(word[-1]))
         initial = re.findall(r'\w', link)[0]
         return '<a href="../{0}/{1}.html#{2}">{3}</a>'.format(
-            initial, link, language, buyCaps(word[-1]))
+            initial, link, language, word[-1])
 
     def remove_links(self, text):
-        regex = r'<a href="(?:\w+\.html|\.\./.*?)">(.*?)</a>'
+        regex = r'<a href="(?:\w+\.html|\.\./.*?)#(.*?)">(.*?)</a>'
         return re.sub(regex, self._unlink, text)
 
     def _unlink(self, regex):
-        return r'<{0}>{1}</{0}>'.format('link', sellCaps(regex.group(1)))
+        return r'<{0}>{1}:{2}</{0}>'.format('link', regex.group(1), regex.group(2))
 
 
 class ExternalGrammar:
