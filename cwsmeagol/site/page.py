@@ -200,7 +200,7 @@ class Page(Node):
         :return (str): an HTML heading with the id as the URL form of the name of the Page
         """
         level, name = text.split(']')
-        if level == 1:
+        if level == '1':
             name = buyCaps(name)
         url_id = urlform(re.sub(r'\(.*?\)', '', name))
         if url_id:

@@ -5,6 +5,7 @@ class default:
 _ | &under; | <br>
 ' | &squot; | <br>
 &aacute; | (a | <br>
+&eth; | (d | <br>
 &eacute; | (e | <br>
 &iacute; | (i | <br>
 &oacute; | (o | <br>
@@ -14,11 +15,17 @@ _ | &under; | <br>
 &igrave; | )i | <br>
 &ograve; | )o | <br>
 &ugrave; | )u | <br>
-&acirc; | )(a | <br>
-&ecirc; | )(e | <br>
-&icirc; | )(i | <br>
-&ocirc; | )(o | <br>
-&ucirc; | )(u | <br>
+&acirc; | ()a | <br>
+&ecirc; | ()e | <br>
+&icirc; | ()i | <br>
+&ocirc; | ()o | <br>
+&ucirc; | ()u | <br>
+&#x17e; | )(z | <br>
+&ntilde; | !!n | <br>
+&atilde; | !!a | <br>
+&otilde; | !!o | <br>
+h&#x330; | !!h | <br> <!-- h with tilde below -->
+l&#x330; | !!l | <br> <!-- l with tilde below -->
 &auml; | !a | <br>
 &euml; | !e | <br>
 &iuml; | !i | <br>

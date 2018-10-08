@@ -65,6 +65,42 @@ class Evolver:
         return output
 
 class HighToVulgarLulani:
+    def geminate_shift(self, regex):
+        return {
+            'n': 'N',
+            'l': 'L',
+            '\'': 'y',
+            'h': 'H',
+            'b': 'v',
+            'd': 'D',
+            'g': 'r',
+            'p': 'b',
+            't': 'd',
+            'c': 'j',
+            'k': 'g',
+        }[regex.group(1)] * 2
+
+    def umlaut(self, regex):
+        return dict(a='e', u='U', o='O')[regex.group(1)]
+
+    def palatalise(self, regex):
+        return dict(
+                s='x', t='c', d='j', n='N', l='L'
+            )[regex.group(2)] * len(regex.group(1))
+
+    def simplify_vowel_cluster(self, regex):
+        first, second = [regex.group(x) for x in xrange(1, 3)]
+        if (first + second).lower() in ('au', 'ao'):
+            return 'O'
+        return first
+
+    def vowel_elision(self, regex):
+        vowel = regex.group(1)
+        if vowel in 'ae.':
+            return ''
+        else:
+            return '2' + dict(i='*', u='^', U='+', o='(', O=')')[vowel]
+
     def __init__(self, debug=False):
         self.rewrites = [
             ('&rsquo;', "'"),
@@ -77,32 +113,19 @@ class HighToVulgarLulani:
             ('l&#x330;', 'L'),
             ('h&#x330;', 'H'),
             ('&#x17e;', 'Z'),
-            ('&#x323;', ','),
+            ('&#x1ee5;', '^'), # u with dot
+            ('&#x1ecd;', '('), # o with dot
+            ('&#x1ecb;', '*'), # i with dot
+            ('&uuml;&#x323;', '+'), # u with umlaut and dot
+            ('&ouml;&#x323;', ')'), # o with umlaut and dot
             ('&#x2c8;', '1'),
             ('&#x2cc;', '2')]
         replacements = [
-            ('nn', 'NN'),
-            ('ll', 'LL'),
-            ("''", "yy"),
-            ("hh", "HH"),
-            # frication of geminate voiced plosives, and
-            # voicing of geminate voiceless plosives
-            (r'bb', r'vv'),
-            (r'dd', r'DD'),
-            (r'gg', r'rr'),
-            (r'pp', r'bb'),
-            (r'tt', r'dd'),
-            (r'cc', r'jj'),
-            (r'kk', r'gg'),
-            # umlaut
-            (r'a(?=.{1,2}i)', 'e'),
-            (r'u(?=.{1,2}i)', 'U'),
-            # palatalisation of segments before /i/
-            (r's(?=s*i)', 'x'),
-            (r't(?=t*i)', 'c'),
-            (r'd(?=d*i)', 'j'),
-            (r'n(?=n*i)', 'N'),
-            (r'l(?=l*i)', 'L'),
+            # lowering of back vowels before peripherals
+            (r'u(?=[pbmfkgqhH])', 'o'),
+            (r'([nl\'hbdgptck])\1', self.geminate_shift),
+            (r'([auo])(?=.{1,2}i)', self.umlaut),
+            (r'(([stdnl])\2?)(?=i)', self.palatalise),
             # stress markers
                 # C* => C*2 :: unstressed after a geminate
                 # VC*V$ => VC*2V$ :: unstressed at end of word
@@ -110,33 +133,27 @@ class HighToVulgarLulani:
                 # CVC*VC*2 => C2VC*VC*2 :: propagate (**)
                 # (*) , (**) , (*)
             (r'(([pbvtdDcjkg\'mnqrlfsxhNLHy])\2)', r'\g<1>2'),
-            (r'([aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)([aiueU.])$', r'\g<1>2\2'),
-            (r'(2[aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
-            (r'([pbvtdDcjkg\'mnqrlfsxhNLHy])([aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+[aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+2)', r'\g<1>2\2'),
-            (r'(2[aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
-            (r'([pbvtdDcjkg\'mnqrlfsxhNLHy])([aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+[aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+2)', r'\g<1>2\2'),
-            (r'(2[aiueU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
+            (r'([aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)([aiuoeOU.])$', r'\g<1>2\2'),
+            (r'(2[aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
+            (r'([pbvtdDcjkg\'mnqrlfsxhNLHy])([aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+[aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+2)', r'\g<1>2\2'),
+            (r'(2[aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
+            (r'([pbvtdDcjkg\'mnqrlfsxhNLHy])([aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+[aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+2)', r'\g<1>2\2'),
+            (r'(2[aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
             # elision of syllable final /h/
             (r'(?<=.)h(?=2)', '\''),
             # fortition of unstressed high vowels
             (r'2i\'', 'y'),
-            (r'2[uU]\'', 'w'),
+            (r'2[uUoO]\'', 'w'),
             # haplology middle dot
-            (r'([aiueU.]([pbtdDcjkg\'mnqrlfsxhNLHy])2)[aiueU.](\2)', r'\1.\3'),
+            (r'([aiuoeOU.]([pbtdDcjkg\'mnqrlfsxhNLHy])2)[aiuoeOU.](\2)', r'\1.\3'),
             # degemination
             (r'((\w)\2)2i$', r'\2'),
             (r'([pbvtdDcjkg\'mnqrlfsxhNLHy])\1', r'\1'),
-            # simplification of vowel clusters
-            (r'(?<=2a)\'(?=e)', 'y'),
-            (r'(?<=[Ue])\'2i', ''),
-            (r'(?<=[i])\'2u', ''),
-            (r'(?<=[a])\'2U', ''),
-            (r'a\'2u', 'O'),
+            (r'([aieouOU])\'2([aieouOU])', self.simplify_vowel_cluster),
             # elision of /y/ after palatal
             (r'(?<=[cjxNL])y', ''),
             # elision of schwa and glottal stop, and simplification of some clusters
-            (r'(?<=2[iuU])', r','),
-            (r'2[ae.]', r''),
+            (r'2([ae.iuoUO])', self.vowel_elision),
             (r'h(?=[pbtdDcjkg\'mnqrlfsxhNLHy])', ''),
             (r'(?<=[pbtdDcjkg\'mnqrlfsxhNLHy])h', ''),
             (r'p(?=[bdjgmnNq])', r'b'),
@@ -177,7 +194,7 @@ class HighToVulgarLulani:
             (r'n(?=[xcj])', 'N'),
             (r'(?<=[H])n', 'N'),
             # shortening of long vowels
-            (r'([aiueU])2\1,*', r'\1'),
+            (r'([aiueUoO^*()])2\1,*', r'\1'),
             # re-writing word-final semivowels
             (r'(?<=[^i])y$', 'i'),
             (r'w$', 'u')

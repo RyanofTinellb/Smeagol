@@ -121,11 +121,21 @@ class InternalDictionary:
             initial, link, language, word[-1])
 
     def remove_links(self, text):
+        self.language = 'also'
+        lang = '[2]'  # language marker
+        output = []
         regex = r'<a href="(?:\w+\.html|\.\./.*?)#(.*?)">(.*?)</a>'
-        return re.sub(regex, self._unlink, text)
+        for line in text.splitlines():
+            if line.startswith(lang):
+                self.language = line[len(lang):]
+            output.append(re.sub(regex, self._unlink, line))
+        return '\n'.join(output)
 
     def _unlink(self, regex):
-        return r'<{0}>{1}:{2}</{0}>'.format('link', regex.group(1), regex.group(2))
+        language, link = [regex.group(x) for x in xrange(1,3)]
+        if language == urlform(self.language):
+            return r'<{0}>{1}</{0}>'.format('link', link)
+        return r'<{0}>{1}:{2}</{0}>'.format('link', language, link)
 
 
 class ExternalGrammar:
