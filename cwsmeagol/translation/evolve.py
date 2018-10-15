@@ -3,6 +3,7 @@ import re
 def unique(lst):
     return [lst[0]] + [y for x,y in zip(lst, lst[1:]) if x != y]
 
+
 class EMString:
     # Encodable mutable string
     def __init__(self, string, encoding=None, debug=False):
@@ -64,6 +65,7 @@ class Evolver:
             output += [evolution]
         return output
 
+
 class HighToVulgarLulani:
     def geminate_shift(self, regex):
         return {
@@ -101,12 +103,41 @@ class HighToVulgarLulani:
         else:
             return '2' + dict(i='*', u='^', U='+', o='(', O=')')[vowel]
 
+    def fortify_vowel(self, regex):
+        if regex.group(1) == 'i':
+            return 'y'
+        return 'w'
+
+    def setup_stresses(self, stresses):
+        return [(re.compile(pattern.replace(
+                'C', self.consonants).replace(
+                'V', self.vowels)
+            ), string) for pattern, string in stresses]
+
+    def stress(self, regex):
+        word = regex.group(0)
+        for stress in (0, 1, 2, 3, 2, 3, 2):
+            pattern, string = self.stresses[stress]
+            word = pattern.sub(string, word)
+        return word
+
+    def setup_sandhi(self, sandhi):
+        return [(re.compile(pattern), string) for pattern, string in sandhi]
+
+    def simplify_consonant_cluster(self, regex):
+        cluster = regex.group(0)
+        for sandhi in self.sandhi:
+            pattern, string = sandhi
+            cluster = pattern.sub(string, cluster)
+        return cluster
+
     def __init__(self, debug=False):
         self.rewrites = [
             ('&rsquo;', "'"),
             ('&middot;', '.'),
             ('&#x294;', "''"),
             ('&eth;', 'D'),
+            ('&thorn;', 'T'),
             ('&ouml;', 'O'),
             ('&uuml;', 'U'),
             ('&ntilde;', 'N'),
@@ -120,50 +151,32 @@ class HighToVulgarLulani:
             ('&ouml;&#x323;', ')'), # o with umlaut and dot
             ('&#x2c8;', '1'),
             ('&#x2cc;', '2')]
-        replacements = [
-            # lowering of back vowels before peripherals
-            (r'u(?=[pbmfkgqhH])', 'o'),
-            (r'([nl\'hbdgptck])\1', self.geminate_shift),
-            (r'([auo])(?=.{1,2}i)', self.umlaut),
-            (r'(([stdnl])\2?)(?=i)', self.palatalise),
-            # stress markers
-                # C* => C*2 :: unstressed after a geminate
-                # VC*V$ => VC*2V$ :: unstressed at end of word
-                # 2VC*2 => 2VC* :: restress after unstressed  (*)
-                # CVC*VC*2 => C2VC*VC*2 :: propagate (**)
-                # (*) , (**) , (*)
-            (r'(([pbvtdDcjkg\'mnqrlfsxhNLHy])\2)', r'\g<1>2'),
-            (r'([aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)([aiuoeOU.])$', r'\g<1>2\2'),
-            (r'(2[aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
-            (r'([pbvtdDcjkg\'mnqrlfsxhNLHy])([aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+[aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+2)', r'\g<1>2\2'),
-            (r'(2[aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
-            (r'([pbvtdDcjkg\'mnqrlfsxhNLHy])([aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+[aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+2)', r'\g<1>2\2'),
-            (r'(2[aiuoeOU.][pbvtdDcjkg\'mnqrlfsxhNLHy]+)2', r'\1'),
-            # elision of syllable final /h/
-            (r'(?<=.)h(?=2)', '\''),
-            # fortition of unstressed high vowels
-            (r'2i\'', 'y'),
-            (r'2[uUoO]\'', 'w'),
-            # haplology middle dot
-            (r'([aiuoeOU.]([pbtdDcjkg\'mnqrlfsxhNLHy])2)[aiuoeOU.](\2)', r'\1.\3'),
-            # degemination
-            (r'((\w)\2)2i$', r'\2'),
-            (r'([pbvtdDcjkg\'mnqrlfsxhNLHy])\1', r'\1'),
-            (r'([aieouOU])\'2([aieouOU])', self.simplify_vowel_cluster),
-            # elision of /y/ after palatal
+        self.consonants = r'[pbvtdDcjkg\'mnqrlfsxhNLHy]'
+        self.vowels = r'[aiuoeOU.]'
+        self.stresses = self.setup_stresses([
+            (r'((C)\2)', r'\g<1>2'),
+            (r'(VC+)(V)$', r'\g<1>2\2'),
+            (r'(2VC+)2', r'\1'),
+            (r'(C)(VC+VC+2)', r'\g<1>2\2')])
+        self.sandhi = self.setup_sandhi([
             (r'(?<=[cjxNL])y', ''),
-            # elision of schwa and glottal stop, and simplification of some clusters
-            (r'2([ae.iuoUO])', self.vowel_elision),
-            (r'h(?=[pbtdDcjkg\'mnqrlfsxhNLHy])', ''),
-            (r'(?<=[pbtdDcjkg\'mnqrlfsxhNLHy])h', ''),
+            (r'h(?=[pbvtdDcjkg\'mnqrlfsxhNLHy])', ''),
+            (r'(?<=[pbvtdDcjkg\'mnqrlfsxhNLHy])h', ''),
             (r'p(?=[bdjgmnNq])', r'b'),
             (r't(?=[bdjgmnNq])', r'd'),
             (r'c(?=[bdjgmnNq])', r'j'),
             (r'k(?=[bdjgmnNq])', r'g'),
             (r'b(?=[ptck])', r'p'),
+            (r'v(?=[ptcksx])', r'f'),
+            (r'D(?=[ptcksxrl])', r'T'),
             (r'd(?=[ptck])', r't'),
             (r'j(?=[ptck])', r'c'),
             (r'g(?=[ptck])', r'k'),
+            (r'(?<=[vD])q', 'n'),
+            (r'(?<=[TD])c', 't'),
+            (r'(?<=[TD])j', 'd'),
+            (r'([fv])([pb])', r'\2\1'),
+            (r'([DT])([td])', r'\2\1'),
             (r'L(?=[bdjgptck])', 'l'),
             (r'(?<=[bdjgptck])L', 'l'),
             (r'(?<=b)[mnNq]', r'm'),
@@ -171,8 +184,9 @@ class HighToVulgarLulani:
             (r'(?<=j)[mnNq]', r''),
             (r'(?<=g)[mnNq]', r'q'),
             (r'pt', 'p\'t'),    # protect pt
+            (r'mn', 'm\'n'),    # protect mn
+            (r'sf', 's\'f'),    # protect sf
             (r'([bdjgptck])([bdjgptck])', r'\1\1'),
-            (r'^[mnNq](?=[pbmftdDcjkgnqsxNLH])', 'm'),
             (r'(?<=.)[mnNq](?=[pbfv])', 'm'),
             (r'(?<=.)[mnNq](?=[tdsz])', 'n'),
             (r'(?<=.)[mnNq](?=[cjxZ])', 'N'),
@@ -180,25 +194,42 @@ class HighToVulgarLulani:
             (r'[jd][jx]', 'j'),
             (r'[ct][cx]', r'c'),
             (r'[cj](?=[fvsz])', r''),
-            (r'(?<=[bdjg])f', r'v'),
+            (r'(?<=[bvdDjg])f', r'v'),
+            (r'f(?=[djg])', r'v'),
+            (r'[fvszxZ](?=[cj])', ''),
             (r'(?<=[bdjg])s', r'z'),
+            (r's(?=[bdjg])', r'z'),
             (r'(?<=[bdjg])x', r'Z'),
+            (r'x(?=[bdjg])', r'Z'),
             (r'(?<=[cj])[rl]', r''),
-            (r'^((\w)\2)', r'\2'),
             (r'\'', ''),
-            # assimilation of palatal / alveolar sounds
-            (r's(?=[NL])', 'x'),
-            (r'x(?=[nl])', 's'),
+            (r's(?=[NLx])', 'x'),
+            (r'(?<=[H])s', 'x'),
+            (r'x(?=[nls])', 's'),
             (r'l(?=[xcj])', 'L'),
-            (r'L(?=[std])', 'l'),
+            (r'(?<=[HL])l', 'L'),
+            (r'L(?=[stdr])', 'l'),
             (r'n(?=[xcj])', 'N'),
-            (r'(?<=[H])n', 'N'),
-            # shortening of long vowels
-            (r'([aiueUoO^*()])2\1,*', r'\1'),
-            # re-writing word-final semivowels
-            (r'(?<=[^i])y$', 'i'),
-            (r'w$', 'u')
-            ]
+            (r'(?<=[H])n', 'N')])
+        replacements = [
+            (r'u(?=[pbmfkgqhH])', 'o'), # lowering of back vowels before peripherals
+            (r'([nl\'hbdgptck])\1', self.geminate_shift),
+            (r'([auo])(?=.{1,2}i)', self.umlaut),
+            (r'(([stdnl])\2?)(?=i)', self.palatalise),
+            (r'.*', self.stress),
+            (r'(?<=.)h(?=2)', '\''), # elision of syllable final /h/
+            (r'2([iuUoO])\'', self.fortify_vowel),
+            (r'([aiuoeOU.]([pbtdDcjkg\'mnqrlfsxhNLHy])2)[aiuoeOU.](\2)', r'\1.\3'), # middot
+            (r'((\w)\2)2i', r'\2'), # kappita ==> kapta
+            (r'([pbvtdDcjkg\'mnqrlfsxhNLHyw])\1', r'\1'), # degemination
+            (r'([aieouOU])\'2([aieouOU])', self.simplify_vowel_cluster),
+            (r'2([ae.iuoUO])', self.vowel_elision),
+            (r'[pbvtdDcjkg\'mnqrlfsxhNLHyw]{2}', self.simplify_consonant_cluster),
+            (r'^[mnNq](?=[pbmftdDcjkgnqsxNLH])', 'm'),
+            (r'^((\w)\2)', r'\2'), # degeminate initials
+            (r'([aiueUoO^*()])2\1,*', r'\1'), # shorten long vowel
+            (r'(?<=[^i])y$', 'i'), # re-write final semivowels
+            (r'w$', 'u')]
         self.evolver = Evolver(replacements, debug)
         self.debug = debug
 
