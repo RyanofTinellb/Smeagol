@@ -94,6 +94,8 @@ class HighToVulgarLulani:
         first, second = [regex.group(x) for x in xrange(1, 3)]
         if (first + second).lower() in ('au', 'ao'):
             return 'O'
+        if (first + second).lower() in ('ae', 'aa'):
+            return first + 'y' + second
         return first
 
     def vowel_elision(self, regex):
@@ -159,58 +161,71 @@ class HighToVulgarLulani:
             (r'(2VC+)2', r'\1'),
             (r'(C)(VC+VC+2)', r'\g<1>2\2')])
         self.sandhi = self.setup_sandhi([
-            (r'(?<=[cjxNL])y', ''),
-            (r'h(?=[pbvtdDcjkg\'mnqrlfsxhNLHy])', ''),
-            (r'(?<=[pbvtdDcjkg\'mnqrlfsxhNLHy])h', ''),
-            (r'p(?=[bdjgmnNq])', r'b'),
-            (r't(?=[bdjgmnNq])', r'd'),
-            (r'c(?=[bdjgmnNq])', r'j'),
-            (r'k(?=[bdjgmnNq])', r'g'),
-            (r'b(?=[ptck])', r'p'),
-            (r'v(?=[ptcksx])', r'f'),
-            (r'D(?=[ptcksxrl])', r'T'),
-            (r'd(?=[ptck])', r't'),
-            (r'j(?=[ptck])', r'c'),
-            (r'g(?=[ptck])', r'k'),
-            (r'(?<=[vD])q', 'n'),
-            (r'(?<=[TD])c', 't'),
-            (r'(?<=[TD])j', 'd'),
-            (r'([fv])([pb])', r'\2\1'),
-            (r'([DT])([td])', r'\2\1'),
-            (r'L(?=[bdjgptck])', 'l'),
-            (r'(?<=[bdjgptck])L', 'l'),
-            (r'(?<=b)[mnNq]', r'm'),
-            (r'(?<=d)[mnNq]', r'n'),
-            (r'(?<=j)[mnNq]', r''),
-            (r'(?<=g)[mnNq]', r'q'),
-            (r'pt', 'p\'t'),    # protect pt
-            (r'mn', 'm\'n'),    # protect mn
-            (r'sf', 's\'f'),    # protect sf
-            (r'([bdjgptck])([bdjgptck])', r'\1\1'),
-            (r'(?<=.)[mnNq](?=[pbfv])', 'm'),
-            (r'(?<=.)[mnNq](?=[tdsz])', 'n'),
-            (r'(?<=.)[mnNq](?=[cjxZ])', 'N'),
-            (r'(?<=.)[mnNq](?=[kg])', 'q'),
-            (r'[jd][jx]', 'j'),
-            (r'[ct][cx]', r'c'),
-            (r'[cj](?=[fvsz])', r''),
-            (r'(?<=[bvdDjg])f', r'v'),
-            (r'f(?=[djg])', r'v'),
-            (r'[fvszxZ](?=[cj])', ''),
-            (r'(?<=[bdjg])s', r'z'),
-            (r's(?=[bdjg])', r'z'),
-            (r'(?<=[bdjg])x', r'Z'),
-            (r'x(?=[bdjg])', r'Z'),
-            (r'(?<=[cj])[rl]', r''),
-            (r'\'', ''),
-            (r's(?=[NLx])', 'x'),
-            (r'(?<=[H])s', 'x'),
-            (r'x(?=[nls])', 's'),
-            (r'l(?=[xcj])', 'L'),
-            (r'(?<=[HL])l', 'L'),
-            (r'L(?=[stdr])', 'l'),
-            (r'n(?=[xcj])', 'N'),
-            (r'(?<=[H])n', 'N')])
+                # anything + h or h + anything
+                (r'(?<=[pbtdcjkgmnNqlLrfvDsx])[hH]', ''),
+                (r'[hH](?=[pbtdcjkgmnNqlLrfvDsx])', ''),
+                (r'[hH]([hH])', r'\1'),
+                # plosive + nasal
+                    # assimilate to place of plosive
+                (r'(?<=[pb])[mnNq]', 'm'),
+                (r'(?<=[td])[mnNq]', 'n'),
+                (r'(?<=[cj])[mnNq]', 'N'),
+                (r'(?<=[kg])[mnNq]', 'q'),
+                # plosive + plosive / plosive + nasal
+                    # if one is voiced, voice both
+                    # return second twice
+                (r'p(?=[bdjgm])', 'b'),
+                (r'(?<=[bdjg])p', 'b'),
+                (r't(?=[bdjgn])', 'd'),
+                (r'(?<=[bdjg])t', 'd'),
+                (r'c(?=[bdjgN])', 'j'),
+                (r'(?<=[bdjg])c', 'j'),
+                (r'k(?=[bdjgq])', 'g'),
+                (r'(?<=[bdjg])k', 'g'),
+                ('pt', 'p\'t'),
+                (r'[pbtdcjkg]([pbtdcjkg])', r'\1\1'),
+                # plosive + non-sibilant
+                (r'([td])([fv])', r'\2\1'),
+                # plosive + sibilant
+                ('tx', 'c'),
+                ('dx', 'j'),
+                # affricate + liquid
+                (r'c(?=[lLr])', 't'),
+                (r'j(?=[lLr])', 'd'),
+                # affricate + fricative
+                (r'(?<=[cj])[fsx]', ''),
+                # nasal + other
+                    # assimilate place to plosive
+                ('mn', 'm\'n'),
+                (r'[nNq](?=[pbm])', 'm'),
+                (r'[mNq](?=[tdn])', 'n'),
+                (r'[mnq](?=[cjN])', 'N'),
+                (r'[mnN](?=[kgq])', 'q'),
+                (r'n(?=[xLy])', 'N'),
+                (r'N(?=[slr])', 'n'),
+                # liquid + other
+                (r'L(?=[tdnlscjNLx])', 'l'),
+                # non-sibilant + plosive
+                (r'v(?=[ptk])', 'f'),
+                (r'f(?=[bdg])', 'v'),
+                (r'(?<=D)[pbkg]', 'D'),
+                (r'(?<=D)[cj]', ''),
+                (r'([D])([td])', r'\2\1'),
+                ('tD', 'tT'),
+                # fricative + affricate
+                (r'[fvsx](?=[cj])', ''),
+                # fricative + fricative
+                ('sf', 's\'f'),
+                (r'([vD])[fsx]', r'\1\1'),
+                (r'[fsx]([fsx])', r'\1\1'),
+                # fricative + nasal
+                (r'(?<=[fvD])[mnNq]', 'n'),
+                (r'(?<=s)N', 'n'),
+                (r'(?<=x)n', 'N'),
+                # remove quotes
+                ('\'', ''),
+                # remove /y/ after palatals
+                (r'(?<=[cjNL])y', '')])
         replacements = [
             (r'u(?=[pbmfkgqhH])', 'o'), # lowering of back vowels before peripherals
             (r'([nl\'hbdgptck])\1', self.geminate_shift),
@@ -218,15 +233,19 @@ class HighToVulgarLulani:
             (r'(([stdnl])\2?)(?=i)', self.palatalise),
             (r'.*', self.stress),
             (r'(?<=.)h(?=2)', '\''), # elision of syllable final /h/
+            (r'(?<=2a)\'(?=[aeuo])', 'y'), # fortify glottal stop
+            (r'(?<=2a)\'(?=[i])', 'w'), # fortify glottal stop
             (r'2([iuUoO])\'', self.fortify_vowel),
             (r'([aiuoeOU.]([pbtdDcjkg\'mnqrlfsxhNLHy])2)[aiuoeOU.](\2)', r'\1.\3'), # middot
             (r'((\w)\2)2i', r'\2'), # kappita ==> kapta
             (r'([pbvtdDcjkg\'mnqrlfsxhNLHyw])\1', r'\1'), # degemination
             (r'([aieouOU])\'2([aieouOU])', self.simplify_vowel_cluster),
             (r'2([ae.iuoUO])', self.vowel_elision),
-            (r'[pbvtdDcjkg\'mnqrlfsxhNLHyw]{2}', self.simplify_consonant_cluster),
+            (r'.*', self.simplify_consonant_cluster),
             (r'^[mnNq](?=[pbmftdDcjkgnqsxNLH])', 'm'),
+            (r'^[lL](?=[pbmftdDcjkgnqsxNLH])', 'l'),
             (r'^((\w)\2)', r'\2'), # degeminate initials
+            (r'[cj]([cj])', r'\1'), # degeminate affricates
             (r'([aiueUoO^*()])2\1,*', r'\1'), # shorten long vowel
             (r'(?<=[^i])y$', 'i'), # re-write final semivowels
             (r'w$', 'u')]
