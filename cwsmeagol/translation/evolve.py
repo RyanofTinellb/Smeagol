@@ -67,72 +67,6 @@ class Evolver:
 
 
 class HighToVulgarLulani:
-    def geminate_shift(self, regex):
-        return {
-            'n': 'N',
-            'l': 'L',
-            '\'': 'y',
-            'h': 'H',
-            'b': 'v',
-            'd': 'D',
-            'g': 'r',
-            'p': 'b',
-            't': 'd',
-            'c': 'j',
-            'k': 'g',
-        }[regex.group(1)] * 2
-
-    def umlaut(self, regex):
-        return dict(a='e', u='U', o='O')[regex.group(1)]
-
-    def palatalise(self, regex):
-        return dict(
-                s='x', t='c', d='j', n='N', l='L'
-            )[regex.group(2)] * len(regex.group(1))
-
-    def simplify_vowel_cluster(self, regex):
-        first, second = [regex.group(x) for x in xrange(1, 3)]
-        if (first + second).lower() in ('au', 'ao'):
-            return 'O'
-        if (first + second).lower() in ('ae', 'aa'):
-            return first + 'y' + second
-        return first
-
-    def vowel_elision(self, regex):
-        vowel = regex.group(1)
-        if vowel in 'ae.':
-            return ''
-        else:
-            return '2' + dict(i='*', u='^', U='+', o='(', O=')')[vowel]
-
-    def fortify_vowel(self, regex):
-        if regex.group(1) == 'i':
-            return 'y'
-        return 'w'
-
-    def setup_stresses(self, stresses):
-        return [(re.compile(pattern.replace(
-                'C', self.consonants).replace(
-                'V', self.vowels)
-            ), string) for pattern, string in stresses]
-
-    def stress(self, regex):
-        word = regex.group(0)
-        for stress in (0, 1, 2, 3, 2, 3, 2):
-            pattern, string = self.stresses[stress]
-            word = pattern.sub(string, word)
-        return word
-
-    def setup_sandhi(self, sandhi):
-        return [(re.compile(pattern), string) for pattern, string in sandhi]
-
-    def simplify_consonant_cluster(self, regex):
-        cluster = regex.group(0)
-        for sandhi in self.sandhi:
-            pattern, string = sandhi
-            cluster = pattern.sub(string, cluster)
-        return cluster
-
     def __init__(self, debug=False):
         self.rewrites = [
             ('&rsquo;', "'"),
@@ -161,71 +95,35 @@ class HighToVulgarLulani:
             (r'(2VC+)2', r'\1'),
             (r'(C)(VC+VC+2)', r'\g<1>2\2')])
         self.sandhi = self.setup_sandhi([
-                # anything + h or h + anything
                 (r'(?<=[pbtdcjkgmnNqlLrfvDsx])[hH]', ''),
                 (r'[hH](?=[pbtdcjkgmnNqlLrfvDsx])', ''),
                 (r'[hH]([hH])', r'\1'),
-                # plosive + nasal
-                    # assimilate to place of plosive
-                (r'(?<=[pb])[mnNq]', 'm'),
-                (r'(?<=[td])[mnNq]', 'n'),
-                (r'(?<=[cj])[mnNq]', 'N'),
-                (r'(?<=[kg])[mnNq]', 'q'),
-                # plosive + plosive / plosive + nasal
-                    # if one is voiced, voice both
-                    # return second twice
-                (r'p(?=[bdjgm])', 'b'),
-                (r'(?<=[bdjg])p', 'b'),
-                (r't(?=[bdjgn])', 'd'),
-                (r'(?<=[bdjg])t', 'd'),
-                (r'c(?=[bdjgN])', 'j'),
-                (r'(?<=[bdjg])c', 'j'),
-                (r'k(?=[bdjgq])', 'g'),
-                (r'(?<=[bdjg])k', 'g'),
-                ('pt', 'p\'t'),
+                (r'([pbtdcjkg])[mnNq]', self.prenasal_assimilation),
+                (r'sf|mn|pt', self.protect_cluster),
+                (r'p(?=[bdjgm])|(?<=[bdjg])p', 'b'),
+                (r't(?=[bdjgn])|(?<=[bdjg])t', 'd'),
+                (r'c(?=[bdjgN])|(?<=[bdjg])c', 'j'),
+                (r'k(?=[bdjgq])|(?<=[bdjg])k', 'g'),
                 (r'[pbtdcjkg]([pbtdcjkg])', r'\1\1'),
-                # plosive + non-sibilant
                 (r'([td])([fv])', r'\2\1'),
-                # plosive + sibilant
                 ('tx', 'c'),
                 ('dx', 'j'),
-                # affricate + liquid
                 (r'c(?=[lLr])', 't'),
                 (r'j(?=[lLr])', 'd'),
-                # affricate + fricative
-                (r'(?<=[cj])[fsx]', ''),
-                # nasal + other
-                    # assimilate place to plosive
-                ('mn', 'm\'n'),
-                (r'[nNq](?=[pbm])', 'm'),
-                (r'[mNq](?=[tdn])', 'n'),
-                (r'[mnq](?=[cjN])', 'N'),
-                (r'[mnN](?=[kgq])', 'q'),
-                (r'n(?=[xLy])', 'N'),
-                (r'N(?=[slr])', 'n'),
-                # liquid + other
+                (r'(?<=[cj])[fsx]|(?<=D)[cj]|[fvsx](?=[cj])', ''),
+                (r'[mnNq]([pbmtdncjNkgq])', self.nasal_assimilation),
+                (r'n(?=[xLy])|(?<=x)n', 'N'),
+                (r'N(?=[slr])|(?<=[fvD])[mnNq]|(?<=s)N', 'n'),
                 (r'L(?=[tdnlscjNLx])', 'l'),
-                # non-sibilant + plosive
                 (r'v(?=[ptk])', 'f'),
                 (r'f(?=[bdg])', 'v'),
                 (r'(?<=D)[pbkg]', 'D'),
-                (r'(?<=D)[cj]', ''),
                 (r'([D])([td])', r'\2\1'),
                 ('tD', 'tT'),
-                # fricative + affricate
-                (r'[fvsx](?=[cj])', ''),
-                # fricative + fricative
-                ('sf', 's\'f'),
                 (r'([vD])[fsx]', r'\1\1'),
                 (r'[fsx]([fsx])', r'\1\1'),
-                # fricative + nasal
-                (r'(?<=[fvD])[mnNq]', 'n'),
-                (r'(?<=s)N', 'n'),
-                (r'(?<=x)n', 'N'),
-                # remove quotes
-                ('\'', ''),
-                # remove /y/ after palatals
-                (r'(?<=[cjNL])y', '')])
+                # remove /y/ after palatals, and quotes
+                ('\'|(?<=[cjxNL])y', '')])
         replacements = [
             (r'u(?=[pbmfkgqhH])', 'o'), # lowering of back vowels before peripherals
             (r'([nl\'hbdgptck])\1', self.geminate_shift),
@@ -256,3 +154,84 @@ class HighToVulgarLulani:
         return unique(self.evolver.evolve(
                 EMString(text, self.rewrites, self.debug)
             ))
+
+    def geminate_shift(self, regex):
+        return {
+            'n': 'N', 'l': 'L', '\'': 'y', 'h': 'H',
+            'b': 'v', 'd': 'D', 'g': 'r', 'p': 'b',
+            't': 'd', 'c': 'j', 'k': 'g',
+        }[regex.group(1)] * 2
+
+    def umlaut(self, regex):
+        return dict(a='e', u='U', o='O')[regex.group(1)]
+
+    def palatalise(self, regex):
+        return dict(
+                s='x', t='c', d='j', n='N', l='L'
+            )[regex.group(2)] * len(regex.group(1))
+
+    def simplify_vowel_cluster(self, regex):
+        first, second = [regex.group(x) for x in xrange(1, 3)]
+        if (first + second).lower() in ('au', 'ao'):
+            return 'O'
+        if (first + second).lower() in ('ae', 'aa', 'ia', 'iu'):
+            return first + 'y2' + second
+        if (first + second).lower() in ('ui', 'oi'):
+            return first + 'w2' + second
+        return first
+
+    def vowel_elision(self, regex):
+        vowel = regex.group(1)
+        if vowel in 'ae.':
+            return ''
+        else:
+            return '2' + dict(i='*', u='^', U='+', o='(', O=')')[vowel]
+
+    def fortify_vowel(self, regex):
+        if regex.group(1) == 'i':
+            return 'y'
+        return 'w'
+
+    def prenasal_assimilation(self, regex):
+        plosive = regex.group(1)
+        return plosive + dict(
+            p='m', b='m',
+            t='n', d='n',
+            c='N', j='N',
+            k='q', g='q'
+        )[plosive]
+
+    def nasal_assimilation(self, regex):
+        other = regex.group(1)
+        return dict(
+            p='m', b='m', m='m',
+            t='n', d='n', n='n',
+            c='N', j='N', N='N',
+            k='q', g='q', q='q'
+        )[other] + other
+
+    def protect_cluster(self, regex):
+        return '{0}\'{1}'.format(*regex.group(0))
+
+    def setup_stresses(self, stresses):
+        return [(re.compile(pattern.replace(
+                'C', self.consonants).replace(
+                'V', self.vowels)
+            ), string) for pattern, string in stresses]
+
+    def stress(self, regex):
+        word = regex.group(0)
+        for stress in (0, 1, 2, 3, 2, 3, 2):
+            pattern, string = self.stresses[stress]
+            word = pattern.sub(string, word)
+        return word
+
+    def setup_sandhi(self, sandhi):
+        return [(re.compile(pattern), string) for pattern, string in sandhi]
+
+    def simplify_consonant_cluster(self, regex):
+        cluster = regex.group(0)
+        for sandhi in self.sandhi:
+            pattern, string = sandhi
+            cluster = pattern.sub(string, cluster)
+        return cluster
