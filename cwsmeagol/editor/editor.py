@@ -25,7 +25,7 @@ class Editor(Tk.Frame, object):
 
     def ready_headings(self):
         master = self.headingframe
-        self.headings = [Tk.Entry(master) for _ in xrange(self.headings)]
+        self.headings = [Tk.Entry(master, width=25) for _ in xrange(self.headings)]
 
     def ready_menus(self):
         """

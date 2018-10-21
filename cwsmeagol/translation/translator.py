@@ -53,7 +53,8 @@ class Translator:
                 if language.urlname == languagename:
                     return code
             except AttributeError:
-                if language.name.lower() == languagename:
+                name = language.name.lower().replace(' ', '')
+                if name == languagename:
                     return code
         else:
             return 'unknown'
@@ -151,7 +152,7 @@ class HighLulani:
         return output
 
 
-class VulgarLulani(English):
+class VulgarLulani(HighLulani):
     def __init__(self):
         self.name = 'Vulgar Lulani'
 
