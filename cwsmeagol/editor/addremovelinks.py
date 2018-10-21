@@ -1,5 +1,6 @@
 import re
 import json
+from cwsmeagol import Translator
 from cwsmeagol.utils import urlform, ignored, buyCaps, sellCaps
 
 class AddRemoveLinks:
@@ -97,6 +98,9 @@ class InternalDictionary:
     """
     Replace links with hyperlinks to other entries in the same dictionary
     """
+    def __init__(self):
+        self.translator = Translator()
+
     def add_links(self, text, entry):
         """
         Add links of the form
@@ -114,8 +118,11 @@ class InternalDictionary:
 
     def _link(self, text):
         word = text.group(1).split(':')
-        language = urlform(self.language if len(word) == 1 else word[0])
-        link = urlform(sellCaps(word[-1]))
+        tr = self.translator
+        language, link = [urlform(name) for name in (
+            self.language if len(word) == 1 else tr.select(word[0]),
+            sellCaps(word[-1])
+        )]
         initial = re.findall(r'\w', link)[0]
         return '<a href="../{0}/{1}.html#{2}">{3}</a>'.format(
             initial, link, language, word[-1])
@@ -132,10 +139,11 @@ class InternalDictionary:
         return '\n'.join(output)
 
     def _unlink(self, regex):
+        tr = self.translator
         language, link = [regex.group(x) for x in xrange(1,3)]
         if language == urlform(self.language):
             return r'<{0}>{1}</{0}>'.format('link', link)
-        return r'<{0}>{1}:{2}</{0}>'.format('link', language, link)
+        return r'<{0}>{1}:{2}</{0}>'.format('link', tr.encode(language), link)
 
 
 class ExternalGrammar:

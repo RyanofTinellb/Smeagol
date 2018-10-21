@@ -131,13 +131,14 @@ class HighToVulgarLulani:
             (r'(([stdnl])\2?)(?=i)', self.palatalise),
             (r'.*', self.stress),
             (r'(?<=.)h(?=2)', '\''), # elision of syllable final /h/
-            (r'(?<=2a)\'(?=[aeuo])', 'y'), # fortify glottal stop
+            (r'(?<=2a)\'(?=[aeuoUO])', 'y'), # fortify glottal stop
             (r'(?<=2a)\'(?=[i])', 'w'), # fortify glottal stop
             (r'2([iuUoO])\'', self.fortify_vowel),
             (r'([aiuoeOU.]([pbtdDcjkg\'mnqrlfsxhNLHy])2)[aiuoeOU.](\2)', r'\1.\3'), # middot
             (r'((\w)\2)2i', r'\2'), # kappita ==> kapta
             (r'([pbvtdDcjkg\'mnqrlfsxhNLHyw])\1', r'\1'), # degemination
-            (r'([aieouOU])\'2([aieouOU])', self.simplify_vowel_cluster),
+            (r'(?<!2)([aieouOU])\'2*([aieouOU])',
+                    self.simplify_vowel_cluster),
             (r'2([ae.iuoUO])', self.vowel_elision),
             (r'.*', self.simplify_consonant_cluster),
             (r'^[mnNq](?=[pbmftdDcjkgnqsxNLH])', 'm'),
@@ -146,7 +147,8 @@ class HighToVulgarLulani:
             (r'[cj]([cj])', r'\1'), # degeminate affricates
             (r'([aiueUoO^*()])2\1,*', r'\1'), # shorten long vowel
             (r'(?<=[^i])y$', 'i'), # re-write final semivowels
-            (r'w$', 'u')]
+            (r'w$', 'u'),
+            (r'U$', 'O')]
         self.evolver = Evolver(replacements, debug)
         self.debug = debug
 
@@ -173,7 +175,7 @@ class HighToVulgarLulani:
     def simplify_vowel_cluster(self, regex):
         first, second = [regex.group(x) for x in xrange(1, 3)]
         if (first + second).lower() in ('au', 'ao'):
-            return 'O'
+            return second.upper()
         if (first + second).lower() in ('ae', 'aa', 'ia', 'iu'):
             return first + 'y2' + second
         if (first + second).lower() in ('ui', 'oi'):
@@ -221,9 +223,15 @@ class HighToVulgarLulani:
 
     def stress(self, regex):
         word = regex.group(0)
-        for stress in (0, 1, 2, 3, 2, 3, 2):
+        for stress in (0, 1, 2):
             pattern, string = self.stresses[stress]
             word = pattern.sub(string, word)
+        old = ''
+        while old != word:
+            old = word
+            for stress in (3, 2):
+                pattern, string = self.stresses[stress]
+                word = pattern.sub(string, word)
         return word
 
     def setup_sandhi(self, sandhi):

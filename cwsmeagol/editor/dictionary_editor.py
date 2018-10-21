@@ -126,6 +126,13 @@ class DictionaryEditor(SiteEditor):
         self.master.title('Editing Dictionary: ' + self.entry.name)
         return entry
 
+    def prepare_entry(self, entry):
+        text = super(DictionaryEditor, self).prepare_entry(entry)[0]
+        text = text.splitlines(True)
+        text[0] = buyCaps(text[0])
+        text = ''.join(text)
+        return [text]
+
     def prepare_texts(self, texts):
         """
         Modify entry with manipulated texts.
@@ -136,6 +143,10 @@ class DictionaryEditor(SiteEditor):
         :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
         :param return (Nothing):
         """
+        texts[0] = texts[0].splitlines(True)
+        with ignored(IndexError):
+            texts[0][0] = sellCaps(texts[0][0])
+        texts[0] = ''.join(texts[0])
         super(DictionaryEditor, self).prepare_texts(texts)
         with ignored(AttributeError):
             self.entry.parent.content = replace_datestamp(
@@ -200,11 +211,11 @@ class DictionaryEditor(SiteEditor):
         if entry is None:
             entry = self.entry
         name = entry.name
-        trans = self.translator
-        before = ('[1]{0}\n[2]{1}\n').format(name, trans.name)
+        tr = self.translator
+        before = ('[1]{0}\n[2]{1}\n').format(name, tr.safename)
         before += '' if self.languagevar.get() == 'en' else '[3]{0}\n'.format(
-            trans.convert_word(name))
-        before += '[4][p {0}]/'.format(trans.code)
+            tr.convert_word(name))
+        before += '[4][p {0}]/'.format(tr.code)
         after = '/[/p]\n[5]\n\n'
         return before + after
 

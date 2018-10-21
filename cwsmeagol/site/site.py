@@ -201,8 +201,9 @@ class Site(object):
         """
         Write the Site's contents to the sourcefile.
         """
-        with open(self.source, 'w') as source:
-            source.write(str(self))
+        if str(self) != '':
+            with open(self.source, 'w') as source:
+                source.write(str(self))
 
     def update_json(self):
         if self.searchjson:

@@ -10,7 +10,7 @@ class FlatName:
         if name is None:
             name = ''
         alphabet = "aiu'pbtdcjkgmnqlrfsxh"
-        punctuation = "-'#"
+        punctuation = "$-'#"
         radix = len(punctuation)
 
         name = urlform(name)
@@ -20,8 +20,7 @@ class FlatName:
 
         for points, pattern in enumerate(punctuation):
             score += self.score_pattern(name, pattern, radix, points+1)
-            name = name.replace(pattern, '*')
-            name = name.replace('*', '')
+            name = name.replace(pattern, '')
             self.name = name
             self.score = score
 

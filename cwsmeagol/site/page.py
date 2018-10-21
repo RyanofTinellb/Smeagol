@@ -9,11 +9,6 @@ from cwsmeagol.translation import *
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 
-# def buyCaps(word):
-#     return re.sub(r'[$](.)', _buy, word)
-#
-# def _buy(regex):
-#     return regex.group(1).capitalize()
 
 class Page(Node):
     """
@@ -199,7 +194,10 @@ class Page(Node):
         :param text (str)
         :return (str): an HTML heading with the id as the URL form of the name of the Page
         """
-        level, name = text.split(']')
+        try:
+            level, name = text.split(']')
+        except ValueError:
+            raise AttributeError(text)
         if level == '1':
             name = buyCaps(name)
         url_id = urlform(re.sub(r'\(.*?\)', '', name))

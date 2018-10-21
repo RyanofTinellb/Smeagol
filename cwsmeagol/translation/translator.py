@@ -1,20 +1,62 @@
+# -*- coding: utf-8 -*-
 import re
 from collections import OrderedDict
 
 class Translator:
     def __init__(self, language=None):
+        language = language or 'en'
         languages = OrderedDict()
         languages['en'] = English
         languages['hl'] = HighLulani
+        languages['vl'] = VulgarLulani
+        languages['ef'] = EarlyFezhle
+        languages['lf'] = LateFezhle
+        languages['kf'] = KoineFezhle
+        languages['op'] = OldPtokan
+        languages['mp'] = MiddlePtokan
+        languages['sp'] = StandardPtokan
+        languages['pb'] = PreBrequen
+        languages['ab'] = ArchaicBrequen
+        languages['cb'] = CommonBrequen
+        languages['pz'] = ProtoZhaladi
+        languages['cz'] = ContemporaryZhaladi
+        languages['rz'] = ReformedZhaladi
+        languages['ct'] = ClassicalTsarin
+        languages['mt'] = ModernTsarin
+        languages['as'] = AncientSolajin
+        languages['ms'] = MedievalSolajin
+        languages['ts'] = TraditionalSolajin
+        languages['ns'] = NewSolajin
+        self.number = len(languages)
         self.languages = languages
+        self.select(language)
+
+    def select(self, language):
+        language = language.lower()
         try:
-            language = language.lower()
-            self.converter = languages[language]()
+            self.converter = self.languages[language]()
         except (IndexError, AttributeError, KeyError):
             self.converter = English()
         self.name = self.converter.name
+        try:
+            self.safename = self.converter.safename
+        except AttributeError:
+            self.safename = self.converter.name
         self.code = language
-        self.number = len(languages)
+        return self.safename
+
+    def encode(self, languagename):
+        languagename = languagename.lower()
+        for code, language in self.languages.iteritems():
+            language = language()
+            try:
+                if language.urlname == languagename:
+                    return code
+            except AttributeError:
+                if language.name.lower() == languagename:
+                    return code
+        else:
+            return 'unknown'
 
     def convert_text(self, text):
         return self.converter.convert_text(text)
@@ -107,3 +149,110 @@ class HighLulani:
     def convert_word(self, text):
         output = '<high-lulani>{0}</high-lulani>'.format(self.convert_text(text))
         return output
+
+
+class VulgarLulani(English):
+    def __init__(self):
+        self.name = 'Vulgar Lulani'
+
+
+class EarlyFezhle(English):
+    def __init__(self):
+        self.name = u'Early Fezhl\u00ea'
+        self.safename = 'Early Fezhl&ecirc;'
+        self.urlname = 'earlyfezhl()e'
+
+
+class LateFezhle(English):
+    def __init__(self):
+        self.name = u'Late Fezhl\u00ea'
+        self.safename = 'Late Fezhl&ecirc;'
+        self.urlname = 'latefezhl()e'
+
+
+class KoineFezhle(English):
+    def __init__(self):
+        self.name = u'Koine Fezhl\u00ea'
+        self.safename = 'Koine Fezhl&ecirc;'
+        self.urlname = 'koinefezhl()e'
+
+
+class OldPtokan(English):
+    def __init__(self):
+        self.name = u'Old Ptokan'
+
+
+class MiddlePtokan(English):
+    def __init__(self):
+        self.name = u'Middle Ptokan'
+
+
+class StandardPtokan(English):
+    def __init__(self):
+        self.name = u'Standard Ptokan'
+
+
+class PreBrequen(English):
+    def __init__(self):
+        self.name = u'Pre-Brequ\u00e8n'
+        self.safename = 'Pre-Brequ&egrave;n'
+        self.urlname = 'pre-brequ)en'
+
+
+class ArchaicBrequen(English):
+    def __init__(self):
+        self.name = u'Archaic Brequ\u00e8n'
+        self.safename = 'Archaic Brequ&egrave;n'
+        self.urlname = 'archaicbrequ)en'
+
+
+class CommonBrequen(English):
+    def __init__(self):
+        self.name = u'Common Brequ\u00e8n'
+        self.safename = 'Common Brequ&egrave;n'
+        self.urlname = 'commonbrequ)en'
+
+
+class ProtoZhaladi(English):
+    def __init__(self):
+        self.name = u'Proto-Zhaladi'
+
+
+class ContemporaryZhaladi(English):
+    def __init__(self):
+        self.name = u'Contemporary Zhaladi'
+
+
+class ReformedZhaladi(English):
+    def __init__(self):
+        self.name = u'Reformed Zhaladi'
+
+
+class ClassicalTsarin(English):
+    def __init__(self):
+        self.name = u'Classical Tsarin'
+
+
+class ModernTsarin(English):
+    def __init__(self):
+        self.name = u'Modern Tsarin'
+
+
+class AncientSolajin(English):
+    def __init__(self):
+        self.name = u'Ancient Solajin'
+
+
+class MedievalSolajin(English):
+    def __init__(self):
+        self.name = u'Medieval Solajin'
+
+
+class TraditionalSolajin(English):
+    def __init__(self):
+        self.name = u'Traditional Solajin'
+
+
+class NewSolajin(English):
+    def __init__(self):
+        self.name = u'New Solajin'

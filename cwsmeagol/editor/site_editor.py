@@ -76,7 +76,7 @@ class SiteEditor(Properties, Editor, object):
 
     def refresh_random(self, event=None):
         """
-        Show a certain number of random nonsense words using High Lulani phonotactics.
+        Show a certain number of random words.
         """
         if self.randomwords:
             self.information.set('\n'.join(self.randomwords.words))

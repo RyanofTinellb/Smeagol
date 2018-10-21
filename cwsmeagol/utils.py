@@ -32,7 +32,7 @@ def _buy(regex):
     return regex.group(1).capitalize()
 
 def sellCaps(word):
-    return re.sub(r'^([A-Z])', _sell, word)
+    return re.sub(r'([A-Z])', _sell, word)
 
 def _sell(regex):
     return '$' + regex.group(1).lower()
