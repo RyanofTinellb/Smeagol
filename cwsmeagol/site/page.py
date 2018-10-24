@@ -3,7 +3,7 @@ from cached_property import cached_property
 from collections import deque
 from contents_mode import ContentsMode
 from text_analysis import Analysis
-from flatname import FlatName
+# from flatname import FlatName
 from cwsmeagol.translation import *
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default

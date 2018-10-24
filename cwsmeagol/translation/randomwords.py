@@ -34,16 +34,21 @@ class English:
         self.name = 'English'
         self.words = set()
         folder = ('c:/users/ryan/documents/tinellbianlanguages'
-                  '/{0}/data.txt')
+                  '/{0}/data.json')
         filenames = [
             'coelacanth',
             'shortstories',
         ]
         for filename in filenames:
             with open(folder.format(filename)) as page:
-                self.words.update(
-                    {word for line in page for word in line.split(' ')})
+                page = json.load(page)
+            self.collate(page, self.words)
         self.words = list(self.words)
+
+    def collate(self, page, words):
+        words.update({word for line in page['text'] for word in line.split()})
+        for child in page['children']:
+            self.collate(child, self.words)
 
     def word(self):
         choice = ''

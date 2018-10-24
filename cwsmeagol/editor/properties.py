@@ -4,7 +4,6 @@ import json
 import re
 from addremovelinks import AddRemoveLinks
 from cwsmeagol.site.site import Site
-from cwsmeagol.site.files import Files
 from cwsmeagol.translation import *
 from cwsmeagol.utils import ignored
 from cwsmeagol.defaults import default
@@ -12,17 +11,7 @@ import tkFileDialog as fd
 import tkSimpleDialog as sd
 
 class Properties(object):
-    """
-    properties:
-        self.template
-        self.config_filename - to save changes to
-        self.config
-        self.files - a Files object
-        self.site - a Site object
-        self.linkadder - a AddRemoveLinks object
-    """
-
-    def __init__(self, master, current):
+    def __init__(self, master=None, current=None):
         self.template = json.loads(default.properties)
         self.config_filename = current
         self.setup_config()
@@ -32,7 +21,6 @@ class Properties(object):
         self.evolver = HighToVulgarLulani()
         self.randomwords = RandomWords(self.language)
         self.markdown = Markdown(self.markdown_file)
-        super(Properties, self).__init__(master)
 
     def setup_config(self, config=None):
         self.config_filename = config or self.config_filename
@@ -116,12 +104,6 @@ class Properties(object):
             self.config_filename = filename
             self.save_site()
 
-    def collate_files(self):
-        """
-        Create a File object from the config info
-        """
-        return Files(**self.config['files'])
-
     def update_site(self):
         """
         Update the current Site object with new properties from the
@@ -129,16 +111,13 @@ class Properties(object):
         """
         for prop, value in self.config['site'].items():
             self.site.__dict__[prop] = value
-        self.site.files = self.collate_files()
         self.site.change_destination()
 
     def create_site(self):
         """
         Create a new Site object from the config info
         """
-        dict_ = dict(self.config['site'])
-        dict_['files'] = self.collate_files()
-        self.site = Site(**dict_)
+        self.site = Site(**self.config['site'])
 
     def create_linkadder(self):
         """

@@ -2,7 +2,7 @@ import os
 import json
 import node
 import page
-from cwsmeagol.translation import *
+from cwsmeagol.translation import Markdown, Translator
 from cwsmeagol.utils import *
 
 class Site(object):

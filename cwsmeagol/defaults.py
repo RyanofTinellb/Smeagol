@@ -51,16 +51,12 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
 {
   "site": {
     "name": "",
-    "destination": ""
-  },
-  "files": {
-    "searchindex": "",
-    "source": "",
-    "template": ""
-  },
-  "random words": {
-    "number": 0,
-    "geminate": 1
+    "destination": "",
+    "files": {
+      "searchindex": "",
+      "source": "",
+      "template": ""
+    }
   },
   "current": {
     "page": [
