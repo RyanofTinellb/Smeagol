@@ -1,240 +1,68 @@
-from collections import deque
+"""
+Helper functions for navigating a Site
+"""
 
-class Node(object):
-    """
-    A node in the hierarchy
-    """
-
-    def __init__(self, parent=None):
-        """
-        :param parent (Node): the Node's immediate ancestor
-
-        :attribute children (list): the Nodes beneath self
-        :attribute level (int): how low the Node is on the hierarchy
-        """
-        self.parent = parent
-        self.children = []
-        self.level = self.generation - 1
-        self.isRoot = self is self.root
-
-    def insert(self, index=None):
-        """
-        Insert self into the Site as a child of its parent
-        :pre: Self has a filled parent attribute
-        :param index (int): the index number to be inserted at
-        :param index (None): self is inserted in order
-        :return (Node): the Node just inserted
-        """
+def find(node, location):
+    if len(location) == 1:
+        return node['children'][location[0]]
+    elif len(location) > 1:
         try:
-            self.parent.children.insert(index, self)
-        except TypeError:   # index is None or 'end'
-            if index == 'end':
-                self.parent.children.append(self)
-            else:
-                for index, node in enumerate(self.parent.children):
-                    number = index
-                    if self <= node:
-                        self.parent.children.insert(number, self)
-                        break
-                else:
-                    self.parent.children.append(self)
-            return self
-
-    def remove_from_hierarchy(self):
-        """
-        Remove self and all of its descendants from the hierarchy
-        """
-        self.parent.children.remove(self)
-
-    @property
-    def isLeaf(self):
-        """
-        :return (bool): True iff self has children
-        """
-        return not self.has_children
-
-    @property
-    def has_children(self):
-        return len(self.children) > 0
-
-    @property
-    def root(self):
-        """
-        Proceed up the Site
-        :return (Node): the top Node in the Site
-        """
-        node = self
-        while node.parent is not None:
-            node = node.parent
+            return find(node['children'][location[0]], location[1:])
+        except TypeError:
+            raise TypeError(node)
+    else:
         return node
 
-    @property
-    def genealogy(self):
-        """
-        Generates for every Node in the Site sequentially
-        :yield (Node):
-        :raises StopIteration:
-        """
-        node = self.root
-        yield node
-        while True:
-            try:
-                node = node.next_node
-                yield node
-            except IndexError:
-                node = self.root
-                raise StopIteration
+def sister(root, location, index):
+    if not len(location):
+        raise IndexError('No such sister')
+    children = find(root, location[:-1])['children']
+    if len(children) > location[-1] + index >= 0:
+        location[-1] += index
+        return location
+    else:
+        raise IndexError('No such sister')
 
-    @property
-    def elders(self):
-        """
-        The first generation in the Site
-        :return (Node[]):
-        """
-        return self.root.children
+def previous_sister(node, location):
+    return sister(node, location, -1)
 
-    @property
-    def ancestors(self):
-        """
-        Self and the direct ancestors of self, in order down from the root.
-        :return (Node[]):
-        """
-        node = self
-        ancestry = deque([node])
-        while node.parent is not None:
-            node = node.parent
-            ancestry.appendleft(node)
-        return list(ancestry)
+def next_sister(node, location):
+    return sister(node, location, 1)
 
-    @property
-    def generation(self):
-        """
-        :return (int): the generation number of the Node, with the root at one
-        """
-        return len(self.ancestors)
+def has_children(root, location):
+    return num_children(root, location) > 0
 
-    def sister(self, index):
-        if self.isRoot:
-            raise IndexError
-        children = self.parent.children
-        node_order = children.index(self)
-        if len(children) > node_order + index >= 0:
-            return children[node_order + index]
+def num_children(root, location):
+    return len(find(root, location)['children'])
+
+def next(root, location, _seen_children=False):
+    if not _seen_children and has_children(root, location):
+        location += [0]
+        return find(root, location)
+    elif len(location) == 0:
+        raise IndexError('No more nodes')
+    else:
+        try:
+            return next_sister(root, location)
+        except IndexError:
+            location.pop()
+            return next(root, location, _seen_children=True)
+
+def previous(root, location):
+    try:
+        return find(root,
+                _last_grandchild(root, previous_sister(root, location)))
+    except IndexError:
+        if len(location):
+            location.pop()
+            return find(root, location)
         else:
-            raise IndexError('No such sister')
-
-    @property
-    def previous_sister(self):
-        """
-        :return (Node): the previous Node if it has the same parent as self
-        :raises IndexError: the previous Node does not exist
-        """
-        return self.sister(-1)
-
-    @property
-    def next_sister(self):
-        """
-        :return (Node): the next Node if it has the same parent as self
-        :raises IndexError: the next Node does not exist
-        """
-        return self.sister(1)
-
-    @property
-    def next_node(self):
-        """
-        Finds the next sister, or uses iteration to find the next Node
-        :return (Node): the next Node in sequence
-        :raises IndexError: the next Node does not exist
-        """
-        if self.has_children:
-            return self.children[0]
-        elif self.isRoot:
             raise IndexError('No more nodes')
-        else:
-            try:
-                return self.next_sister
-            except IndexError:
-                return self.parent.next_node_iter
 
-    @property
-    def next_node_iter(self):
-        """
-        Iterates over the Site to find the next Node
-        :return (Node): the next Node in sequence
-        :raises IndexError: the next Node does not exist
-        """
-        if self.isRoot or self.parent is None:
-            raise IndexError('No more nodes')
-        try:
-            return self.next_sister
-        except IndexError:
-            return self.parent.next_node_iter
-
-    @property
-    def previous(self):
-        try:
-            return self.previous_sister.last_grandchild
-        except IndexError:
-            if self.parent:
-                return self.parent
-            else:
-                raise IndexError('No more nodes')
-
-    @property
-    def last_grandchild(self):
-        return self.children[-1].last_grandchild if self.children else self
-
-    @property
-    def descendants(self):
-        """
-        All the descendants of self, using iteration
-        :return (Node{}):
-        """
-        descendants = set(self.children)
-        for child in self.children:
-            descendants.update(child.descendants)
-        return descendants
-
-    @property
-    def cousins(self):
-        """
-        Taking a sub-hierarchy as the descendants of a Node, cousins are Nodes at the same point as self, but in different sub-hierarchies.
-        """
-        node = self
-        indices = deque()
-        while node.parent is not None:
-            indices.appendleft(node.parent.children.index(node))
-            node = node.parent
-        try:
-            indices.popleft()
-        except IndexError:
-            return []
-        cousins = []
-        for child in node.children:
-            cousin = child
-            for index in indices:
-                try:
-                    cousin = cousin.children[index]
-                except (IndexError, AttributeError):
-                    cousin = None
-            cousins.append(cousin)
-        return cousins
-
-    def cousin_degree(self, ancestors):
-        try:
-            return [i != j for i, j in zip(
-                *[x for x in ancestors.values()])].index(True)
-        except ValueError:
-            return min(map(len, ancestors.values()))
-
-    @property
-    def family(self):
-        """
-        Return all of self, descendants, sisters, ancestors, and sisters of ancestors
-        :rtype (Node{}):
-        """
-        family = set([])
-        for ancestor in self.ancestors:
-            family.update(ancestor.children)
-        family.update(self.descendants)
-        return family
+def _last_grandchild(node, location):
+    children = num_children(node, location)
+    if children:
+        location += [children - 1]
+        return _last_grandchild(node, location)
+    else:
+        return location

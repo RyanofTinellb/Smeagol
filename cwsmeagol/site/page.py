@@ -4,28 +4,13 @@ from collections import deque
 from contents_mode import ContentsMode
 from text_analysis import Analysis
 from flatname import FlatName
-from node import Node
 from cwsmeagol.translation import *
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 
 
-class Page(Node):
-    """
-    A node in the hierarchy
-    """
-
+class Page:
     def __init__(self, name=None, parent=None, content='', newpage=False):
-        """
-        :param name (str): the name of the Page
-        :param parent (Page): the Page's immediate ancestor
-        :param content (str): text that will ultimately appear on the Page's webpage
-        :param previous (Page):
-
-        :attribute children (list): the Pages beneath self
-        :attribute isLeaf (bool): is the Page at the lowest level of the hierarchy?
-        :attribute level (int): how low the Page is on the hierarchy
-        """
         super(Page, self).__init__(parent)
         self.name = name or ''
         self.content = content
@@ -501,12 +486,18 @@ class Page(Node):
         return output
 
     @property
-    def copyright(self):
+    def date(self):
         try:
-            date = datetime.strptime(
+            return datetime.strptime(
                 max(re.findall(r'(?<=&date=)\d{8}', self.content)), '%Y%m%d')
         except ValueError:
             return ''
+
+    @property
+    def copyright(self):
+        date = self.date
+        if date == '':
+            return date
         suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else [
             "st", "nd", "rd"][date.day % 10 - 1]
         output = datetime.strftime(

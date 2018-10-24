@@ -54,7 +54,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
     "destination": ""
   },
   "files": {
-    "searchjson": "",
+    "searchindex": "",
     "source": "",
     "template": ""
   },
@@ -158,7 +158,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
       },
       {
         "name": "Searchterms File",
-        "property": "searchjson",
+        "property": "searchindex",
         "owner": "files",
         "check": false,
         "textbox": true,

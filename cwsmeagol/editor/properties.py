@@ -2,9 +2,9 @@ import sys
 import os
 import json
 import re
-from files import Files
 from addremovelinks import AddRemoveLinks
 from cwsmeagol.site.site import Site
+from cwsmeagol.site.files import Files
 from cwsmeagol.translation import *
 from cwsmeagol.utils import ignored
 from cwsmeagol.defaults import default
