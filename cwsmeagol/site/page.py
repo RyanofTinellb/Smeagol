@@ -1,6 +1,4 @@
 import os
-from cached_property import cached_property
-from collections import deque
 from contents_mode import ContentsMode
 from text_analysis import Analysis
 # from flatname import FlatName
@@ -8,6 +6,45 @@ from cwsmeagol.translation import *
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 
+def change(item, replacement, text):
+    text[0] = re.sub(item, replacement, text[0])
+
+def remove(item, text):
+    change(item, '', text)
+
+def analyse(text, markdown=None):
+    markdown = markdown or Markdown()
+    wordlist = {}
+    content = [text]
+    # remove tags, and items between some tags
+    change(r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
+    # remove datestamps
+    remove(r'&date=\d{8}', content)
+    # change punctuation to paragraph marks, so that splitlines works
+    change(r'[!?.|]', '\n', content)
+    # change punctuation to space
+    change(r'[_()]', ' ', content)
+    # remove spaces at the beginnings and end of lines,
+    #    duplicate spaces and end-lines
+    remove(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[,:]', content)
+    # remove duplicate end-lines, and tags in square brackets
+    remove(r'\n+(?=\n)|\[.*?\]', content)
+    content = buyCaps(content[0])
+    lines = content.splitlines()
+    content = [markdown.to_markdown(content).lower()]
+    # change punctuation, and tags in square brackets, into spaces
+    change(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|&nbsp', ' ', content)
+    # make glottal stops lower case where appropriate
+    change(r"(?<=[ \n])''", "'", content)
+    for number, line in enumerate(content[0].splitlines()):
+        for word in line.split():
+            try:
+                if wordlist[word][-1] != number:
+                    wordlist[word].append(number)
+            except KeyError:
+                wordlist[word] = [number]
+    return dict(words=wordlist,
+                sentences=lines)
 
 class Page:
     def __init__(self, name=None, parent=None, content='', newpage=False):
@@ -22,7 +59,7 @@ class Page:
         output = '' if self.isRoot else '-' * 50 + str(self.level) + '\n'
         return output + self.content
 
-    @cached_property
+    @property
     def urlform(self):
         """
         Simplify the name to make it more suitable for urls
@@ -532,10 +569,7 @@ class Page:
                 page = page.replace(section, getattr(self, function))
         with ignored(os.error):
             os.makedirs(self.folder)
-        page = re.sub('\x05.*?(\x06\x06*)', '', page)
-        page = re.sub(r'\x07', '', page)
-        page = re.sub(r'&date=\d{8}', '', page)
-        with open(self.link(), "w") as f:
+        with open(self.link(), 'w') as f:
             f.write(page)
         self.newpage = False
 

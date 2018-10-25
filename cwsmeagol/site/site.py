@@ -5,6 +5,11 @@ import page
 from cwsmeagol.translation import Markdown, Translator
 from cwsmeagol.utils import *
 
+def dump(dictionary, filename):
+    if filename:
+        with open(filename, 'w') as f:
+            json.dump(dictionary, f, indent=2)
+
 class Site(object):
     def __init__(self, destination=None, name=None, files=None):
         self.name = name
@@ -101,38 +106,17 @@ class Site(object):
             raise KeyError(page)
         return node.find(self.root, location)
 
-    def add_node(self, name, parent, content):
-        """
-        Add a Page to the appropriate location in the Site, and return that Page
-        If another Page exists at the same point with the same name, a '2' is appended to the name
-        :param name (str): human-readable name of the Page
-        :param parent (Page): the parent node of the new Page
-        :param content (str): the content of the Page, including the header line
-        :return (Page): the Page that was added
-        :class: Site
-        """
-        child = Page(name, parent, content)
-        if child not in parent.children:
-            parent.children.append(child)
-        else:
-            return self.add_node(name + '2', parent, content)
-        return child
-
     def publish(self):
-        """
-        Create / modify all .html files, and create search JSON file.
-        :class: Site
-        """
         errors = 0
         errorstring = ''
-        for page in self:
+        for node in self:
             try:
-                page.publish(self.template)
+                page.publish(self.root, self.current, self.template)
             except:
-                errorstring += 'Error in ' + page.name + '\n'
+                errorstring += 'Error in ' + node['name'] + '\n'
                 errors += 1
-        self.update_json()
-        self.modify_source()
+        self.update_searchindex()
+        self.update_source()
         return '{2}{0} error{3}\n{1}'.format(
                 errors,
                 '-' * 10,
@@ -140,24 +124,14 @@ class Site(object):
                 '' if errors == 1 else 's'
             )
 
-    def modify_source(self):
-        """
-        Write the Site's contents to the sourcefile.
-        """
-        with open(self.source, 'w') as source:
-            json.dump(self.root, source, indent=2)
+    def update_source(self):
+        dump(self.root, self.source)
 
     def update_searchindex(self):
-        if self.searchindex:
-            with open(self.searchindex, 'w') as searchindex:
-                json.dump(self.analyse(), searchindex, indent=2)
+        dump(self.analysis, self.searchindex)
 
-    def analyse(self):
-        """
-        Analyse the Site for searchable content
-        :rtype: Analysis
-        :class: Site
-        """
+    @property
+    def analysis(self):
         words = {}
         sentences = []
         urls = []
@@ -167,16 +141,17 @@ class Site(object):
             # line numbers in each Page are incremented by the current total number of sentences
             base = len(sentences)
             # analyse the Page
-            analysis = entry.analyse(markdown)
+            analysis = page.analyse('['.join(entry['text']))
             # add results to appropriate lists and dictionaries
             new_words = analysis['words']
             sentences += analysis['sentences']
-            urls.append(entry.link(extend=False))
-            names.append(buyCaps(entry.name))
-            for word in new_words:
+            urls.append(entry['hyperlink'])
+            names.append(buyCaps(entry['name']))
+            for word, line_numbers in new_words.iteritems():
                 # increment line numbers by base
                 # use str(page_number) because search.js relies on that
-                locations = {str(page_number): map(lambda x: x + base, new_words[word])}
+                locations = {str(page_number):
+                        [line_number + base for line_number in line_numbers]}
                 try:
                     words[word].update(locations)
                 except KeyError:
