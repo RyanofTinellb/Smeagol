@@ -1,41 +1,34 @@
 import os
-from contents_mode import ContentsMode
-from text_analysis import Analysis
-# from flatname import FlatName
+import node
 from cwsmeagol.translation import *
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 
-def change(item, replacement, text):
-    text[0] = re.sub(item, replacement, text[0])
-
-def remove(item, text):
-    change(item, '', text)
 
 def analyse(text, markdown=None):
     markdown = markdown or Markdown()
     wordlist = {}
     content = [text]
     # remove tags, and items between some tags
-    change(r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
+    change_text(r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
     # remove datestamps
-    remove(r'&date=\d{8}', content)
+    remove_text(r'&date=\d{8}', content)
     # change punctuation to paragraph marks, so that splitlines works
-    change(r'[!?.|]', '\n', content)
+    change_text(r'[!?.|]', '\n', content)
     # change punctuation to space
-    change(r'[_()]', ' ', content)
+    change_text(r'[_()]', ' ', content)
     # remove spaces at the beginnings and end of lines,
     #    duplicate spaces and end-lines
-    remove(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[,:]', content)
+    remove_text(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[,:]', content)
     # remove duplicate end-lines, and tags in square brackets
-    remove(r'\n+(?=\n)|\[.*?\]', content)
+    remove_text(r'\n+(?=\n)|\[.*?\]', content)
     content = buyCaps(content[0])
     lines = content.splitlines()
     content = [markdown.to_markdown(content).lower()]
     # change punctuation, and tags in square brackets, into spaces
-    change(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|&nbsp', ' ', content)
+    change_text(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|&nbsp', ' ', content)
     # make glottal stops lower case where appropriate
-    change(r"(?<=[ \n])''", "'", content)
+    change_text(r"(?<=[ \n])''", "'", content)
     for number, line in enumerate(content[0].splitlines()):
         for word in line.split():
             try:
@@ -46,572 +39,390 @@ def analyse(text, markdown=None):
     return dict(words=wordlist,
                 sentences=lines)
 
-class Page:
-    def __init__(self, name=None, parent=None, content='', newpage=False):
-        super(Page, self).__init__(parent)
-        self.name = name or ''
-        self.content = content
-        self.flatname = FlatName(name)
-        self.newpage = newpage
-        self.divclass = []
 
-    def __str__(self):
-        output = '' if self.isRoot else '-' * 50 + str(self.level) + '\n'
-        return output + self.content
+alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
+punctuation = "$-'#.()!_"
+radix = len(punctuation)
+double_letter = r'([{0}])\1'.format(alphabet)
 
-    @property
-    def urlform(self):
-        """
-        Simplify the name to make it more suitable for urls
-        Put the name in lower case, and remove tags
-        Allowed punctuation: -'.$_+!()
-        """
-        return urlform(self.name)
 
-    def __eq__(self, other):
-        """
-        :param self (Page):
-        :param other (Page): the two Pages being compared
-        :return (bool): True iff both nodes have the same URL and the same parent
-        """
+def flatname(name):
+    if name is None:
+        name = ''
+    name = [urlform(name)]
+    score = 0
+    change_text(double_letter, r'\1#', name)
+    for points, pattern in enumerate(punctuation):
+        score += score_pattern(name[0], pattern, radix, points + 1)
+        remove_text('\\' + pattern, name)
+    return dict(name=name[0], score=score)
+
+
+def score_pattern(word, pattern, radix, points):
+    return sum([points * radix**index
+                for index in pattern_indices(word, pattern)])
+
+
+def pattern_indices(word, pattern):
+    index = -1
+    while True:
         try:
-            if self.urlform == other.urlform:
-                parent, other = self.parent, other.parent
-                while True:
-                    return parent == other
-            else:
-                return False
-        except AttributeError:
-            return self is other is None
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __lt__(self, other):
-        """
-        :return (bool): True iff the self.name comes before self.other in Tinellbian alphabetical order
-        """
-        alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
-        try:
-            if self.name == other.name:
-                return False
-        except AttributeError:  # self or other are None
-            return self is None is not other
-        if self.flatname.name == other.flatname.name:
-            return self.flatname.score < other.flatname.score
-        for s, t in zip(self.flatname.name, other.flatname.name):
-            if s != t:
-                try:
-                    return alphabet.index(s) < alphabet.index(t)
-                except ValueError:
-                    continue
-        else:
-            return len(self.flatname.name) < len(other.flatname.name)
-
-    def __gt__(self, other):
-        return not self <= other
-
-    def __le__(self, other):
-        return self < other or self.name == other.name
-
-    def __ge__(self, other):
-        return not self < other
-
-    def __getitem__(self, item):
-        """
-        Search the children of the Page for a particular item
-        :param item (int): index number of the item to return
-        :param item (str): name of the item to return
-        :return (Page):
-        :raises KeyError: item cannot be found
-        """
-        try:
-            item = int(item)
-            return self.children[item]
-        except ValueError:  # item is a string
-            for child in self.children:
-                if child.name == item:
-                    return child
-            else:
-                raise KeyError('No such page ' + item + 'in ' + self.name)
-
-    def __hash__(self):
-        return hash(self.name)
-
-    @property
-    def urlname(self):
-        """
-        :return (str): the name and extension of the Page in a form suitable for URLs
-        """
-        # extension = '/index' if not self.isLeaf else ''
-        return self.urlform if self.isLeaf else 'index'
-
-    @property
-    def folder(self):
-        """
-        :return (str): the folder in which the Page should appear, or an empty string if Page is the root
-        """
-        return '/'.join(self.folder_as_list)
-
-    @property
-    def folder_as_list(self):
-        folder = []
-        if self.level > 1:
-            folder.append('/'.join([i.urlform for i in self.ancestors[1:-1]]))
-        if not self.isLeaf and not self.isRoot:
-            folder.append(self.urlform)
-        return folder
-
-    def link(self, extend=True):
-        link = self.folder_as_list
-        url = self.urlname
-        url += '.html' if extend else ''
-        link.append(url)
-        return '/'.join(link)
-
-    def hyperlink(self, destination, template="{0}", needAnchorTags=True, fragment=''):
-        """
-        Source and destination must be within the same website
-        :param needAnchorTags (bool): Put anchor tags around the link?
-        :param template (str): The form of the hyperlink
-        :param destination (Page): the Page being linked to
-        :param fragment (str): allows for a # fragment. Must include the hash sign.
-        :return (str):
-        """
-        if destination is self:
-            return template.format(destination.name)
-        try:
-            address, link = self.direct_hyperlink(destination, template, fragment)
-        except AttributeError:  # destination is a string
-            up = self.level + int(not self.isLeaf) - 1
-            address = (up * '../') + destination + fragment
-            link = '<a {0}>{1}</a>'.format(address,
-                                           template.format(destination))
-        return link if needAnchorTags else address
-
-    def direct_hyperlink(self, destination, template, fragment):
-        change = int(not self.isLeaf)
-        extension = ".html" if destination.isLeaf else "/index.html"
-        ancestors = {'self': self.ancestors,
-                     'destination': destination.ancestors}
-        isDirect = destination in ancestors['self']
-        common = self.cousin_degree(ancestors)
-        if destination == self.root:
-            up = self.level + change - 1
-            down = "index"
-            extension = ".html"
-        else:
-            up = self.level + change - \
-                (destination.level if isDirect else common)
-            down = destination.urlform if isDirect else \
-                "/".join([ancestor.urlform for ancestor in ancestors['destination'][common:]])
-        address = (up * '../') + down + extension + fragment
-        link = '<a href="{0}">{1}</a>'.format(
-            address, template.format(buyCaps(destination.name)))
-        return (address, link)
-
-    def change_to_heading(self, text):
-        """
-        Transform '3]Blah' --> '<h2 id="blah">Blah</h2>'
-        :param text (str)
-        :return (str): an HTML heading with the id as the URL form of the name of the Page
-        """
-        try:
-            level, name = text.split(']')
+            index = word.index(pattern, index + 1)
+            yield index + 1
         except ValueError:
-            raise AttributeError(text)
-        if level == '1':
-            name = buyCaps(name)
-        url_id = urlform(re.sub(r'\(.*?\)', '', name))
-        if url_id:
-            return '<h{0} id="{1}">{2}</h{0}>\n'.format(level, url_id, name)
+            raise StopIteration
+
+
+def compare_flatnames(one, other):
+    if one.name == other.name:
+        if one.score == other.score:
+            return 0
         else:
-            return '<h{0}>{1}</h{0}>\n'.format(level, name)
-
-    def change_to_div(self, text):
-        """
-        Transform '[/d]' --> '</div>'
-            and '[d blah]\n' --> '<div class="blah">'
-        """
-        if text.startswith('/'):
-            if self.divclass and self.divclass.pop() == 'folding':
-                return '</div></label>'
-            return '</div>'
-        else:
-            divclass = text[2:-1]
-            self.divclass.append(divclass)
-            if divclass == 'folding':
-                return ('<label class="folder">'
-                        '<input type="checkbox" class="folder">'
-                        '<div class="folding">')
-            elif divclass == 'interlinear':
-                return '''<div class="interlinear">
-        <input class="version" type="radio" name="version" id="All" checked>All
-        <input class="version" type="radio" name="version" id="English">English
-        <input class="version" type="radio" name="version" id="Tinellbian">Tinellbian
-        <input class="version" type="radio" name="version" id="Transliteration">Transliteration'''
-            return '<div class="{0}">'.format(divclass)
-
-    def change_to_table(self, text):
-        """
-        Transform:
-            '''
-              [t]| table |h heading1 |hr2 heading2 |hc2 heading3
-              |h heading4 | data1 |r2 data2 |c2 data3
-              | data4 |hr2c2 heading5
-            '''
-                ==>
-            '''
-                <table>
-                  <tr>
-                    <td>table</td>
-                    <th>heading1</th>
-                    <th rowspan="2">heading2</th>
-                    <th colspan="2">heading3</th>
-                  </tr>
-                  <tr>
-                    <th>heading4</th>
-                    <td>data1</td>
-                    <td rowspan="2">data2</td>
-                    <td colspan="2">data3</td>
-                  </tr>
-                    <tr>
-                    <td>data4</td>
-                    <th rowspan="2" colspan="2">heading5</th>
-                  </tr>
-                </table>
-            '''
-        """
-        text = text[2:]
-        rows = ''.join(map(self.table_row, text.splitlines()))
-        return '<{0}>\n{1}</{0}>\n'.format('table', rows)
-
-    def table_row(self, row):
-        cells = ''.join(map(self.table_cell, row.split('|')))
-        return '<{0}>\n{1}\n</{0}>\n'.format('tr', cells)
-
-    def table_cell(self, cell):
-        if cell.startswith(' ') or cell == '':
-            form, cell = '', cell[1:]
-        else:
+            return 1 if one.score > other.score else -1
+    for s, t in zip(one.name, other.name):
+        if s != t:
             try:
-                form, cell = cell.split(' ', 1)
+                return 1 if alphabet.index(s) < alphabet.index(t) else -1
             except ValueError:
-                form, cell = cell, ''
-        heading = 'h' if 'h' in form else 'd'
-        rowcol = map(self.check_rowcol, [
-            ['rowspan', r'(?<=r)\d*', form],
-            ['colspan', r'(?<=c)\d*', form]
-        ])
-        return '<t{0}{2}{3}>\n{1}\n</t{0}>\n'.format(heading, cell, *rowcol)
-
-    def check_rowcol(self, info):
-        try:
-            return ' {0}="{1}"'.format(info.pop(0), re.search(*info).group(0))
-        except AttributeError:
-            return ''
-
-    @property
-    def title(self):
-        """
-        :return (str): its own name, suitable for HTML titles
-        """
-        # remove tags from names
-        return re.sub(r'[[<].*?[]>]', '', buyCaps(self.name))
-
-    @property
-    def category_title(self):
-        """
-        :return (str): A title of the form 'High Lulani Verbs'
-        """
-        if self.level < 2:
-            return self.title
-        else:
-            matriarch = self.ancestors[1]
-            if matriarch.name in ('Introduction', 'Appendices'):
-                return self.title
-            else:
-                return matriarch.title + ' ' + self.title
-
-    @property
-    def contents(self):
-        """
-        Markup tags in square brackets to HTML, including headings, paragraphs, tables and lists.
-        :return (str): the main contents of a Page
-        """
-        mode = ContentsMode()
-        output = ''
-        for line in self.content.split('['):
-            if line == '':
                 continue
-            elif re.match(r'\d\]', line):
-                try:
-                    heading, rest = line.split('\n', 1)
-                except ValueError:
-                    heading, rest = line, ''
-                line = self.change_to_heading(heading)
-                line += self.paragraphs(rest)
-            elif re.match(r'\/*d', line):  # start of html div
-                try:
-                    divclass, rest = line.split('\n', 1)
-                except ValueError:
-                    divclass, rest = line, ''
-                line = self.change_to_div(divclass)
-                line += self.paragraphs(rest)
-            elif line.startswith('t'):  # html table
-                line = self.change_to_table(line)
-            elif line.startswith('/t]'):
-                try:
-                    rest = line.split('\n', 1)[1]
-                except IndexError:
-                    rest = ''
-                line = self.paragraphs(rest)
-            else:
-                try:
-                    category, text = line.split(']', 1)
-                    mode.set(category)
-                    try:
-                        line = mode.replacements[category] + text
-                    except KeyError:  # something's gone wrong
-                        line = category
-                    if not mode.table():
-                        line = line.replace(
-                            '</tr><tr><td>',
-                            '<' + mode.delimiter + '>\n'
-                        )
-                    line = re.sub('\n$', '</' + mode.delimiter + '>', line)
-                    linebreak = '</d>\n<d>'.replace('d', mode.delimiter)
-                    line = linebreak.join(line.splitlines()) + '\n'
-                except ValueError:
-                    pass
-            output += line
-        return output
+    else:
+        return 1 if len(one.name) < len(other.name) else -1
 
-    def paragraphs(self, text):
-        return '<p>{0}</p>\n'.format('</p>\n<p>'.join(text.splitlines())) if text else ''
 
-    @property
-    def stylesheet_and_icon(self):
-        """
-        :return (str): relative HTML links to the stylesheet and icon for self.
-        :class: Page:
-        """
-        output = '''<link rel="stylesheet" type="text/css" href="{0}">
-                    <link rel="stylesheet" type="text/css" href="{1}">
-                    <link rel="icon" type="image/png" href="{2}">'''.format(
-            self.hyperlink('basic_style.css', needAnchorTags=False),
-            self.hyperlink('style.css', needAnchorTags=False),
-            self.hyperlink('favicon.png', needAnchorTags=False))
-        return output
+def folder(root, location):
+    return '/'.join(iterfolder(root, location))
 
-    @property
-    def search_script(self):
-        """
-        :return (str): javascript function for moving to search page if required, using relative links
-        """
-        output = '''<script type="text/javascript">
-        if (window.location.href.indexOf("?") != -1) {{
-            window.location.href = "{0}" +
-            window.location.href.substring(window.location.href.indexOf("?")) + "&andOr=and";
-        }}
-    </script>'''.format(self.hyperlink('search.html', needAnchorTags=False))
-        return output
 
-    @property
-    def toc(self):
-        """
-        :return (str): a table of contents in HTML
-        """
-        if self.level:  # self not root nor leaf
-            return "".join(['<p>{0}</p>\n'.format(self.hyperlink(child)) for child in self.children])
+def iterfolder(root, location):
+    ancestors = node.ancestors(root, location)
+    ancestors.next()
+    for ancestor in ancestors:
+        yield urlform(node.name(root, ancestor))
+    if len(location) and not node.is_leaf(root, location):
+        yield urlform(node.name(root, location))
+    raise StopIteration
+
+
+def link(root, location, extend=True):
+    link = folder(root, location)
+    entry = node.find(root, location)
+    url = '{0}{1}'.format(
+        url(root, location) if len(entry['children']) == 0 else 'index',
+        '.html' if extend else '')
+    return '{0}/{1}'.format(link, url) if link else url
+
+
+def hyperlink(root, source, destination, template='{0}', anchor_tags=True):
+    if list(destination) == list(source):
+        return template.format(node.name(root, destination))
+    try:
+        address, link = _direct(root, source, destination, template)
+    except AttributeError:  # destination is a string
+        address, link = _indirect(root, source, destination, template)
+    return link if anchor_tags else address
+
+
+def _indirect(root, source, destination, template):
+    up = len(source) + int(node.has_children(root, source)) - 1
+    address = (up * '../') + destination
+    link = '<a href="{0}">{1}</a>'.format(address, template.format(destination))
+    return address, link
+
+
+def _direct(root, source, destination, template):
+    change = int(not node.is_leaf(root, source))
+    if not len(destination):
+        up = len(source) + change - 1
+        down = 'index'
+        extension = '.html'
+    else:
+        if node.startswith(destination, source):
+            up = len(source) + change - len(destination)
+            down = node.url(root, destination)
         else:
-            return ''
+            up = len(source) + change - node.cousin_degree(source, destination)
+            down = '/'.join([node.url(root, ancestor) for ancestor in
+                    node.unshared_ancestors(root, destination, source)])
+        extension = '.html' if node.is_leaf(root, destination) else '/index.html'
+    address = (up * '../') + down + extension
+    link = '<a href="{0}">{1}</a>'.format(address,
+                        template.format(buyCaps(node.name(root, destination))))
+    return address, link
 
-    @property
-    def links(self):
-        """
-        :return (str):
-        """
-        output = '''<label>
-                    <input type="checkbox" class="menu">
-                    <ul><li{0}>{1}</li>
-                <div class="javascript">
-                  <form id="search">
-                    <li class="search">
-                      <input type="text" name="term"></input> <button type="submit">Search</button>
-                    </li>
-                  </form>
-                </div>
-                $links$
-                </ul></label>'''.format(' class="normal"' if self == self.root else '',
-                                self.hyperlink(self.root))
-        return output
 
-    @property
-    def family_links(self):
-        links = ''
-        level = 0
-        family = self.family
-        for page in self.genealogy:
-            if page in family:
-                old_level = level
-                level = page.level
-                if level > old_level:
-                    links += '<ul class=\"level-{0}\">'.format(str(level))
-                elif level < old_level:
-                    links += (old_level - level) * '</ul>\n'
-                if page == self:
-                    links += '<li class="normal">{0}</li>\n'.format(
-                        self.hyperlink(page))
-                else:
-                    links += '<li>{0}</li>\n'.format(self.hyperlink(page))
-        links += (level) * '</ul>\n'
-        return self.links.replace('$links$', links)
+def change_to_heading(text):
+    try:
+        level, name = text.split(']')
+    except ValueError:
+        raise AttributeError(text)
+    if level == '1':
+        name = buyCaps(name)
+    url_id = urlform(re.sub(r'\(.*?\)', '', name))
+    if url_id:
+        return '<h{0} id="{1}">{2}</h{0}>\n'.format(level, url_id, name)
+    else:
+        return '<h{0}>{1}</h{0}>\n'.format(level, name)
 
-    @property
-    def cousin_links(self):
-        links = ''
-        level = 0
-        family = self.family
-        for page in self.genealogy:
-            if page in family:
-                old_level = level
-                level = page.level
-                if level > old_level:
-                    links += '<ul class="level-{0}">'.format(str(level))
-                elif level < old_level:
-                    links += (old_level - level) * '</ul>\n'
-                if page == self:
-                    links += '<li class="normal">{0}</li>\n'.format(
-                        self.hyperlink(page))
-                else:
-                    links += '<li>{0}</li>\n'.format(self.hyperlink(page))
-        links += (level + 1) * '</ul>\n' + \
-            '<p>Other Versions:</p>\n<ul class="level-1">'
-        categories = [node.name for node in self.elders]
-        cousins = self.cousins
-        for cousin, category in zip(cousins, categories):
-            if cousin and cousin is not self:
-                links += '<li>{0}</li>\n'.format(
-                    self.hyperlink(cousin, category))
-        links += '</ul><ul>'
-        return self.links.replace('$links$', links)
 
-    @property
-    def elder_links(self):
-        links = '<ul>'
-        for elder in self.elders:
-            links += '<li{0}>{1}</li>\n'.format(
-                (' class="normal"' if elder in [self, self.parent] else ''), self.hyperlink(elder))
-        return self.links.replace('$links$', links + '</ul>')
+def change_to_div(text, divclass=None):
+    divclass = divclass or []
+    if text.startswith('/'):
+        if divclass and divclass.pop() == 'folding':
+            return '</div></label>'
+        return '</div>'
+    else:
+        divclass.append(text[2:-1])
+        if divclass[-1] == 'folding':
+            return ('<label class="folder">'
+                    '<input type="checkbox" class="folder">'
+                    '<div class="folding">')
+        elif divclass[-1] == 'interlinear':
+            return '''<div class="interlinear">
+    <input class="version" type="radio" name="version" id="All" checked>All
+    <input class="version" type="radio" name="version" id="English">English
+    <input class="version" type="radio" name="version" id="Tinellbian">Tinellbian
+    <input class="version" type="radio" name="version" id="Transliteration">Transliteration'''
+        return '<div class="{0}">'.format(divclass[-1])
 
-    @property
-    def nav_footer(self):
-        div = '<div>\n{0}\n</div>\n'
+
+def change_to_table(text):
+    text = text[2:]
+    rows = ''.join(map(table_row, text.splitlines()))
+    return '<{0}>\n{1}</{0}>\n'.format('table', rows)
+
+
+def table_row(row):
+    cells = ''.join(map(table_cell, row.split('|')))
+    return '<{0}>\n{1}\n</{0}>\n'.format('tr', cells)
+
+
+def table_cell(cell):
+    if cell.startswith(' ') or cell == '':
+        form, cell = '', cell[1:]
+    else:
         try:
-            output = div.format(self.hyperlink(
-                self.previous, '&larr; Previous page'))
-        except IndexError:
-            output = div.format(
-                '<a href="http://www.tinellb.com">&uarr; Go to Main Page</a>')
-        try:
-            output += div.format(self.hyperlink(self.next_node,
-                                                'Next page &rarr;'))
-        except IndexError:
-            output += div.format(self.hyperlink(self.root,
-                                                'Return to Menu &uarr;'))
-        return output
-
-    @property
-    def date(self):
-        try:
-            return datetime.strptime(
-                max(re.findall(r'(?<=&date=)\d{8}', self.content)), '%Y%m%d')
+            form, cell = cell.split(' ', 1)
         except ValueError:
-            return ''
+            form, cell = cell, ''
+    heading = 'h' if 'h' in form else 'd'
+    rowcol = map(check_rowcol, [
+        ['rowspan', r'(?<=r)\d*', form],
+        ['colspan', r'(?<=c)\d*', form]
+    ])
+    return '<t{0}{2}{3}>\n{1}\n</t{0}>\n'.format(heading, cell, *rowcol)
 
-    @property
-    def copyright(self):
-        date = self.date
-        if date == '':
-            return date
-        suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else [
-            "st", "nd", "rd"][date.day % 10 - 1]
-        output = datetime.strftime(
-            date, '<span class="no-breaks">&copy;%Y <a href="http://www.tinellb.com/about.html">Ryan Eakins</a>.</span> <span class="no-breaks">Last updated: %A, %B %#d' + suffix + ', %Y.')
-        return output
 
-    def publish(self, template=None):
-        """
-        Create / modify an .html file.
-        :param template (Template): the basic template to be published against
-        :param template (str): the basic template to be published against
-        """
+def check_rowcol(info):
+    try:
+        return ' {0}="{1}"'.format(info.pop(0), re.search(*info).group(0))
+    except AttributeError:
+        return ''
+
+
+def title(root, location):
+    return remove(r'[[<].*?[]>]', [node.name(root, location)])[0]
+
+
+def category_title(root, location):
+    if len(location) < 2:
+        return title(root, location)
+    else:
+        if node.name(root, location[:1]) == 'Introduction':
+            return title(root, location)
+        else:
+            return title(root, location[:1]) + ' ' + title(root, location)
+
+
+def contents(text):
+    mode = [None]
+    return [convert(line, mode) for line in text]
+
+section_mark = {'n': '<ol>',
+                '/n': '</ol>',
+                'l': '<ul>',
+                '/l': '</ul>',
+                'e': '<p class="example_no_lines">',
+                'f': '<p class="example">'}
+
+delimiters = {'n': 'li', 'l': 'li'}
+
+def convert(line, mode):
+    delimiter = 'p'
+    marks = True
+    try:
+        category, rest = line.split('\n', 1)
+    except ValueError:
+        category, rest = '', line
+    if re.match(r'\d\]', line):
+        category = change_to_heading(category)
+    elif re.match(r'\/*d', line):
+        category = change_to_div(category)
+    elif line.startswith('t'):
+        category = change_to_table(line)
+    elif line.startswith('/t]'):
+        category = ''
+    else:
         try:
-            page = template.template
-        except AttributeError:
-            # template is a string or None
-            page = template or default.template
-        for (section, function) in [
-            ('{title}', 'title'),
-            ('{stylesheet}', 'stylesheet_and_icon'),
-            ('{search-script}', 'search_script'),
-            ('{content}', 'contents'),
-            ('{toc}', 'toc'),
-            ('{family-links}', 'family_links'),
-            ('{cousin-links}', 'cousin_links'),
-            ('{elder-links}', 'elder_links'),
-            ('{nav-footer}', 'nav_footer'),
-            ('{copyright}', 'copyright'),
-            ('{category-title}', 'category_title')
-        ]:
-            if page.count(section):
-                page = page.replace(section, getattr(self, function))
-        with ignored(os.error):
-            os.makedirs(self.folder)
-        with open(self.link(), 'w') as f:
-            f.write(page)
-        self.newpage = False
+            category, remainder = category.split(']', 1)
+            if category.startswith('/'):
+                mode.pop()
+            elif category in ('n', 'l'):
+                mode.append(category)
+            elif category in ('e', 'f'):
+                marks = False
+            delimiter = delimiters.get(mode[-1], 'p')
+            category = section_mark.get(category, '<p>')
+        except ValueError:
+            category, remainder = '', category
+        rest = remainder + '\n' + rest
+    try:
+        return category + '\n' + paragraphs(rest, delimiter, marks)
+    except TypeError:
+        raise TypeError(category)
 
-    def delete_htmlfile(self):
-        with ignored(WindowsError):
-            os.remove(self.link())
 
-    def analyse(self, markdown=None):
-        markdown = markdown or Markdown()
-        wordlist = {}
-        content = self.content
-        """remove tags, and items between some tags"""
-        content = re.sub(
-            r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
-        """remove datestamps"""
-        content = re.sub(r'&date=\d{8}', '', content)
-        """change punctuation to paragraph marks, so that splitlines works"""
-        content = re.sub(r'[!?.|]', '\n', content)
-        """change punctuation to space"""
-        content = re.sub(r'[_()]', ' ', content)
-        """remove hidden text"""
-        content = re.sub(r'\x05.*?(\x06\x06*)', '', content)
-        """remove bells, spaces at the beginnings and end of lines, duplicate spaces and end-lines"""
-        content = re.sub(
-            r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[\x07,:]', '', content)
-        """remove duplicate end-lines"""
-        content = re.sub(r'\n+(?=\n)', '', content)
-        """remove tags in square brackets"""
-        content = re.sub(r'\[.*?\]', '', content)
-        content = buyCaps(content)
-        lines = content.splitlines()
-        content = markdown.to_markdown(content).lower()
-        """change punctuation, and tags in square brackets, into spaces"""
-        content = re.sub(
-            r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|&nbsp', ' ', content)
-        """make glottal stops lower case where appropriate"""
-        content = re.sub(r"(?<=[ \n])''", "'", content)
-        for number, line in enumerate(content.splitlines()):
-            for word in line.split():
-                try:
-                    if wordlist[word][-1] != number:
-                        wordlist[word].append(number)
-                except KeyError:
-                    wordlist[word] = [number]
-        return Analysis(wordlist, lines)
+def paragraphs(text, delimiter='p', marks=True):
+    text = re.sub(r'^\n|\n$', '', text)
+    if text == '\n' or text == '':
+        return ''
+    if marks:
+        return '<{{0}}>{0}</{{0}}>'.format(
+            '</{0}>\n<{0}>'.join(text.splitlines())).format(delimiter)
+    return '{0}</{{0}}>'.format(
+        '</{0}>\n<{0}>'.join(text.splitlines())).format(delimiter)
+
+
+def stylesheet_and_icon(root, source):
+    return ('<link rel="stylesheet" type="text/css" href="{0}">\n'
+            '<link rel="stylesheet" type="text/css" href="{1}">\n'
+            '<link rel="icon" type="image/png" href="{2}">\n').format(
+                *[hyperlink(root, source, destination) for destination in [
+                        'basic_style.css', 'style.css', 'favicon.png']])
+
+
+def search_script(root, source):
+    return ('<script type="text/javascript">'
+                'if (window.location.href.indexOf("?") != -1) {{'
+                'window.location.href = "{0}" +'
+                'window.location.href.substring('
+                'window.location.href.indexOf("?")) + "&andOr=and";'
+                '}}'
+                '</script>').format(hyperlink('search.html', anchor_tags=False))
+
+
+def toc(root, location):
+    children = node.num_children(root, location)
+    if children and len(source):  # self not root nor leaf
+        return ''.join(['<p>{0}</p>\n'.format(hyperlink(root, location, child))
+            for child in xrange(children)])
+    else:
+        return ''
+
+
+def links(root, location):
+    return ('<label>\n'
+            '  <input type="checkbox" class="menu">\n'
+            '  <ul>\n  <li{0}>{1}</li>\n'
+            '    <div class="javascript">\n'
+            '      <form id="search">\n'
+            '        <li class="search">\n'
+            '          <input type="text" name="term"></input>\n'
+            '          <button type="submit">Search</button>\n'
+            '        </li>\n'
+            '      </form>\n'
+            '    </div>\n'
+            '  {{0}}'
+            '</ul></label>').format(
+                ' class="normal"' if not len(location) else '',
+                hyperlink(root, location, []))
+
+
+def family_links(root, location):
+    link_array = ''
+    level = 1
+    for page in node.family(root, location):
+        old_level = level
+        level = len(page)
+        if level > old_level:
+            link_array += '<ul class="level-{0}">'.format(str(level))
+        elif level < old_level:
+            link_array += (old_level - level) * '</ul>\n'
+        if page == tuple(location):
+            link_array += '<li class="normal">{0}</li>\n'.format(
+                node.name(root, location))
+        else:
+            link_array += '<li>{0}</li>\n'.format(
+                hyperlink(root, location, page))
+    link_array += (level) * '</ul>\n'
+    return links(root, location).format(link_array)
+
+
+def elder_links(root, location):
+    return links(root, location).format(matriarch_links(root, location))
+
+
+def matriarch_links(root, location):
+    return '<ul>\n{0}\n</ul>'.format('\n'.join([
+                    '<li{0}>{1}</li>'.format(
+                    ' class="normal"' if matriarch == (location[1],) else '',
+                            hyperlink(root, location, matriarch))
+                                    for matriarch in node.matriarchs(root, location)]))
+
+
+def nav_footer(root, location):
+    div = '<div>\n{0}\n</div>\n'
+    try:
+
+        output = div.format(hyperlink(root, location,
+                node.previous(root, location[:]), '&larr; Previous page'))
+    except IndexError:
+        output = div.format(
+            '<a href="http://www.tinellb.com">&uarr; Go to Main Page</a>')
+    try:
+        output += div.format(hyperlink(root, location,
+                node.next(root, location[:]), 'Next page &rarr;'))
+    except IndexError:
+        output += div.format(hyperlink(root, location,
+                    [], 'Return to Menu &uarr;'))
+    return output
+
+
+def date(root, location):
+    try:
+        return datetime.strptime(node.date(root, location), '%Y-%m-%d')
+    except ValueError:
+        return datetime.now()
+
+
+def copyright(root, location):
+    cdate = date(root, location)
+    suffix = "th" if 4 <= cdate.day <= 20 or 24 <= cdate.day <= 30 else [
+        "st", "nd", "rd"][cdate.day % 10 - 1]
+    return datetime.strftime(
+        cdate, ('<span class="no-breaks">&copy;%Y '
+               '<a href="http://www.tinellb.com/about.html">'
+               'Ryan Eakins</a>.</span> <span class="no-breaks">'
+               'Last updated: %A, %B %#d' + suffix + ', %Y.'))
+
+
+def publish(root, location=[], template=None):
+    page = template or default.template
+    for (section, function) in [
+        ('{title}', 'title'),
+        ('{stylesheet}', 'stylesheet_and_icon'),
+        ('{search-script}', 'search_script'),
+        ('{content}', 'contents'),
+        ('{toc}', 'toc'),
+        ('{family-links}', 'family_links'),
+        ('{elder-links}', 'elder_links'),
+        ('{nav-footer}', 'nav_footer'),
+        ('{copyright}', 'copyright'),
+        ('{category-title}', 'category_title')
+    ]:
+        if page.count(section):
+            page = page.replace(section, getattr(self, function))
+
+
+def delete_htmlfile(root, location):
+    with ignored(WindowsError):
+        os.remove_text(link(root, location))

@@ -1,7 +1,5 @@
 import json
 from cwsmeagol.site.site import Site
-from cwsmeagol.site.page import Page
-from cwsmeagol.editor.files import Files
 from datetime import datetime
 
 class Dictionary(Site):

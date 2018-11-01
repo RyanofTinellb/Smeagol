@@ -5,11 +5,6 @@ import page
 from cwsmeagol.translation import Markdown, Translator
 from cwsmeagol.utils import *
 
-def dump(dictionary, filename):
-    if filename:
-        with open(filename, 'w') as f:
-            json.dump(dictionary, f, indent=2)
-
 class Site(object):
     def __init__(self, destination=None, name=None, files=None):
         self.name = name
@@ -95,25 +90,44 @@ class Site(object):
             raise StopIteration
         return node.find(self.root, self.current)
 
-    def __getitem__(self, page):
+    def iteritems(self):
+        current = []
+        yield current, self.root
+        while True:
+            try:
+                node.next(self.root, current)
+            except IndexError:
+                raise StopIteration
+            yield current, node.find(self.root, current)
+
+    def __getitem__(self, entry):
         location = []
         count = 0
         try:
-            while node.find(self.root, location)['name'] != page != count:
+            while node.name(self.root, location) != entry != count:
                 node.next(self.root, location)
                 count += 1
         except IndexError:
-            raise KeyError(page)
-        return node.find(self.root, location)
+            raise KeyError(entry)
+        return location
+
+    def refresh_flatnames(self):
+        for entry in self:
+            entry['flatname'] = page.flatname(entry['name'])
+
+    def refresh_hyperlinks(self):
+        for location, entry in self.iteritems():
+            entry['hyperlink'] = page.link(self.root, location, extend=False)
 
     def publish(self):
         errors = 0
         errorstring = ''
-        for node in self:
+        for location, node in self.iteritems():
             try:
-                page.publish(self.root, self.current, self.template)
+                dump(page.publish(self.root, location, template=self.template),
+                        page.hyperlink(self.root, location))
             except:
-                errorstring += 'Error in ' + node['name'] + '\n'
+                errorstring += 'Error in {0}\n'.format(node['name'])
                 errors += 1
         self.update_searchindex()
         self.update_source()

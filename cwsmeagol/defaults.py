@@ -6,6 +6,7 @@ _ | &under; | <br>
 ' | &squot; | <br>
 &aacute; | (a | <br>
 &eth; | (d | <br>
+&thorn; | (t | <br>
 &eacute; | (e | <br>
 &iacute; | (i | <br>
 &oacute; | (o | <br>

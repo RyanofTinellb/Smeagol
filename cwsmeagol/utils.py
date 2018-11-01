@@ -14,16 +14,17 @@ def ignored(*exceptions):
 
 @contextmanager
 def conversion(converter, function):
-    """
-    Ensures a converter exists.
-    Returns identity function if not.
-    :param converter (object):
-    :param function (str):
-    """
     try:
         yield getattr(converter, function)
     except AttributeError:
         yield lambda x: x
+    # except:
+    #     raise
+
+def dump(dictionary, filename):
+    if filename:
+        with open(filename, 'w') as f:
+            json.dump(dictionary, f, indent=2)
 
 def buyCaps(word):
     return re.sub(r'[$](.)', _buy, word)
@@ -37,23 +38,29 @@ def sellCaps(word):
 def _sell(regex):
     return '$' + regex.group(1).lower()
 
+def change_text(item, replacement, text):
+    text[0] = re.sub(item, replacement, text[0])
+
+def remove_text(item, text):
+    change_text(item, '', text)
+
 url_markdown = Markdown()
 
 def urlform(text, markdown=None):
     markdown = markdown or url_markdown
-    name = text.lower()
+    name = [text.lower()]
     safe_punctuation = '\'._+!(),'
     # remove safe punctuations that should only be used to encode non-ascii characters
-    name = re.sub(r'[{0}]'.format(safe_punctuation), '', name)
+    remove_text(r'[{0}]'.format(safe_punctuation), name)
     with conversion(markdown, 'to_markdown') as converter:
-        name = converter(name)
+        name[0] = converter(name[0])
     # remove extraneous initial apostrophes
-    name = re.sub(r"^''+", "'", name)
+    change_text(r"^''+", "'", name)
     # remove text within tags
-    name = re.sub(r'<(div|ipa).*?\1>', '', name)
+    remove_text(r'<(div|ipa).*?\1>', name)
     # remove tags, spaces and punctuation
-    name = re.sub(r'<.*?>|[/*;: ]', '', name)
-    name = urllib.quote(name, safe_punctuation + '$')
+    remove_text(r'<.*?>|[/*;: ]', name)
+    name = urllib.quote(name[0], safe_punctuation + '$')
     return name
 
 def add_datestamp(text):
