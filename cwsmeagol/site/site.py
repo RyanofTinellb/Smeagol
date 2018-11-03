@@ -1,7 +1,6 @@
 import os
 import json
-import node
-import page
+from page import Page
 from cwsmeagol.translation import Markdown, Translator
 from cwsmeagol.utils import *
 
@@ -76,66 +75,52 @@ class Site(object):
             os.chdir(destination)
 
     def __iter__(self):
-        self.current = None
+        self.current = Page(self.tree, [])
         return self
 
     def next(self):
-        if self.current is None:
-            self.current = []
-            return self.tree
         try:
-            node.next(self.tree, self.current)
+            self.current.next()
         except IndexError:
-            self.current = None
+            self.__iter__()
             raise StopIteration
-        return node.find(self.tree, self.current)
-
-    def iteritems(self):
-        current = []
-        yield current, self.tree
-        while True:
-            try:
-                node.next(self.tree, current)
-            except IndexError:
-                raise StopIteration
-            yield current, node.find(self.tree, current)
+        return self.current.find()
 
     def __getitem__(self, entry):
-        location = []
+        page = Page(self.tree, [])
         count = 0
         try:
-            while node.name(self.tree, location) != entry != count:
-                node.next(self.tree, location)
+            while page.name != entry != count:
+                page.next()
                 count += 1
         except IndexError:
             raise KeyError(entry)
-        return location
+        return page
 
     def refresh_flatnames(self):
-        for entry in self:
-            entry['flatname'] = page.flatname(entry['name'])
+        for page in self:
+            page.refresh_flatname()
 
     def refresh_hyperlinks(self):
-        for location, entry in self.iteritems():
-            entry['hyperlink'] = page.link(self.tree, location)
+        for page in self:
+            page.refresh_hyperlink()
 
     def publish(self):
         errors = 0
         errorstring = ''
-        for location, node in self.iteritems():
+        for page in self:
             try:
-                dump(page.publish(self.tree, location, template=self.template),
-                        page.hyperlink(self.tree, location))
+                dump(page.publish(template=self.template), page.link)
             except:
-                errorstring += 'Error in {0}\n'.format(node['name'])
+                errorstring += 'Error in {0}\n'.format(page.name)
                 errors += 1
         self.update_searchindex()
         self.update_source()
-        return '{2}{0} error{3}\n{1}'.format(
-                errors,
-                '-' * 10,
+        return '{0}{1} error{2}\n{3}'.format(
                 errorstring,
-                '' if errors == 1 else 's'
+                errors,
+                '' if errors == 1 else 's',
+                '-' * 10
             )
 
     def update_source(self):
@@ -155,7 +140,7 @@ class Site(object):
             # line numbers in each Page are incremented by the current total number of sentences
             base = len(sentences)
             # analyse the Page
-            analysis = page.analyse('['.join(entry['text']))
+            analysis = page.analysis
             # add results to appropriate lists and dictionaries
             new_words = analysis['words']
             sentences += analysis['sentences']
