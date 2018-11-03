@@ -5,12 +5,14 @@ from contextlib import contextmanager
 from datetime import datetime
 from translation.markdown import Markdown
 
+
 @contextmanager
 def ignored(*exceptions):
     try:
         yield
     except exceptions:
         pass
+
 
 @contextmanager
 def conversion(converter, function):
@@ -21,30 +23,54 @@ def conversion(converter, function):
     # except:
     #     raise
 
+
 def dump(dictionary, filename):
     if filename:
         with open(filename, 'w') as f:
             json.dump(dictionary, f, indent=2)
 
+
 def buyCaps(word):
     return re.sub(r'[$](.)', _buy, word)
+
 
 def _buy(regex):
     return regex.group(1).capitalize()
 
+
 def sellCaps(word):
     return re.sub(r'([A-Z])', _sell, word)
+
 
 def _sell(regex):
     return '$' + regex.group(1).lower()
 
+
 def change_text(item, replacement, text):
     text[0] = re.sub(item, replacement, text[0])
+
 
 def remove_text(item, text):
     change_text(item, '', text)
 
+
+def score_pattern(word, pattern, radix, points):
+    return sum([points * radix**index
+                for index in pattern_indices(word, pattern)])
+
+
+def pattern_indices(word, pattern):
+    index = -1
+    while True:
+        try:
+            index = word.index(pattern, index + 1)
+            yield index + 1
+        except ValueError:
+            raise StopIteration
+
+
 url_markdown = Markdown()
+
 
 def urlform(text, markdown=None):
     markdown = markdown or url_markdown
@@ -63,12 +89,15 @@ def urlform(text, markdown=None):
     name = urllib.quote(name[0], safe_punctuation + '$')
     return name
 
+
 def add_datestamp(text):
     text += datetime.strftime(datetime.today(), '&date=%Y%m%d')
     return text
 
+
 def remove_datestamp(text):
     return re.sub(r'&date=\d{8}', '', text)
+
 
 def replace_datestamp(text):
     return add_datestamp(remove_datestamp(text))

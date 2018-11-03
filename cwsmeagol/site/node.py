@@ -1,5 +1,5 @@
 from itertools import chain
-from cwsmeagol.utils import urlform
+
 
 def unique(iter):
     old = Node(None, None)
@@ -8,17 +8,11 @@ def unique(iter):
             yield k
         old = k
 
+
 class Node(object):
     def __init__(self, root, location):
-        self.root = root
+        self.tree = root
         self.location = location
-
-    def __getattr__(self, attr):
-        if attr in ('name', 'date', 'text', 'children', 'hyperlink', 'flatname'):
-            return self.find()[attr]
-        else:
-            raise AttributeError("{0} instance has no attribute '{1}'".format(
-                    self.__class__.__name__, attr))
 
     def __repr__(self):
         return 'Node: location = {0}'.format(self.location)
@@ -41,17 +35,24 @@ class Node(object):
     def __ne__(self, other):
         return self.location <> other.location
 
+    def __len__(self):
+        return len(self.location)
+
     def new(self, location):
-        return type(self)(self.root, location[:])
+        try:
+            return type(self)(self.tree, location[:])
+        except TypeError:
+            return type(self)(self.tree, None)
 
     def find(self, node=None, location=None):
-        node = node or self.root
+        node = node or self.tree
         location = location or self.location
         if len(location) == 1:
             return node['children'][location[0]]
         elif len(location) > 1:
             try:
-                return self.find(node['children'][location[0]], location[1:])
+                return self.find(node['children'][location[0]],
+                                 location[1:])
             except TypeError:
                 raise TypeError(type(node))
         else:
@@ -85,6 +86,10 @@ class Node(object):
     def is_leaf(self):
         return not self.has_children
 
+    @property
+    def is_root(self):
+        return len(self.location) == 0
+
     def next(self, _seen_children=False):
         if not _seen_children and self.has_children:
             self.location += [0]
@@ -93,11 +98,23 @@ class Node(object):
             try:
                 return self.next_sister()
             except IndexError:
-                self.location.pop()
-                return self.next(_seen_children=True)
+                try:
+                    self.location.pop()
+                    return self.next(_seen_children=True)
+                except IndexError:
+                    raise StopIteration
+
+    @property
+    def successor(self):
+        return self.new(self.location).next()
+
+    @property
+    def predecessor(self):
+        return self.new(self.location).previous()
 
     def previous(self):
         try:
+            self.previous_sister()
             self._last_grandchild()
             return self
         except IndexError:
@@ -108,40 +125,52 @@ class Node(object):
                 raise IndexError('No more nodes')
 
     def _last_grandchild(self):
-        children = num_children()
+        children = self.num_children
         if children:
             self.location += [children - 1]
             self._last_grandchild()
 
-    def cousin_degree(self, destination):
+    def distance(self, destination):
         try:
-            return [i != j for i, j in
-                    zip(self.location, destination.location)].index(True) + 1
+            return 1 + [i != j for i, j in
+                        zip(self.location, destination.location)].index(True)
         except ValueError:
             return min(map(len, [self.location, destination.location]))
 
     def startswith(self, destination):
-        return list(self.location[:len(destination.location)]
-                                            ) == list(destination.location)
+        tail = self.location[:destination.level]
+        return destination == self.new(tail)
+
+    @property
+    def root(self):
+        return self.new([])
+
+    @property
+    def parent(self):
+        return self.new(self.location[:-1])
 
     @property
     def ancestors(self):
         for i in xrange(len(self.location) - 1):
             yield self.new(self.location[:i + 1])
 
-    def __sub__(self, other):
-        return self.unshared_ancestors(other)
-
     def unshared_ancestors(self, other):
-        source, destination = [set(location.ancestors())
-                    for location in (self, other)]
-        for ancestor in sorted(source - destination):
+        source, destination = [set(location.ancestors)
+                               for location in (self, other)]
+        level = lambda node: node.level
+        for ancestor in sorted(source - destination, key=level):
             yield ancestor
         yield self
+        if self.has_children:
+            yield self.new(None)
+
+    @property
+    def matriarch(self):
+        return self.new(self.location[0])
 
     @property
     def matriarchs(self):
-        for i, _ in enumerate(self.root['children']):
+        for i, _ in enumerate(self.tree['children']):
             yield self.new([i])
         else:
             raise StopIteration
@@ -159,6 +188,11 @@ class Node(object):
         for ancestor in self.ancestors:
             for sister in ancestor.sisters:
                 yield self.new(sister.location)
+
+    @property
+    def daughters(self):
+        for child in xrange(self.num_children):
+            return self.new(self.location + [child])
 
     @property
     def descendants(self):
@@ -180,9 +214,5 @@ class Node(object):
     @property
     def family(self):
         for relative in self.reunion(
-                    self.descendants, self.aunts, self.sisters):
+                self.descendants, self.aunts, self.sisters):
             yield relative
-
-    @property
-    def url(self):
-        return urlform(self.name)

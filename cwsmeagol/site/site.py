@@ -27,9 +27,9 @@ class Site(object):
     def load_site(self):
         if self.source:
             with open(self.source) as source:
-                self.root = json.load(source)
+                self.tree = json.load(source)
         else:
-            self.root = dict(
+            self.tree = dict(
                 date=str(datetime.today()),
                 text='',
                 hyperlink='index.html',
@@ -82,30 +82,30 @@ class Site(object):
     def next(self):
         if self.current is None:
             self.current = []
-            return self.root
+            return self.tree
         try:
-            node.next(self.root, self.current)
+            node.next(self.tree, self.current)
         except IndexError:
             self.current = None
             raise StopIteration
-        return node.find(self.root, self.current)
+        return node.find(self.tree, self.current)
 
     def iteritems(self):
         current = []
-        yield current, self.root
+        yield current, self.tree
         while True:
             try:
-                node.next(self.root, current)
+                node.next(self.tree, current)
             except IndexError:
                 raise StopIteration
-            yield current, node.find(self.root, current)
+            yield current, node.find(self.tree, current)
 
     def __getitem__(self, entry):
         location = []
         count = 0
         try:
-            while node.name(self.root, location) != entry != count:
-                node.next(self.root, location)
+            while node.name(self.tree, location) != entry != count:
+                node.next(self.tree, location)
                 count += 1
         except IndexError:
             raise KeyError(entry)
@@ -117,15 +117,15 @@ class Site(object):
 
     def refresh_hyperlinks(self):
         for location, entry in self.iteritems():
-            entry['hyperlink'] = page.link(self.root, location, extend=False)
+            entry['hyperlink'] = page.link(self.tree, location)
 
     def publish(self):
         errors = 0
         errorstring = ''
         for location, node in self.iteritems():
             try:
-                dump(page.publish(self.root, location, template=self.template),
-                        page.hyperlink(self.root, location))
+                dump(page.publish(self.tree, location, template=self.template),
+                        page.hyperlink(self.tree, location))
             except:
                 errorstring += 'Error in {0}\n'.format(node['name'])
                 errors += 1
@@ -139,7 +139,7 @@ class Site(object):
             )
 
     def update_source(self):
-        dump(self.root, self.source)
+        dump(self.tree, self.source)
 
     def update_searchindex(self):
         dump(self.analysis, self.searchindex)
