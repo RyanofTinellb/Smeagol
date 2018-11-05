@@ -25,16 +25,15 @@ class Page(Node):
                 return self.find()['flatname'][key]
             except KeyError:
                 self.refresh_flatname()
-                return self.__getattr__(attr)
+                return getattr(self, attr)
         elif attr is 'link':
             try:
                 return self.find()['hyperlink']
             except KeyError:
                 self.refresh_hyperlink()
-                return self.__getattr__(attr)
+                return getattr(self, attr)
         else:
-            raise AttributeError("{0} instance has no attribute '{1}'".format(
-                self.__class__.__name__, attr))
+            missing_attribute(Page, self, attr)
 
     def refresh_flatname(self):
         self.find()['flatname'] = self._flatname

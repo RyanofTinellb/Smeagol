@@ -51,8 +51,7 @@ class Site(object):
         if attr in {'source', 'template', 'template_file', 'searchindex'}:
             return self.files[attr]
         else:
-            raise AttributeError("{0} instance has no attribute '{1}'".format(
-                    self.__class__.__name__, attr))
+            missing_attribute(Site, self, attr)
 
     def __setattr__(self, attr, value):
         if attr in {'source', 'template', 'template_file', 'searchindex'}:

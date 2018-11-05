@@ -1,54 +1,37 @@
-import Tkinter as Tk
+import re
 import tkFont
+import Tkinter as Tk
+from ttk import Combobox
 from itertools import izip
-from cwsmeagol.utils import ignored
+from cwsmeagol.translation import *
+from cwsmeagol.utils import ignored, missing_attribute, conversion
 
 
 class Editor(Tk.Frame, object):
     def __init__(self, master=None):
         super(Editor, self).__init__(master)
-        self.headings = 2
-        self.textboxes = 1
-        self.buttonframe = Tk.Frame(master)
-        self.headingframe = Tk.Frame(self.buttonframe)
+        self.sidebar = Tk.Frame(master)
         self.textframe = Tk.Frame(master)
         self.row = 0
         self.font = tkFont.Font(family='Calibri', size=18)
+        self.languagevar = Tk.StringVar()
+        self.language = 'en: English'
+        self.markdown = Markdown()
+        self.randomwords = RandomWords()
+        self.translator = Translator(self.language)
         self.top = self.winfo_toplevel()
         self.ready()
 
     def ready(self):
-        for obj in ['headings', 'menus', 'labels', 'radios', 'buttons', 'textboxes']:
+        objs = ['menus', 'labels', 'option_menu', 'textbox']
+        for obj in objs:
             getattr(self, 'ready_' + obj)()
         self.place_widgets()
         self.top.state('zoomed')
 
-    def ready_headings(self):
-        master = self.headingframe
-        self.headings = [Tk.Entry(master, width=25) for _ in xrange(self.headings)]
-
     def ready_menus(self):
-        """
-        Ready the top menu.
-        """
         self.menu = Tk.Menu(self.top)
-        menu_commands = [('Site', [('Open', self.site_open),
-                                   ('Save', self.save_site),
-                                   ('Save _As', self.save_site_as),
-                                   ('Open in _Browser', self.open_in_browser),
-                                   ('P_roperties', self.site_properties),
-                                   ('S_ee All', self.list_pages),
-                                   ('Publish _WholePage', self.save_wholepage),
-                                   ('Publish All', self.site_publish)]),
-                         ('Markdown', [('Load', self.markdown_load),
-                                       ('Refresh', self.markdown_refresh),
-                                       ('Check', self.markdown_check),
-                                       ('Change to _Tkinter',
-                                        self.html_to_tkinter),
-                                       ('Change to Ht_ml', self.tkinter_to_html),
-                                       ('Open as _Html', self.markdown_open)]
-                          )]
-        for menu in menu_commands:
+        for menu in self.menu_commands:
             submenu = Tk.Menu(self.menu, tearoff=0)
             label, options = menu
             self.menu.add_cascade(label=label, menu=submenu)
@@ -57,85 +40,62 @@ class Editor(Tk.Frame, object):
                 underline = label.find('_')
                 underline = 0 if underline == -1 else underline
                 label = label.replace('_', '')
+                keypress = label[underline]
                 submenu.add_command(label=label, command=command,
                                     underline=underline)
-                submenu.bind(
-                    '<KeyPress-{0}>'.format(label[underline]), command)
+                submenu.bind('<KeyPress-{0}>'.format(keypress), command)
 
     def ready_labels(self):
-        master = self.buttonframe
+        master = self.sidebar
         self.information = Tk.StringVar()
         self.info_label = Tk.Label(
-            master=master, textvariable=self.information, font=('Arial', 14))
-        # blanklabel has enough height to push all other widgets to the top
-        #   of the window.
+            master=master, textvariable=self.information,
+            font=('Arial', 14), width=20)
         self.current_style = Tk.StringVar()
         self.current_style.set('')
         self.style_label = Tk.Label(
-            master=master, textvariable=self.current_style, font=('Arial', 12))
+            master=master, font=('Arial', 12),
+            textvariable=self.current_style)
         self.blank_label = Tk.Label(master=master, height=1000)
 
-    def ready_radios(self):
-        master = self.buttonframe
+    def ready_option_menu(self):
+        self.languagevar.set(self.language)
         translator = self.translator
-        settings = translator.languages.items()
-        number = translator.number
-        self.radios = [Tk.Radiobutton(master) for _ in xrange(number)]
-        settings = zip(self.radios, settings)
-        for radio, (code, language) in settings:
-            radio.configure(text=language().name, variable=self.languagevar,
-                            value=code, command=self.change_language)
+        languages = [u'{0}: {1}'.format(code, lang().name)
+                for code, lang in translator.languages.items()]
+        self.language_menu = Combobox(self.sidebar,
+                                textvariable=self.languagevar,
+                                values=languages,
+                                height=2000,
+                                width=25,
+                                justify=Tk.CENTER)
+        self.language_menu.state(['readonly'])
+        self.language_menu.bind('<<ComboboxSelected>>',
+                self.change_language)
 
-    def ready_buttons(self):
-        master = self.buttonframe
-        commands = self.load, self.save_page
-        self.save_text = Tk.StringVar()
-        self.load_button = Tk.Button(master, text='Load', command=commands[0])
-        self.save_button = Tk.Button(master, command=commands[1],
-                                     textvariable=self.save_text)
-        self.buttons = [self.load_button, self.save_button]
-
-    def ready_textboxes(self):
+    def ready_textbox(self):
         master = self.textframe
-        number = self.textboxes
         font = self.font
-        self.textboxes = [Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
-                                  undo=False, font=font) for _ in xrange(number)]
-        commands = [
-            ('<MouseWheel>', self.scroll_textbox),
-            ('<Control-MouseWheel>', self.change_fontsize),
-            ('<Control-0>', self.reset_fontsize),
-            ('<Control-a>', self.select_all),
-            ('<Control-c>', self.copy_text),
-            ('<Control-v>', self.paste_text),
-            ('<Control-w>', self.select_word),
-            ('<Control-x>', self.cut_text),
-            ('<Control-BackSpace>', self.backspace_word),
-            ('<Control-Delete>', self.delete_word),
-            (('<Control-Up>', '<Control-Down>'), self.move_line),
-            ('<Control-K>', self.delete_line),
-            ('<Alt-d>', self.go_to_heading)
-        ]
-        self.add_commands('Text', commands)
-        for textbox in self.textboxes:
-            textbox.bind('<KeyPress>', self.edit_text_changed)
-            textbox.bind('<Button-1>', self.edit_text_changed)
-            self.ready_scrollbar(textbox)
-            for (name, style) in self.text_styles:
-                textbox.tag_config(name, **style)
+        self.textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
+                                undo=True, font=font)
+        self.add_commands('Text', self.textbox_commands)
+        for command in ('<KeyPress>', '<Button-1>'):
+            self.textbox.bind(command, self.edit_text_changed)
+        self.ready_scrollbar()
+        for (name, style) in self.text_styles:
+            self.textbox.tag_config(name, **style)
 
-    def reset_textboxes(self):
-        for textbox in self.textboxes:
-            textbox.edit_modified(False)
-            textbox.config(font=self.font)
-            for (name, style) in self.text_styles:
-                textbox.tag_config(name, **style)
+    def reset_textbox(self):
+        self.textbox.edit_modified(False)
+        self.textbox.config(font=self.font)
+        for (name, style) in self.text_styles:
+            self.textbox.tag_config(name, **style)
 
-    def ready_scrollbar(self, textbox):
+    def ready_scrollbar(self):
         scrollbar = Tk.Scrollbar(self.textframe)
         scrollbar.pack(side=Tk.RIGHT, fill=Tk.Y)
-        scrollbar.config(command=textbox.yview)
-        textbox.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.textbox.yview)
+        self.textbox.config(yscrollcommand=scrollbar.set)
 
     def add_commands(self, tkclass, commands):
         for (keys, command) in commands:
@@ -147,13 +107,9 @@ class Editor(Tk.Frame, object):
 
     @property
     def text_styles(self):
-        (strong,
-         em,
-         underline,
-         small_caps,
-         highlulani,
-         example,
-         example_no_lines) = iter([self.font.copy() for _ in xrange(7)])
+        (strong, em, underline, small_caps, highlulani,
+         example, example_no_lines) = iter(
+                                [self.font.copy() for _ in xrange(7)])
         strong.configure(weight='bold')
         em.configure(slant='italic')
         underline.configure(underline=True, family='Calibri')
@@ -165,21 +121,20 @@ class Editor(Tk.Frame, object):
             family='Lulani')
         example.configure(size=-1)
         return [
-            ('example', {'lmargin1': '2c', 'spacing1': '5m', 'font': example}),
+            ('example',
+                {'lmargin1': '2c', 'spacing1': '5m', 'font': example}),
             ('example-no-lines', {'lmargin1': '2c', 'font': example}),
             ('strong', {'font': strong}),
             ('em', {'font': em}),
             ('small-caps', {'font': small_caps}),
             ('link', {'foreground': 'blue', 'font': underline}),
-            ('high-lulani', {'font': highlulani})
-        ]
+            ('high-lulani', {'font': highlulani})]
 
     def modify_fontsize(self, size):
         self.font.config(size=size)
-        for textbox in self.textboxes:
-            textbox.config(font=self.font)
-            for (name, style) in self.text_styles:
-                textbox.tag_config(name, **style)
+        self.textbox.config(font=self.font)
+        for (name, style) in self.text_styles:
+            self.textbox.tag_config(name, **style)
 
     def change_fontsize(self, event):
         sign = 1 if event.delta > 0 else -1
@@ -191,9 +146,15 @@ class Editor(Tk.Frame, object):
         self.modify_fontsize(18)
         return 'break'
 
+    def change_language(self, event=None):
+        self.language = self.languagevar.get()[:2]
+        self.translator = Translator(self.language)
+        self.randomwords = RandomWords(self.language)
+        return 'break'
+
     def go_to(self, position):
-        self.textboxes[0].mark_set(Tk.INSERT, position)
-        self.textboxes[0].see(Tk.INSERT)
+        self.textbox.mark_set(Tk.INSERT, position)
+        self.textbox.see(Tk.INSERT)
 
     def select_word(self, event):
         textbox = event.widget
@@ -209,61 +170,26 @@ class Editor(Tk.Frame, object):
         textbox.tag_add('sel', *borders)
         return textbox.get(*borders)
 
-    def fill_headings(self, entries):
-        while len(self.headings) < len(entries):
-            self.add_heading()
-        while len(self.headings) > len(entries):
-            self.remove_heading()
-        for heading, entry in zip(self.headings, entries):
-            self.replace(heading, entry)
-
     def place_widgets(self):
-        """
-        Place all widgets in GUI window.
-        Stack the textboxes on the right-hand side, taking as much
-            room as possible.
-        Stack the heading boxes, the buttons, radiobuttons and a
-            label in the top-left corner.
-        """
         self.top['menu'] = self.menu
         self.pack(expand=True, fill=Tk.BOTH)
-        self.buttonframe.pack(side=Tk.LEFT)
-        self.headingframe.grid(row=0, column=0, columnspan=2, sticky=Tk.N)
-        self.textframe.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
-        for heading in self.headings:
-            heading.grid(column=0, columnspan=2, sticky=Tk.N)
+        self.sidebar.pack(side=Tk.LEFT)
+        self.textframe.pack(side=Tk.RIGHT, expand=True, fill=Tk.BOTH)
         row = 1
-        for i, button in enumerate(self.buttons):
-            button.grid(row=row, column=i)
-        row += 1
         self.style_label.grid(row=row, column=0, columnspan=2)
         row += 1
-        for radio in self.radios:
-            radio.grid(row=row, column=0, columnspan=2)
-            row += 1
-        for textbox in self.textboxes:
-            textbox.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
-            row += 1
-        self.info_label.grid(row=row, column=0, columnspan=2)
-        self.blank_label.grid(row=row + 1, column=0, columnspan=2)
+        self.language_menu.grid(row=row, column=0, columnspan=2)
+        row += 1
+        self.textbox.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
+        self.info_label.grid(row=row + 1, column=0, columnspan=2)
+        self.blank_label.grid(row=row + 2, column=0, columnspan=2)
 
-    def add_heading(self):
-        if len(self.headings) < 10:
-            heading = Tk.Entry(self.headingframe)
-            heading.grid(column=0, columnspan=2, sticky=Tk.N)
-            self.headings.append(heading)
-        return 'break'
-
-    def remove_heading(self, event=None):
-        if len(self.headings) > 1:
-            heading = self.headings.pop()
-            heading.destroy()
+    def refresh_random(self, event=None):
+        if self.randomwords:
+            self.information.set('\n'.join(self.randomwords.words))
         return 'break'
 
     def replace(self, widget, text):
-        """
-        Clears textbox and inserts text
-        """
         try:  # textbox
             position = widget.index(Tk.INSERT)
             widget.delete(1.0, Tk.END)
@@ -276,35 +202,10 @@ class Editor(Tk.Frame, object):
             widget.insert(0, text)
 
     def clear_interface(self):
-        for heading in self.headings:
-            heading.delete(0, Tk.END)
-        for textbox in self.textboxes:
-            textbox.delete(1.0, Tk.END)
+        self.textbox.delete(1.0, Tk.END)
         self.information.set('')
-        self.go_to_heading()
-
-    def go_to_heading(self, event=None):
-        """
-        Move focus to the heading and select all the text therein
-        """
-        with ignored(IndexError):
-            heading = self.headings[0]
-            heading.focus_set()
-            heading.select_range(0, Tk.END)
-        return 'break'
-
-    def window(self, current, direction):
-        textbox = self.textboxes[(self.textboxes.index(event.widget) - 1)]
-        textbox.focus_set()
-        self.update_wordcount(widget=textbox)
-        return 'break'
 
     def edit_text_changed(self, event):
-        """
-        Notify the user that the edittext has been changed.
-        Activates after each keypress or mouseclick
-        Deactivates after a save or a load action.
-        """
         cancelkeys = ['Left', 'Right', 'Up', 'Down', 'Return']
         self.update_wordcount(event)
         if event.keysym.startswith('Control_'):
@@ -314,13 +215,11 @@ class Editor(Tk.Frame, object):
             event.widget.tag_remove(self.current_style.get(), Tk.INSERT)
             self.current_style.set('')
         elif event.widget.edit_modified():
-            self.save_text.set('*Save')
             event.widget.tag_add(self.current_style.get(),
                                  Tk.INSERT + '-1c', Tk.INSERT)
 
-    def scroll_textbox(self, event):
-        for textbox in self.textboxes:
-            textbox.yview_scroll(-1 * (event.delta / 20), Tk.UNITS)
+    def scroll_textbox(self, event=None):
+        self.textbox.yview_scroll(-1 * (event.delta / 20), Tk.UNITS)
         return 'break'
 
     @staticmethod
@@ -405,12 +304,10 @@ class Editor(Tk.Frame, object):
         self.information.set(
             str(text.count(' ') + text.count('\n') - text.count(' | ')))
 
-    def display(self, texts):
-        for textbox, text in izip(self.textboxes, texts):
-            self.replace(textbox, text)
-        else:
-            textbox.focus_set()
-            self.update_wordcount(widget=textbox)
+    def display(self, text):
+        self.replace(self.textbox, text)
+        self.textbox.focus_set()
+        self.update_wordcount(widget=self.textbox)
         self.html_to_tkinter()
 
     def html_to_html(self, function, args=(), kwargs={}):
@@ -451,58 +348,231 @@ class Editor(Tk.Frame, object):
             textbox.delete(*borders)
         textbox.insert(Tk.INSERT, self.clipboard_get())
 
+    def bold(self, event):
+        self.change_style(event, 'strong')
+        return 'break'
+
+    def italic(self, event):
+        self.change_style(event, 'em')
+        return 'break'
+
+    def small_caps(self, event):
+        self.change_style(event, 'small-caps')
+        return 'break'
+
+    def add_link(self, event):
+        self.change_style(event, 'link')
+        return 'break'
+
+    def change_style(self, event, style):
+        textbox = event.widget
+        if style in textbox.tag_names(Tk.INSERT):
+            try:
+                textbox.tag_remove(style, Tk.SEL_FIRST, Tk.SEL_LAST)
+            except Tk.TclError:
+                textbox.tag_remove(style, Tk.INSERT)
+                self.current_style.set('')
+        else:
+            try:
+                textbox.tag_add(style, Tk.SEL_FIRST, Tk.SEL_LAST)
+            except Tk.TclError:
+                textbox.tag_add(style, Tk.INSERT)
+                self.current_style.set(style)
+
+    def example_no_lines(self, event):
+        self.format_paragraph('example-no-lines', 'e ', event.widget)
+        return 'break'
+
+    def example(self, event):
+        self.format_paragraph('example', 'f ', event.widget)
+        return 'break'
+
+    def add_translation(self, event):
+        textbox = event.widget
+        try:
+            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
+            text = textbox.get(*borders)
+        except Tk.TclError:
+            text = self.select_word(event)
+            textbox.tag_remove('sel', '1.0', Tk.END)
+        length = len(text)
+        with conversion(self.markdown, 'to_markup') as converter:
+            text = converter(text)
+        example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
+        converter = self.translator.convert_word # default setting
+        for mark in '.!?':
+            if mark in text:
+                converter = self.translator.convert_word
+                break
+        text = converter(text)
+        if example:
+            text = '[e]' + text
+        with conversion(self.markdown, 'to_markdown') as converter:
+            text = converter(text)
+        try:
+            text += '\n' if textbox.compare(Tk.SEL_LAST,
+                                            '==', Tk.SEL_LAST + ' lineend') else ' '
+            textbox.insert(Tk.SEL_LAST + '+1c', text)
+        except Tk.TclError:
+            text += ' '
+            textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
+            textbox.insert(Tk.INSERT + '+1c', text)
+        self.html_to_tkinter()
+        return 'break'
+
+    def add_descendant(self, event):
+        textbox = event.widget
+        try:
+            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
+            text = textbox.get(*borders)
+        except Tk.TclError:
+            text = self.select_word(event)
+            textbox.tag_remove('sel', '1.0', Tk.END)
+        length = len(text)
+        with conversion(self.markdown, 'to_markup') as converter:
+            text = converter(text)
+        example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
+        converter = self.evolver.evolve # default setting
+        text = converter(text)[-1]
+        if example:
+            text = '[e]' + text
+        with conversion(self.markdown, 'to_markdown') as converter:
+            text = converter(text)
+        try:
+            text += '\n' if textbox.compare(Tk.SEL_LAST,
+                                            '==', Tk.SEL_LAST + ' lineend') else ' '
+            textbox.insert(Tk.SEL_LAST + '+1c', text)
+        except Tk.TclError:
+            text += ' '
+            textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
+            textbox.insert(Tk.INSERT + '+1c', text)
+        self.html_to_tkinter()
+        return 'break'
+
     def html_to_tkinter(self):
         count = Tk.IntVar()
-        for textbox in self.textboxes:
-            for (style, _) in self.text_styles:
-                while True:
-                    try:
-                        if style.startswith('example'):
-                            letter = 'e' if style.endswith('lines') else 'f'
-                            start = textbox.search(
-                                '\[[{0}]\]'.format(letter),
-                                '1.0',
-                                regexp=True,
-                                count=count
-                            )
-                            end = '{0}+3c'.format(start)
-                            text = textbox.get(start, end)
-                            text = text[1] + ' '
-                            textbox.delete(start, end)
-                            textbox.insert(start, text)
-                            textbox.tag_add(
-                                style, start, '{0}+{1}c'.format(start, len(text)))
-                        else:
-                            start = textbox.search(
-                                '<{0}>.*?</{0}>'.format(style),
-                                '1.0',
-                                regexp=True,
-                                count=count
-                            )
-                            end = '{0}+{1}c'.format(start, count.get())
-                            text = textbox.get(start, end)
-                            text = text[(len(style) + 2):(-3 - len(style))]
-                            textbox.delete(start, end)
-                            textbox.insert(start, text)
-                            textbox.tag_add(style, start,
-                                            '{0}+{1}c'.format(start, len(text)))
-                    except Tk.TclError:
-                        break
-        self.reset_textboxes()
+        textbox = self.textbox
+        for (style, _) in self.text_styles:
+            while True:
+                try:
+                    if style.startswith('example'):
+                        letter = 'e' if style.endswith('lines') else 'f'
+                        start = textbox.search(
+                            '\[[{0}]\]'.format(letter),
+                            '1.0',
+                            regexp=True,
+                            count=count
+                        )
+                        end = '{0}+3c'.format(start)
+                        text = textbox.get(start, end)
+                        text = text[1] + ' '
+                        textbox.delete(start, end)
+                        textbox.insert(start, text)
+                        textbox.tag_add(
+                            style, start, '{0}+{1}c'.format(start, len(text)))
+                    else:
+                        start = textbox.search(
+                            '<{0}>.*?</{0}>'.format(style),
+                            '1.0',
+                            regexp=True,
+                            count=count
+                        )
+                        end = '{0}+{1}c'.format(start, count.get())
+                        text = textbox.get(start, end)
+                        text = text[(len(style) + 2):(-3 - len(style))]
+                        textbox.delete(start, end)
+                        textbox.insert(start, text)
+                        textbox.tag_add(style, start,
+                                        '{0}+{1}c'.format(start, len(text)))
+                except Tk.TclError:
+                    break
+        self.reset_textbox()
 
     def tkinter_to_html(self):
-        for textbox in self.textboxes:
-            for (style, _) in self.text_styles:
-                for end, start in izip(*[reversed(textbox.tag_ranges(style))] * 2):
-                    if style.startswith('example'):
-                        text = textbox.get(start, end)[0]
-                        text = '[{0}]'.format(text)
-                    else:
-                        text = textbox.get(start, end)
-                        text = '<{1}>{0}</{1}>'.format(text, style)
-                    textbox.delete(start, end)
-                    textbox.insert(start, text)
+        textbox = self.textbox
+        for (style, _) in self.text_styles:
+            for end, start in izip(*[reversed(textbox.tag_ranges(style))] * 2):
+                if style.startswith('example'):
+                    text = textbox.get(start, end)[0]
+                    text = '[{0}]'.format(text)
+                else:
+                    text = textbox.get(start, end)
+                    text = '<{1}>{0}</{1}>'.format(text, style)
+                textbox.delete(start, end)
+                textbox.insert(start, text)
+
+    def markdown_open(self, event=None):
+        web.open_new_tab(self.markdown.filename)
+
+    def markdown_load(self, event=None):
+        filename = fd.askopenfilename(
+            filetypes=[('Sm\xe9agol Markdown File', '*.mkd')],
+            title='Load Markdown')
+        if filename:
+            try:
+                self.tkinter_to_tkinter(
+                    self._markdown_load, [filename])
+            except IndexError:
+                mb.showerror('Invalid File',
+                             'Please select a valid *.mkd file.')
+
+    def _markdown_load(self, filename):
+        text = self.get_text(self.textbox)
+        with conversion(self.markdown, 'to_markup') as converter:
+            text = converter(text)
+        self.markdown = filename
+        with conversion(self.markdown, 'to_markdown') as converter:
+            text = converter(text)
+        self.replace(self.textbox, text)
+
+    def markdown_refresh(self, event=None):
+        try:
+            self.tkinter_to_tkinter(self._markdown_refresh)
+            self.information.set('OK')
+        except AttributeError:
+            self.information.set('Not OK')
+        return 'break'
+
+    def _markdown_refresh(self):
+        text = self.get_text(self.textbox)
+        with conversion(self.markdown, 'to_markup') as converter:
+            text = converter(text)
+        self.markdown.refresh()
+        with conversion(self.markdown, 'to_markdown') as converter:
+            text = converter(text)
+        self.replace(self.textbox, text)
 
     @property
-    def heading_contents(self):
-        return map(lambda heading: heading.get(), self.headings)
+    def menu_commands(self):
+        return [('Markdown', [
+                 ('Load', self.markdown_load),
+                 ('Refresh', self.markdown_refresh),
+                 ('Change to _Tkinter', self.html_to_tkinter),
+                 ('Change to Ht_ml', self.tkinter_to_html),
+                 ('Open as _Html', self.markdown_open)])]
+
+    @property
+    def textbox_commands(self):
+        return [
+            ('<MouseWheel>', self.scroll_textbox),
+            ('<Control-MouseWheel>', self.change_fontsize),
+            ('<Control-0>', self.reset_fontsize),
+            ('<Control-a>', self.select_all),
+            ('<Control-b>', self.bold),
+            ('<Control-c>', self.copy_text),
+            ('<Control-d>', self.add_descendant),
+            ('<Control-e>', self.example_no_lines),
+            ('<Control-f>', self.example),
+            ('<Control-i>', self.italic),
+            ('<Control-k>', self.small_caps),
+            ('<Control-K>', self.delete_line),
+            ('<Control-m>', self.markdown_refresh),
+            ('<Control-n>', self.add_link),
+            ('<Control-r>', self.refresh_random),
+            ('<Control-t>', self.add_translation),
+            ('<Control-v>', self.paste_text),
+            ('<Control-w>', self.select_word),
+            ('<Control-x>', self.cut_text),
+            ('<Control-BackSpace>', self.backspace_word),
+            ('<Control-Delete>', self.delete_word),
+            (('<Control-Up>', '<Control-Down>'), self.move_line)]

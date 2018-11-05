@@ -30,15 +30,15 @@ class Properties(object):
         except (IOError, TypeError):
             self.config = json.loads(default.config)
 
-    def __getattr__(self, name):
-        if name in {'files', 'source', 'destination'}:
-            return getattr(self.site, name)
-        elif name in {'page', 'language', 'position', 'fontsize'}:
-            return self.config['current'][name]
-        elif name == 'markdown_file':
+    def __getattr__(self, attr):
+        if attr in {'files', 'source', 'destination'}:
+            return getattr(self.site, attr)
+        elif attr in {'page', 'language', 'position', 'fontsize'}:
+            return self.config['current'][attr]
+        elif attr == 'markdown_file':
             return self.config['current']['markdown']
         else:
-            return getattr(super(Properties, self), name)
+            missing_attribute(Properties, self, attr)
 
     def __setattr__(self, name, value):
         if name in {'page', 'language', 'position', 'fontsize'}:

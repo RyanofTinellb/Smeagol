@@ -1,6 +1,7 @@
 import json
 import re
 import urllib
+import inspect
 from contextlib import contextmanager
 from datetime import datetime
 from translation.markdown import Markdown
@@ -22,6 +23,15 @@ def conversion(converter, function):
         yield lambda x: x
     # except:
     #     raise
+
+
+def missing_attribute(cls, instance, attr):
+    try:
+        return getattr(super(cls, instance), attr)
+    except AttributeError:
+        class_name = instance.__class__.__name__
+        error = "{0} instance has no attribute '{1}'"
+        raise AttributeError(error.format(class_name, attr))
 
 
 def dump(dictionary, filename):
@@ -88,16 +98,3 @@ def urlform(text, markdown=None):
     remove_text(r'<.*?>|[/*;: ]', name)
     name = urllib.quote(name[0], safe_punctuation + '$')
     return name
-
-
-def add_datestamp(text):
-    text += datetime.strftime(datetime.today(), '&date=%Y%m%d')
-    return text
-
-
-def remove_datestamp(text):
-    return re.sub(r'&date=\d{8}', '', text)
-
-
-def replace_datestamp(text):
-    return add_datestamp(remove_datestamp(text))

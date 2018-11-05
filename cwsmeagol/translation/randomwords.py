@@ -46,7 +46,8 @@ class English:
         self.words = list(self.words)
 
     def collate(self, page, words):
-        words.update({word for line in page['text'] for word in line.split()})
+        words.update({word for line in page['text']
+                for word in line.split()})
         for child in page['children']:
             self.collate(child, self.words)
 
