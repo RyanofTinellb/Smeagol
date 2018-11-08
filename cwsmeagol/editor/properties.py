@@ -5,15 +5,16 @@ import re
 from addremovelinks import AddRemoveLinks
 from cwsmeagol.site.site import Site
 from cwsmeagol.translation import *
-from cwsmeagol.utils import ignored
+from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 import tkFileDialog as fd
 import tkSimpleDialog as sd
 
 class Properties(object):
-    def __init__(self, master=None, current=None):
+    def __init__(self, config=None, caller=None):
+        super(Properties, self).__init__()
+        self.config_filename = config
         self.template = json.loads(default.properties)
-        self.config_filename = current
         self.setup_config()
         self.create_site()
         self.create_linkadder()
@@ -35,17 +36,17 @@ class Properties(object):
             return getattr(self.site, attr)
         elif attr in {'page', 'language', 'position', 'fontsize'}:
             return self.config['current'][attr]
-        elif attr == 'markdown_file':
+        elif attr is 'markdown_file':
             return self.config['current']['markdown']
         else:
-            missing_attribute(Properties, self, attr)
+            return missing_attribute(Properties, self, attr)
 
     def __setattr__(self, name, value):
         if name in {'page', 'language', 'position', 'fontsize'}:
             self.config['current'][name] = value
-        elif name == 'markdown_file':
+        elif name is 'markdown_file':
             self.config['current']['markdown'] = value
-        elif name == 'markdown':
+        elif name is 'markdown':
             try:
                 super(Properties, self).__setattr__(name, Markdown(value))
             except TypeError: # value is already a Markdown instance

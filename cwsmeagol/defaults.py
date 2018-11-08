@@ -64,7 +64,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
       ""
     ],
     "markdown": "",
-    "language": "en",
+    "language": "en: English",
     "position": "1.0",
     "fontsize": 14
   },

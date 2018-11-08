@@ -6,7 +6,6 @@ import os
 import random
 import webbrowser as web
 import Tkinter as Tk
-import tkFileDialog as fd
 from editor import Editor
 from properties import Properties
 from properties_window import PropertiesWindow
@@ -15,40 +14,18 @@ from itertools import izip, izip_longest
 from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
-from cwsmeagol.translation import Translator
-from cwsmeagol.translation import RandomWords
-from cwsmeagol.translation import HighToVulgarLulani
 
 
 class SiteEditor(Editor, object):
-    def __init__(self, master=None, current=None):
-        super(SiteEditor, self).__init__(master, current)
-        self.headingframe = Tk.Frame(self.sidebar)
-        self.master.title('Site Editor')
-        self.master.protocol('WM_DELETE_WINDOW', self.quit)
-
-        commands = [
-            ('<Control-Prior>', self.previous_entry),
-            ('<Control-Next>', self.next_entry)
-            ('<Control-s>', self.save_page),
-            ('<Control-o>', self.site_open),
-            ('<Control-N>', self.insert_new)]
-        self.add_commands('Text', commands)
-        self.save_text.set('Save')
-        commands = [
-            (('<Prior>', '<Next>'), self.scroll_headings),
-            ('<Return>', self.enter_headings)
-        ]
-        self.add_commands('Entry', commands)
-
+    def __init__(self, master=None, config_file=None):
+        super(SiteEditor, self).__init__(master)
+        self.setup_properties(config_file)
         self.new_page = False
-
         self.server = None
         self.PORT = 41809
         self.start_server()
-
         self.entry = self.site.root
-        self.entry.content = self.entry.content or self.initial_content()
+        self.content = self.entry.content or self.initial_content()
         self.fill_headings(self.page)
         self.load()
         self.go_to(self.position)
@@ -57,19 +34,69 @@ class SiteEditor(Editor, object):
     def caller(self):
         return 'site'
 
+    def setup_properties(self, config_file):
+        self.properties.caller = self.caller
+        self.properties.setup_config(config_file)
 
-    def ready_heading(self):
+    def setup_linguistics(self):
+        self.languagevar = Tk.StringVar()
+        self.languagevar.set(self.translator.fullname)
+
+    def change_language(self, event=None):
+        self.language = self.languagevar.get()
+        for obj in (self.translator, self.randomwords):
+            obj.select(self.language[:2])
+        return 'break'
+
+    def __getattr__(self, attr):
+        if attr is 'properties':
+            self.properties = Properties()
+            return self.properties
+        try:
+            return getattr(self.properties, attr)
+        except AttributeError:
+            return missing_attribute(SiteEditor, self, attr)
+
+    def __setattr__(self, attr, value):
+        if attr is 'language':
+            self.properties.language = value
+        else:
+            super(SiteEditor, self).__setattr__(attr, value)
+
+    def set_frames(self):
+        super(SiteEditor, self).set_frames()
+        self.headingframe = Tk.Frame(self.sidebar)
+        self.master.title('Site Editor')
+        self.master.protocol('WM_DELETE_WINDOW', self.quit)
+
+    def ready(self):
+        objs = ['headings', 'buttons']
+        for obj in objs:
+            getattr(self, 'ready_' + obj)()
+        super(SiteEditor, self).ready()
+
+    def ready_headings(self):
         master = self.headingframe
         self.headings = [Tk.Entry(master, width=25)]
+        self.add_commands('Entry', self.heading_commands)
 
     def ready_buttons(self):
-        master = self.sidebar
+        master = self.headingframe
         self.save_text = Tk.StringVar()
+        self.save_text.set('Save')
         self.load_button = Tk.Button(master, text='Load',
-                            command=self.load)
-        self.save_button = Tk.Button(master, command=self.save,
-                            textvariable=self.save_text)
+                            command=self.load, width=10)
+        self.save_button = Tk.Button(master, command=self.save_page,
+                            textvariable=self.save_text, width=10)
         self.buttons = [self.load_button, self.save_button]
+
+    def place_widgets(self):
+        super(SiteEditor, self).place_widgets()
+        self.headingframe.grid(row=0, column=0)
+        for i, heading in enumerate(self.headings):
+            heading.grid(row=i, column=0, columnspan=2)
+        for j, button in enumerate(self.buttons):
+            button.grid(row=i+1, column=j)
 
     def clear_interface(self):
         super(SiteEditor, self).clear_interface()
@@ -77,6 +104,11 @@ class SiteEditor(Editor, object):
             heading.delete(0, Tk.END)
         self.go_to_heading()
 
+    @property
+    def heading_contents(self):
+        contents = [heading.get() for heading in self.headings]
+        self.properties.heading_contents = contents
+        return contents
 
     def fill_headings(self, entries):
         while len(self.headings) < len(entries):
@@ -128,9 +160,9 @@ class SiteEditor(Editor, object):
             self.master.title('Editing ' + self.entry.name)
         return 'break'
 
-    def add_heading(self):
+    def add_heading(self, event=None):
         if len(self.headings) < 10:
-            heading = Tk.Entry(self.headingframe)
+            heading = Tk.Entry(self.headingframe, width=25)
             heading.grid(column=0, columnspan=2, sticky=Tk.N)
             self.headings.append(heading)
         return 'break'
@@ -170,15 +202,9 @@ class SiteEditor(Editor, object):
             heading.insert(0, ancestor.name)
         self.load()
 
-    def place_widgets(self):
-        super(SiteEditor, self).place_widgets()
-        self.buttonframe.pack(side=Tk.LEFT)
-        for i, button in enumerate(self.buttons):
-            button.grid(row=row, column=i)
-            row += 1
-
     def site_open(self, event=None):
         source = self.open()
+        self.languagevar.set(self.language)
         self.reset()
         return 'break'
 
@@ -256,7 +282,6 @@ class SiteEditor(Editor, object):
 
     def prepare_entry(self, entry):
         text = entry.content
-        text = remove_datestamp(text)
         with conversion(self.linkadder, 'remove_links') as converter:
             text = converter(text)
         with conversion(self.markdown, 'to_markdown') as converter:
@@ -267,7 +292,7 @@ class SiteEditor(Editor, object):
         try:
             widget = event.widget
         except AttributeError:
-            widget = self.textboxes[0]
+            widget = self.textbox
         if self.is_new:
             self.site_properties()
         if self.entry.newpage:
@@ -288,8 +313,11 @@ class SiteEditor(Editor, object):
         self.new_page = False
 
     def save_wholepage(self):
-        with open('wholetemplate.html') as template:
-            template = template.read()
+        try:
+            with open('wholetemplate.html') as template:
+                template = template.read()
+        except IOError:
+            return False
         g = self.site
         self.errors = 0
         self.errorstring = ''
@@ -426,7 +454,7 @@ class SiteEditor(Editor, object):
         self.server.shutdown()
         self.page = self.heading_contents
         self.language = self.languagevar.get()
-        self.position = self.textboxes[0].index(Tk.INSERT)
+        self.position = self.textbox.index(Tk.INSERT)
         self.fontsize = self.font.actual(option='size')
         self.save_site()
         self.master.quit()
@@ -437,6 +465,35 @@ class SiteEditor(Editor, object):
         name = entry.name
         return '1]{0}\n'.format(name)
 
+    @property
+    def textbox_commands(self):
+        return super(SiteEditor, self).textbox_commands + [
+            ('<Control-Prior>', self.previous_entry),
+            ('<Control-Next>', self.next_entry),
+            ('<Control-N>', self.insert_new),
+            ('<Control-o>', self.site_open),
+            ('<Control-s>', self.save_page)]
+
+    @property
+    def heading_commands(self):
+        return [
+            (('<Prior>', '<Next>'), self.scroll_headings),
+            ('<Return>', self.enter_headings),
+            ('<Control-M>', self.add_heading),
+            ('<Control-N>', self.remove_heading)]
+
+    @property
+    def menu_commands(self):
+        return [('Site', [('Open', self.site_open),
+                ('Save', self.save_site),
+                ('Save _As', self.save_site_as),
+                ('Open in _Browser', self.open_in_browser),
+                ('P_roperties', self.site_properties),
+                ('S_ee All', self.list_pages),
+                ('Publish _WholePage', self.save_wholepage),
+                ('Publish All', self.site_publish)])
+            ] + super(SiteEditor, self).menu_commands
+
 
 if __name__ == '__main__':
-    e = SiteEditor()
+    SiteEditor().mainloop()

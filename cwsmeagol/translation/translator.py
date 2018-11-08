@@ -45,6 +45,10 @@ class Translator:
         self.code = language
         return self.safename
 
+    @property
+    def fullname(self):
+        return u'{0}: {1}'.format(self.code, self.name)
+
     def encode(self, languagename):
         languagename = languagename.lower()
         for code, language in self.languages.iteritems():

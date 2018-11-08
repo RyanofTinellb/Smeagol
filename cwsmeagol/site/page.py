@@ -33,7 +33,7 @@ class Page(Node):
                 self.refresh_hyperlink()
                 return getattr(self, attr)
         else:
-            missing_attribute(Page, self, attr)
+            return missing_attribute(Page, self, attr)
 
     def refresh_flatname(self):
         self.find()['flatname'] = self._flatname
@@ -58,7 +58,7 @@ class Page(Node):
     @property
     def analysis(self):
         wordlist = {}
-        content = ['['.join(self.text)]
+        content = [self.content]
         # remove tags, and items between some tags
         change_text(
             r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
@@ -193,6 +193,10 @@ class Page(Node):
         return contents(self.text)
 
     @property
+    def content(self):
+        return '['.join(self.text)
+
+    @property
     def stylesheet_and_icon(self):
         hyperlinks = [self.hyperlink(destination) for destination in
                       ['basic_style.css', 'style.css', 'favicon.png']]
@@ -236,7 +240,7 @@ class Page(Node):
                 '  {{0}}'
                 '</ul></label>').format(
                     ' class="normal"' if not self.is_root else '',
-                    hyperlink(self.root))
+                    self.hyperlink(self.root))
 
     @property
     def family_links(self):

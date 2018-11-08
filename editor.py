@@ -68,4 +68,5 @@ class Smeagol(Tk.Frame, object):
     def open_dictionary(self, event=None, filename=None):
         self.open_editor(DictionaryEditor, filename)
 
-Smeagol().mainloop()
+if __name__ == '__main__':
+    Smeagol().mainloop()

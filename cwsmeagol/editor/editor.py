@@ -1,6 +1,7 @@
 import re
 import tkFont
 import Tkinter as Tk
+import tkFileDialog as fd
 from ttk import Combobox
 from itertools import izip
 from cwsmeagol.translation import *
@@ -10,24 +11,23 @@ from cwsmeagol.utils import ignored, missing_attribute, conversion
 class Editor(Tk.Frame, object):
     def __init__(self, master=None):
         super(Editor, self).__init__(master)
-        self.sidebar = Tk.Frame(master)
-        self.textframe = Tk.Frame(master)
+        self.set_frames()
         self.row = 0
         self.font = tkFont.Font(family='Calibri', size=18)
-        self.languagevar = Tk.StringVar()
-        self.language = 'en: English'
-        self.markdown = Markdown()
-        self.randomwords = RandomWords()
-        self.translator = Translator(self.language)
-        self.top = self.winfo_toplevel()
+        self.setup_linguistics()
         self.ready()
+        self.place_widgets()
+
+    def set_frames(self):
+        self.sidebar = Tk.Frame(self.master)
+        self.textframe = Tk.Frame(self.master)
+        self.top = self.winfo_toplevel()
+        self.top.state('zoomed')
 
     def ready(self):
         objs = ['menus', 'labels', 'option_menu', 'textbox']
         for obj in objs:
             getattr(self, 'ready_' + obj)()
-        self.place_widgets()
-        self.top.state('zoomed')
 
     def ready_menus(self):
         self.menu = Tk.Menu(self.top)
@@ -146,6 +146,14 @@ class Editor(Tk.Frame, object):
         self.modify_fontsize(18)
         return 'break'
 
+    def setup_linguistics(self):
+        self.languagevar = Tk.StringVar()
+        self.language = 'en: English'
+        self.markdown = Markdown()
+        self.randomwords = RandomWords()
+        self.translator = Translator(self.language)
+        self.evolver = HighToVulgarLulani()
+
     def change_language(self, event=None):
         self.language = self.languagevar.get()[:2]
         self.translator = Translator(self.language)
@@ -175,14 +183,11 @@ class Editor(Tk.Frame, object):
         self.pack(expand=True, fill=Tk.BOTH)
         self.sidebar.pack(side=Tk.LEFT)
         self.textframe.pack(side=Tk.RIGHT, expand=True, fill=Tk.BOTH)
-        row = 1
-        self.style_label.grid(row=row, column=0, columnspan=2)
-        row += 1
-        self.language_menu.grid(row=row, column=0, columnspan=2)
-        row += 1
+        self.style_label.grid(row=1, column=0)
+        self.language_menu.grid(row=2, column=0)
+        self.info_label.grid(row=3, column=0)
+        self.blank_label.grid(row=4, column=0)
         self.textbox.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
-        self.info_label.grid(row=row + 1, column=0, columnspan=2)
-        self.blank_label.grid(row=row + 2, column=0, columnspan=2)
 
     def refresh_random(self, event=None):
         if self.randomwords:
@@ -576,3 +581,6 @@ class Editor(Tk.Frame, object):
             ('<Control-BackSpace>', self.backspace_word),
             ('<Control-Delete>', self.delete_word),
             (('<Control-Up>', '<Control-Down>'), self.move_line)]
+
+if __name__ == '__main__':
+    Editor().mainloop()

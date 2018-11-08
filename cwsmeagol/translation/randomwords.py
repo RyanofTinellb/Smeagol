@@ -7,19 +7,22 @@ import re
 class RandomWords():
     def __init__(self, language=None):
         self.maximum = 20
-        self.language = language
         languages = OrderedDict()
         languages['en'] = English
         languages['hl'] = HighLulani
         self.languages = languages
+        self.select(language)
+
+    def select(self, language):
+        self.language = language
         try:
             language = language.lower()
-            self.converter = languages[language]()
+            self.converter = self.languages[language]()
         except (IndexError, AttributeError, KeyError):
             self.converter = English()
         self.name = self.converter.name
         self.code = language
-        self.number = len(languages)
+        self.number = len(self.languages)
 
     @property
     def words(self):

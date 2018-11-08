@@ -20,7 +20,7 @@ class Site(object):
             with open(self.template) as template:
                 template = template.read()
         except IOError:
-            template = None
+            template = ''
         self.template_file, self.template = self.template, template
 
     def load_site(self):
@@ -51,7 +51,7 @@ class Site(object):
         if attr in {'source', 'template', 'template_file', 'searchindex'}:
             return self.files[attr]
         else:
-            missing_attribute(Site, self, attr)
+            return missing_attribute(Site, self, attr)
 
     def __setattr__(self, attr, value):
         if attr in {'source', 'template', 'template_file', 'searchindex'}:
@@ -95,6 +95,10 @@ class Site(object):
         except IndexError:
             raise KeyError(entry)
         return page
+
+    @property
+    def root(self):
+        return self[0]
 
     def refresh_flatnames(self):
         for page in self:
