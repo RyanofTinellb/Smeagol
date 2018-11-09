@@ -11,7 +11,7 @@ class Page(Node):
         super(Page, self).__init__(tree, location)
 
     def __getattr__(self, attr):
-        if attr in ('name', 'date', 'text', 'children'):
+        if attr in ('name', 'text'):
             return self.find().get(attr, '')
         elif attr is 'date':
             try:
@@ -35,6 +35,9 @@ class Page(Node):
         else:
             return missing_attribute(Page, self, attr)
 
+    def __str__(self):
+        return '['.join(self.text)
+
     def refresh_flatname(self):
         self.find()['flatname'] = self._flatname
 
@@ -43,7 +46,6 @@ class Page(Node):
         url = self.url if not self.has_children else 'index'
         hyperlink = '{0}/{1}'.format(link, url) if link else url
         self.find()['hyperlink'] = hyperlink
-
 
     @property
     def level(self):
@@ -100,12 +102,32 @@ class Page(Node):
             remove_text('\\' + pattern, name)
         return dict(name=name[0], score=score)
 
+    def __getitem__(self, entry):
+        count = 0
+        try:
+            page = self.eldest_daughter
+        except AttributeError:
+            raise KeyError('Page has no children')
+        try:
+            while page.name != entry != count:
+                page.next()
+                count += 1
+        except IndexError:
+            raise KeyError(entry)
+        return page
+
     def __eq__(self,  other):
-        return self.flatname == other.flatname and self.score == other.score
+        try:
+            return self.flatname == other.flatname and self.score == other.score
+        except AttributeError:
+            return self == self.new(other.location)
 
     def __lt__(self, other):
-        if self.flatname == other.flatname and self.score < other.score:
-            return True
+        try:
+            if self.flatname == other.flatname and self.score < other.score:
+                return True
+        except AttributeError:
+            return self < self.new(other.location)
         for s, t in zip(self.flatname, other.flatname):
             if s != t:
                 try:
@@ -176,7 +198,7 @@ class Page(Node):
 
     @property
     def title(self):
-        return remove(r'[[<].*?[]>]', [self.name])[0]
+        return remove_text(r'[[<].*?[]>]', [self.name])[0]
 
     @property
     def category_title(self):
@@ -189,12 +211,8 @@ class Page(Node):
                 return self.matriarch.title + ' ' + self.title
 
     @property
-    def contents(self):
-        return contents(self.text)
-
-    @property
-    def content(self):
-        return '['.join(self.text)
+    def main_contents(self):
+        return html(self.text)
 
     @property
     def stylesheet_and_icon(self):
@@ -243,12 +261,16 @@ class Page(Node):
                     self.hyperlink(self.root))
 
     @property
+    def elder_links(self):
+        return self.links.format(self.matriarch_links)
+
+    @property
     def family_links(self):
         link_array = ''
         level = 1
         for relative in self.family:
             old_level = level
-            level = self.level
+            level = relative.level
             if level > old_level:
                 link_array += '<ul class="level-{0}">'.format(str(level))
             elif level < old_level:
@@ -261,10 +283,6 @@ class Page(Node):
                     self.hyperlink(relative))
         link_array += level * '</ul>\n'
         return self.links.format(link_array)
-
-    @property
-    def elder_links(self):
-        return self.links.format(self.matriarch_links)
 
     @property
     def matriarch_links(self):
@@ -304,16 +322,15 @@ class Page(Node):
                     '<a href="http://www.tinellb.com/about.html">'
                     'Ryan Eakins</a>.</span> <span class="no-breaks">'
                     'Last updated: %A, %B %#d' + suffix + ', %Y.')
-        return datetime.strftime(date, self.template)
+        return datetime.strftime(date, template)
 
-
-    def publish(self, template=None):
+    def html(self, template=None):
         page = template or default.template
         for (section, function) in [
             ('{title}', 'title'),
             ('{stylesheet}', 'stylesheet_and_icon'),
             ('{search-script}', 'search_script'),
-            ('{content}', 'contents'),
+            ('{content}', 'main_contents'),
             ('{toc}', 'toc'),
             ('{family-links}', 'family_links'),
             ('{elder-links}', 'elder_links'),
@@ -322,8 +339,11 @@ class Page(Node):
             ('{category-title}', 'category_title')
         ]:
             if page.count(section):
-                page = page.replace(section, getattr(self, function))
-
+                try:
+                    page = page.replace(section, getattr(self, function))
+                except TypeError:
+                    raise TypeError(section, function)
+        return page
 
     def delete_htmlfile(self):
         with ignored(WindowsError):

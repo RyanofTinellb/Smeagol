@@ -159,11 +159,6 @@ class DictionaryEditor(SiteEditor):
 
     @staticmethod
     def publish(entry, site, allpages=False):
-        """
-        Put entry contents into datafile, publish appropriate Pages.
-        Overrides SiteEditor.publish()
-        Subroutine of self.save_page()
-        """
         if entry.content:
             entry.publish(site.template)
         with ignored(AttributeError):

@@ -7,10 +7,10 @@ radix = len(punctuation)
 double_letter = r'([{0}])\1'.format(alphabet)
 
 
-def contents(text):
+def html(text):
     mode = [None]
     divs = [None]
-    return [convert(line, mode, divs) for line in text]
+    return '\n'.join([convert(line, mode, divs) for line in text])
 
 
 section_mark = {'n': '<ol>',

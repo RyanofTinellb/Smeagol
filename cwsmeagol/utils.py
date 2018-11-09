@@ -58,10 +58,11 @@ def _sell(regex):
 
 def change_text(item, replacement, text):
     text[0] = re.sub(item, replacement, text[0])
+    return text
 
 
 def remove_text(item, text):
-    change_text(item, '', text)
+    return change_text(item, '', text)
 
 
 def score_pattern(word, pattern, radix, points):

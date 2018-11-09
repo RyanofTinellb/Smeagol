@@ -24,7 +24,7 @@ class SiteEditor(Editor, object):
         self.server = None
         self.PORT = 41809
         self.start_server()
-        self.entry = self.site.root
+        self.page = self.site.root
         self.content = self.entry.content or self.initial_content()
         self.fill_headings(self.page)
         self.load()
@@ -340,7 +340,7 @@ class SiteEditor(Editor, object):
 
     def _save_wholepage(self, page):
         try:
-            return page.contents
+            return page.html
         except:
             self.errorstring += 'Error in ' + page.folder + '/' + page.name + '\n'
             self.errors += 1
