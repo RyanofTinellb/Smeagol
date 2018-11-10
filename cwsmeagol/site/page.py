@@ -33,7 +33,7 @@ class Page(Node):
                 self.refresh_hyperlink()
                 return getattr(self, attr)
         else:
-            return missing_attribute(Page, self, attr)
+            return super(Page, self).__getattr__(attr)
 
     def __str__(self):
         return '['.join(self.text)
@@ -103,16 +103,18 @@ class Page(Node):
         return dict(name=name[0], score=score)
 
     def __getitem__(self, entry):
+        if entry is '':
+            return self
         count = 0
         try:
             page = self.eldest_daughter
         except AttributeError:
-            raise KeyError('Page has no children')
+            raise KeyError('{0} has no children'.format(self.name))
         try:
             while page.name != entry != count:
                 page.next()
                 count += 1
-        except IndexError:
+        except (IndexError, StopIteration):
             raise KeyError(entry)
         return page
 
@@ -290,6 +292,7 @@ class Page(Node):
         return '<ul>\n{0}\n</ul>'.format(links)
 
     def _link(self, other):
+        other = self.new(other.location)
         if self == other:
             template = '<li class="normal">{0}</li>'
         else:

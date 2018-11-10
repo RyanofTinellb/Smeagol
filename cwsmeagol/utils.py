@@ -25,15 +25,6 @@ def conversion(converter, function):
     #     raise
 
 
-def missing_attribute(cls, instance, attr):
-    try:
-        return getattr(super(cls, instance), attr)
-    except AttributeError:
-        class_name = instance.__class__.__name__
-        error = "{0} instance has no attribute '{1}'"
-        raise AttributeError(error.format(class_name, attr))
-
-
 def dump(dictionary, filename):
     if filename:
         with open(filename, 'w') as f:

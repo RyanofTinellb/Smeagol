@@ -40,7 +40,7 @@ class Site(object):
                 'name="{1}", '
                 'source="{2}", '
                 'template="{3}", '
-                'searchindex="{4}"').format(
+                'searchindex="{4})"').format(
                 self.destination,
                 self.name,
                 self.source,
@@ -51,7 +51,7 @@ class Site(object):
         if attr in {'source', 'template', 'template_file', 'searchindex'}:
             return self.files[attr]
         else:
-            return missing_attribute(Site, self, attr)
+            return getattr(super(Site, self), attr)
 
     def __setattr__(self, attr, value):
         if attr in {'source', 'template', 'template_file', 'searchindex'}:

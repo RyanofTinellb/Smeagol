@@ -24,8 +24,6 @@ class SiteEditor(Editor, object):
         self.server = None
         self.PORT = 41809
         self.start_server()
-        self.page = self.site.root
-        self.content = self.entry.content or self.initial_content()
         self.fill_headings(self.page)
         self.load()
         self.go_to(self.position)
@@ -55,7 +53,7 @@ class SiteEditor(Editor, object):
         try:
             return getattr(self.properties, attr)
         except AttributeError:
-            return missing_attribute(SiteEditor, self, attr)
+            return getattr(super(SiteEditor, self), attr)
 
     def __setattr__(self, attr, value):
         if attr is 'language':
@@ -106,7 +104,7 @@ class SiteEditor(Editor, object):
 
     @property
     def heading_contents(self):
-        contents = [heading.get() for heading in self.headings]
+        contents = [title.get() for title in self.headings if title]
         self.properties.heading_contents = contents
         return contents
 
@@ -249,26 +247,25 @@ class SiteEditor(Editor, object):
 
     def load(self, event=None):
         self.entry = self.find_entry(self.heading_contents)
-        texts = self.prepare_entry(self.entry)
-        self.display(texts)
+        text = self.prepare_entry(self.entry)
+        self.display(text)
         self.reset_textbox()
         self.save_text.set('Save')
         self.master.title('Editing ' + self.entry.name)
         return 'break'
 
-    def find_entry(self, headings):
-        entry = self.site.root
-        for heading in headings:
-            if heading:
-                try:
-                    entry = entry[heading]
-                except KeyError:
-                    entry = Page(heading, entry, '').insert('end')
-                    entry.content = self.initial_content(entry)
-                    self.new_page = True
-            else:
-                break
-        return entry
+    def find_entry(self, headings, entry=None):
+        if entry is None:
+            entry = self.site.root
+        try:
+            heading = headings.pop(0)
+        except IndexError:
+            return entry
+        try:
+            return self.find_entry(headings, entry[heading])
+        except KeyError:
+            self.new_page = True
+            return dict(name=heading)
 
     def list_pages(self, event=None):
         def text_thing(page):
@@ -281,12 +278,15 @@ class SiteEditor(Editor, object):
         return 'break'
 
     def prepare_entry(self, entry):
-        text = entry.content
-        with conversion(self.linkadder, 'remove_links') as converter:
-            text = converter(text)
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
-        return [text]
+        try:
+            text = entry.main_contents
+        except AttributeError:
+            text = initial_content(entry)
+        for converter, function in ((self.linkadder, 'remove_links'),
+                                    (self.markdown, 'to_markdown')):
+            with conversion(converter, function) as converter:
+                text = converter(text)
+        return text
 
     def save_page(self, event=None):
         try:
@@ -462,7 +462,7 @@ class SiteEditor(Editor, object):
     def initial_content(self, entry=None):
         if entry is None:
             entry = self.entry
-        name = entry.name
+        name = entry.get('name', '')
         return '1]{0}\n'.format(name)
 
     @property

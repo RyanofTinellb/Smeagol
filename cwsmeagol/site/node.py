@@ -1,5 +1,4 @@
 from itertools import chain
-from cwsmeagol.utils import missing_attribute
 
 def unique(iter):
     old = Node(None, None)
@@ -44,6 +43,11 @@ class Node(object):
         except TypeError:
             return type(self)(self.tree, None)
 
+    # def append(self, position):
+    #     try:
+    #
+
+
     def find(self, node=None, location=None):
         node = node or self.tree
         location = location or self.location or []
@@ -74,9 +78,11 @@ class Node(object):
     def next_sister(self):
         return self.sister(1)
 
-    @property
-    def children(self):
-        return self.find()['children']
+    def __getattr__(self, attr):
+        if attr is 'children':
+            return self.find().get('children', [])
+        else:
+            return getattr(super(Node, self), attr)
 
     @property
     def num_children(self):
@@ -174,7 +180,7 @@ class Node(object):
 
     @property
     def matriarchs(self):
-        for i, _ in enumerate(self.tree['children']):
+        for i, _ in enumerate(self.root.children):
             yield self.new([i])
         else:
             raise StopIteration
@@ -203,9 +209,7 @@ class Node(object):
         if self.has_children:
             return self.new(self.location + [0])
         else:
-            class_name = instance.__class__.__name__
-            error = "{0} instance has no eldest daughter"
-            raise AttributeError(error.format(class_name))
+            return getattr(super(Node, self), 'eldest_daughter')
 
     @property
     def descendants(self):

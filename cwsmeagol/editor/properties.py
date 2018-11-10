@@ -16,7 +16,6 @@ class Properties(object):
         self.config_filename = config
         self.template = json.loads(default.properties)
         self.setup_config()
-        self.create_site()
         self.create_linkadder()
         self.translator = Translator(self.language)
         self.evolver = HighToVulgarLulani()
@@ -30,6 +29,7 @@ class Properties(object):
                 self.config = json.load(config)
         except (IOError, TypeError):
             self.config = json.loads(default.config)
+        self.create_site()
 
     def __getattr__(self, attr):
         if attr in {'files', 'source', 'destination'}:
@@ -39,7 +39,7 @@ class Properties(object):
         elif attr is 'markdown_file':
             return self.config['current']['markdown']
         else:
-            return missing_attribute(Properties, self, attr)
+            return getattr(super(Properties, self), attr)
 
     def __setattr__(self, name, value):
         if name in {'page', 'language', 'position', 'fontsize'}:

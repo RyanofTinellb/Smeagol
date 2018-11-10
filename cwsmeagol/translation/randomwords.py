@@ -51,7 +51,7 @@ class English:
     def collate(self, page, words):
         words.update({word for line in page['text']
                 for word in line.split()})
-        for child in page['children']:
+        for child in page.get('children', []):
             self.collate(child, self.words)
 
     def word(self):

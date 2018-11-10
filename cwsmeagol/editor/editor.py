@@ -5,7 +5,7 @@ import tkFileDialog as fd
 from ttk import Combobox
 from itertools import izip
 from cwsmeagol.translation import *
-from cwsmeagol.utils import ignored, missing_attribute, conversion
+from cwsmeagol.utils import ignored, conversion
 
 
 class Editor(Tk.Frame, object):
