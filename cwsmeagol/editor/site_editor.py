@@ -19,7 +19,7 @@ from cwsmeagol.defaults import default
 class SiteEditor(Editor, object):
     def __init__(self, master=None, config_file=None):
         super(SiteEditor, self).__init__(master)
-        self.properties = Properties(config_file)
+        self.properties = Properties(config_file, self.caller)
         self.new_page = False
         self.server = None
         self.PORT = 41809
@@ -44,7 +44,7 @@ class SiteEditor(Editor, object):
 
     def __getattr__(self, attr):
         if attr is 'properties':
-            self.properties = Properties()
+            self.properties = Properties(self.caller)
             return self.properties
         try:
             return getattr(self.properties, attr)
@@ -342,8 +342,8 @@ class SiteEditor(Editor, object):
 
     def _save_wholepage(self, page):
         try:
-            return page.html(self.template)
-        except:
+            return page.main_contents
+        except ZeroDivisionError:
             self.errorstring += 'Error in ' + page.folder + '/' + page.name + '\n'
             self.errors += 1
             return ''

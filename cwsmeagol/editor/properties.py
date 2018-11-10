@@ -13,6 +13,7 @@ import tkSimpleDialog as sd
 class Properties(object):
     def __init__(self, config=None, caller=None):
         super(Properties, self).__init__()
+        self.caller = caller
         self.config_filename = config
         try:
             with open(self.config_filename) as config:

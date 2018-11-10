@@ -163,14 +163,14 @@ class Page(Node):
             yield self.url
         raise StopIteration
 
-    def hyperlink(self, destination, template='{0}', anchor_tags=True):
+    def hyperlink(self, destination, template='{0}', anchors=True):
         try:
             if self == destination:
                 return template.format(self.name)
             address, link = self._direct(destination, template)
         except AttributeError:  # destination is a string
             address, link = self._indirect(destination, template)
-        return link if anchor_tags else address
+        return link if anchors else address
 
     def _indirect(self, destination, template):
         up = self.level + int(self.has_children) - 1
@@ -218,12 +218,13 @@ class Page(Node):
 
     @property
     def stylesheet_and_icon(self):
-        hyperlinks = [self.hyperlink(destination) for destination in
-                      ['basic_style.css', 'style.css', 'favicon.png']]
+        destinations = ['basic_style.css', 'style.css', 'favicon.png']
+        hyperlinks = [self.hyperlink(destination, anchors=False)
+                        for destination in destinations]
         return ('<link rel="stylesheet" type="text/css" href="{0}">\n'
                 '<link rel="stylesheet" type="text/css" href="{1}">\n'
-                '<link rel="icon" type="image/png" '
-                'href="{2}">\n').format(*hyperlinks)
+                '<link rel="icon" type="image/png" href="{2}">\n'
+                ).format(*hyperlinks)
 
     @property
     def search_script(self):
@@ -241,8 +242,8 @@ class Page(Node):
         if self.is_root or self.is_leaf:
             return ''
         return '\n'.join(
-            ['<p>{0}</p>'.format(self.hyperlink(child))
-             for child in self.children])
+            ['<p>{0}</p>'.format(self.hyperlink(daughter))
+             for daughter in self.daughters])
 
     @property
     def links(self):

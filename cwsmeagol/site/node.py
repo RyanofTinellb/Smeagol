@@ -116,7 +116,10 @@ class Node(object):
 
     @property
     def successor(self):
-        return self.new(self.location).next()
+        try:
+            return self.new(self.location).next()
+        except StopIteration:
+            raise IndexError('No more nodes!')
 
     @property
     def predecessor(self):
@@ -202,7 +205,7 @@ class Node(object):
     @property
     def daughters(self):
         for child in xrange(self.num_children):
-            return self.new(self.location + [child])
+            yield self.new(self.location + [child])
 
     @property
     def eldest_daughter(self):
