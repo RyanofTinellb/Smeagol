@@ -63,7 +63,9 @@ class SiteEditor(Editor, object):
 
     def set_frames(self):
         super(SiteEditor, self).set_frames()
-        self.headingframe = Tk.Frame(self.sidebar)
+        self.siteframe = Tk.Frame(self.sidebar)
+        self.headingframe = Tk.Frame(self.siteframe)
+        self.buttonframe = Tk.Frame(self.siteframe)
         self.master.title('Site Editor')
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
 
@@ -79,7 +81,7 @@ class SiteEditor(Editor, object):
         self.add_commands('Entry', self.heading_commands)
 
     def ready_buttons(self):
-        master = self.headingframe
+        master = self.buttonframe
         self.save_text = Tk.StringVar()
         self.save_text.set('Save')
         self.load_button = Tk.Button(master, text='Load',
@@ -90,11 +92,13 @@ class SiteEditor(Editor, object):
 
     def place_widgets(self):
         super(SiteEditor, self).place_widgets()
-        self.headingframe.grid(row=0, column=0)
+        self.siteframe.grid(row=0, column=0)
+        self.headingframe.grid()
+        self.buttonframe.grid()
         for i, heading in enumerate(self.headings):
-            heading.grid(row=i, column=0, columnspan=2)
-        for j, button in enumerate(self.buttons):
-            button.grid(row=i+1, column=j)
+            heading.grid(row=i, column=0)
+        for i, button in enumerate(self.buttons):
+            button.grid(row=0, column=i)
 
     def clear_interface(self):
         super(SiteEditor, self).clear_interface()
@@ -251,7 +255,10 @@ class SiteEditor(Editor, object):
         self.display(text)
         self.reset_textbox()
         self.save_text.set('Save')
-        self.master.title('Editing ' + self.entry.name)
+        try:
+            self.master.title('Editing ' + self.entry.name)
+        except AttributeError:
+            self.master.title('Editing ' + self.entry.get('name', ''))
         return 'break'
 
     def find_entry(self, headings, entry=None):
@@ -279,9 +286,9 @@ class SiteEditor(Editor, object):
 
     def prepare_entry(self, entry):
         try:
-            text = entry.main_contents
+            text = self.initial_content(entry)
         except AttributeError:
-            text = initial_content(entry)
+            text = str(entry)
         for converter, function in ((self.linkadder, 'remove_links'),
                                     (self.markdown, 'to_markdown')):
             with conversion(converter, function) as converter:
