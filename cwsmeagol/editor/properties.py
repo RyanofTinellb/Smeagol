@@ -14,25 +14,20 @@ class Properties(object):
     def __init__(self, config=None, caller=None):
         super(Properties, self).__init__()
         self.config_filename = config
-        self.template = json.loads(default.properties)
-        self.setup_config()
-        self.create_linkadder()
-        self.translator = Translator(self.language)
-        self.evolver = HighToVulgarLulani()
-        self.randomwords = RandomWords(self.language)
-        self.markdown = Markdown(self.markdown_file)
-
-    def setup_config(self, config=None):
-        self.config_filename = config or self.config_filename
         try:
             with open(self.config_filename) as config:
                 self.config = json.load(config)
         except (IOError, TypeError):
             self.config = json.loads(default.config)
         self.create_site()
+        self.create_linkadder()
+        self.translator = Translator(self.language)
+        self.evolver = HighToVulgarLulani()
+        self.randomwords = RandomWords(self.language)
+        self.markdown = Markdown(self.markdown_file)
 
     def __getattr__(self, attr):
-        if attr in {'files', 'source', 'destination'}:
+        if attr in {'files', 'source', 'destination', 'template'}:
             return getattr(self.site, attr)
         elif attr in {'page', 'language', 'position', 'fontsize'}:
             return self.config['current'][attr]
@@ -152,10 +147,6 @@ class Properties(object):
             self.config['links'].append(dict(type=kind))
 
     def update(self, owner, prop, text, check, integer=False):
-        """
-
-        :raise: ValueError
-        """
         if owner == 'links':
             if check:
                 self._addlinkadder(prop, text)

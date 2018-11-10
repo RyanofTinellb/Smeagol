@@ -19,7 +19,7 @@ from cwsmeagol.defaults import default
 class SiteEditor(Editor, object):
     def __init__(self, master=None, config_file=None):
         super(SiteEditor, self).__init__(master)
-        self.setup_properties(config_file)
+        self.properties = Properties(config_file)
         self.new_page = False
         self.server = None
         self.PORT = 41809
@@ -31,10 +31,6 @@ class SiteEditor(Editor, object):
     @property
     def caller(self):
         return 'site'
-
-    def setup_properties(self, config_file):
-        self.properties.caller = self.caller
-        self.properties.setup_config(config_file)
 
     def setup_linguistics(self):
         self.languagevar = Tk.StringVar()
@@ -329,7 +325,6 @@ class SiteEditor(Editor, object):
         self.errors = 0
         self.errorstring = ''
         k = '\n'.join(map(self._save_wholepage, g))
-        k = re.sub(r'&date=\d{8}', '', k)
         page = template.replace('{toc}', g[0].family_links).replace(
             '{content}', k).replace(
             '{stylesheet}', g[0].stylesheet_and_icon).replace(
@@ -347,7 +342,7 @@ class SiteEditor(Editor, object):
 
     def _save_wholepage(self, page):
         try:
-            return page.html
+            return page.html(self.template)
         except:
             self.errorstring += 'Error in ' + page.folder + '/' + page.name + '\n'
             self.errors += 1

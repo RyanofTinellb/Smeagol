@@ -78,12 +78,15 @@ class Site(object):
         return self
 
     def next(self):
+        # changed this behaviour because it's better with Page objects
+        # may need to change back if something needs the node object
+            # itself.
         try:
             self.current.next()
         except IndexError:
             self.__iter__()
             raise StopIteration
-        return self.current.find()
+        return self.current
 
     def __getitem__(self, entry):
         page = Page(self.tree, [])
