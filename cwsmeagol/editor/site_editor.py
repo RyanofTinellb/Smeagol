@@ -143,7 +143,7 @@ class SiteEditor(Editor, object):
         # descend hierarchy until correct level
         while self.entry.level < level:
             try:
-                self.entry = self.entry.children[0]
+                self.entry = self.entry.eldest_daughter
             except IndexError:
                 child = False
                 break
