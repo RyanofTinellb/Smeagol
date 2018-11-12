@@ -17,23 +17,18 @@ class Site(object):
 
     def setup_template(self):
         try:
-            with open(self.template) as template:
+            with open(self.template_file) as template:
                 template = template.read()
-        except IOError:
+        except (IOError, KeyError):
             template = ''
-        self.template_file, self.template = self.template, template
+        self.template = template
 
     def load_site(self):
         if self.source:
             with open(self.source) as source:
                 self.tree = json.load(source)
         else:
-            self.tree = dict(
-                date=str(datetime.today()),
-                text='',
-                hyperlink='index.html',
-                children=[],
-                name=self.name)
+            self.tree = dict(name=self.name)
 
     def __repr__(self):
         return ('Site(destination="{0}", '
@@ -48,13 +43,13 @@ class Site(object):
                 self.searchindex)
 
     def __getattr__(self, attr):
-        if attr in {'source', 'template', 'template_file', 'searchindex'}:
+        if attr in {'source', 'template_file', 'searchindex'}:
             return self.files[attr]
         else:
             return getattr(super(Site, self), attr)
 
     def __setattr__(self, attr, value):
-        if attr in {'source', 'template', 'template_file', 'searchindex'}:
+        if attr in {'source', 'template_file', 'searchindex'}:
             self.files[attr] = value
         else:
             super(Site, self).__setattr__(attr, value)
@@ -107,6 +102,10 @@ class Site(object):
         for page in self:
             page.refresh_flatname()
 
+    def remove_flatnames(self):
+        for page in self:
+            page.remove_flatname()
+
     def refresh_hyperlinks(self):
         for page in self:
             page.refresh_hyperlink()
@@ -116,7 +115,7 @@ class Site(object):
         errorstring = ''
         for page in self:
             try:
-                dump(page.publish(template=self.template), page.link)
+                page.publish(template=self.template)
             except:
                 errorstring += 'Error in {0}\n'.format(page.name)
                 errors += 1
@@ -146,12 +145,12 @@ class Site(object):
             # line numbers in each Page are incremented by the current total number of sentences
             base = len(sentences)
             # analyse the Page
-            analysis = page.analysis
+            analysis = entry.analysis
             # add results to appropriate lists and dictionaries
             new_words = analysis['words']
             sentences += analysis['sentences']
-            urls.append(entry['hyperlink'])
-            names.append(buyCaps(entry['name']))
+            urls.append(entry.link)
+            names.append(buyCaps(entry.name))
             for word, line_numbers in new_words.iteritems():
                 # increment line numbers by base
                 # use str(page_number) because search.js relies on that

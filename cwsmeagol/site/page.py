@@ -1,5 +1,6 @@
 import os
 from node import Node
+from datetime import datetime
 from page_utils import *
 from cwsmeagol.translation import *
 from cwsmeagol.utils import *
@@ -35,11 +36,25 @@ class Page(Node):
         else:
             return super(Page, self).__getattr__(attr)
 
+    def __setattr__(self, attr, value):
+        if attr == 'text':
+            self.find()['text'] = value
+        else:
+            super(Page, self).__setattr__(attr, value)
+
+
     def __str__(self):
         return '['.join(self.text)
 
+    def update_date(self):
+        self.find()['date'] = datetime.strftime(datetime.today(), '%Y-%m-%d')
+
     def refresh_flatname(self):
         self.find()['flatname'] = self._flatname
+
+    def remove_flatname(self):
+        with ignored(KeyError):
+            self.find().pop('flatname')
 
     def refresh_hyperlink(self):
         link = self.folder
@@ -60,7 +75,7 @@ class Page(Node):
     @property
     def analysis(self):
         wordlist = {}
-        content = [self.content]
+        content = [str(self)]
         # remove tags, and items between some tags
         change_text(
             r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
@@ -151,6 +166,10 @@ class Page(Node):
     def __le__(self, other):
         return self == other or self < other
 
+    def publish(self, template=None):
+        self.update_date()
+        dumps(self.html(template), self.link)
+
     @property
     def folder(self):
         return '/'.join(self.iterfolder)
@@ -228,7 +247,7 @@ class Page(Node):
 
     @property
     def search_script(self):
-        hyperlink = self.hyperlink('search.html', anchor_tags=False)
+        hyperlink = self.hyperlink('search.html', anchors=False)
         return ('<script type="text/javascript">'
                 'if (window.location.href.indexOf("?") != -1) {{'
                 'window.location.href = "{0}" +'

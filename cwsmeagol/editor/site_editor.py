@@ -292,15 +292,9 @@ class SiteEditor(Editor, object):
         return text
 
     def save_page(self, event=None):
-        try:
-            widget = event.widget
-        except AttributeError:
-            widget = self.textbox
         if self.is_new:
             self.site_properties()
-        if self.entry.newpage:
-            self.entry.insert()
-        widget.tag_remove(self.current_style.get(), Tk.INSERT)
+        self.textbox.tag_remove(self.current_style.get(), Tk.INSERT)
         self.current_style.set('')
         self.tkinter_to_tkinter(self._save_page)
         self.save_text.set('Save')
@@ -309,11 +303,9 @@ class SiteEditor(Editor, object):
         return 'break'
 
     def _save_page(self):
-        texts = map(self.get_text, self.textboxes)
-        if self.entry:
-            self.prepare_texts(texts)
-        self.publish(self.entry, self.site, self.new_page)
-        self.new_page = False
+        text = self.get_text(self.textbox)
+        self.prepare_text(text)
+        self.publish(self.entry, self.site)
 
     def save_wholepage(self):
         try:
@@ -374,26 +366,23 @@ class SiteEditor(Editor, object):
     def get_text(textbox):
         return str(textbox.get(1.0, Tk.END + '-1c'))
 
-    def prepare_texts(self, texts):
-        text = ''.join(texts)
+    def prepare_text(self, text):
         if self.entry.level and not text:
             if self.page == self.heading_contents:
-                self.page = [""]
+                self.page = ['']
             self.entry.delete_htmlfile()
             self.entry.remove_from_hierarchy()
             self.reset()
         else:
-            text = self.convert_texts(text, self.entry)
-            # remove duplicate linebreaks
-            text = re.sub(r'\n\n+', '\n', text)
-            self.entry.content = text
+            self.convert_text(text, self.entry)
 
-    def convert_texts(self, text, entry):
+    def convert_text(self, text, entry):
+        text = re.sub(r'\n\n+', '\n', text)
         with conversion(self.markdown, 'to_markup') as converter:
             text = converter(text)
         with conversion(self.linkadder, 'add_links') as converter:
             text = converter(text, entry)
-        return text
+        self.entry.text = filter(None, text.split('['))
 
     @staticmethod
     def publish(entry, site, allpages=False):
@@ -402,8 +391,8 @@ class SiteEditor(Editor, object):
         elif entry is not None:
             entry.publish(site.template)
         if site is not None:
-            site.modify_source()
-            site.update_json()
+            site.update_source()
+            site.update_searchindex()
 
     @staticmethod
     def insert_characters(textbox, before, after=''):

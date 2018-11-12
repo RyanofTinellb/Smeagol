@@ -1,5 +1,6 @@
-import json
 import re
+import sys
+import json
 import urllib
 import inspect
 from contextlib import contextmanager
@@ -19,16 +20,20 @@ def ignored(*exceptions):
 def conversion(converter, function):
     try:
         yield getattr(converter, function)
-    except AttributeError:
-        yield lambda x: x
-    # except:
-    #     raise
+    except:
+        pass
 
 
 def dump(dictionary, filename):
     if filename:
         with open(filename, 'w') as f:
             json.dump(dictionary, f, indent=2)
+
+
+def dumps(string, filename):
+    if filename:
+        with open(filename, 'w') as f:
+            f.write(string)
 
 
 def buyCaps(word):

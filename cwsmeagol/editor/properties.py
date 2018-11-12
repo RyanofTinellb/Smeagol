@@ -28,7 +28,8 @@ class Properties(object):
         self.markdown = Markdown(self.markdown_file)
 
     def __getattr__(self, attr):
-        if attr in {'files', 'source', 'destination', 'template'}:
+        if attr in {'files', 'source', 'destination', 'template',
+                    'template_file'}:
             return getattr(self.site, attr)
         elif attr in {'page', 'language', 'position', 'fontsize'}:
             return self.config['current'][attr]
