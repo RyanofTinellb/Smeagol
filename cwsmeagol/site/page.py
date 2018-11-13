@@ -167,7 +167,6 @@ class Page(Node):
         return self == other or self < other
 
     def publish(self, template=None):
-        self.update_date()
         dumps(self.html(template), self.link)
 
     @property
@@ -233,7 +232,8 @@ class Page(Node):
 
     @property
     def main_contents(self):
-        return html(self.text)
+        contents = '<div class="main-contents">{0}</div>'
+        return contents.format(html(self.text))
 
     @property
     def stylesheet_and_icon(self):
@@ -260,9 +260,10 @@ class Page(Node):
     def toc(self):
         if self.is_root or self.is_leaf:
             return ''
-        return '\n'.join(
-            ['<p>{0}</p>'.format(self.hyperlink(daughter))
-             for daughter in self.daughters])
+        toc = '<div class="toc">\n{0}\n</div>'
+        hyperlinks = ['<p>{0}</p>'.format(self.hyperlink(daughter))
+                            for daughter in self.daughters]
+        return toc.format('\n'.join(hyperlinks))
 
     @property
     def links(self):
@@ -277,6 +278,7 @@ class Page(Node):
                 '        </li>\n'
                 '      </form>\n'
                 '    </div>\n'
+                '   <div class="links">'
                 '  {{0}}'
                 '</ul></label>').format(
                     ' class="normal"' if not self.is_root else '',
@@ -321,6 +323,7 @@ class Page(Node):
 
     @property
     def nav_footer(self):
+        footer = '<div class="nav-footer">{0}</div>'
         div = '<div>\n{0}\n</div>\n'
         try:
             previous = self.hyperlink(self.predecessor,
@@ -332,10 +335,12 @@ class Page(Node):
             next = self.hyperlink(self.successor, 'Next page &rarr;')
         except IndexError:
             next = 'Return to Menu &uarr;'
-        return '\n'.join([div.format(f) for f in (previous, next)])
+        links = '\n'.join([div.format(f) for f in (previous, next)])
+        return footer.format(links)
 
     @property
     def copyright(self):
+        copyright = '<div class="copyright">{0}</div>'
         date = self.date
         if 4 <= date.day <= 20 or 24 <= date.day <= 30:
             suffix = 'th'
@@ -345,7 +350,8 @@ class Page(Node):
                     '<a href="http://www.tinellb.com/about.html">'
                     'Ryan Eakins</a>.</span> <span class="no-breaks">'
                     'Last updated: %A, %B %#d' + suffix + ', %Y.')
-        return datetime.strftime(date, template)
+        date = datetime.strftime(date, template)
+        return copyright.format(date)
 
     def html(self, template=None):
         page = template or default.template
@@ -353,7 +359,7 @@ class Page(Node):
             ('{title}', 'title'),
             ('{stylesheet}', 'stylesheet_and_icon'),
             ('{search-script}', 'search_script'),
-            ('{content}', 'main_contents'),
+            ('{main-contents}', 'main_contents'),
             ('{toc}', 'toc'),
             ('{family-links}', 'family_links'),
             ('{elder-links}', 'elder_links'),

@@ -318,7 +318,7 @@ class SiteEditor(Editor, object):
         self.errorstring = ''
         k = '\n'.join(map(self._save_wholepage, g))
         page = template.replace('{toc}', g[0].family_links).replace(
-            '{content}', k).replace(
+            '{main-contents}', k).replace(
             '{stylesheet}', g[0].stylesheet_and_icon).replace(
             '{copyright}', self.copyright)
         information = '{3}{0} error{2}\n{1}'.format(
@@ -389,6 +389,7 @@ class SiteEditor(Editor, object):
         if allpages:
             site.publish()
         elif entry is not None:
+            entry.update_date()
             entry.publish(site.template)
         if site is not None:
             site.update_source()

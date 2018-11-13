@@ -49,7 +49,7 @@ class Default():
     def __init__(self):
         self.destination = 'c:/users/ryan/documents/tinellbianlanguages/'
         self.files = dict(source='data.json',
-                          template='template.html',
+                          template_file='template.html',
                           searchindex='searching.json')
 
 

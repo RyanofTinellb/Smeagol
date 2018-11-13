@@ -69,7 +69,7 @@ class Site(object):
             os.chdir(destination)
 
     def __iter__(self):
-        self.current = Page(self.tree, [])
+        self.current = None
         return self
 
     def next(self):
@@ -78,6 +78,8 @@ class Site(object):
             # itself.
         try:
             self.current.next()
+        except AttributeError:
+            self.current = Page(self.tree, [])
         except IndexError:
             self.__iter__()
             raise StopIteration

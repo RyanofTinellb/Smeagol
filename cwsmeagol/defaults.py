@@ -250,6 +250,6 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
               <body>
                 {family-links}
                   {nav-footer}
-                  {content}
+                  {main-contents}
                   {nav-footer}
                   {copyright}'''
