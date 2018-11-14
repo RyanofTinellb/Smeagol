@@ -198,19 +198,13 @@ class Page(Node):
         return address, link
 
     def _direct(self, destination, template):
-        change = int(not self.is_leaf)
-        if destination.is_root:
-            up = self.level + change - 1
-            down = 'index'
+        if self.related_to(destination):
+            up = self.level - destination.level
         else:
-            if self.startswith(destination):
-                up = self.level + change - destination.level
-                down = destination.url
-            else:
-                up = self.level + change - self.distance(destination)
-                down = '/'.join(
-                    [ancestor.url for ancestor in
-                     destination.unshared_ancestors(self)])
+            up = self.distance(destination)
+        up -= int(self.is_leaf)
+        down = '/'.join([ancestor.url for ancestor in
+                            destination.unique_lineage(self)])
         address = (up * '../') + down + '.html'
         destination = template.format(buyCaps(destination.name))
         link = '<a href="{0}">{1}</a>'.format(address, destination)
@@ -273,13 +267,14 @@ class Page(Node):
                 '    <div class="javascript">\n'
                 '      <form id="search">\n'
                 '        <li class="search">\n'
-                '          <input type="text" name="term"></input>\n'
+                '          <input type="text" name="term">\n'
                 '          <button type="submit">Search</button>\n'
                 '        </li>\n'
                 '      </form>\n'
                 '    </div>\n'
                 '   <div class="links">'
                 '  {{0}}'
+                '   </div>'
                 '</ul></label>').format(
                     ' class="normal"' if not self.is_root else '',
                     self.hyperlink(self.root))
@@ -305,7 +300,7 @@ class Page(Node):
             else:
                 link_array += '<li>{0}</li>\n'.format(
                     self.hyperlink(relative))
-        link_array += level * '</ul>\n'
+        link_array += (level - 1) * '</ul>\n'
         return self.links.format(link_array)
 
     @property
@@ -340,18 +335,21 @@ class Page(Node):
 
     @property
     def copyright(self):
+        strftime = datetime.strftime
         copyright = '<div class="copyright">{0}</div>'
         date = self.date
         if 4 <= date.day <= 20 or 24 <= date.day <= 30:
             suffix = 'th'
         else:
             suffix = ['st', 'nd', 'rd'][date.day % 10 - 1]
-        template = ('<span class="no-breaks">&copy;%Y '
-                    '<a href="http://www.tinellb.com/about.html">'
-                    'Ryan Eakins</a>.</span> <span class="no-breaks">'
-                    'Last updated: %A, %B %#d' + suffix + ', %Y.')
-        date = datetime.strftime(date, template)
-        return copyright.format(date)
+        span = '<span class="no-breaks">{0}</span>'
+        templates = (('&copy;%Y '
+                      '<a href="http://www.tinellb.com/about.html">'
+                      'Ryan Eakins</a>.'),
+                'Last updated: %A, %B %#d' + suffix + ', %Y.')
+        spans = '\n'.join([span.format(strftime(date, template))
+                            for template in templates])
+        return copyright.format(spans)
 
     def html(self, template=None):
         page = template or default.template

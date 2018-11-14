@@ -1,11 +1,4 @@
-from itertools import chain
-
-def unique(iter):
-    old = Node(None, None)
-    for k in iter:
-        if old <> k:
-            yield k
-        old = k
+from itertools import chain, izip_longest
 
 
 class Node(object):
@@ -15,6 +8,9 @@ class Node(object):
 
     def __repr__(self):
         return 'Node: location = {0}'.format(self.location)
+
+    def __hash__(self):
+        return hash(tuple(self.location))
 
     def __eq__(self, other):
         return self.location == other.location
@@ -42,11 +38,6 @@ class Node(object):
             return type(self)(self.tree, location[:])
         except TypeError:
             return type(self)(self.tree, None)
-
-    # def append(self, position):
-    #     try:
-    #
-
 
     def find(self, node=None, location=None):
         node = node or self.tree
@@ -144,15 +135,23 @@ class Node(object):
             self._last_grandchild()
 
     def distance(self, destination):
+        self, destination = [x.location for x in (self, destination)]
         try:
-            return 1 + [i != j for i, j in
-                        zip(self.location, destination.location)].index(True)
+            dist = [i != j for i, j in
+                    zip(self, destination)].index(True)
+            return len(self) - dist
         except ValueError:
-            return min(map(len, [self.location, destination.location]))
+            return min(map(len, [self, destination]))
 
-    def startswith(self, destination):
-        tail = self.location[:destination.level]
-        return destination == self.new(tail)
+    def descendant_of(self, other):
+        tail = self.location[:other.level]
+        return other == self.new(tail)
+
+    def ancestor_of(self, other):
+        return other.descendant_of(self)
+
+    def related_to(self, other):
+        return self.descendant_of(other) or self.ancestor_of(other)
 
     @property
     def root(self):
@@ -167,13 +166,19 @@ class Node(object):
         for i in xrange(len(self.location) - 1):
             yield self.new(self.location[:i + 1])
 
-    def unshared_ancestors(self, other):
-        source, destination = [set(location.ancestors)
-                               for location in (self, other)]
-        level = lambda node: node.level
-        for ancestor in sorted(source - destination, key=level):
+    @property
+    def lineage(self):
+        yield self.root
+        for ancestor in self.ancestors:
             yield ancestor
         yield self
+
+    def unique_lineage(self, other):
+        superset, subset = [set(location.lineage)
+                                for location in (self, other)]
+        level = lambda node: node.level
+        for ancestor in sorted(superset - subset, key=level):
+            yield ancestor
         if self.has_children:
             yield self.new(None)
 
@@ -228,7 +233,7 @@ class Node(object):
 
     def reunion(self, *groups):
         location = lambda node: node.location
-        relatives = unique(sorted(chain(*groups), key=location))
+        relatives = sorted(set(chain(*groups)), key=location)
         for relative in relatives:
             yield relative
 
