@@ -36,6 +36,7 @@ def convert(line, mode, divs):
         category = div(category, divs)
     elif line.startswith('t'):
         category = table(line)
+        rest = ''
     elif line.startswith('/t]'):
         category = ''
     else:
@@ -117,7 +118,7 @@ def table(text):
 
 def table_row(row):
     cells = ''.join(map(table_cell, row.split('|')))
-    return '<{0}>\n{1}\n</{0}>\n'.format('tr', cells)
+    return '<{0}>{1}</{0}>\n'.format('tr', cells)
 
 
 def table_cell(cell):
@@ -133,7 +134,7 @@ def table_cell(cell):
         ['rowspan', r'(?<=r)\d*', form],
         ['colspan', r'(?<=c)\d*', form]
     ])
-    return '<t{0}{2}{3}>\n{1}\n</t{0}>\n'.format(heading, cell, *rowcol)
+    return '<t{0}{2}{3}>{1}</t{0}>'.format(heading, cell, *rowcol)
 
 
 def check_rowcol(info):
