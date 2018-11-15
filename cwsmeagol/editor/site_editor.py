@@ -201,7 +201,7 @@ class SiteEditor(Editor, object):
         self.load()
 
     def site_open(self, event=None):
-        source = self.open()
+        source = self.open_site()
         self.languagevar.set(self.language)
         self.reset()
         return 'break'

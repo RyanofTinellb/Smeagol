@@ -14,6 +14,9 @@ class Properties(object):
     def __init__(self, config=None, caller=None):
         super(Properties, self).__init__()
         self.caller = caller
+        self.setup(config)
+
+    def setup(self, config):
         self.config_filename = config
         try:
             with open(self.config_filename) as config:
@@ -51,16 +54,12 @@ class Properties(object):
         else:
             super(Properties, self).__setattr__(name, value)
 
-    def open(self):
+    def open_site(self):
         filetypes = [('Sm\xe9agol File', '*.smg'), ('Source Data File', '*.txt')]
         title = 'Open Site'
         filename = fd.askopenfilename(filetypes=filetypes, title=title)
         if filename and filename.endswith('.smg'):
-            self.config_filename = filename
-            self.setup_config()
-            self.create_site()
-            self.create_linkadder()
-            self.markdown = Markdown(self.markdown_file)
+            self.setup(filename)
             return False
         return filename
 
