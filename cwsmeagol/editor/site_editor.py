@@ -109,9 +109,9 @@ class SiteEditor(Editor, object):
         return contents
 
     def fill_headings(self, entries):
-        while len(self.headings) < len(entries):
+        while len(self.headings) < len(entries) < 10:
             self.add_heading()
-        while len(self.headings) > len(entries):
+        while len(self.headings) > len(entries) > 0:
             self.remove_heading()
         for heading, entry in zip(self.headings, entries):
             self.replace(heading, entry)

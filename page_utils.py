@@ -99,10 +99,9 @@ def div(div_, divs):
 def heading(text):
     try:
         level, name = text.split(']')
+        level = int(level) + 1
     except ValueError:
         raise AttributeError(text)
-    if level == '1':
-        name = buyCaps(name)
     url_id = urlform(re.sub(r'\(.*?\)', '', name))
     if url_id:
         return '<h{0} id="{1}">{2}</h{0}>\n'.format(level, url_id, name)

@@ -215,6 +215,11 @@ class Page(Node):
         return remove_text(r'[[<].*?[]>]', [self.name])[0]
 
     @property
+    def title_heading(self):
+        title = '<h1>{0}</h1>'
+        return title.format(buyCaps(self.name))
+
+    @property
     def category_title(self):
         if self.level < 2:
             return self.title
@@ -357,6 +362,7 @@ class Page(Node):
             ('{title}', 'title'),
             ('{stylesheet}', 'stylesheet_and_icon'),
             ('{search-script}', 'search_script'),
+            ('{title-heading}', 'title_heading'),
             ('{main-contents}', 'main_contents'),
             ('{toc}', 'toc'),
             ('{family-links}', 'family_links'),
