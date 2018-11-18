@@ -59,7 +59,7 @@ if __name__ == '__main__':
         site = site()
         print(site.name + ': ')
         site.update_searchindex()
-        # print(site.publish())
+        print(site.publish())
         newtime = datetime.now()
         print('Done: ' + str(newtime - oldtime))
         oldtime = newtime

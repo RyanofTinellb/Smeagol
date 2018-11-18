@@ -56,7 +56,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
     "files": {
       "searchindex": "",
       "source": "",
-      "template": ""
+      "template_file": ""
     }
   },
   "current": {
@@ -142,7 +142,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
       },
       {
         "name": "Template",
-        "property": "template",
+        "property": "template_file",
         "owner": "files",
         "check": false,
         "textbox": true,

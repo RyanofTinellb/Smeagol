@@ -111,7 +111,7 @@ class Page(Node):
     def _flatname(self):
         name = [self.url]
         score = 0
-        change_text(double_letter, r'\1#', name)
+        change_text(double_letter, r'#\1', name)
         for points, pattern in enumerate(punctuation):
             score += score_pattern(name[0], pattern, radix, points + 1)
             remove_text('\\' + pattern, name)

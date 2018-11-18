@@ -227,7 +227,7 @@ class SiteEditor(Editor, object):
 
     def open_in_browser(self, event=None):
         web.open_new_tab(os.path.join('http://localhost:' +
-                                      str(self.PORT), self.entry.link()))
+                                      str(self.PORT), self.entry.link))
         return 'break'
 
     def reset(self, event=None):

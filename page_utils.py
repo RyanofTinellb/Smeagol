@@ -2,9 +2,24 @@ import re
 from cwsmeagol.utils import *
 
 alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
-punctuation = "$-'#.()!_"
+punctuation = "$-'.#()!_"
 radix = len(punctuation)
 double_letter = r'([{0}])\1'.format(alphabet)
+
+
+def score_pattern(word, pattern, radix, points):
+    return sum([points * radix**index
+                for index in pattern_indices(word, pattern)])
+
+
+def pattern_indices(word, pattern):
+    index = -1
+    while True:
+        try:
+            index = word.index(pattern, index + 1)
+            yield index
+        except ValueError:
+            raise StopIteration
 
 
 def html(text):

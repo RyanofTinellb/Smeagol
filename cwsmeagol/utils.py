@@ -61,21 +61,6 @@ def remove_text(item, text):
     return change_text(item, '', text)
 
 
-def score_pattern(word, pattern, radix, points):
-    return sum([points * radix**index
-                for index in pattern_indices(word, pattern)])
-
-
-def pattern_indices(word, pattern):
-    index = -1
-    while True:
-        try:
-            index = word.index(pattern, index + 1)
-            yield index + 1
-        except ValueError:
-            raise StopIteration
-
-
 url_markdown = Markdown()
 
 

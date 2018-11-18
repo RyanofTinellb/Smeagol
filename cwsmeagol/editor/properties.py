@@ -32,7 +32,7 @@ class Properties(object):
 
     def __getattr__(self, attr):
         if attr in {'files', 'source', 'destination', 'template',
-                    'template_file'}:
+                'template_file'}:
             return getattr(self.site, attr)
         elif attr in {'page', 'language', 'position', 'fontsize'}:
             return self.config['current'][attr]
