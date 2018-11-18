@@ -91,14 +91,14 @@ class InternalDictionary:
             '<a href="../b/blah.html#highlulani">blah</a>'
         """
         self.language = 'also'
-        lang = '[2]'  # language marker
+        lang = '1]'  # language marker
         output = []
         regex = r'<{0}>(.*?)</{0}>'.format('link')
-        for line in text.splitlines():
+        for line in text.split('['):
             if line.startswith(lang):
-                self.language = line[len(lang):]
+                self.language = line[len(lang):-1]
             output.append(re.sub(regex, self._link, line))
-        return '\n'.join(output)
+        return '['.join(output)
 
     def _link(self, text):
         word = text.group(1).split(':')
@@ -113,14 +113,14 @@ class InternalDictionary:
 
     def remove_links(self, text):
         self.language = 'also'
-        lang = '[2]'  # language marker
+        lang = '1]'  # language marker
         output = []
         regex = r'<a href="(?:\w+\.html|\.\./.*?)#(.*?)">(.*?)</a>'
-        for line in text.splitlines():
+        for line in text.split('['):
             if line.startswith(lang):
-                self.language = line[len(lang):]
+                self.language = line[len(lang):-1]
             output.append(re.sub(regex, self._unlink, line))
-        return '\n'.join(output)
+        return '['.join(output)
 
     def _unlink(self, regex):
         tr = self.translator
