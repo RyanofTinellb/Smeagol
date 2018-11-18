@@ -38,6 +38,8 @@ class Page(Node):
 
     def __setattr__(self, attr, value):
         if attr == 'text':
+            with ignored(AttributeError):
+                value = filter(None, value.split('['))
             self.find()['text'] = value
         else:
             super(Page, self).__setattr__(attr, value)

@@ -342,15 +342,21 @@ class SiteEditor(Editor, object):
 
     @property
     def copyright(self):
-        try:
-            date = datetime.today()
-        except ValueError:
-            return ''
-        suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else [
-            "st", "nd", "rd"][date.day % 10 - 1]
-        output = datetime.strftime(
-            date, '<span class="no-breaks">&copy;%Y Ryan Eakins.</span> <span class="no-breaks">Last updated: %A, %B %#d' + suffix + ', %Y.')
-        return output
+        strftime = datetime.strftime
+        copyright = '<div class="copyright">{0}</div>'
+        date = datetime.today()
+        if 4 <= date.day <= 20 or 24 <= date.day <= 30:
+            suffix = 'th'
+        else:
+            suffix = ['st', 'nd', 'rd'][date.day % 10 - 1]
+        span = '<span class="no-breaks">{0}</span>'
+        templates = (('&copy;%Y '
+                      '<a href="http://www.tinellb.com/about.html">'
+                      'Ryan Eakins</a>.'),
+                'Last updated: %A, %B %#d' + suffix + ', %Y.')
+        spans = '\n'.join([span.format(strftime(date, template))
+                            for template in templates])
+        return copyright.format(spans)
 
     @property
     def is_new(self):
@@ -382,7 +388,7 @@ class SiteEditor(Editor, object):
             text = converter(text)
         with conversion(self.linkadder, 'add_links') as converter:
             text = converter(text, entry)
-        self.entry.text = filter(None, text.split('['))
+        self.entry.text = text
 
     @staticmethod
     def publish(entry, site, allpages=False):
