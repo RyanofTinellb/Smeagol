@@ -4,14 +4,8 @@ from cwsmeagol import Translator
 from cwsmeagol.utils import urlform, ignored, buyCaps, sellCaps
 
 class AddRemoveLinks:
-    def __init__(self, link_adders):
-        """
-        Allow for the removal of all links, and addition of specific
-            links to Smeagol pages
-
-        :param link_adders: (obj[]) a list of link adder instances
-        """
-        self.link_adders = link_adders
+    def __init__(self, link_adders=None):
+        self.link_adders = link_adders or []
 
     def add_links(self, text, entry):
         for link_adder in self.link_adders:
@@ -51,24 +45,14 @@ class Glossary:
 
 
 class ExternalDictionary:
-    """
-    Move between markdown links and links to an external dictionary site
-
-    :param text: (str) The source text
-    :param url: (str) A url to the top page of the external site
-    """
-
     def __init__(self, url):
         self.url = url
         self.language = ''
 
     def add_links(self, text, entry):
         """
-        Replace links in text with hyperlinks to an external dictionary site
-
         text: 'foo<link>bar</link>baz' =>
             'foo<a href="url/b/bar.html#language">bar</a>baz'
-
         """
         self.language = '#'
         with ignored(IndexError):
@@ -147,11 +131,6 @@ class InternalDictionary:
 
 
 class ExternalGrammar:
-    """
-    Replace given words in parts of speech with external URLs.
-    :param filename (str): filename to get replacements from.
-    """
-
     def __init__(self, filename):
         with open(filename) as replacements:
             self.replacements = json.load(replacements)
@@ -160,16 +139,16 @@ class ExternalGrammar:
 
     def add_links(self, text, entry):
         """
-        Add links of the form
-            '<a href="http://grammar.tinellb.com/highlulani/morphology/nouns">noun</a>'
+        '<a href="http://grammar.tinellb.com/highlulani/
+                                            morphology/nouns">noun</a>'
         """
         div = ' <div class="definition">'
-        lang = '[2]'  # language marker
-        wcs = '[5]'  # word classes marker
+        lang = '1]'  # language marker
+        wcs = '3]'  # word classes marker
         output = []
-        for line in text.splitlines():
+        for line in text.split('['):
             if line.startswith(lang):
-                self.language = line[len(lang):]
+                self.language = line[len(lang):-1]
             elif line.startswith(wcs):
                 try:
                     pos, rest = line[len(wcs):].split(div, 1)  # part of speech
@@ -178,7 +157,7 @@ class ExternalGrammar:
                 pos = ''.join(map(self._link, re.split(r'([^a-zA-Z0-9_\'-])', pos)))
                 line = wcs + pos + div + rest
             output.append(line)
-        return '\n'.join(output)
+        return '['.join(output)
 
     def _link(self, pos):
         if re.match('\W+|rarr', pos):
@@ -197,11 +176,11 @@ class ExternalGrammar:
         Grammar markdown file takes care of adding and removing links to the phonology page
 
         """
-        return '\n'.join(map(self._unlink, text.splitlines()))
+        return '['.join(map(self._unlink, text.split('[')))
 
     def _unlink(self, line):
         div = ' <div class="definition">'
-        wcs = '[5]'
+        wcs = '3]'
         if line.startswith(wcs):
             try:
                 pos, rest = line[len(wcs):].split(div, 1)
