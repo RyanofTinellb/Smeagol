@@ -88,7 +88,7 @@ class Properties(object):
                             self.config_filename
                         ).group(1).capitalize()
                     sites[name] = self.config_filename
-                    json.dump(sites, inisave)
+                    json.dump(sites, inisave, indent=2)
                 return # successful save
         self.save_site_as() # unsuccessful save
 
