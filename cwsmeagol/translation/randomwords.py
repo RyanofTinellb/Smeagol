@@ -28,7 +28,7 @@ class RandomWords():
 
     @property
     def words(self):
-        return [self.converter.word() for x in range(self.maximum)]
+        return [self.converter.word for x in xrange(self.maximum)]
 
     def __iter__(self):
         return self
@@ -56,6 +56,7 @@ class English:
         for child in page.get('children', []):
             self.collate(child, self.words)
 
+    @property
     def word(self):
         choice = ''
         while not choice:
@@ -79,9 +80,11 @@ class HighLulani:
         self.name = 'High Lulani'
         self.geminate = 2
 
+    @property
     def word(self):
-        return u''.join([self.double(self.syllable(), i) for i in range(self.numsyllables())])
+        return u''.join(self.syllables)
 
+    @property
     def consonant(self):
         lst = ['b', 'g', 'j', 'f', 'h', 'd', 'p', 'r', 't', 'm',
                'c', 'x', 'q', 'n', 'k', 'l', unichr(8217), 's']
@@ -89,36 +92,40 @@ class HighLulani:
                  17, 19, 21, 24, 27, 32, 38, 47, 62, 82]
         return self.pick(lst, scale)
 
+    @property
     def vowel(self):
         lst = ['a', 'i', 'u']
         scale = [4, 2, 1]
         return self.pick(lst, scale)
 
-    def numsyllables(self):
+    @property
+    def syllables(self):
         lst = [1, 2, 3, 4]
         scale = [7, 18, 15, 2]
-        return self.pick(lst, scale)
+        for i in xrange(self.pick(lst, scale)):
+            yield self.double(self.syllable, i)
 
     @staticmethod
     def pick(lst, scale):
+        rand = random.randint(1, sum(scale))
         try:
-            output = map(lambda x: sum(scale[:x]), range(len(scale)))
-            output = map(lambda x: x <= random.randint(
-                1, sum(scale)), output).index(False) - 1
-            output = lst[output]
+            sums = [sum(scale[:x]) for x in xrange(len(scale))]
+            letter = [x <= rand for x in sums].index(False) - 1
+            return lst[letter]
         except ValueError:
-            output = lst[-1]
-        return output
+            return lst[-1]
 
+    @property
     def syllable(self):
-        return self.consonant() + self.vowel()
+        return self.consonant + self.vowel
 
     def double(self, syllable, num):
-        consonant, vowel = list(syllable)
+        consonant, vowel = syllable
         if num and not random.randint(0, self.geminate):
-            return consonant + syllable if consonant != unichr(8217) else unichr(660) + vowel
-        else:
-            return syllable
+            if consonant == unichr(8217):  # right single quote
+                return unichr(660) + vowel # glottal stop
+            return consonant + syllable
+        return syllable
 
 class VulgarLulani:
     def __init__(self):
@@ -144,6 +151,7 @@ class VulgarLulani:
                 ('&#x2c8;', u'\u02c8'),
                 ('&#x2cc;', u'\u02cc')]
 
+    @property
     def word(self):
         word = self.vulgar.evolve(self._word)[-1]
         for rewrite in self.rewrites:
@@ -160,7 +168,7 @@ class VulgarLulani:
 
     @property
     def lulani_word(self):
-        word = self.lulani.word()
+        word = self.lulani.word
         return word.replace(
             unichr(8217), "&rsquo;").replace(
             unichr(660), "&#x294;")
