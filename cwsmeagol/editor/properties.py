@@ -32,12 +32,14 @@ class Properties(object):
 
     def __getattr__(self, attr):
         if attr in {'files', 'source', 'destination', 'template',
-                'template_file'}:
+                'template_file', 'name', 'searchindex'}:
             return getattr(self.site, attr)
         elif attr in {'page', 'language', 'position', 'fontsize'}:
             return self.config['current'][attr]
         elif attr is 'markdown_file':
             return self.config['current']['markdown']
+        elif attr is 'links':
+            return self.config['links']
         else:
             return getattr(super(Properties, self), attr)
 
@@ -102,10 +104,6 @@ class Properties(object):
             self.save_site()
 
     def update_site(self):
-        """
-        Update the current Site object with new properties from the
-            config file.
-        """
         for prop, value in self.config['site'].items():
             self.site.__dict__[prop] = value
         self.site.change_destination()

@@ -20,7 +20,6 @@ class SiteEditor(Editor, object):
     def __init__(self, master=None, config_file=None):
         super(SiteEditor, self).__init__(master)
         self.properties = Properties(config_file, self.caller)
-        self.new_page = False
         self.server = None
         self.PORT = 41809
         self.start_server()
@@ -267,8 +266,7 @@ class SiteEditor(Editor, object):
         try:
             return self.find_entry(headings, entry[heading])
         except KeyError:
-            self.new_page = True
-            return dict(name=heading)
+            return dict(name=heading, parent=entry)
 
     def list_pages(self, event=None):
         def text_thing(page):

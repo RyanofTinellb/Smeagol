@@ -89,7 +89,7 @@ class HighLulani:
         lst = ['b', 'g', 'j', 'f', 'h', 'd', 'p', 'r', 't', 'm',
                'c', 'x', 'q', 'n', 'k', 'l', unichr(8217), 's']
         scale = [10, 10, 11, 12, 13, 14, 15, 16,
-                 17, 19, 21, 24, 27, 32, 38, 47, 62, 82]
+                 17, 19, 21, 24, 27, 32, 38, 47, 79, 82]
         return self.pick(lst, scale)
 
     @property
