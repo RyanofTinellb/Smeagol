@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 import json
@@ -26,12 +27,16 @@ def conversion(converter, function):
 
 def dump(dictionary, filename):
     if filename:
+        with ignored(os.error):
+            os.makedirs(os.path.dirname(filename))
         with open(filename, 'w') as f:
             json.dump(dictionary, f, indent=2)
 
 
 def dumps(string, filename):
     if filename:
+        with ignored(os.error):
+            os.makedirs(os.path.dirname(filename))
         with open(filename, 'w') as f:
             f.write(string)
 
