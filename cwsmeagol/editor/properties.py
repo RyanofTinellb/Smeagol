@@ -65,7 +65,7 @@ class Properties(object):
         except TypeError: # value is already a Markdown instance
             super(Properties, self).__setattr__(attr, value)
 
-    def collate(self):
+    def collate_config(self):
         self.name = self.site.name
         self.destination = self.site.destination
         self.links = self.linkadder.adders
@@ -80,9 +80,8 @@ class Properties(object):
         return filename
 
     def save_site(self, filename=None):
-        self.page = list(self.heading_contents)
         self.config_filename = filename or self.config_filename
-        self.collate()
+        self.collate_config()
         if self.config_filename:
             with ignored(IOError):
                 with open(self.config_filename, 'w') as config:

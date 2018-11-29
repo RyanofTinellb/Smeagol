@@ -6,6 +6,7 @@ import os
 import random
 import webbrowser as web
 import Tkinter as Tk
+import tkSimpleDialog as sd
 from editor import Editor
 from properties import Properties
 from properties_window import PropertiesWindow
@@ -23,7 +24,7 @@ class SiteEditor(Editor, object):
         self.server = None
         self.PORT = 41809
         self.start_server()
-        self.fill_headings(self.page)
+        self.fill_headings()
         self.load()
         self.go_to(self.position)
 
@@ -51,8 +52,8 @@ class SiteEditor(Editor, object):
             return getattr(super(SiteEditor, self), attr)
 
     def __setattr__(self, attr, value):
-        if attr is 'language':
-            self.properties.language = value
+        if attr in ('page', 'language'):
+            self.properties.__setattr__(attr, value)
         else:
             super(SiteEditor, self).__setattr__(attr, value)
 
@@ -103,11 +104,12 @@ class SiteEditor(Editor, object):
 
     @property
     def heading_contents(self):
-        contents = [title.get() for title in self.headings if title]
-        self.properties.heading_contents = contents
+        contents = [title.get() for title in self.headings]
+        contents = filter(None, contents)
         return contents
 
-    def fill_headings(self, entries):
+    def fill_headings(self):
+        entries = self.page
         while len(self.headings) < len(entries) < 10:
             self.add_heading()
         while len(self.headings) > len(entries) > 0:
@@ -155,6 +157,7 @@ class SiteEditor(Editor, object):
         if child:
             heading.insert(Tk.INSERT, self.entry.name)
             self.master.title('Editing ' + self.entry.name)
+        self.page = self.heading_contents
         return 'break'
 
     def add_heading(self, event=None):
@@ -232,7 +235,7 @@ class SiteEditor(Editor, object):
     def reset(self, event=None):
         self.entry = self.site.root
         self.clear_interface()
-        self.fill_headings(self.page)
+        self.fill_headings()
         self.load()
 
     def site_properties(self, event=None):
@@ -250,11 +253,14 @@ class SiteEditor(Editor, object):
         self.display(text)
         self.reset_textbox()
         self.save_text.set('Save')
+        self.update_titlebar()
+        return 'break'
+
+    def update_titlebar(self):
         try:
             self.master.title('Editing ' + self.entry.name)
         except AttributeError:
             self.master.title('Editing ' + self.entry.get('name', ''))
-        return 'break'
 
     def find_entry(self, headings, entry=None):
         if entry is None:
@@ -388,6 +394,19 @@ class SiteEditor(Editor, object):
             text = converter(text, entry)
         self.entry.text = text
 
+    def rename_page(self):
+        if self.entry.level:
+            new_name = sd.askstring('Rename', 'What is the new name?',
+                                     initialvalue=self.entry.name)
+            if new_name:
+                try:
+                    self.entry.name = new_name
+                except AttributeError:
+                    self.entry['name'] = new_name
+                self.page[-1] = new_name
+                self.fill_headings()
+                self.update_titlebar()
+
     @staticmethod
     def publish(entry, site, allpages=False):
         if allpages:
@@ -487,7 +506,8 @@ class SiteEditor(Editor, object):
                 ('P_roperties', self.site_properties),
                 ('S_ee All', self.list_pages),
                 ('Publish _WholePage', self.save_wholepage),
-                ('Publish All', self.site_publish)])
+                ('Publish All', self.site_publish)]),
+                ('Page', [('Rename', self.rename_page)])
             ] + super(SiteEditor, self).menu_commands
 
 

@@ -41,9 +41,11 @@ class Page(Node):
             with ignored(AttributeError):
                 value = filter(None, value.split('['))
             self.find()['text'] = value
+        elif attr == 'name':
+            self.find()['name'] = value
+            self.refresh_hyperlink()
         else:
             super(Page, self).__setattr__(attr, value)
-
 
     def __str__(self):
         return '['.join(self.text)
@@ -62,7 +64,7 @@ class Page(Node):
         link = self.folder
         url = self.url if not self.has_children else 'index'
         hyperlink = '{0}/{1}'.format(link, url) if link else url
-        self.find()['hyperlink'] = hyperlink
+        self.find()['hyperlink'] = hyperlink + '.html'
 
     @property
     def level(self):
