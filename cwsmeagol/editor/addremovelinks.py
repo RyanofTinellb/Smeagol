@@ -1,25 +1,51 @@
 import re
 import json
+from itertools import chain
 from cwsmeagol import Translator
 from cwsmeagol.utils import urlform, ignored, buyCaps, sellCaps
 
 class AddRemoveLinks:
-    def __init__(self, link_adders=None):
-        self.link_adders = link_adders or []
+    def __init__(self, link_adders):
+        self += link_adders
+
+    @property
+    def adders(self):
+        chain_up = chain.from_iterable
+        adders = [adder.adder for adder in self.link_adders.values()]
+        return dict(chain_up(adder.iteritems() for adder in adders))
+
+    def __add__(self, adder):
+        for adder, resource in adder.iteritems():
+            self.link_adders[adder] = globals()[adder](resource)
+        return self
+
+    def __sub__(self, adder):
+        for adder, resource in adder.iteritems():
+            self.link_adders.pop(adder, None)
+        return self
+
+    def __getattr__(self, attr):
+        if attr == 'link_adders':
+            self.link_adders = {}
+            return self.link_adders
+        else:
+            raise AttributeError(
+                'AddRemoveLinks has no attribute {0}'.format(attr))
 
     def add_links(self, text, entry):
-        for link_adder in self.link_adders:
+        for link_adder in self.link_adders.items():
             text = link_adder.add_links(text, entry)
         return text
 
     def remove_links(self, text):
-        for link_adder in self.link_adders:
+        for link_adder in self.link_adders.items():
             text = link_adder.remove_links(text)
         return text
 
 
 class Glossary:
     def __init__(self, filename):
+        self.adder = {'Glossary': filename}
         try:
             with open(filename) as glossary:
                 self.glossary = json.load(glossary)
@@ -48,6 +74,7 @@ class ExternalDictionary:
     def __init__(self, url):
         self.url = url
         self.language = ''
+        self.adder = {'ExternalDictionary': url}
 
     def add_links(self, text, entry):
         """
@@ -79,10 +106,8 @@ class ExternalDictionary:
 
 
 class InternalDictionary:
-    """
-    Replace links with hyperlinks to other entries in the same dictionary
-    """
-    def __init__(self):
+    def __init__(self, resource=None):
+        self.adder = {'InternalDictionary': resource}
         self.translator = Translator()
 
     def add_links(self, text, entry):
@@ -132,6 +157,7 @@ class InternalDictionary:
 
 class ExternalGrammar:
     def __init__(self, filename):
+        self.adder = {'ExternalGrammar': filename}
         with open(filename) as replacements:
             self.replacements = json.load(replacements)
         self.url = self.replacements['url']

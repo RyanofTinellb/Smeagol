@@ -68,8 +68,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
     "position": "1.0",
     "fontsize": 14
   },
-  "links": [
-  ]
+  "links": {}
 }
     '''
 
@@ -110,18 +109,18 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
     properties = '''
     [
       {
-        "name": "Destination",
-        "property": "destination",
-        "owner": "site",
-        "textbox": true,
-        "browse": "folder"
-      },
-      {
         "name": "Name",
         "property": "name",
         "owner": "site",
         "textbox": true,
         "browse": false
+      },
+      {
+        "name": "Destination",
+        "property": "destination",
+        "owner": "site",
+        "textbox": true,
+        "browse": "folder"
       },
       {
         "name": "Data File",
@@ -131,7 +130,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
         "browse": {
           "action": "save",
           "text": "Data File",
-          "extension": ".txt"
+          "extension": ".json"
         }
       },
       {
@@ -171,7 +170,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
         "browse": {
           "text": "Grammar Links File",
           "action": "open",
-          "extension": "*.glk"
+          "extension": ".glk"
         }
       },
       {
@@ -182,7 +181,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
         "browse": {
           "text": "Glossary File",
           "action": "open",
-          "extension": "*.gls"
+          "extension": ".gls"
         }
       },
       {

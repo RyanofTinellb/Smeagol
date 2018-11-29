@@ -40,21 +40,35 @@ class Properties(object):
             return self.config['current']['markdown']
         elif attr is 'links':
             return self.config['links']
+        elif attr is 'site_info':
+            return self.config['site']
         else:
             return getattr(super(Properties, self), attr)
 
-    def __setattr__(self, name, value):
-        if name in {'page', 'language', 'position', 'fontsize'}:
-            self.config['current'][name] = value
-        elif name is 'markdown_file':
+    def __setattr__(self, attr, value):
+        if attr in {'page', 'language', 'position', 'fontsize'}:
+            self.config['current'][attr] = value
+        elif attr == 'markdown_file':
             self.config['current']['markdown'] = value
-        elif name is 'markdown':
-            try:
-                super(Properties, self).__setattr__(name, Markdown(value))
-            except TypeError: # value is already a Markdown instance
-                super(Properties, self).__setattr__(name, value)
+        elif attr == 'markdown':
+            self.set_markdown(attr, value)
+        elif attr in {'name', 'destination'}:
+            self.config['site'][attr] = value
+        elif attr == 'links':
+            self.config['links'] = value
         else:
-            super(Properties, self).__setattr__(name, value)
+            super(Properties, self).__setattr__(attr, value)
+
+    def set_markdown(self, attr, value):
+        try:
+            super(Properties, self).__setattr__(attr, Markdown(value))
+        except TypeError: # value is already a Markdown instance
+            super(Properties, self).__setattr__(attr, value)
+
+    def collate(self):
+        self.name = self.site.name
+        self.destination = self.site.destination
+        self.links = self.linkadder.adders
 
     def open_site(self):
         filetypes = [('Sm\xe9agol File', '*.smg'), ('Source Data File', '*.txt')]
@@ -68,6 +82,7 @@ class Properties(object):
     def save_site(self, filename=None):
         self.page = list(self.heading_contents)
         self.config_filename = filename or self.config_filename
+        self.collate()
         if self.config_filename:
             with ignored(IOError):
                 with open(self.config_filename, 'w') as config:
@@ -103,57 +118,21 @@ class Properties(object):
             self.config_filename = filename
             self.save_site()
 
-    def update_site(self):
-        for prop, value in self.config['site'].items():
-            self.site.__dict__[prop] = value
-        self.site.change_destination()
-
     def create_site(self):
-        """
-        Create a new Site object from the config info
-        """
-        self.site = Site(**self.config['site'])
+        self.site = Site(**self.site_info)
 
     def create_linkadder(self):
-        """
-        Create an AddRemoveLinks instance from the config info
-        """
-        self.linkadder = AddRemoveLinks(map(self._links, self.config['links']))
+        self.linkadder = AddRemoveLinks(self.links)
 
-    def _links(self, linkadder):
-        import addremovelinks as translation
-        try:
-            linkadder = getattr(translation, linkadder['type'])()
-        except TypeError:
-            linkadder, resource = linkadder['type'], linkadder['resource']
-            linkadder = getattr(translation, linkadder)(resource)
-        return linkadder
-
-    def _removelinkadder(self, kind):
-        """
-        Remove the linkadder of the appropriate type from configuration
-
-        :param kind: (str) type of the adder
-        """
-        links = self.config['links']
-        self.config['links'] = [adder for adder in links if adder['type'] != kind]
-
-    def _addlinkadder(self, kind, resource):
-        self._removelinkadder(kind)
-        if resource:
-            self.config['links'].append(dict(type=kind, resource=resource))
-        else:
-            self.config['links'].append(dict(type=kind))
-
-    def update(self, owner, prop, text, check, integer=False):
+    def update(self, properties):
+        property = properties['property']
+        owner = properties['owner']
+        value = properties.get('value')
+        checked = properties.get('checked')
         if owner == 'links':
-            if check:
-                self._addlinkadder(prop, text)
+            if checked:
+                self.linkadder += {property: value}
             else:
-                self._removelinkadder(prop)
+                self.linkadder -= {property: value}
         else:
-            try:
-                text = int(text) if integer else text
-            except ValueError:
-                text = 0
-            self.config[owner][prop] = text
+            setattr(self.site, property, value)

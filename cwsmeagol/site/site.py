@@ -51,6 +51,9 @@ class Site(object):
     def __setattr__(self, attr, value):
         if attr in {'source', 'template_file', 'searchindex'}:
             self.files[attr] = value
+        if attr == 'destination':
+            super(Site, self).__setattr__(attr, value)
+            self.change_destination()
         else:
             super(Site, self).__setattr__(attr, value)
 
