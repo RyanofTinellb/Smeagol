@@ -6,7 +6,8 @@ import os
 import random
 import webbrowser as web
 import Tkinter as Tk
-import tkFileDialog as fd
+import tkSimpleDialog as sd
+import tkMessageBox as mb
 from editor import Editor
 from properties import Properties
 from properties_window import PropertiesWindow
@@ -15,58 +16,16 @@ from itertools import izip, izip_longest
 from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
-from cwsmeagol.translation import Translator
-from cwsmeagol.translation import RandomWords
-from cwsmeagol.translation import HighToVulgarLulani
 
 
-class SiteEditor(Properties, Editor, object):
-    """
-    Base class for DictionaryEditor
-    """
-
-    def __init__(self, master=None, current=None):
-        self.languagevar = Tk.StringVar()
-        super(SiteEditor, self).__init__(master, current)
-        self.languagevar.set(self.language)
-        self.master.title('Site Editor')
-        self.master.protocol('WM_DELETE_WINDOW', self.quit)
-
-        commands = [
-            ('<Control-b>', self.bold),
-            ('<Control-d>', self.add_descendant),
-            ('<Control-e>', self.example_no_lines),
-            ('<Control-f>', self.example),
-            ('<Control-i>', self.italic),
-            ('<Control-k>', self.small_caps),
-            ('<Control-m>', self.markdown_refresh),
-            ('<Control-N>', self.insert_new),
-            ('<Control-n>', self.add_link),
-            ('<Control-o>', self.site_open),
-            ('<Control-r>', self.refresh_random),
-            ('<Control-s>', self.save_page),
-            ('<Control-t>', self.add_translation),
-            (('<Control-[>', '<Control-]>'), self.set_indent),
-            ('<Control-Prior>', self.previous_entry),
-            ('<Control-Next>', self.next_entry)
-        ]
-        self.add_commands('Text', commands)
-        self.save_text.set('Save')
-        commands = [
-            (('<Prior>', '<Next>'), self.scroll_headings),
-            ('<Return>', self.enter_headings)
-        ]
-        self.add_commands('Entry', commands)
-
-        self.new_page = False
-
+class SiteEditor(Editor, object):
+    def __init__(self, master=None, config_file=None):
+        super(SiteEditor, self).__init__(master)
+        self.properties = Properties(config_file, self.caller)
         self.server = None
         self.PORT = 41809
         self.start_server()
-
-        self.entry = self.site.root
-        self.entry.content = self.entry.content or self.initial_content()
-        self.fill_headings(self.page)
+        self.fill_headings()
         self.load()
         self.go_to(self.position)
 
@@ -74,22 +33,99 @@ class SiteEditor(Properties, Editor, object):
     def caller(self):
         return 'site'
 
-    def refresh_random(self, event=None):
-        """
-        Show a certain number of random words.
-        """
-        if self.randomwords:
-            self.information.set('\n'.join(self.randomwords.words))
+    def setup_linguistics(self):
+        self.languagevar = Tk.StringVar()
+        self.languagevar.set(self.translator.fullname)
+
+    def change_language(self, event=None):
+        self.language = self.languagevar.get()
+        for obj in (self.translator, self.randomwords):
+            obj.select(self.language[:2])
+        return 'break'
+
+    def __getattr__(self, attr):
+        if attr is 'properties':
+            self.properties = Properties(self.caller)
+            return self.properties
+        try:
+            return getattr(self.properties, attr)
+        except AttributeError:
+            return getattr(super(SiteEditor, self), attr)
+
+    def __setattr__(self, attr, value):
+        if attr in ('page', 'language'):
+            self.properties.__setattr__(attr, value)
+        else:
+            super(SiteEditor, self).__setattr__(attr, value)
+
+    def set_frames(self):
+        super(SiteEditor, self).set_frames()
+        self.siteframe = Tk.Frame(self.sidebar)
+        self.headingframe = Tk.Frame(self.siteframe)
+        self.buttonframe = Tk.Frame(self.siteframe)
+        self.master.title('Site Editor')
+        self.master.protocol('WM_DELETE_WINDOW', self.quit)
+
+    def ready(self):
+        objs = ['headings', 'buttons']
+        for obj in objs:
+            getattr(self, 'ready_' + obj)()
+        super(SiteEditor, self).ready()
+
+    def ready_headings(self):
+        master = self.headingframe
+        self.headings = [Tk.Entry(master, width=25)]
+        self.add_commands('Entry', self.heading_commands)
+
+    def ready_buttons(self):
+        master = self.buttonframe
+        self.save_text = Tk.StringVar()
+        self.save_text.set('Save')
+        self.load_button = Tk.Button(master, text='Load',
+                            command=self.load, width=10)
+        self.save_button = Tk.Button(master, command=self.save_page,
+                            textvariable=self.save_text, width=10)
+        self.buttons = [self.load_button, self.save_button]
+
+    def place_widgets(self):
+        super(SiteEditor, self).place_widgets()
+        self.siteframe.grid(row=0, column=0)
+        self.headingframe.grid()
+        self.buttonframe.grid()
+        for i, heading in enumerate(self.headings):
+            heading.grid(row=i, column=0)
+        for i, button in enumerate(self.buttons):
+            button.grid(row=0, column=i)
+
+    def clear_interface(self):
+        super(SiteEditor, self).clear_interface()
+        for heading in self.headings:
+            heading.delete(0, Tk.END)
+        self.go_to_heading()
+
+    @property
+    def heading_contents(self):
+        contents = [title.get() for title in self.headings]
+        contents = filter(None, contents)
+        return contents
+
+    def fill_headings(self):
+        entries = self.page
+        while len(self.headings) < len(entries) < 10:
+            self.add_heading()
+        while len(self.headings) > len(entries) > 0:
+            self.remove_heading()
+        for heading, entry in zip(self.headings, entries):
+            self.replace(heading, entry)
+
+    def go_to_heading(self, event=None):
+        with ignored(IndexError):
+            heading = self.headings[0]
+            heading.focus_set()
+            heading.select_range(0, Tk.END)
         return 'break'
 
     def scroll_headings(self, event):
-        """
-        Respond to PageUp / PageDown by changing headings, moving
-            through the hierarchy.
-        :param event (Event): which entry box received the KeyPress
-        :param level (int): the level of the hierarchy that is being
-            traversed.
-        """
         root = self.site.root
         heading = event.widget
         actual_level = self.headings.index(heading) + 2
@@ -109,7 +145,7 @@ class SiteEditor(Properties, Editor, object):
         # descend hierarchy until correct level
         while self.entry.level < level:
             try:
-                self.entry = self.entry.children[0]
+                self.entry = self.entry.eldest_daughter
             except IndexError:
                 child = False
                 break
@@ -121,13 +157,23 @@ class SiteEditor(Properties, Editor, object):
             self.add_heading()
         if child:
             heading.insert(Tk.INSERT, self.entry.name)
-            self.master.title('Editing ' + self.entry.name)
+        self.page = self.heading_contents
+        return 'break'
+
+    def add_heading(self, event=None):
+        if len(self.headings) < 10:
+            heading = Tk.Entry(self.headingframe, width=25)
+            heading.grid(column=0, columnspan=2, sticky=Tk.N)
+            self.headings.append(heading)
+        return 'break'
+
+    def remove_heading(self, event=None):
+        if len(self.headings) > 1:
+            heading = self.headings.pop()
+            heading.destroy()
         return 'break'
 
     def enter_headings(self, event):
-        """
-        Go to the next heading, or load the entry
-        """
         headings = self.headings
         level = headings.index(event.widget)
         try:
@@ -156,20 +202,9 @@ class SiteEditor(Properties, Editor, object):
             heading.insert(0, ancestor.name)
         self.load()
 
-    def change_language(self, event=None):
-        """
-        Change the entry language to whatever is in the StringVar 'self.languagevar'
-        """
-        self.language = self.languagevar.get()
-        self.translator = Translator(self.language)
-        self.randomwords = RandomWords(self.language)
-        return 'break'
-
     def site_open(self, event=None):
-        """
-        Loop until a valid file is passed back, or user cancels
-        """
-        source = self.open()
+        source = self.open_site()
+        self.languagevar.set(self.language)
         self.reset()
         return 'break'
 
@@ -194,133 +229,50 @@ class SiteEditor(Properties, Editor, object):
 
     def open_in_browser(self, event=None):
         web.open_new_tab(os.path.join('http://localhost:' +
-                                      str(self.PORT), self.entry.link()))
+                                      str(self.PORT), self.entry.link))
         return 'break'
 
     def reset(self, event=None):
-        """
-        Reset the program.
-        """
         self.entry = self.site.root
         self.clear_interface()
-        self.fill_headings(self.page)
+        self.fill_headings()
         self.load()
 
     def site_properties(self, event=None):
-        """
-        Pass current site details to a new Properties Window, and then
-            re-create the Site with the new values and renew the Links
-        """
         properties_window = PropertiesWindow(self.properties)
         self.wait_window(properties_window)
         self.site.root.name = self.site.name
         self.save_site()
 
     def site_publish(self, event=None):
-        """
-        Publish every page in the Site using the Site's own method
-        """
         self.information.set(self.site.publish())
 
     def load(self, event=None):
-        """
-        Find entry, manipulate entry to fit boxes, place in boxes.
-        """
         self.entry = self.find_entry(self.heading_contents)
-        texts = self.prepare_entry(self.entry)
-        self.display(texts)
-        self.reset_textboxes()
+        self.update_titlebar()
+        text = self.prepare_entry(self.entry)
+        self.display(text)
+        self.reset_textbox()
         self.save_text.set('Save')
-        self.master.title('Editing ' + self.entry.name)
         return 'break'
 
-    def add_translation(self, event):
-        """
-        Insert a transliteration of the selected text in the current language.
-        Do sentence conversion if there is a period in the text, and word conversion otherwise.
-        Insert an additional linebreak if the selection ends with a linebreak.
-        """
-        textbox = event.widget
+    def update_titlebar(self):
         try:
-            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
-            text = textbox.get(*borders)
-        except Tk.TclError:
-            text = self.select_word(event)
-            textbox.tag_remove('sel', '1.0', Tk.END)
-        length = len(text)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
-        example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
-        converter = self.translator.convert_word # default setting
-        for mark in '.!?':
-            if mark in text:
-                converter = self.translator.convert_word
-                break
-        text = converter(text)
-        if example:
-            text = '[e]' + text
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
-        try:
-            text += '\n' if textbox.compare(Tk.SEL_LAST,
-                                            '==', Tk.SEL_LAST + ' lineend') else ' '
-            textbox.insert(Tk.SEL_LAST + '+1c', text)
-        except Tk.TclError:
-            text += ' '
-            textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
-            textbox.insert(Tk.INSERT + '+1c', text)
-        self.html_to_tkinter()
-        return 'break'
+            self.master.title('Editing ' + self.entry.name)
+        except AttributeError:
+            self.master.title('Editing ' + self.entry.get('name', ''))
 
-    def add_descendant(self, event):
-        textbox = event.widget
+    def find_entry(self, headings, entry=None):
+        if entry is None:
+            entry = self.site.root
         try:
-            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
-            text = textbox.get(*borders)
-        except Tk.TclError:
-            text = self.select_word(event)
-            textbox.tag_remove('sel', '1.0', Tk.END)
-        length = len(text)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
-        example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
-        converter = self.evolver.evolve # default setting
-        text = converter(text)[-1]
-        if example:
-            text = '[e]' + text
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
+            heading = headings.pop(0)
+        except IndexError:
+            return entry
         try:
-            text += '\n' if textbox.compare(Tk.SEL_LAST,
-                                            '==', Tk.SEL_LAST + ' lineend') else ' '
-            textbox.insert(Tk.SEL_LAST + '+1c', text)
-        except Tk.TclError:
-            text += ' '
-            textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
-            textbox.insert(Tk.INSERT + '+1c', text)
-        self.html_to_tkinter()
-        return 'break'
-
-    def find_entry(self, headings):
-        """
-        Find the current entry based on what is in the heading boxes.
-        This is the default method - other Editor programs may override this.
-        Subroutine of self.load().
-        :param headings (str[]): the texts from the heading boxes
-        :return (Page):
-        """
-        entry = self.site.root
-        for heading in headings:
-            if heading:
-                try:
-                    entry = entry[heading]
-                except KeyError:
-                    entry = Page(heading, entry, '').insert('end')
-                    entry.content = self.initial_content(entry)
-                    self.new_page = True
-            else:
-                break
-        return entry
+            return self.find_entry(headings, entry[heading])
+        except KeyError:
+            return dict(name=heading, parent=entry)
 
     def list_pages(self, event=None):
         def text_thing(page):
@@ -333,35 +285,20 @@ class SiteEditor(Properties, Editor, object):
         return 'break'
 
     def prepare_entry(self, entry):
-        """
-        Manipulate text taken from a single Page to suit a textbox.
-
-        Default method, other Editors will override this.
-        :param entry (Page): A Page instance carrying text.
-        :param return (str):
-        :called by: SiteEditor.load()
-        """
-        text = entry.content
-        text = remove_datestamp(text)
-        with conversion(self.linkadder, 'remove_links') as converter:
-            text = converter(text)
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
-        return [text]
+        try:
+            text = self.initial_content(entry) # entry is a dict
+        except AttributeError:
+            text = str(entry)
+        for converter, function in ((self.linkadder, 'remove_links'),
+                                    (self.markdown, 'to_markdown')):
+            with conversion(converter, function) as converter:
+                text = converter(text)
+        return text
 
     def save_page(self, event=None):
-        """
-        Take text from box, manipulate to fit datafile, put in datafile, publish appropriate Pages.
-        """
-        try:
-            widget = event.widget
-        except AttributeError:
-            widget = self.textboxes[0]
         if self.is_new:
             self.site_properties()
-        if self.entry.newpage:
-            self.entry.insert()
-        widget.tag_remove(self.current_style.get(), Tk.INSERT)
+        self.textbox.tag_remove(self.current_style.get(), Tk.INSERT)
         self.current_style.set('')
         self.tkinter_to_tkinter(self._save_page)
         self.save_text.set('Save')
@@ -370,22 +307,32 @@ class SiteEditor(Properties, Editor, object):
         return 'break'
 
     def _save_page(self):
-        texts = map(self.get_text, self.textboxes)
-        if self.entry:
-            self.prepare_texts(texts)
-        self.publish(self.entry, self.site, self.new_page)
-        self.new_page = False
+        text = self.get_text(self.textbox)
+        with ignored(AttributeError):
+            parent = self.entry.pop('parent')
+            self.entry = parent.append(self.entry)
+            if parent.num_children == 1:
+                parent.delete_html()
+            self.update_tocs()
+        self.prepare_text(text)
+        self.publish(self.entry, self.site)
+
+    def update_tocs(self):
+        # don't publish the whole site again if you're a dictionary
+        self.site.publish()
 
     def save_wholepage(self):
-        with open('wholetemplate.html') as template:
-            template = template.read()
+        try:
+            with open('wholetemplate.html') as template:
+                template = template.read()
+        except IOError:
+            return False
         g = self.site
         self.errors = 0
         self.errorstring = ''
         k = '\n'.join(map(self._save_wholepage, g))
-        k = re.sub(r'&date=\d{8}', '', k)
         page = template.replace('{toc}', g[0].family_links).replace(
-            '{content}', k).replace(
+            '{main-contents}', k).replace(
             '{stylesheet}', g[0].stylesheet_and_icon).replace(
             '{copyright}', self.copyright)
         information = '{3}{0} error{2}\n{1}'.format(
@@ -401,23 +348,29 @@ class SiteEditor(Properties, Editor, object):
 
     def _save_wholepage(self, page):
         try:
-            return page.contents
-        except:
+            return page.main_contents
+        except ZeroDivisionError:
             self.errorstring += 'Error in ' + page.folder + '/' + page.name + '\n'
             self.errors += 1
             return ''
 
     @property
     def copyright(self):
-        try:
-            date = datetime.today()
-        except ValueError:
-            return ''
-        suffix = "th" if 4 <= date.day <= 20 or 24 <= date.day <= 30 else [
-            "st", "nd", "rd"][date.day % 10 - 1]
-        output = datetime.strftime(
-            date, '<span class="no-breaks">&copy;%Y Ryan Eakins.</span> <span class="no-breaks">Last updated: %A, %B %#d' + suffix + ', %Y.')
-        return output
+        strftime = datetime.strftime
+        copyright = '<div class="copyright">{0}</div>'
+        date = datetime.today()
+        if 4 <= date.day <= 20 or 24 <= date.day <= 30:
+            suffix = 'th'
+        else:
+            suffix = ['st', 'nd', 'rd'][date.day % 10 - 1]
+        span = '<span class="no-breaks">{0}</span>'
+        templates = (('&copy;%Y '
+                      '<a href="http://www.tinellb.com/about.html">'
+                      'Ryan Eakins</a>.'),
+                'Last updated: %A, %B %#d' + suffix + ', %Y.')
+        spans = '\n'.join([span.format(strftime(date, template))
+                            for template in templates])
+        return copyright.format(spans)
 
     @property
     def is_new(self):
@@ -431,74 +384,54 @@ class SiteEditor(Properties, Editor, object):
 
     @staticmethod
     def get_text(textbox):
-        """
-        Retrieves text from textbox.
-        Default method - may be overriden by descendant classes.
-        """
         return str(textbox.get(1.0, Tk.END + '-1c'))
 
-    def prepare_texts(self, texts):
-        """
-        Modify entry with manipulated texts.
-        Subroutine of self.save_page().
-        Overrides parent method.
-        :param texts (str[]): the texts to be manipulated and inserted.
-        :param return (Nothing):
-        """
-        text = ''.join(texts)
-        if self.entry.level and not text:
-            if self.page == self.heading_contents:
-                self.page = [""]
-            self.entry.delete_htmlfile()
-            self.entry.remove_from_hierarchy()
+    def delete_page(self, event=None):
+        template = 'Are you sure you wish to delete {0}?'
+        message = template.format(self.entry.name)
+        ans = mb.askokcancel('Delete', message)
+        if ans:
+            self.entry.delete()
+            self.page.pop()
             self.reset()
-        else:
-            text = self.convert_texts(text, self.entry)
-            # remove duplicate linebreaks
-            text = re.sub(r'\n\n+', '\n', text)
-            self.entry.content = text
+        return 'break'
 
-    def convert_texts(self, text, entry):
-        """
-        Run conversions over text
-        """
+    def prepare_text(self, text):
+        text = re.sub(r'\n\n+', '\n', text)
         with conversion(self.markdown, 'to_markup') as converter:
             text = converter(text)
         with conversion(self.linkadder, 'add_links') as converter:
-            text = converter(text, entry)
-        text = add_datestamp(text)
-        return text
+            text = converter(text, self.entry)
+        self.entry.text = text
+
+    def rename_page(self):
+        if self.entry.level:
+            new_name = sd.askstring('Rename', 'What is the new name?',
+                                     initialvalue=self.entry.name)
+            if new_name:
+                try:
+                    self.entry.delete_html()
+                    self.entry.name = new_name
+                except AttributeError:
+                    self.entry['name'] = new_name
+                self.page[-1] = new_name
+                self.fill_headings()
+                self.update_titlebar()
+                self.update_tocs()
 
     @staticmethod
     def publish(entry, site, allpages=False):
-        """
-        Put entry contents into datafile, publish appropriate Pages.
-        This is the default method - other Editor programs may override this.
-        Subroutine of self.save_page()
-        :param entry (Page):
-        :return (nothing):
-        """
         if allpages:
             site.publish()
         elif entry is not None:
+            entry.update_date()
             entry.publish(site.template)
         if site is not None:
-            site.modify_source()
-            site.update_json()
+            site.update_source()
+            site.update_searchindex()
 
     @staticmethod
     def insert_characters(textbox, before, after=''):
-        """
-        Insert given text into a Text textbox, either around an
-        insertion cursor or selected text, and move the cursor
-        to the appropriate place.
-        :param textbox (Tkinter Text): The Text into which the
-        given text is to be inserted.
-        :param before (str): The text to be inserted before the
-        insertion counter, or before the selected text.
-        :param after (str): The text to be inserted after the
-        insertion cursor, or after the selected text.
-        """
         try:
             text = textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
             textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
@@ -508,26 +441,12 @@ class SiteEditor(Properties, Editor, object):
             textbox.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(after)))
 
     def insert_formatting(self, event, tag):
-        """
-        Insert markdown for tags, and place insertion point between
-        them.
-        """
         with conversion(self.markdown, 'find_formatting') as converter:
             self.insert_characters(event.widget, *converter(tag))
 
     def insert_markdown(self, event, tag):
-        """
-        Insert markdown for tags
-        """
         with conversion(self.markdown, 'find') as converter:
             self.insert_characters(event.widget, converter(tag))
-
-    def example_no_lines(self, event):
-        """
-        Format paragraph with this marking
-        """
-        self.format_paragraph('example-no-lines', 'e ', event.widget)
-        return 'break'
 
     def format_paragraph(self, style, code, textbox):
         linestart = Tk.INSERT + ' linestart'
@@ -546,83 +465,6 @@ class SiteEditor(Properties, Editor, object):
         elif text in ('[e', '[f'):
             textbox.delete(linestart, linestart + '+3c')
 
-    def example(self, event):
-        """
-        Format paragraph with this marking
-        """
-        self.format_paragraph('example', 'f ', event.widget)
-        return 'break'
-
-    def change_style(self, event, style):
-        textbox = event.widget
-        if style in textbox.tag_names(Tk.INSERT):
-            try:
-                textbox.tag_remove(style, Tk.SEL_FIRST, Tk.SEL_LAST)
-            except Tk.TclError:
-                textbox.tag_remove(style, Tk.INSERT)
-                self.current_style.set('')
-        else:
-            try:
-                textbox.tag_add(style, Tk.SEL_FIRST, Tk.SEL_LAST)
-            except Tk.TclError:
-                textbox.tag_add(style, Tk.INSERT)
-                self.current_style.set(style)
-
-    def bold(self, event):
-        """
-        Use tags to bold and un-bold selected text
-        """
-        self.change_style(event, 'strong')
-        return 'break'
-
-    def italic(self, event):
-        """
-        Insert markdown for italic tags, and place insertion point between them.
-        """
-        self.change_style(event, 'em')
-        return 'break'
-
-    def small_caps(self, event):
-        """
-        Insert markdown for small-caps tags, and place insertion point between them.
-        """
-        self.change_style(event, 'small-caps')
-        return 'break'
-
-    def add_link(self, event):
-        self.change_style(event, 'link')
-        return 'break'
-
-    def set_indent(self, event):
-        self.tkinter_to_tkinter(self._set_indent, [event])
-        return 'break'
-
-    def _set_indent(self, event):
-        direction = +1 if event.keysym == 'bracketright' else -1
-        textbox = event.widget
-        try:
-            ends = (Tk.SEL_FIRST + ' linestart', Tk.SEL_LAST + ' lineend')
-            text = textbox.get(*ends)
-            selected = map(textbox.index, (Tk.SEL_FIRST, Tk.SEL_LAST))
-        except Tk.TclError:
-            ends = (Tk.INSERT + ' linestart', Tk.INSERT + ' lineend')
-            text = textbox.get(*ends)
-            selected = None
-        text = re.sub(
-            r'\[\d\]', lambda x: self.move_indent(x, direction), text)
-        textbox.delete(*ends)
-        textbox.insert(Tk.INSERT, text)
-        if selected:
-            textbox.tag_add('sel', *selected)
-
-    def move_indent(self, match, direction):
-        number = max(min(int(match.group(0)[1]) + direction, 9), 1)
-        return '[{0}]'.format(number)
-
-    def insert_spaces(self, event):
-        self.insert_characters(event.widget, ' ' * 10)
-        return 'break'
-
     def insert_new(self, event):
         self.entry.content = self.initial_content()
         self.load()
@@ -633,78 +475,55 @@ class SiteEditor(Properties, Editor, object):
                              Tk.INSERT + ' lineend +1c')
         return 'break'
 
-    def markdown_open(self, event=None):
-        web.open_new_tab(self.markdown.filename)
-
-    def markdown_load(self, event=None):
-        filename = fd.askopenfilename(
-            filetypes=[('Sm\xe9agol Markdown File', '*.mkd')],
-            title='Load Markdown')
-        if filename:
-            try:
-                self.tkinter_to_tkinter(
-                    self._markdown_load, [filename])
-            except IndexError:
-                mb.showerror('Invalid File',
-                             'Please select a valid *.mkd file.')
-
-    def _markdown_load(self, filename):
-        texts = map(self.get_text, self.textboxes)
-        texts = map(self.markdown.to_markup, texts)
-        self.markdown = filename
-        texts = map(self.markdown.to_markdown, texts)
-        for textbox, text in izip(self.textboxes, texts):
-            self.replace(textbox, text)
-
-    def markdown_refresh(self, event=None):
-        try:
-            self.tkinter_to_tkinter(self._markdown_refresh)
-            self.information.set('OK')
-        except AttributeError:
-            self.information.set('Not OK')
-        return 'break'
-
-    def _markdown_refresh(self):
-        texts = map(self.get_text, self.textboxes)
-        texts = map(self.markdown.to_markup, texts)
-        self.markdown.refresh()
-        texts = map(self.markdown.to_markdown, texts)
-        for textbox, text in izip(self.textboxes, texts):
-            self.replace(textbox, text)
-
-    def markdown_check(self, event=None):
-        filename = self.markdown.filename
-        with open(filename) as markdown:
-            original = markdown.read()
-        intermediate = self.markdown.to_markdown(original)
-        translated = self.markdown.to_markup(intermediate)
-        output = ''
-        for o, i, t in izip(*map(lambda x: x.splitlines(), [original, intermediate, translated])):
-            if o != t:
-                output += '{0} {3} {1} {3} {2}\n'.format(o, i, t, '-' * 5)
-        textwindow = TextWindow(output)
-        self.wait_window(textwindow)
-
     def quit(self):
         if self.save_wholepage():
             return
         self.server.shutdown()
         self.page = self.heading_contents
         self.language = self.languagevar.get()
-        self.position = self.textboxes[0].index(Tk.INSERT)
+        self.position = self.textbox.index(Tk.INSERT)
         self.fontsize = self.font.actual(option='size')
         self.save_site()
         self.master.quit()
 
     def initial_content(self, entry=None):
-        """
-        Return the content to be placed in a textbox if the page is new
-        """
+        # blank for sites, filled for dictionary entries
         if entry is None:
             entry = self.entry
-        name = entry.name
-        return '1]{0}\n'.format(name)
+        name = entry.get('name', '')
+        return 'Describe {0} here!\n'.format(name)
+
+    @property
+    def textbox_commands(self):
+        return super(SiteEditor, self).textbox_commands + [
+            ('<Control-Prior>', self.previous_entry),
+            ('<Control-Next>', self.next_entry),
+            ('<Control-N>', self.insert_new),
+            ('<Control-o>', self.site_open),
+            ('<Control-s>', self.save_page)]
+
+    @property
+    def heading_commands(self):
+        return [
+            (('<Prior>', '<Next>'), self.scroll_headings),
+            ('<Return>', self.enter_headings),
+            ('<Control-M>', self.add_heading),
+            ('<Control-N>', self.remove_heading)]
+
+    @property
+    def menu_commands(self):
+        return [('Site', [('Open', self.site_open),
+                ('Save', self.save_site),
+                ('Save _As', self.save_site_as),
+                ('P_roperties', self.site_properties),
+                ('S_ee All', self.list_pages),
+                ('Publish _WholePage', self.save_wholepage),
+                ('Publish All', self.site_publish)]),
+                ('Page', [('Rename', self.rename_page),
+                ('Delete', self.delete_page),
+                ('Open in _Browser', self.open_in_browser)])
+            ] + super(SiteEditor, self).menu_commands
 
 
 if __name__ == '__main__':
-    e = Editor()
+    SiteEditor().mainloop()

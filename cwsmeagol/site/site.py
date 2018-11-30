@@ -1,7 +1,6 @@
 import os
 import json
-import node
-import page
+from page import Page
 from cwsmeagol.translation import Markdown, Translator
 from cwsmeagol.utils import *
 
@@ -18,30 +17,25 @@ class Site(object):
 
     def setup_template(self):
         try:
-            with open(self.template) as template:
+            with open(self.template_file) as template:
                 template = template.read()
-        except IOError:
-            template = None
-        self.template_file, self.template = self.template, template
+        except (IOError, KeyError):
+            template = ''
+        self.template = template
 
     def load_site(self):
         if self.source:
             with open(self.source) as source:
-                self.root = json.load(source)
+                self.tree = json.load(source)
         else:
-            self.root = dict(
-                date=str(datetime.today()),
-                text='',
-                hyperlink='index.html',
-                children=[],
-                name=self.name)
+            self.tree = dict(name=self.name)
 
     def __repr__(self):
         return ('Site(destination="{0}", '
                 'name="{1}", '
                 'source="{2}", '
                 'template="{3}", '
-                'searchindex="{4}"').format(
+                'searchindex="{4})"').format(
                 self.destination,
                 self.name,
                 self.source,
@@ -49,15 +43,17 @@ class Site(object):
                 self.searchindex)
 
     def __getattr__(self, attr):
-        if attr in {'source', 'template', 'template_file', 'searchindex'}:
+        if attr in {'source', 'template_file', 'searchindex'}:
             return self.files[attr]
         else:
-            raise AttributeError("{0} instance has no attribute '{1}'".format(
-                    self.__class__.__name__, attr))
+            return getattr(super(Site, self), attr)
 
     def __setattr__(self, attr, value):
-        if attr in {'source', 'template', 'template_file', 'searchindex'}:
+        if attr in {'source', 'template_file', 'searchindex'}:
             self.files[attr] = value
+        if attr == 'destination':
+            super(Site, self).__setattr__(attr, value)
+            self.change_destination()
         else:
             super(Site, self).__setattr__(attr, value)
 
@@ -80,66 +76,61 @@ class Site(object):
         return self
 
     def next(self):
-        if self.current is None:
-            self.current = []
-            return self.root
+        # changed this behaviour because it's better with Page objects
+        # may need to change back if something needs the node object
+            # itself.
         try:
-            node.next(self.root, self.current)
+            self.current.next()
+        except AttributeError:
+            self.current = Page(self.tree, [])
         except IndexError:
-            self.current = None
+            self.__iter__()
             raise StopIteration
-        return node.find(self.root, self.current)
-
-    def iteritems(self):
-        current = []
-        yield current, self.root
-        while True:
-            try:
-                node.next(self.root, current)
-            except IndexError:
-                raise StopIteration
-            yield current, node.find(self.root, current)
+        return self.current
 
     def __getitem__(self, entry):
-        location = []
+        page = Page(self.tree, [])
         count = 0
         try:
-            while node.name(self.root, location) != entry != count:
-                node.next(self.root, location)
+            while page.name != entry != count:
+                page.next()
                 count += 1
         except IndexError:
             raise KeyError(entry)
-        return location
+        return page
+
+    @property
+    def root(self):
+        return self[0]
 
     def refresh_flatnames(self):
-        for entry in self:
-            entry['flatname'] = page.flatname(entry['name'])
+        for page in self:
+            page.refresh_flatname()
 
-    def refresh_hyperlinks(self):
-        for location, entry in self.iteritems():
-            entry['hyperlink'] = page.link(self.root, location, extend=False)
+    def remove_flatnames(self):
+        for page in self:
+            page.remove_flatname()
 
     def publish(self):
         errors = 0
         errorstring = ''
-        for location, node in self.iteritems():
+        for page in self:
             try:
-                dump(page.publish(self.root, location, template=self.template),
-                        page.hyperlink(self.root, location))
+                page.publish(template=self.template)
             except:
-                errorstring += 'Error in {0}\n'.format(node['name'])
+                errorstring += 'Error in {0}\n'.format(page.name)
                 errors += 1
         self.update_searchindex()
         self.update_source()
-        return '{2}{0} error{3}\n{1}'.format(
-                errors,
-                '-' * 10,
+        return '{0}{1} error{2}\n{3}'.format(
                 errorstring,
-                '' if errors == 1 else 's'
+                errors,
+                '' if errors == 1 else 's',
+                '-' * 10
             )
 
     def update_source(self):
-        dump(self.root, self.source)
+        dump(self.tree, self.source)
 
     def update_searchindex(self):
         dump(self.analysis, self.searchindex)
@@ -155,12 +146,12 @@ class Site(object):
             # line numbers in each Page are incremented by the current total number of sentences
             base = len(sentences)
             # analyse the Page
-            analysis = page.analyse('['.join(entry['text']))
+            analysis = entry.analysis
             # add results to appropriate lists and dictionaries
             new_words = analysis['words']
             sentences += analysis['sentences']
-            urls.append(entry['hyperlink'])
-            names.append(buyCaps(entry['name']))
+            urls.append(entry.link)
+            names.append(buyCaps(entry.name))
             for word, line_numbers in new_words.iteritems():
                 # increment line numbers by base
                 # use str(page_number) because search.js relies on that

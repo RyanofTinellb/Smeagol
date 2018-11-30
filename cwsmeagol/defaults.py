@@ -56,7 +56,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
     "files": {
       "searchindex": "",
       "source": "",
-      "template": ""
+      "template_file": ""
     }
   },
   "current": {
@@ -64,12 +64,11 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
       ""
     ],
     "markdown": "",
-    "language": "en",
+    "language": "en: English",
     "position": "1.0",
     "fontsize": 14
   },
-  "links": [
-  ]
+  "links": {}
 }
     '''
 
@@ -110,43 +109,35 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
     properties = '''
     [
       {
-        "name": "Destination",
-        "property": "destination",
-        "owner": "site",
-        "check": false,
-        "textbox": true,
-        "browse": "folder",
-        "vartype": "string"
-      },
-      {
         "name": "Name",
         "property": "name",
         "owner": "site",
-        "check": false,
         "textbox": true,
-        "browse": false,
-        "vartype": "string"
+        "browse": false
+      },
+      {
+        "name": "Destination",
+        "property": "destination",
+        "owner": "site",
+        "textbox": true,
+        "browse": "folder"
       },
       {
         "name": "Data File",
         "property": "source",
         "owner": "files",
-        "check": false,
         "textbox": true,
-        "vartype": "string",
         "browse": {
           "action": "save",
           "text": "Data File",
-          "extension": ".txt"
+          "extension": ".json"
         }
       },
       {
         "name": "Template",
-        "property": "template",
+        "property": "template_file",
         "owner": "files",
-        "check": false,
         "textbox": true,
-        "vartype": "string",
         "browse": {
           "text": "HTML Template",
           "action": "open",
@@ -157,9 +148,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
         "name": "Searchterms File",
         "property": "searchindex",
         "owner": "files",
-        "check": false,
         "textbox": true,
-        "vartype": "string",
         "browse": {
           "text": "JSON File",
           "action": "save",
@@ -167,36 +156,9 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
         }
       },
       {
-        "name": "Number of Random Words",
-        "property": "number",
-        "owner": "random words",
-        "vartype": "integer",
-        "check": false,
-        "textbox": true,
-        "browse": false
-      },
-      {
-        "name": "Odds of Gemination",
-        "owner": "random words",
-        "property": "geminate",
-        "vartype": "integer",
-        "check": false,
-        "textbox": true,
-        "browse": false
-      },
-      {
-        "name": "Version Links within Stories",
-        "property": "InternalStory",
-        "owner": "links",
-        "check": true,
-        "textbox": false,
-        "browse": false
-      },
-      {
         "name": "Links within Dictionaries",
         "property": "InternalDictionary",
         "owner": "links",
-        "check": true,
         "textbox": false,
         "browse": false
       },
@@ -204,35 +166,29 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
         "name": "Links to an external Grammar",
         "property": "ExternalGrammar",
         "owner": "links",
-        "check": true,
         "textbox": true,
-        "vartype": "string",
         "browse": {
           "text": "Grammar Links File",
           "action": "open",
-          "extension": "*.glk"
+          "extension": ".glk"
         }
       },
       {
         "name": "Glossing Abbreviation Tooltips",
         "property": "Glossary",
         "owner": "links",
-        "check": true,
         "textbox": true,
-        "vartype": "string",
         "browse": {
           "text": "Glossary File",
           "action": "open",
-          "extension": "*.gls"
+          "extension": ".gls"
         }
       },
       {
         "name": "Links to an external Dictionary",
         "property": "ExternalDictionary",
         "owner": "links",
-        "check": true,
         "textbox": true,
-        "vartype": "string",
         "browse": false
       }
     ]
@@ -250,6 +206,6 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
               <body>
                 {family-links}
                   {nav-footer}
-                  {content}
+                  {main-contents}
                   {nav-footer}
                   {copyright}'''

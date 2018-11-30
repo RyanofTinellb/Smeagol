@@ -2,100 +2,111 @@ import Tkinter as Tk
 import tkFileDialog as fd
 from properties import Properties
 from cwsmeagol.utils import *
+from cwsmeagol.defaults import default
 
 class PropertiesWindow(Tk.Toplevel, object):
-
-    """
-
-    :param properties: (Properties)
-    """
     def __init__(self, properties=None, master=None):
         super(PropertiesWindow, self).__init__(master)
         self.properties = properties or Properties()
-        commands = dict(done=self.finish_window, cancel=self.cancel_window)
+        properties = json.loads(default.properties)
         self.property_frames = []
-        for row, property_ in enumerate(self.properties.template):
-            if (property_['owner'] in self.properties.config):
-                property_frame = PropertyFrame(self, row, self.properties, commands)
-                self.property_frames.append(property_frame)
-        self.configure_buttons(row+1, commands)
+        for row, property in enumerate(properties):
+            self.prepare(property, row)
+            frame = PropertyFrame(property, master=self)
+            self.property_frames.append(frame)
+        self.configure_buttons(row+1)
         self.property_frames[0].entry.focus_set()
 
-    def configure_buttons(self, row, commands):
-        done_button = Tk.Button(self, text='OK', command=commands['done'])
-        cancel_button = Tk.Button(self, text='Cancel', command=commands['cancel'])
-        done_button.grid(row=row, column=3, sticky=Tk.E+Tk.W)
-        cancel_button.grid(row=row, column=2, sticky=Tk.E)
+    def __getattr__(self, attr):
+        return getattr(self.properties, attr)
 
-    def finish_window(self, event=None):
-        """
-        Set values to site values and links values from the properties
-            window, and then disable the window
-        """
+    def prepare(self, properties, row):
+        properties['row'] = row
+        owner = properties['owner']
+        property = properties['property']
+        if owner == 'links':
+            properties['value'] = self.links.get(property, '')
+            properties['checked'] = property in self.links
+        else:
+            properties['value'] = getattr(self, property)
+
+    def configure_buttons(self, row):
+        done = Tk.Button(self, text='OK', command=self.done)
+        done.grid(row=row, column=3, sticky=Tk.E+Tk.W)
+        cancel = Tk.Button(self, text='Cancel', command=self.cancel)
+        cancel.grid(row=row, column=2, sticky=Tk.E)
+
+    def done(self, event=None):
         for frame in self.property_frames:
-            frame.update()
-        self.properties.update_site()
+            value = frame.get()
+            self.properties.update(value)
         self.destroy()
 
-    def cancel_window(self, event=None):
-        """
-        Do nothing if cancel button pressed
-        """
+    def cancel(self, event=None):
         self.destroy()
 
-class PropertyFrame:
-    """
-    Wrapper class for one row of a PropertiesWindow
-    """
-    def __init__(self, master, row, properties, commands):
-        """
-        Create a row of the properties window
-        """
-        self.row = row
-        self.properties = properties
-        self.__dict__.update(self.template)
-        self.checkvar, self.entryvar = Tk.IntVar(), Tk.StringVar()
-        self.entry = self.button = self.label = None
-        value = self.config[self.owner]
+class PropertyFrame(object):
+    def __init__(self, property, master):
+        self.property = property
+        self.master = master
+        self.ready_label()
         if self.check:
-            self.checkvar.set(self.property in [adder['type'] for adder in value])
-            self.check = Tk.Checkbutton(master, variable=self.checkvar)
-            self.check.grid(row=row, column=0)
-        self.label = Tk.Label(master, text=self.name)
-        self.label.grid(row=row, column=1, sticky=Tk.W)
+            self.ready_checkbox()
         if self.textbox:
-            try:
-                text = value[self.property]
-            except TypeError:
-                text = [prop['resource'] for prop in value if prop['type'] == self.property]
-                text = text[0] if text else ''
-            self.entryvar.set(text)
-            self.entry = Tk.Entry(master, width=50, textvariable=self.entryvar)
-            self.entry.bind('<Return>', commands['done'])
-            self.entry.bind('<Escape>', commands['cancel'])
-            self.entry.grid(row=row, column=2)
-            self.entry.xview('end')
-            if not self.browse:
-                return
-            elif self.browse == 'folder':
-                self.browse = self.browse_folder
-            else:
-                self.browse = self.file_browser()
-            self.button = Tk.Button(master, text='Browse...', command=self.browse)
-            self.button.grid(row=row, column=3)
+            self.ready_entry()
+        if self.browse:
+            self.ready_browser()
+            self.ready_button()
+
+    def __getattr__(self, attr):
+        if attr in {'name', 'owner', 'textbox', 'browse',
+                        'value', 'checked', 'row'}:
+            return self.property[attr]
+        else:
+            return getattr(super(PropertyFrame, self), attr)
+
+    def __setattr__(self, attr, value):
+        if attr in {'value', 'checked'}:
+            self.property[attr] = value
+        else:
+            super(PropertyFrame, self).__setattr__(attr, value)
 
     @property
-    def template(self):
-        return self.properties.template[self.row]
+    def check(self):
+        return self.owner == 'links'
 
-    @property
-    def config(self):
-        return self.properties.config
+    def ready_checkbox(self):
+        self.checkvar = Tk.IntVar()
+        self.checkvar.set(self.checked)
+        check = Tk.Checkbutton(self.master, variable=self.checkvar)
+        check.grid(row=self.row, column=0)
+
+    def ready_label(self):
+        label = Tk.Label(self.master, text=self.name)
+        label.grid(row=self.row, column=1, sticky=Tk.W)
+
+    def ready_entry(self):
+        self.entryvar = Tk.StringVar()
+        self.entryvar.set(self.value)
+        self.entry = Tk.Entry(self.master, width=50, textvariable=self.entryvar)
+        self.entry.bind('<Return>', self.master.done)
+        self.entry.bind('<Escape>', self.master.cancel)
+        self.entry.grid(row=self.row, column=2)
+        self.entry.xview('end')
+
+    def ready_button(self):
+        button = Tk.Button(self.master,
+                           text='Browse...',
+                           command=self.browse)
+        button.grid(row=self.row, column=3)
+
+    def ready_browser(self):
+        if self.browse == 'folder':
+            self.browse = self.browse_folder
+        else:
+            self.browse = self.file_browser()
 
     def browse_folder(self):
-        """
-        Allow the user to browse for a folder
-        """
         filename = fd.askdirectory()
         self.insert(filename)
         self.entry.focus_set()
@@ -104,11 +115,6 @@ class PropertyFrame:
         browse = self.browse
         filetype = (browse['text'], browse['extension'])
         def browse_file():
-            """
-            Allow the user to browse for a file of a given filetype
-
-            :param filetype: (str()) The usual tuple passed to a Tk.FileDialog
-            """
             action = browse['action']
             if action == 'open':
                 browser = fd.askopenfilename
@@ -116,7 +122,6 @@ class PropertyFrame:
                 browser = fd.asksaveasfilename
             filename = browser(filetypes=[filetype], title='Select File')
             extension = filetype[1]
-            filename = re.sub(r'(\.' + extension + ')?$', r'.' + extension, filename)
             self.insert(filename)
             if filename:
                 if action == 'save':
@@ -128,14 +133,13 @@ class PropertyFrame:
         return browse_file
 
     def insert(self, text=''):
-        """
-        Insert text into the appropriate textbox
-        """
-        self.entryvar.set(text)
+        if text:
+            self.entryvar.set(text)
         self.entry.xview('end')
 
-    def update(self):
-        text = self.entryvar.get()
-        check = self.checkvar.get()
-        integer = self.textbox and self.vartype == 'integer'
-        self.properties.update(self.owner, self.property, text, check, integer)
+    def get(self):
+        if self.textbox:
+            self.value = self.entryvar.get()
+        if self.check:
+            self.checked = self.checkvar.get()
+        return self.property

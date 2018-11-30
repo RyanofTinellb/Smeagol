@@ -49,7 +49,7 @@ class Default():
     def __init__(self):
         self.destination = 'c:/users/ryan/documents/tinellbianlanguages/'
         self.files = dict(source='data.json',
-                          template='template.html',
+                          template_file='template.html',
                           searchindex='searching.json')
 
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
         site = site()
         print(site.name + ': ')
         site.update_searchindex()
-        # print(site.publish())
+        print(site.publish())
         newtime = datetime.now()
         print('Done: ' + str(newtime - oldtime))
         oldtime = newtime

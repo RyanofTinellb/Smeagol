@@ -1,9 +1,13 @@
-import json
+import os
 import re
+import sys
+import json
 import urllib
+import inspect
 from contextlib import contextmanager
 from datetime import datetime
 from translation.markdown import Markdown
+
 
 @contextmanager
 def ignored(*exceptions):
@@ -12,39 +16,58 @@ def ignored(*exceptions):
     except exceptions:
         pass
 
+
 @contextmanager
 def conversion(converter, function):
     try:
         yield getattr(converter, function)
-    except AttributeError:
-        yield lambda x: x
-    # except:
-    #     raise
+    except:
+        pass
+
 
 def dump(dictionary, filename):
     if filename:
+        with ignored(os.error):
+            os.makedirs(os.path.dirname(filename))
         with open(filename, 'w') as f:
             json.dump(dictionary, f, indent=2)
+
+
+def dumps(string, filename):
+    if filename:
+        with ignored(os.error):
+            os.makedirs(os.path.dirname(filename))
+        with open(filename, 'w') as f:
+            f.write(string)
+
 
 def buyCaps(word):
     return re.sub(r'[$](.)', _buy, word)
 
+
 def _buy(regex):
     return regex.group(1).capitalize()
+
 
 def sellCaps(word):
     return re.sub(r'([A-Z])', _sell, word)
 
+
 def _sell(regex):
     return '$' + regex.group(1).lower()
 
+
 def change_text(item, replacement, text):
     text[0] = re.sub(item, replacement, text[0])
+    return text
+
 
 def remove_text(item, text):
-    change_text(item, '', text)
+    return change_text(item, '', text)
+
 
 url_markdown = Markdown()
+
 
 def urlform(text, markdown=None):
     markdown = markdown or url_markdown
@@ -62,13 +85,3 @@ def urlform(text, markdown=None):
     remove_text(r'<.*?>|[/*;: ]', name)
     name = urllib.quote(name[0], safe_punctuation + '$')
     return name
-
-def add_datestamp(text):
-    text += datetime.strftime(datetime.today(), '&date=%Y%m%d')
-    return text
-
-def remove_datestamp(text):
-    return re.sub(r'&date=\d{8}', '', text)
-
-def replace_datestamp(text):
-    return add_datestamp(remove_datestamp(text))
