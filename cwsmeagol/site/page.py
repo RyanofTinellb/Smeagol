@@ -28,12 +28,6 @@ class Page(Node):
             except KeyError:
                 self.refresh_flatname()
                 return getattr(self, attr)
-        elif attr is 'link':
-            try:
-                return self.find()['hyperlink']
-            except KeyError:
-                self.refresh_hyperlink()
-                return getattr(self, attr)
         else:
             return super(Page, self).__getattr__(attr)
 
@@ -44,7 +38,6 @@ class Page(Node):
             self.find()['text'] = value
         elif attr == 'name':
             self.find()['name'] = value
-            self.refresh_hyperlink()
         else:
             super(Page, self).__setattr__(attr, value)
 
@@ -61,11 +54,12 @@ class Page(Node):
         with ignored(KeyError):
             self.find().pop('flatname')
 
-    def refresh_hyperlink(self):
+    @property
+    def link(self):
         link = self.folder
         url = self.url if not self.has_children else 'index'
         hyperlink = '{0}/{1}'.format(link, url) if link else url
-        self.find()['hyperlink'] = hyperlink + '.html'
+        return hyperlink + '.html'
 
     @property
     def level(self):
@@ -384,10 +378,11 @@ class Page(Node):
         return page
 
     def delete_html(self):
-        if self.has_children:
-            shutil.rmtree(os.path.dirname(self.link))
-        else:
-            os.remove(self.link)
+        with ignored(WindowsError):
+            if self.has_children:
+                shutil.rmtree(os.path.dirname(self.link))
+            else:
+                os.remove(self.link)
 
     def delete(self):
         self.delete_html()

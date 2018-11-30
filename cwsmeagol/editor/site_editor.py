@@ -7,6 +7,7 @@ import random
 import webbrowser as web
 import Tkinter as Tk
 import tkSimpleDialog as sd
+import tkMessageBox as mb
 from editor import Editor
 from properties import Properties
 from properties_window import PropertiesWindow
@@ -285,7 +286,7 @@ class SiteEditor(Editor, object):
 
     def prepare_entry(self, entry):
         try:
-            text = self.initial_content(entry)
+            text = self.initial_content(entry) # entry is a dict
         except AttributeError:
             text = str(entry)
         for converter, function in ((self.linkadder, 'remove_links'),
@@ -307,8 +308,18 @@ class SiteEditor(Editor, object):
 
     def _save_page(self):
         text = self.get_text(self.textbox)
+        with ignored(AttributeError):
+            parent = self.entry.pop('parent')
+            self.entry = parent.append(self.entry)
+            if parent.num_children == 1:
+                parent.delete_html()
+            self.update_tocs()
         self.prepare_text(text)
         self.publish(self.entry, self.site)
+
+    def update_tocs(self):
+        # don't publish the whole site again if you're a dictionary
+        self.site.publish()
 
     def save_wholepage(self):
         try:
@@ -376,9 +387,13 @@ class SiteEditor(Editor, object):
         return str(textbox.get(1.0, Tk.END + '-1c'))
 
     def delete_page(self, event=None):
-        self.entry.delete()
-        self.page.pop()
-        self.reset()
+        template = 'Are you sure you wish to delete {0}?'
+        message = template.format(self.entry.name)
+        ans = mb.askokcancel('Delete', message)
+        if ans:
+            self.entry.delete()
+            self.page.pop()
+            self.reset()
         return 'break'
 
     def prepare_text(self, text):
@@ -402,6 +417,7 @@ class SiteEditor(Editor, object):
                 self.page[-1] = new_name
                 self.fill_headings()
                 self.update_titlebar()
+                self.update_tocs()
 
     @staticmethod
     def publish(entry, site, allpages=False):
@@ -471,10 +487,11 @@ class SiteEditor(Editor, object):
         self.master.quit()
 
     def initial_content(self, entry=None):
+        # blank for sites, filled for dictionary entries
         if entry is None:
             entry = self.entry
         name = entry.get('name', '')
-        return '1]{0}\n'.format(name)
+        return 'Describe {0} here!\n'.format(name)
 
     @property
     def textbox_commands(self):
@@ -498,13 +515,13 @@ class SiteEditor(Editor, object):
         return [('Site', [('Open', self.site_open),
                 ('Save', self.save_site),
                 ('Save _As', self.save_site_as),
-                ('Open in _Browser', self.open_in_browser),
                 ('P_roperties', self.site_properties),
                 ('S_ee All', self.list_pages),
                 ('Publish _WholePage', self.save_wholepage),
                 ('Publish All', self.site_publish)]),
                 ('Page', [('Rename', self.rename_page),
-                ('Delete', self.delete_page)])
+                ('Delete', self.delete_page),
+                ('Open in _Browser', self.open_in_browser)])
             ] + super(SiteEditor, self).menu_commands
 
 

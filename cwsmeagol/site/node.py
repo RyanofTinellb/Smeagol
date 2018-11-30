@@ -53,6 +53,13 @@ class Node(object):
         else:
             return node
 
+    def append(self, child):
+        if self.num_children:
+            self.children.append(child)
+        else:
+            self.children = [child]
+        return self.youngest_daughter
+
     def delete(self):
         sisters = self.parent.children
         index = sisters.index(self.find())
@@ -75,10 +82,16 @@ class Node(object):
         return self.sister(1)
 
     def __getattr__(self, attr):
-        if attr is 'children':
+        if attr == 'children':
             return self.find().get('children', [])
         else:
             return getattr(super(Node, self), attr)
+
+    def __setattr__(self, attr, value):
+        if attr == 'children':
+            self.find()['children'] = value
+        else:
+            super(Node, self).__setattr__(attr, value)
 
     @property
     def num_children(self):
@@ -223,6 +236,13 @@ class Node(object):
             return self.new(self.location + [0])
         else:
             return getattr(super(Node, self), 'eldest_daughter')
+
+    @property
+    def youngest_daughter(self):
+        if self.has_children:
+            return self.new(self.location + [self.num_children - 1])
+        else:
+            return getattr(super(Node, self), 'youngest_daughter')
 
     @property
     def descendants(self):
