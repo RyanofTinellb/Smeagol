@@ -66,14 +66,12 @@ class Evolver:
         return output
 
 
-class HighToVulgarLulani:
+class HighToColloquialLulani:
     def __init__(self, debug=False):
         self.rewrites = [
             ('&rsquo;', "'"),
             ('&middot;', '.'),
             ('&#x294;', "''"),
-            ('&eth;', 'D'),
-            ('&thorn;', 'T'),
             ('&ouml;', 'O'),
             ('&uuml;', 'U'),
             ('&ntilde;', 'N'),
@@ -148,7 +146,10 @@ class HighToVulgarLulani:
             (r'([aiueUoO^*()])2\1,*', r'\1'), # shorten long vowel
             (r'(?<=[^i])y$', 'i'), # re-write final semivowels
             (r'w$', 'u'),
-            (r'U$', 'O')]
+            (r'U$', 'O'),
+            ('dd', 'd.d'),
+            ('D', 'dd')
+            ]
         self.evolver = Evolver(replacements, debug)
         self.debug = debug
 

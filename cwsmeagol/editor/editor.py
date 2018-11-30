@@ -152,7 +152,7 @@ class Editor(Tk.Frame, object):
         self.markdown = Markdown()
         self.randomwords = RandomWords()
         self.translator = Translator(self.language)
-        self.evolver = HighToVulgarLulani()
+        self.evolver = HighToColloquialLulani()
 
     def change_language(self, event=None):
         self.language = self.languagevar.get()[:2]

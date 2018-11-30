@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from evolve import HighToVulgarLulani
+from evolve import HighToColloquialLulani
 import random
 import json
 import re
@@ -11,7 +11,7 @@ class RandomWords():
         languages = OrderedDict()
         languages['en'] = English
         languages['hl'] = HighLulani
-        languages['vl'] = VulgarLulani
+        languages['cl'] = ColloquialLulani
         self.languages = languages
         self.select(language)
 
@@ -127,11 +127,11 @@ class HighLulani:
             return consonant + syllable
         return syllable
 
-class VulgarLulani:
+class ColloquialLulani:
     def __init__(self):
-        self.name = 'Vulgar Lulani'
+        self.name = 'Colloquial Lulani'
         self.lulani = HighLulani()
-        self.vulgar = HighToVulgarLulani()
+        self.vulgar = HighToColloquialLulani()
         self.rewrites = [
                 ('&rsquo;', u"\u2019"),
                 ('&middot;', u'\u00b7'),

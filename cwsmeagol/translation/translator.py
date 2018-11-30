@@ -8,7 +8,7 @@ class Translator:
         languages = OrderedDict()
         languages['en'] = English
         languages['hl'] = HighLulani
-        languages['vl'] = VulgarLulani
+        languages['cl'] = ColloquialLulani
         languages['ef'] = EarlyFezhle
         languages['lf'] = LateFezhle
         languages['kf'] = KoineFezhle
@@ -156,9 +156,9 @@ class HighLulani:
         return output
 
 
-class VulgarLulani(HighLulani):
+class ColloquialLulani(HighLulani):
     def __init__(self):
-        self.name = 'Vulgar Lulani'
+        self.name = 'Colloquial Lulani'
 
 
 class EarlyFezhle(English):
