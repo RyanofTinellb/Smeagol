@@ -10,6 +10,7 @@ from cwsmeagol.defaults import default
 import tkFileDialog as fd
 import tkSimpleDialog as sd
 
+
 class Properties(object):
     def __init__(self, config=None, caller=None):
         super(Properties, self).__init__()

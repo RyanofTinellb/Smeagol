@@ -111,10 +111,6 @@ class Site(object):
         for page in self:
             page.remove_flatname()
 
-    def refresh_hyperlinks(self):
-        for page in self:
-            page.refresh_hyperlink()
-
     def publish(self):
         errors = 0
         errorstring = ''
