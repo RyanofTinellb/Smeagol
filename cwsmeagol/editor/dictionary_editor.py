@@ -4,9 +4,6 @@ from cwsmeagol.utils import *
 
 class DictionaryEditor(SiteEditor):
     def __init__(self, master=None, current=None):
-        """
-
-        """
         # initialise instance variables
         self.entry = None
         self.history = []
@@ -82,9 +79,6 @@ class DictionaryEditor(SiteEditor):
         self.load()
 
     def keep_history(self, heading):
-        """
-        Keep track of which entries have been loaded
-        """
         if not self.history or heading != self.history[self.current]:
             try:
                 self.history[self.current + 1] = heading
