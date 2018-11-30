@@ -53,6 +53,11 @@ class Node(object):
         else:
             return node
 
+    def delete(self):
+        sisters = self.parent.children
+        index = sisters.index(self.find())
+        sisters.pop(index)
+
     def sister(self, index):
         if not len(self.location):
             raise IndexError('No such sister')

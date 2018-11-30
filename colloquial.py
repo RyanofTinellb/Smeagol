@@ -42,7 +42,7 @@ class Verbs:
 
     @property
     def conjugation(self):
-        vulgar = HighToColloquialLulani()
+        colloquial = HighToColloquialLulani()
         output = json.load(self.file)
         verbs = [entry['t'] for entry in output if 'verb' in entry['p'] and
             entry['l'] == 'High Lulani']
@@ -56,7 +56,7 @@ class Verbs:
             for aux in auxes:
                 y = verb
                 output += [verb + aux]
-        return unique([vulgar.evolve(x) for x in output])
+        return unique([colloquial.evolve(x) for x in output])
 
 def lexi_sort(word):
     last_vowel = word[-1]
@@ -86,9 +86,9 @@ option = raw_input('Choice: ')
 if option == '1':
     with open('wordlist.json') as f:
         wordlist = Verbs(f).conjugation
-    with open('vulgarverbs.json', 'w') as f:
+    with open('colloquialverbs.json', 'w') as f:
         json.dump(wordlist, f, indent=2)
-    web.open('vulgarverbs.html')
+    web.open('colloquialverbs.html')
 elif option == '2':
     wordlist = sandhi_check()
     with open('colloquiallulani.json', 'w') as f:

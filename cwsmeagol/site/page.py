@@ -1,4 +1,5 @@
 import os
+import shutil
 from node import Node
 from datetime import datetime
 from page_utils import *
@@ -382,6 +383,9 @@ class Page(Node):
                     raise TypeError(section, function)
         return page
 
-    def delete_htmlfile(self):
-        with ignored(WindowsError):
-            os.remove_text(self.link + '.html')
+    def delete(self):
+        if self.has_children:
+            shutil.rmtree(os.path.dirname(self.link))
+        else:
+            os.remove(self.link)
+        super(Page, self).delete()

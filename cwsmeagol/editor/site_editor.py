@@ -376,22 +376,18 @@ class SiteEditor(Editor, object):
     def get_text(textbox):
         return str(textbox.get(1.0, Tk.END + '-1c'))
 
-    def prepare_text(self, text):
-        if self.entry.level and not text:
-            if self.page == self.heading_contents:
-                self.page = ['']
-            self.entry.delete_htmlfile()
-            self.entry.remove_from_hierarchy()
-            self.reset()
-        else:
-            self.convert_text(text, self.entry)
+    def delete_page(self, event=None):
+        self.entry.delete()
+        self.page.pop()
+        self.reset()
+        return 'break'
 
-    def convert_text(self, text, entry):
+    def prepare_text(self, text):
         text = re.sub(r'\n\n+', '\n', text)
         with conversion(self.markdown, 'to_markup') as converter:
             text = converter(text)
         with conversion(self.linkadder, 'add_links') as converter:
-            text = converter(text, entry)
+            text = converter(text, self.entry)
         self.entry.text = text
 
     def rename_page(self):
@@ -507,7 +503,8 @@ class SiteEditor(Editor, object):
                 ('S_ee All', self.list_pages),
                 ('Publish _WholePage', self.save_wholepage),
                 ('Publish All', self.site_publish)]),
-                ('Page', [('Rename', self.rename_page)])
+                ('Page', [('Rename', self.rename_page),
+                ('Delete', self.delete_page)])
             ] + super(SiteEditor, self).menu_commands
 
 
