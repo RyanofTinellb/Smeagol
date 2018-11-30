@@ -156,7 +156,6 @@ class SiteEditor(Editor, object):
             self.add_heading()
         if child:
             heading.insert(Tk.INSERT, self.entry.name)
-            self.master.title('Editing ' + self.entry.name)
         self.page = self.heading_contents
         return 'break'
 
@@ -249,11 +248,11 @@ class SiteEditor(Editor, object):
 
     def load(self, event=None):
         self.entry = self.find_entry(self.heading_contents)
+        self.update_titlebar()
         text = self.prepare_entry(self.entry)
         self.display(text)
         self.reset_textbox()
         self.save_text.set('Save')
-        self.update_titlebar()
         return 'break'
 
     def update_titlebar(self):
@@ -396,6 +395,7 @@ class SiteEditor(Editor, object):
                                      initialvalue=self.entry.name)
             if new_name:
                 try:
+                    self.entry.delete_html()
                     self.entry.name = new_name
                 except AttributeError:
                     self.entry['name'] = new_name

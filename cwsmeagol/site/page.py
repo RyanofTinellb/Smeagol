@@ -383,9 +383,12 @@ class Page(Node):
                     raise TypeError(section, function)
         return page
 
-    def delete(self):
+    def delete_html(self):
         if self.has_children:
             shutil.rmtree(os.path.dirname(self.link))
         else:
             os.remove(self.link)
+
+    def delete(self):
+        self.delete_html()
         super(Page, self).delete()
