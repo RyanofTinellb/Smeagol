@@ -24,8 +24,8 @@ class Properties(object):
                 self.config = json.load(config)
         except (IOError, TypeError):
             self.config = json.loads(default.config)
-        self.create_site()
-        self.create_linkadder()
+        self.site = Site(**self.site_info)
+        self.linkadder = AddRemoveLinks(self.links)
         self.translator = Translator(self.language)
         self.evolver = HighToColloquialLulani()
         self.randomwords = RandomWords(self.language)
@@ -35,19 +35,23 @@ class Properties(object):
         if attr in {'files', 'source', 'destination', 'template',
                 'template_file', 'name', 'searchindex'}:
             return getattr(self.site, attr)
-        elif attr in {'page', 'language', 'position', 'fontsize'}:
+        elif attr in {'language', 'position', 'fontsize'}:
             return self.config['current'][attr]
-        elif attr is 'markdown_file':
+        elif attr == 'markdown_file':
             return self.config['current']['markdown']
-        elif attr is 'links':
+        elif attr == 'links':
             return self.config['links']
-        elif attr is 'site_info':
+        elif attr == 'site_info':
             return self.config['site']
+        elif attr == 'history':
+            return self.get_history()
+        elif attr == 'page':
+            return self.history[-1]
         else:
             return getattr(super(Properties, self), attr)
 
     def __setattr__(self, attr, value):
-        if attr in {'page', 'language', 'position', 'fontsize'}:
+        if attr in {'language', 'position', 'fontsize'}:
             self.config['current'][attr] = value
         elif attr == 'markdown_file':
             self.config['current']['markdown'] = value
@@ -55,8 +59,10 @@ class Properties(object):
             self.set_markdown(attr, value)
         elif attr in {'name', 'destination'}:
             self.config['site'][attr] = value
-        elif attr == 'links':
-            self.config['links'] = value
+        elif attr in {'links', 'history'}:
+            self.config[attr] = value
+        elif attr == 'page':
+            self.history.replace(value)
         else:
             super(Properties, self).__setattr__(attr, value)
 
@@ -65,6 +71,14 @@ class Properties(object):
             super(Properties, self).__setattr__(attr, Markdown(value))
         except TypeError: # value is already a Markdown instance
             super(Properties, self).__setattr__(attr, value)
+
+    def get_history(self):
+        history = self.config.get('history', [])
+        if isinstance(history, ShortList):
+            return history
+        else:
+            self.history = ShortList(history, 3)
+            return self.history
 
     def collate_config(self):
         self.name = self.site.name
@@ -117,12 +131,6 @@ class Properties(object):
             filename = re.sub(r'(\.smg)?$', r'.smg', filename)
             self.config_filename = filename
             self.save_site()
-
-    def create_site(self):
-        self.site = Site(**self.site_info)
-
-    def create_linkadder(self):
-        self.linkadder = AddRemoveLinks(self.links)
 
     def update(self, properties):
         property = properties['property']

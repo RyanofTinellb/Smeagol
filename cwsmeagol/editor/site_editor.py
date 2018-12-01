@@ -21,12 +21,11 @@ from cwsmeagol.defaults import default
 class SiteEditor(Editor, object):
     def __init__(self, master=None, config_file=None):
         super(SiteEditor, self).__init__(master)
-        self.properties = Properties(config_file, self.caller)
+        self.properties.setup(config_file)
         self.server = None
         self.PORT = 41809
         self.start_server()
-        self.fill_headings()
-        self.load()
+        self.fill_and_load()
         self.go_to(self.position)
 
     @property
@@ -45,7 +44,7 @@ class SiteEditor(Editor, object):
 
     def __getattr__(self, attr):
         if attr is 'properties':
-            self.properties = Properties(self.caller)
+            self.properties = Properties(caller=self.caller)
             return self.properties
         try:
             return getattr(self.properties, attr)
@@ -109,6 +108,10 @@ class SiteEditor(Editor, object):
         contents = filter(None, contents)
         return contents
 
+    def fill_and_load(self):
+        self.fill_headings()
+        self.load()
+
     def fill_headings(self):
         entries = self.page
         while len(self.headings) < len(entries) < 10:
@@ -157,7 +160,6 @@ class SiteEditor(Editor, object):
             self.add_heading()
         if child:
             heading.insert(Tk.INSERT, self.entry.name)
-        self.page = self.heading_contents
         return 'break'
 
     def add_heading(self, event=None):
@@ -179,28 +181,31 @@ class SiteEditor(Editor, object):
         try:
             headings[level + 1].focus_set()
         except IndexError:
+            self.history += self.heading_contents
             self.load()
         return 'break'
 
-    def previous_entry(self, event):
-        self.load_entry(self.entry.previous)
+    def earlier_entry(self, event=None):
+        self.history.previous()
+        self.fill_and_load()
         return 'break'
 
-    def next_entry(self, event):
-        self.load_entry(self.entry.next_node)
+    def later_entry(self, event=None):
+        self.history.next()
+        self.fill_and_load()
         return 'break'
 
-    def load_entry(self, entry):
-        ancestors = entry.ancestors[1:]
-        actual_level = len(ancestors)
-        while len(self.headings) > max(1, actual_level):
-            self.remove_heading()
-        while len(self.headings) < min(actual_level, 10):
-            self.add_heading()
-        for heading, ancestor in izip(self.headings, ancestors):
-            heading.delete(0, Tk.END)
-            heading.insert(0, ancestor.name)
-        self.load()
+    def previous_entry(self, event=None):
+        self.entry = self.entry.predecessor
+        self.fill_and_load()
+        return 'break'
+
+    def next_entry(self, event=None):
+        print self.entry.name
+        self.entry = self.entry.successor
+        print self.entry.name
+        self.fill_and_load()
+        return 'break'
 
     def site_open(self, event=None):
         source = self.open_site()
@@ -235,8 +240,7 @@ class SiteEditor(Editor, object):
     def reset(self, event=None):
         self.entry = self.site.root
         self.clear_interface()
-        self.fill_headings()
-        self.load()
+        self.fill_and_load()
 
     def site_properties(self, event=None):
         properties_window = PropertiesWindow(self.properties)
@@ -248,7 +252,7 @@ class SiteEditor(Editor, object):
         self.information.set(self.site.publish())
 
     def load(self, event=None):
-        self.entry = self.find_entry(self.heading_contents)
+        self.entry = self.find_entry(self.page)
         self.update_titlebar()
         text = self.prepare_entry(self.entry)
         self.display(text)
@@ -316,6 +320,11 @@ class SiteEditor(Editor, object):
             self.update_tocs()
         self.prepare_text(text)
         self.publish(self.entry, self.site)
+
+    def save_site(self):
+        self.position = self.textbox.index(Tk.INSERT)
+        self.fontsize = self.font.actual(option='size')
+        self.properties.save_site()
 
     def update_tocs(self):
         # don't publish the whole site again if you're a dictionary
@@ -479,10 +488,6 @@ class SiteEditor(Editor, object):
         if self.save_wholepage():
             return
         self.server.shutdown()
-        self.page = self.heading_contents
-        self.language = self.languagevar.get()
-        self.position = self.textbox.index(Tk.INSERT)
-        self.fontsize = self.font.actual(option='size')
         self.save_site()
         self.master.quit()
 
@@ -498,6 +503,8 @@ class SiteEditor(Editor, object):
         return super(SiteEditor, self).textbox_commands + [
             ('<Control-Prior>', self.previous_entry),
             ('<Control-Next>', self.next_entry),
+            ('<Control-Shift-Prior>', self.earlier_entry),
+            ('<Control-Shift-Next>', self.later_entry),
             ('<Control-N>', self.insert_new),
             ('<Control-o>', self.site_open),
             ('<Control-s>', self.save_page)]

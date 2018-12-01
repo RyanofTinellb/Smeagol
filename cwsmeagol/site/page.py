@@ -169,6 +169,11 @@ class Page(Node):
         dumps(self.html(template), self.link)
 
     @property
+    def list(self):
+        name = lambda x: x.name
+        return map(name, self.lineage)[1:]
+
+    @property
     def folder(self):
         return '/'.join(self.iterfolder)
 
