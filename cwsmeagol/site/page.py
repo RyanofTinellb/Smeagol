@@ -170,6 +170,8 @@ class Page(Node):
 
     @property
     def list(self):
+        if self.is_root:
+            return []
         name = lambda x: x.name
         return map(name, self.lineage)[1:]
 
@@ -338,7 +340,8 @@ class Page(Node):
         try:
             next = self.hyperlink(self.successor, 'Next page &rarr;')
         except IndexError:
-            next = 'Return to Menu &uarr;'
+            next = ('<a href="http://grammar.tinellb.com">'
+                        'Return to Menu &uarr;')
         links = '\n'.join([div.format(f) for f in (previous, next)])
         return footer.format(links)
 

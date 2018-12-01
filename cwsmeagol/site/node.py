@@ -33,7 +33,9 @@ class Node(object):
     def __len__(self):
         return len(self.location)
 
-    def new(self, location):
+    def new(self, location=None):
+        if location is None:
+            location = self.location
         try:
             return type(self)(self.tree, location[:])
         except TypeError:
@@ -126,13 +128,13 @@ class Node(object):
     @property
     def successor(self):
         try:
-            return self.new(self.location).next()
+            return self.new().next()
         except StopIteration:
             raise IndexError('No more nodes!')
 
     @property
     def predecessor(self):
-        return self.new(self.location).previous()
+        return self.new().previous()
 
     def previous(self):
         try:
@@ -151,6 +153,12 @@ class Node(object):
         if children:
             self.location += [children - 1]
             self._last_grandchild()
+
+    @property
+    def youngest_granddaughter(self):
+        new = self.new()
+        new._last_grandchild()
+        return new
 
     def distance(self, destination):
         self, destination = [x.location for x in (self, destination)]
