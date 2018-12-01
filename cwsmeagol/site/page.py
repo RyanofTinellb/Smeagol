@@ -78,8 +78,6 @@ class Page(Node):
         # remove tags, and items between some tags
         change_text(
             r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
-        # remove datestamps
-        remove_text(r'&date=\d{8}', content)
         # change punctuation to paragraph marks, so that splitlines works
         change_text(r'[!?.|]', '\n', content)
         # change punctuation to space

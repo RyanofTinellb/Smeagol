@@ -46,7 +46,7 @@ class Properties(object):
         elif attr == 'history':
             return self.get_history()
         elif attr == 'page':
-            return self.history[-1]
+            return self.get_page()
         else:
             return getattr(super(Properties, self), attr)
 
@@ -79,6 +79,12 @@ class Properties(object):
         else:
             self.history = ShortList(history, 3)
             return self.history
+            
+    def get_page(self):
+        try:
+            return self.history[-1]
+        except IndexError:
+            return []
 
     def collate_config(self):
         self.name = self.site.name

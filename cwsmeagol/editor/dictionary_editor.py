@@ -3,26 +3,10 @@ from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 
 class DictionaryEditor(SiteEditor):
-    def __init__(self, master=None, current=None):
-        # initialise instance variables
-        self.entry = None
-        self.history = []
-        self.current = -1
-
-        super(DictionaryEditor, self).__init__(master, current)
-        commands = [
-            ('<Control-r>', self.refresh_random),
-            ('<Control-=>', self.add_definition),
-            ('<Prior>', self.scroll_history),
-            ('<Next>', self.scroll_history),
-            ('<Button-2>', self.set_jump_to_entry),
-            ('<Control-Return>', self.jump_to_entry)
-
-        ]
-        self.add_commands('Text', commands)
+    def __init__(self, master=None, config_file=None):
+        super(DictionaryEditor, self).__init__(master, config_file)
         self.heading = self.headings[0]
         self.font.config(family='Courier New')
-        self.master.title('Editing Dictionary')
 
     def jump_to_entry(self, event):
         textbox = event.widget
@@ -32,9 +16,8 @@ class DictionaryEditor(SiteEditor):
         except Tk.TclError:
             entry = self.select_word(event)
         self.save_page()
-        self.heading.delete(0, Tk.END)
-        self.heading.insert(0, entry)
-        self.load()
+        self.page = [entry]
+        self.fill_and_load()
 
     def set_jump_to_entry(self, event):
         textbox = event.widget
@@ -46,127 +29,61 @@ class DictionaryEditor(SiteEditor):
     def caller(self):
         return 'dictionary'
 
-    def scroll_headings(self, event):
-        if event.keysym == 'Prior':
-            if self.current > 0:
-                self.current -= 1
-                self.heading.delete(0, Tk.END)
-                self.heading.insert(0, self.markdown.to_markdown(
-                    self.history[self.current]))
-        elif event.keysym == 'Next':
-            if self.current < len(self.history) - 1:
-                self.current += 1
-                self.heading.delete(0, Tk.END)
-                self.heading.insert(0, self.markdown.to_markdown(
-                    self.history[self.current]))
-        return 'break'
-
-    def scroll_history(self, event):
-        self.scroll_headings(event)
-        self.load()
-        return 'break'
-
-    def previous_entry(self, event):
-        m = self.markdown.to_markdown
-        self.heading.delete(0, Tk.END)
-        self.heading.insert(0, m(self.entry.previous.name))
-        self.load()
-
-    def next_entry(self, event):
-        m = self.markdown.to_markdown
-        self.heading.delete(0, Tk.END)
-        self.heading.insert(0, m(self.entry.next_node.name))
-        self.load()
-
-    def keep_history(self, heading):
-        if not self.history or heading != self.history[self.current]:
-            try:
-                self.history[self.current + 1] = heading
-                self.history = self.history[:self.current + 2]
-            except IndexError:
-                self.history.append(heading)
-            self.current += 1
-
     def add_definition(self, event=None):
-        """
-        Insert the markdown for entry definition, and move the insertion pointer to allow for immediate input of the definition.
-        """
         widget = event.widget
         m = self.markdown.to_markdown
         self.insert_characters(
             widget, m('<div class="definition">'), m('</div>'))
         return 'break'
 
-    def find_entry(self, headings):
-        """
-        Find the current entry based on what is in the heading boxes.
-        Overrides SiteEditor.find_entry.
-        Subroutine of self.load().
-        :param headings (str[]): the texts from the heading boxes
-        :return (Page):
-        """
-        heading = sellCaps(headings[0])
-        site = self.site
-        with conversion(self.markdown, 'to_markup') as converter:
-            heading = converter(heading)
+    def find_entry(self, headings, entry=None):
+        # override super().find_entry()
+        entry = self.site.root
         try:
-            entry = site[heading]
+            heading = headings[0]
+        except IndexError:
+            return entry
+        initial = re.sub(r'.*?(\w).*', r'\1',
+            urlform(heading)).capitalize()
+        try:
+            return entry[initial][heading]
         except KeyError:
-            initial = re.sub(r'.*?(\w).*', r'\1',
-                urlform(heading)).capitalize()
-            entry = Page(heading, site[initial], '', newpage=True)
-            entry.content = self.initial_content(entry)
-        self.keep_history(heading)
-        self.master.title('Editing Dictionary: ' + self.entry.name)
+            try:
+                parent = entry[initial]
+            except KeyError:
+                parent = dict(name=initial, parent=entry)
+            entry = dict(name=heading, parent=parent)
         return entry
 
-    def prepare_entry(self, entry):
-        text = super(DictionaryEditor, self).prepare_entry(entry)[0]
-        text = text.splitlines(True)
-        text[0] = buyCaps(text[0])
-        text = ''.join(text)
-        return [text]
-
-    def prepare_texts(self, texts):
-        """
-        Modify entry with manipulated texts.
-        Subroutine of self.save().
-        Overrides SiteEditor.prepare_texts()
-        :param entry (Page): the entry in the datafile to be modified.
-        :param texts (str[]): the texts to be manipulated and inserted.
-        :param markdown (Markdown): a Markdown instance to be applied to the texts. If None, the texts are not changed.
-        :param return (Nothing):
-        """
-        texts[0] = texts[0].splitlines(True)
-        with ignored(IndexError):
-            texts[0][0] = sellCaps(texts[0][0])
-        texts[0] = ''.join(texts[0])
-        super(DictionaryEditor, self).prepare_texts(texts)
-        with ignored(AttributeError):
-            self.entry.parent.content = replace_datestamp(
-                self.entry.parent.content)
-
     def _save_page(self):
-        """Override method in SiteEditor"""
+        # override super()._save_page
         super(DictionaryEditor, self)._save_page()
         self.serialise()
 
     @staticmethod
     def publish(entry, site, allpages=False):
-        if entry.content:
+        if allpages:
+            site.publish()
+        elif entry is not None:
+            entry.update_date()
+            entry.parent.update_date()
             entry.publish(site.template)
-        with ignored(AttributeError):
             entry.parent.publish(site.template)
-        site.modify_source()
-        site.update_json()
+        if site is not None:
+            site.update_source()
+            site.update_searchindex()
+
+    def update_tocs(self):
+        # override super().update_tocs()
+        pass
 
     def serialise(self):
         output = []
         transliteration = None
         language = None
         partofspeech = None
-        for entry in map(lambda entry: self.linkadder.remove_links(remove_datestamp(entry.content)),
-                         self.site):
+        for entry in map(lambda entry:
+                self.linkadder.remove_links(str(entry)), self.site):
             for line in entry.splitlines():
                 if line.startswith('[1]'):
                     transliteration = line[len('[1]'):]
@@ -194,25 +111,29 @@ class DictionaryEditor(SiteEditor):
             json.dump(output, f, indent=2)
 
     def initial_content(self, entry=None):
-        """
-        Return the content to be placed in a textbox if the page is new
-        """
         if entry is None:
             entry = self.entry
-        name = entry.name
+        name = entry.get('name', '')
         tr = self.translator
-        before = ('[1]{0}\n[2]{1}\n').format(name, tr.safename)
-        before += '' if self.languagevar.get() == 'en' else '[3]{0}\n'.format(
-            tr.convert_word(name))
-        before += '[4][p {0}]/'.format(tr.code)
-        after = '/[/p]\n[5]\n\n'
-        return before + after
+        code = tr.code[:2]
+        output = [
+            '[1]{0}'.format(tr.safename),
+            '[2]{0}'.format(tr.convert_word(name)),
+            '[p {0}]//[/p]'.format(code),
+            '[3] {0}'.format('{{}}')
+        ]
+        if code == 'en':
+            output.pop(1)
+        markup = self.markdown.to_markup
+        return markup('\n'.join(output))
 
     @property
-    def heading_commands(self):
-        commands = super(DictionaryEditor, self).heading_commands
-        commands += [(['<Control-r>'], self.refresh_random)]
-        return commands
+    def textbox_commands(self):
+        return super(DictionaryEditor, self).textbox_commands + [
+            ('<Control-=>', self.add_definition),
+            ('<Button-2>', self.set_jump_to_entry),
+            ('<Control-Return>', self.jump_to_entry)
+        ]
 
 
 if __name__ == '__main__':

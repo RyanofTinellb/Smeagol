@@ -68,7 +68,6 @@ class English:
                 r'.*?>',
                 r'<.*?',
                 r'&.*?;',
-                r'&date=',
                 r'\W|\d'
             ):
                 choice = re.sub(sub, '', choice)

@@ -33,12 +33,12 @@ class AddRemoveLinks:
                 'AddRemoveLinks has no attribute {0}'.format(attr))
 
     def add_links(self, text, entry):
-        for link_adder in self.link_adders.items():
+        for link_adder in self.link_adders.values():
             text = link_adder.add_links(text, entry)
         return text
 
     def remove_links(self, text):
-        for link_adder in self.link_adders.items():
+        for link_adder in self.link_adders.values():
             text = link_adder.remove_links(text)
         return text
 
