@@ -120,7 +120,7 @@ class DictionaryEditor(SiteEditor):
             '[1]{0}'.format(tr.safename),
             '[2]{0}'.format(tr.convert_word(name)),
             '[p {0}]//[/p]'.format(code),
-            '[3] {0}'.format('{{}}')
+            '[3] {{ }}'
         ]
         if code == 'en':
             output.pop(1)

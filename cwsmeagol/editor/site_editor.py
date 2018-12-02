@@ -301,8 +301,7 @@ class SiteEditor(Editor, object):
         def text_thing(page):
             return ' ' * 2 * page.level + page.name
         text = '\n'.join(map(text_thing, self.site))
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
+        text = self.markdown(text)
         textwindow = TextWindow(text)
         self.wait_window(textwindow)
         return 'break'
@@ -312,18 +311,14 @@ class SiteEditor(Editor, object):
             text = self.initial_content(entry) # entry is a dict
         except AttributeError:
             text = str(entry)
-        for converter, function in ((self.linkadder, 'remove_links'),
-                                    (self.markdown, 'to_markdown')):
-            with conversion(converter, function) as converter:
-                text = converter(text)
+        for converter in (self.remove_links, self.markdown):
+            text = converter(text)
         return text
 
     def prepare_text(self, text):
         text = re.sub(r'\n\n+', '\n', text)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
-        with conversion(self.linkadder, 'add_links') as converter:
-            text = converter(text, self.entry)
+        text = self.markup(text)
+        text = self.add_links(text, self.entry)
         self.entry.text = text
 
     def save_page(self, event=None):
@@ -464,12 +459,12 @@ class SiteEditor(Editor, object):
             textbox.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(after)))
 
     def insert_formatting(self, event, tag):
-        with conversion(self.markdown, 'find_formatting') as converter:
-            self.insert_characters(event.widget, *converter(tag))
+        converter = self.marker.find_formatting
+        self.insert_characters(event.widget, *converter(tag))
 
     def insert_markdown(self, event, tag):
-        with conversion(self.markdown, 'find') as converter:
-            self.insert_characters(event.widget, converter(tag))
+        converter = self.marker.find
+        self.insert_characters(event.widget, converter(tag))
 
     def format_paragraph(self, style, code, textbox):
         linestart = Tk.INSERT + ' linestart'

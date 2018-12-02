@@ -83,7 +83,7 @@ class ExternalDictionary:
         """
         self.language = '#'
         with ignored(IndexError):
-            self.language += entry.matriarch.urlform
+            self.language += entry.matriarch.url
         return re.sub(r'<{0}>(.*?)</{0}>'.format('link'), self._link, text)
 
     def _link(self, matchobj):

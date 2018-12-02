@@ -3,11 +3,6 @@ from cwsmeagol.defaults import default
 
 class Markdown:
     def __init__(self, filename=None):
-        """
-        Marking down proceeds down the Replacements page
-        :param filename (String): the path to the replacements file
-        :raise IOError: filename does not exist
-        """
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None

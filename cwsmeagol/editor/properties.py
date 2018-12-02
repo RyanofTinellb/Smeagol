@@ -29,7 +29,7 @@ class Properties(object):
         self.translator = Translator(self.language)
         self.evolver = HighToColloquialLulani()
         self.randomwords = RandomWords(self.language)
-        self.markdown = Markdown(self.markdown_file)
+        self.marker = Markdown(self.markdown_file)
 
     def __getattr__(self, attr):
         if attr in {'files', 'source', 'destination', 'template',
@@ -39,6 +39,10 @@ class Properties(object):
             return self.config['current'][attr]
         elif attr == 'markdown_file':
             return self.config['current']['markdown']
+        elif attr in {'markdown', 'markup'}:
+            return getattr(self.marker, 'to_{0}'.format(attr))
+        elif attr in {'remove_links', 'add_links'}:
+            return getattr(self.linkadder, attr)
         elif attr == 'links':
             return self.config['links']
         elif attr == 'site_info':
@@ -55,7 +59,7 @@ class Properties(object):
             self.config['current'][attr] = value
         elif attr == 'markdown_file':
             self.config['current']['markdown'] = value
-        elif attr == 'markdown':
+        elif attr == 'marker':
             self.set_markdown(attr, value)
         elif attr in {'name', 'destination'}:
             self.config['site'][attr] = value
@@ -79,7 +83,7 @@ class Properties(object):
         else:
             self.history = ShortList(history, 3)
             return self.history
-            
+
     def get_page(self):
         try:
             return self.history[-1]

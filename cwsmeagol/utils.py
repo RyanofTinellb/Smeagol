@@ -17,14 +17,6 @@ def ignored(*exceptions):
         pass
 
 
-@contextmanager
-def conversion(converter, function):
-    try:
-        yield getattr(converter, function)
-    except:
-        pass
-
-
 def dump(dictionary, filename):
     if filename:
         with ignored(os.error):
@@ -66,17 +58,16 @@ def remove_text(item, text):
     return change_text(item, '', text)
 
 
-url_markdown = Markdown()
-
-
 def urlform(text, markdown=None):
-    markdown = markdown or url_markdown
+    try:
+        markdown = markdown.to_markdown
+    except AttributeError:
+        markdown = Markdown().to_markdown
     name = [text.lower()]
     safe_punctuation = '\'._+!(),'
     # remove safe punctuations that should only be used to encode non-ascii characters
     remove_text(r'[{0}]'.format(safe_punctuation), name)
-    with conversion(markdown, 'to_markdown') as converter:
-        name[0] = converter(name[0])
+    name[0] = markdown(name[0])
     # remove extraneous initial apostrophes
     change_text(r"^''+", "'", name)
     # remove text within tags

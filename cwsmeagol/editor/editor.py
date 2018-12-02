@@ -5,7 +5,7 @@ import tkFileDialog as fd
 from ttk import Combobox
 from itertools import izip
 from cwsmeagol.translation import *
-from cwsmeagol.utils import ignored, conversion
+from cwsmeagol.utils import ignored
 
 
 class Editor(Tk.Frame, object):
@@ -149,10 +149,15 @@ class Editor(Tk.Frame, object):
     def setup_linguistics(self):
         self.languagevar = Tk.StringVar()
         self.language = 'en: English'
-        self.markdown = Markdown()
+        self.setup_markdown()
         self.randomwords = RandomWords()
         self.translator = Translator(self.language)
         self.evolver = HighToColloquialLulani()
+
+    def setup_markdown(self, filename=None):
+        self.marker = Markdown(filename)
+        self.markup = self.marker.to_markup
+        self.markdown = self.marker.to_markdown
 
     def change_language(self, event=None):
         self.language = self.languagevar.get()[:2]
@@ -401,8 +406,7 @@ class Editor(Tk.Frame, object):
             text = self.select_word(event)
             textbox.tag_remove('sel', '1.0', Tk.END)
         length = len(text)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
+        text = self.markup(text)
         example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
         converter = self.translator.convert_word # default setting
         for mark in '.!?':
@@ -412,8 +416,7 @@ class Editor(Tk.Frame, object):
         text = converter(text)
         if example:
             text = '[e]' + text
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
+        self.markdown(text)
         try:
             text += '\n' if textbox.compare(Tk.SEL_LAST,
                                             '==', Tk.SEL_LAST + ' lineend') else ' '
@@ -434,15 +437,13 @@ class Editor(Tk.Frame, object):
             text = self.select_word(event)
             textbox.tag_remove('sel', '1.0', Tk.END)
         length = len(text)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
+        text = self.markup(text)
         example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
         converter = self.evolver.evolve # default setting
         text = converter(text)[-1]
         if example:
             text = '[e]' + text
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
+        text = self.markdown(text)
         try:
             text += '\n' if textbox.compare(Tk.SEL_LAST,
                                             '==', Tk.SEL_LAST + ' lineend') else ' '
@@ -523,11 +524,9 @@ class Editor(Tk.Frame, object):
 
     def _markdown_load(self, filename):
         text = self.get_text(self.textbox)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
-        self.markdown = filename
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
+        text = self.markup(text)
+        self.setup_markdown(filename)
+        text = self.markdown(text)
         self.replace(self.textbox, text)
 
     def markdown_refresh(self, event=None):
@@ -540,11 +539,9 @@ class Editor(Tk.Frame, object):
 
     def _markdown_refresh(self):
         text = self.get_text(self.textbox)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
-        self.markdown.refresh()
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
+        text = self.markup(text)
+        self.marker.refresh()
+        text = self.markdown(text)
         self.replace(self.textbox, text)
 
     @property
