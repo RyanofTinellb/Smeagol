@@ -5,7 +5,7 @@ import tkFileDialog as fd
 from ttk import Combobox
 from itertools import izip
 from cwsmeagol.translation import *
-from cwsmeagol.utils import ignored
+from cwsmeagol.utils import ignored, tkinter
 
 
 class Editor(Tk.Frame, object):
@@ -268,10 +268,8 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(event)
         return 'break'
 
+    @tkinter()
     def move_line(self, event):
-        self.tkinter_to_tkinter(self._move_line, [event])
-
-    def _move_line(self, event):
         if event.keysym == 'Up':
             direction = ' -1 lines'
             correction = ' -1c linestart'
@@ -320,39 +318,20 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(widget=self.textbox)
         self.html_to_tkinter()
 
-    def html_to_html(self, function, args=(), kwargs={}):
-        self.html_to_tkinter()
-        function(*args, **kwargs)
-        self.tkinter_to_html()
-
-    def tkinter_to_tkinter(self, function, args=(), kwargs={}):
-        self.tkinter_to_html()
-        function(*args, **kwargs)
-        self.html_to_tkinter()
-
-    def copy_text(self, event):
-        self.tkinter_to_tkinter(self._copy_text, [event.widget])
-        return 'break'
-
-    def cut_text(self, event):
-        self.tkinter_to_tkinter(self._cut_text, [event.widget])
-        return 'break'
-
-    def paste_text(self, event):
-        self.tkinter_to_tkinter(self._paste_text, [event.widget])
-        return 'break'
-
-    def _copy_text(self, textbox):
+    @tkinter()
+    def copy_text(self, textbox):
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             self.clipboard_clear()
             self.clipboard_append(textbox.get(*borders))
         return borders
 
-    def _cut_text(self, textbox):
+    @tkinter()
+    def cut_text(self, textbox):
         textbox.delete(*self._copy_text(textbox))
 
-    def _paste_text(self, textbox):
+    @tkinter()
+    def paste_text(self, textbox):
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             textbox.delete(*borders)
@@ -516,12 +495,12 @@ class Editor(Tk.Frame, object):
             title='Load Markdown')
         if filename:
             try:
-                self.tkinter_to_tkinter(
-                    self._markdown_load, [filename])
+                self._markdown_load(filename)
             except IndexError:
                 mb.showerror('Invalid File',
                              'Please select a valid *.mkd file.')
 
+    @tkinter()
     def _markdown_load(self, filename):
         text = self.get_text(self.textbox)
         text = self.markup(text)
@@ -531,12 +510,13 @@ class Editor(Tk.Frame, object):
 
     def markdown_refresh(self, event=None):
         try:
-            self.tkinter_to_tkinter(self._markdown_refresh)
+            self._markdown_refresh()
             self.information.set('OK')
         except AttributeError:
             self.information.set('Not OK')
         return 'break'
 
+    @tkinter()
     def _markdown_refresh(self):
         text = self.get_text(self.textbox)
         text = self.markup(text)

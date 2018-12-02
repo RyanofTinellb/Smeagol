@@ -4,6 +4,7 @@ import sys
 import json
 import urllib
 import inspect
+import functools
 from contextlib import contextmanager
 from datetime import datetime
 from translation.markdown import Markdown
@@ -15,6 +16,16 @@ def ignored(*exceptions):
         yield
     except exceptions:
         pass
+
+def tkinter():
+    def decorator(function):
+        @functools.wraps(function)
+        def wrapper(self, *args, **kwargs):
+            self.tkinter_to_html()
+            function(self, *args, **kwargs)
+            self.html_to_tkinter()
+        return wrapper
+    return decorator
 
 
 def dump(dictionary, filename):

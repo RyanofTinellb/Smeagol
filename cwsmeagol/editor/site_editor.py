@@ -326,12 +326,13 @@ class SiteEditor(Editor, object):
             self.site_properties()
         self.textbox.tag_remove(self.current_style.get(), Tk.INSERT)
         self.current_style.set('')
-        self.tkinter_to_tkinter(self._save_page)
+        self._save_page()
         self.save_text.set('Save')
         self.information.set('Saved!')
         self.save_site()
         return 'break'
 
+    @tkinter()
     def _save_page(self):
         text = self.get_text(self.textbox)
         with ignored(AttributeError):
