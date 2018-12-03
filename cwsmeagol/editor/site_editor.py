@@ -152,9 +152,12 @@ class SiteEditor(Properties, Editor):
 
     def enter_headings(self, event):
         headings = self.headings
-        level = headings.index(event.widget)
         try:
-            headings[level + 1].focus_set()
+            level = headings.index(event.widget) + 1
+        except ValueError:
+            level = 0
+        try:
+            headings[level].focus_set()
         except IndexError:
             self.history += self.heading_contents
             self.load()
@@ -411,19 +414,19 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def rename_page(self):
-        if self.entry.level:
-            new_name = sd.askstring('Rename', 'What is the new name?',
-                                     initialvalue=self.entry.name)
-            if new_name:
-                try:
-                    self.entry.delete_html()
-                    self.entry.name = new_name
-                except AttributeError:
-                    self.entry['name'] = new_name
+        new_name = sd.askstring('Rename', 'What is the new name?',
+                                 initialvalue=self.entry.name)
+        if new_name:
+            try:
+                self.entry.delete_html()
+                self.entry.name = new_name
+            except AttributeError:
+                self.entry['name'] = new_name
+            with ignored(IndexError):
                 self.page[-1] = new_name
-                self.fill_headings()
-                self.update_titlebar()
-                self.update_tocs()
+            self.fill_headings()
+            self.update_titlebar()
+            self.update_tocs()
 
     @staticmethod
     def publish(entry, site, allpages=False):

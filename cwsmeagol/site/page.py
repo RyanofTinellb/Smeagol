@@ -209,8 +209,10 @@ class Page(Node):
         else:
             up = self.distance(destination)
         up -= int(self.is_leaf)
-        down = '/'.join([ancestor.url for ancestor in
-                            destination.unique_lineage(self)])
+        urls = [entry.url for entry in destination.unique_lineage(self)]
+        if destination.has_children:
+            urls[-1] = 'index'
+        down = '/'.join(urls)
         address = (up * '../') + down + '.html'
         destination = template.format(buyCaps(destination.name))
         link = '<a href="{0}">{1}</a>'.format(address, destination)
@@ -287,7 +289,7 @@ class Page(Node):
                 '  {{0}}'
                 '   </div>'
                 '</ul></label>').format(
-                    ' class="normal"' if not self.is_root else '',
+                    ' class="normal"' if self.is_root else '',
                     self.hyperlink(self.root))
 
     @property

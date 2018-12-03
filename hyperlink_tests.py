@@ -35,5 +35,5 @@ class TestHyperlinks(unittest.TestCase):
                 self.assertEqual(m, i, '{0} -> {1}: {2} <> {3}'.format(
                     g, f, m, i))
 
-if __name__ == '__main__':
-    unittest.main()
+# if __name__ == '__main__':
+unittest.main()
