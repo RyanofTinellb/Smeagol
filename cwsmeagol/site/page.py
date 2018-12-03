@@ -15,6 +15,8 @@ class Page(Node):
     def __getattr__(self, attr):
         if attr in ('name', 'text'):
             return self.find().get(attr, '')
+        elif attr in {'position'}:
+            return self.find().get(attr, '1.0')
         elif attr is 'date':
             try:
                 date = self.find()['date']
@@ -36,8 +38,8 @@ class Page(Node):
             with ignored(AttributeError):
                 value = filter(None, value.split('['))
             self.find()['text'] = value
-        elif attr == 'name':
-            self.find()['name'] = value
+        elif attr in {'name', 'position'}:
+            self.find()[attr] = value
         else:
             super(Page, self).__setattr__(attr, value)
 
@@ -132,7 +134,7 @@ class Page(Node):
 
     def __eq__(self,  other):
         try:
-            return self.flatname == other.flatname and self.score == other.score
+            return self.name == other.name
         except AttributeError:
             return self == self.new(other.location)
 

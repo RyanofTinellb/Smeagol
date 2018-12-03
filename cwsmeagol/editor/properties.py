@@ -37,7 +37,7 @@ class Properties(object):
         if attr in {'files', 'source', 'destination', 'template',
                 'template_file', 'name', 'searchindex'}:
             return getattr(self.site, attr)
-        elif attr in {'language', 'position', 'fontsize'}:
+        elif attr in {'language', 'fontsize'}:
             return self.configuration['current'][attr]
         elif attr == 'markdown_file':
             return self.configuration['current']['markdown']
@@ -57,7 +57,7 @@ class Properties(object):
             return getattr(super(Properties, self), attr)
 
     def __setattr__(self, attr, value):
-        if attr in {'language', 'position', 'fontsize'}:
+        if attr in {'language', 'fontsize'}:
             self.configuration['current'][attr] = value
         elif attr == 'markdown_file':
             self.configuration['current']['markdown'] = value

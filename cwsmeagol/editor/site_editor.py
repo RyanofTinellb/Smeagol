@@ -25,7 +25,6 @@ class SiteEditor(Properties, Editor):
                                          caller=self.caller)
         self.start_server(port=41809)
         self.fill_and_load()
-        self.go_to(self.position)
 
     @property
     def caller(self):
@@ -162,12 +161,15 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def load(self, event=None):
+        with ignored(AttributeError):
+            self.entry.position = self.textbox.index(Tk.INSERT)
         self.entry = self.find_entry(list(self.page))
         self.update_titlebar()
         text = self.prepare_entry(self.entry)
         self.display(text)
         self.reset_textbox()
         self.save_text.set('Save')
+        self.go_to(self.entry.position)
         return 'break'
 
     def earlier_entry(self, event=None):
@@ -222,7 +224,6 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def site_save(self):
-        self.position = self.textbox.index(Tk.INSERT)
         self.fontsize = self.font.actual(option='size')
         self.save_site()
 
