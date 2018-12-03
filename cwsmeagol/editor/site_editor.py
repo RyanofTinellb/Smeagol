@@ -18,13 +18,12 @@ from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 
 
-class SiteEditor(Editor, object):
+class SiteEditor(Properties, Editor):
     def __init__(self, master=None, config_file=None):
-        super(SiteEditor, self).__init__(master)
-        self.properties.setup(config_file)
-        self.server = None
-        self.PORT = 41809
-        self.start_server()
+        super(SiteEditor, self).__init__(master=master,
+                                         config=config_file,
+                                         caller=self.caller)
+        self.start_server(port=41809)
         self.fill_and_load()
         self.go_to(self.position)
 
@@ -33,6 +32,7 @@ class SiteEditor(Editor, object):
         return 'site'
 
     def setup_linguistics(self):
+        super(SiteEditor, self).setup_linguistics()
         self.languagevar = Tk.StringVar()
         self.languagevar.set(self.translator.fullname)
 
@@ -41,21 +41,6 @@ class SiteEditor(Editor, object):
         for obj in (self.translator, self.randomwords):
             obj.select(self.language[:2])
         return 'break'
-
-    def __getattr__(self, attr):
-        if attr is 'properties':
-            self.properties = Properties(caller=self.caller)
-            return self.properties
-        try:
-            return getattr(self.properties, attr)
-        except AttributeError:
-            return getattr(super(SiteEditor, self), attr)
-
-    def __setattr__(self, attr, value):
-        if attr in ('page', 'language'):
-            self.properties.__setattr__(attr, value)
-        else:
-            super(SiteEditor, self).__setattr__(attr, value)
 
     def set_frames(self):
         super(SiteEditor, self).set_frames()
@@ -239,10 +224,10 @@ class SiteEditor(Editor, object):
     def site_save(self):
         self.position = self.textbox.index(Tk.INSERT)
         self.fontsize = self.font.actual(option='size')
-        self.properties.save_site()
+        self.save_site()
 
     def site_properties(self, event=None):
-        properties_window = PropertiesWindow(self.properties)
+        properties_window = PropertiesWindow(self)
         self.wait_window(properties_window)
         self.site.root.name = self.site.name
         self.save_site()
@@ -250,7 +235,8 @@ class SiteEditor(Editor, object):
     def site_publish(self, event=None):
         self.information.set(self.site.publish())
 
-    def start_server(self):
+    def start_server(self, port):
+        self.PORT = port
         handler = SimpleHTTPServer.SimpleHTTPRequestHandler
         while True:
             try:
@@ -497,7 +483,8 @@ class SiteEditor(Editor, object):
     def quit(self):
         if self.save_wholepage():
             return
-        self.server.shutdown()
+        with ignored(AttributeError):
+            self.server.shutdown()
         self.save_site()
         self.master.quit()
 
@@ -515,6 +502,7 @@ class SiteEditor(Editor, object):
             ('<Control-Next>', self.next_entry),
             ('<Control-Shift-Prior>', self.earlier_entry),
             ('<Control-Shift-Next>', self.later_entry),
+            ('<Alt-d>', self.go_to_heading),
             ('<Control-N>', self.insert_new),
             ('<Control-o>', self.site_open),
             ('<Control-s>', self.save_page)]

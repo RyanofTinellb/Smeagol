@@ -12,20 +12,22 @@ import tkSimpleDialog as sd
 
 
 class Properties(object):
-    def __init__(self, config=None, caller=None):
-        super(Properties, self).__init__()
-        self.caller = caller
+    def __init__(self, config=None, caller=None, master=None):
         self.setup(config)
+        super(Properties, self).__init__(master)
 
     def setup(self, config):
         self.config_filename = config
         try:
             with open(self.config_filename) as config:
-                self.config = json.load(config)
+                self.configuration = json.load(config)
         except (IOError, TypeError):
-            self.config = json.loads(default.config)
+            self.configuration = json.loads(default.config)
         self.site = Site(**self.site_info)
         self.linkadder = AddRemoveLinks(self.links)
+
+    def setup_linguistics(self):
+        # override Editor.setup_linguistics()
         self.translator = Translator(self.language)
         self.evolver = HighToColloquialLulani()
         self.randomwords = RandomWords(self.language)
@@ -36,17 +38,17 @@ class Properties(object):
                 'template_file', 'name', 'searchindex'}:
             return getattr(self.site, attr)
         elif attr in {'language', 'position', 'fontsize'}:
-            return self.config['current'][attr]
+            return self.configuration['current'][attr]
         elif attr == 'markdown_file':
-            return self.config['current']['markdown']
+            return self.configuration['current']['markdown']
         elif attr in {'markdown', 'markup'}:
             return getattr(self.marker, 'to_{0}'.format(attr))
         elif attr in {'remove_links', 'add_links'}:
             return getattr(self.linkadder, attr)
         elif attr == 'links':
-            return self.config['links']
+            return self.configuration['links']
         elif attr == 'site_info':
-            return self.config['site']
+            return self.configuration['site']
         elif attr == 'history':
             return self.get_history()
         elif attr == 'page':
@@ -56,15 +58,15 @@ class Properties(object):
 
     def __setattr__(self, attr, value):
         if attr in {'language', 'position', 'fontsize'}:
-            self.config['current'][attr] = value
+            self.configuration['current'][attr] = value
         elif attr == 'markdown_file':
-            self.config['current']['markdown'] = value
+            self.configuration['current']['markdown'] = value
         elif attr == 'marker':
             self.set_markdown(attr, value)
         elif attr in {'name', 'destination'}:
-            self.config['site'][attr] = value
+            self.configuration['site'][attr] = value
         elif attr in {'links', 'history'}:
-            self.config[attr] = value
+            self.configuration[attr] = value
         elif attr == 'page':
             self.history.replace(value)
         else:
@@ -77,7 +79,7 @@ class Properties(object):
             super(Properties, self).__setattr__(attr, value)
 
     def get_history(self):
-        history = self.config.get('history', [])
+        history = self.configuration.get('history', [])
         if isinstance(history, ShortList):
             return history
         else:
@@ -110,7 +112,7 @@ class Properties(object):
         if self.config_filename:
             with ignored(IOError):
                 with open(self.config_filename, 'w') as config:
-                    json.dump(self.config, config, indent=2)
+                    json.dump(self.configuration, config, indent=2)
                 folder = os.getenv('LOCALAPPDATA')
                 inifolder = os.path.join(folder, 'smeagol')
                 inifile = os.path.join(inifolder, self.caller + '.ini')

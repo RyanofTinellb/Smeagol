@@ -16,6 +16,7 @@ def ignored(*exceptions):
         yield
     except exceptions:
         pass
+        
 
 def tkinter():
     def decorator(function):
