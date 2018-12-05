@@ -51,8 +51,8 @@ class DictionaryEditor(SiteEditor):
             try:
                 parent = entry[initial]
             except KeyError:
-                parent = dict(name=initial, parent=entry)
-            entry = dict(name=heading, parent=parent)
+                parent = dict(name=initial, parent=entry, position='1.0')
+            entry = dict(name=heading, parent=parent, position='1.0')
         return entry
 
     def _save_page(self):
@@ -81,34 +81,31 @@ class DictionaryEditor(SiteEditor):
         output = []
         transliteration = None
         language = None
-        partofspeech = None
-        for entry in map(lambda entry:
-                self.linkadder.remove_links(str(entry)), self.site):
-            for line in entry.splitlines():
-                if line.startswith('[1]'):
-                    transliteration = line[len('[1]'):]
-                elif line.startswith('[2]'):
-                    language = line[len('[2]'):]
-                elif line.startswith('[5]'):
-                    line = re.sub(r'\[5\](.*?) <div class="definition">(.*?)</div>',
-                                  r'\1\n\2', line)
+        pos = None
+        sieve = re.compile(r'3\](.*?) <div class="definition">(.*?)</div>')
+        for entry in self.site:
+            transliteration = entry.name
+            for line in entry.text:
+                if line.startswith('1]'):
+                    language = re.sub('1](.*?)\n', r'\1', line)
+                elif line.startswith('3]'):
+                    line = sieve.sub(r'\1\n\2', self.remove_links(line))
                     try:
                         newpos, meaning = line.splitlines()
                     except:
                         continue
                     if newpos:
-                        partofspeech = re.sub(r'\(.*?\)', '', newpos).split(' ')
+                        pos = re.sub(r'\(.*?\)', '', newpos).split(' ')
                     definition = re.split(r'\W*', re.sub(r'<.*?>', '', meaning))
                     output.append(dict(
                         t=buyCaps(transliteration),
                         l=language,
-                        p=partofspeech,
+                        p=pos,
                         d=definition,
-                        m=meaning
-                    ))
-        with open('c:/users/ryan/documents/tinellbianlanguages'
-                        '/dictionary/wordlist.json', 'w') as f:
-            json.dump(output, f, indent=2)
+                        m=meaning))
+        filename = ('c:/users/ryan/documents/tinellbianlanguages'
+                        '/dictionary/wordlist.json')
+        dump(output, filename)
 
     def initial_content(self, entry=None):
         if entry is None:
@@ -124,8 +121,7 @@ class DictionaryEditor(SiteEditor):
         ]
         if code == 'en':
             output.pop(1)
-        markup = self.markdown.to_markup
-        return markup('\n'.join(output))
+        return self.markup('\n'.join(output))
 
     @property
     def textbox_commands(self):

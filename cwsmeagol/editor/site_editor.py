@@ -23,6 +23,7 @@ class SiteEditor(Properties, Editor):
         super(SiteEditor, self).__init__(master=master,
                                          config=config_file,
                                          caller=self.caller)
+        self.entry = dict(position='1.0')
         self.start_server(port=41809)
         self.fill_and_load()
 
@@ -164,15 +165,20 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def load(self, event=None):
-        with ignored(AttributeError):
+        try:
             self.entry.position = self.textbox.index(Tk.INSERT)
+        except AttributeError:
+            self.entry['position'] = self.textbox.index(Tk.INSERT)
         self.entry = self.find_entry(list(self.page))
         self.update_titlebar()
         text = self.prepare_entry(self.entry)
         self.display(text)
         self.reset_textbox()
         self.save_text.set('Save')
-        self.go_to(self.entry.position)
+        try:
+            self.go_to(self.entry.position)
+        except AttributeError:
+            self.go_to(self.entry['position'])
         return 'break'
 
     def earlier_entry(self, event=None):
@@ -285,7 +291,7 @@ class SiteEditor(Properties, Editor):
         try:
             return self.find_entry(headings, entry[heading])
         except KeyError:
-            return dict(name=heading, parent=entry)
+            return dict(name=heading, parent=entry, position='1.0')
 
     def list_pages(self, event=None):
         def text_thing(page):
@@ -370,6 +376,29 @@ class SiteEditor(Properties, Editor):
             self.errorstring += 'Error in ' + page.folder + '/' + page.name + '\n'
             self.errors += 1
             return ''
+
+    def save_search_page(self):
+        try:
+            with open('searchtemplate.html') as template:
+                page = template.read()
+        except IOError:
+            return
+        replacements = (
+            ('{stylesheet}', 'stylesheet_and_icon'),
+            ('{family-links}', 'family_links'),
+            ('{elder-links}', 'elder_links'),
+        )
+        for (text, function) in replacements:
+            page = page.replace(text, getattr(self.site.root, function))
+        page = re.sub(
+            r'<li class="normal">(.*?)</li>',
+            r'<li><a href="index.html">\1</a></li>',
+            page
+        )
+        dumps(page, 'search.html')
+        page = page.replace('search.js', '404search.js')
+        page = re.sub(r'href="/*', 'href="/', page)
+        dumps(page, '404.html')
 
     @property
     def copyright(self):
@@ -487,6 +516,7 @@ class SiteEditor(Properties, Editor):
     def quit(self):
         if self.save_wholepage():
             return
+        self.save_search_page()
         with ignored(AttributeError):
             self.server.shutdown()
         self.save_site()
