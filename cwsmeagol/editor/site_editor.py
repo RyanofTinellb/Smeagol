@@ -13,7 +13,6 @@ from properties import Properties
 from properties_window import PropertiesWindow
 from text_window import TextWindow
 from itertools import izip, izip_longest
-from cwsmeagol.site.page import Page
 from cwsmeagol.utils import *
 from cwsmeagol.defaults import default
 
@@ -288,10 +287,11 @@ class SiteEditor(Properties, Editor):
             heading = headings.pop(0)
         except IndexError:
             return entry
-        try:
-            return self.find_entry(headings, entry[heading])
-        except KeyError:
-            return dict(name=heading, parent=entry, position='1.0')
+        if not isinstance(entry, dict):
+            with ignored(KeyError):
+                return self.find_entry(headings, entry[heading])
+        child = dict(name=heading, parent=entry, position='1.0')
+        return self.find_entry(headings, child)
 
     def list_pages(self, event=None):
         def text_thing(page):
@@ -315,7 +315,10 @@ class SiteEditor(Properties, Editor):
         text = re.sub(r'\n\n+', '\n', text)
         text = self.markup(text)
         text = self.add_links(text, self.entry)
-        self.entry.text = text
+        try:
+            self.entry.text = text
+        except AttributeError:
+            self.entry['text'] = text
 
     def save_page(self, event=None):
         if self.is_new:
@@ -331,18 +334,26 @@ class SiteEditor(Properties, Editor):
     @tkinter()
     def _save_page(self):
         text = self.get_text(self.textbox)
-        with ignored(AttributeError):
+        with ignored(AttributeError): # entry could be a dict
             parent = self.entry.pop('parent')
-            self.entry = parent.append(self.entry)
+            self.entry = self.chain_append(self.entry, parent)
             if parent.num_children == 1:
                 parent.delete_html()
             self.update_tocs()
         self.prepare_text(text)
         self.publish(self.entry, self.site)
 
+    def chain_append(self, child, parent):
+        try:
+            return parent.append(child)
+        except AttributeError: # parent is also a dict
+            parent['children'] = [child]
+            grandparent = parent.pop('parent')
+            return self.chain_append(parent, grandparent)
+
     def update_tocs(self):
         # don't publish the whole site again if you're a dictionary
-        self.site.publish()
+        self.publish(site=self.site, allpages=True)
 
     def save_wholepage(self):
         try:
@@ -396,7 +407,7 @@ class SiteEditor(Properties, Editor):
             page
         )
         dumps(page, 'search.html')
-        page = page.replace('search.js', '404search.js')
+        page = page.replace('search.js', '/404search.js')
         page = re.sub(r'href="/*', 'href="/', page)
         dumps(page, '404.html')
 
@@ -458,7 +469,7 @@ class SiteEditor(Properties, Editor):
             self.update_tocs()
 
     @staticmethod
-    def publish(entry, site, allpages=False):
+    def publish(entry=None, site=None, allpages=False):
         if allpages:
             site.publish()
         elif entry is not None:

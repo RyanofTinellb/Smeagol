@@ -121,7 +121,7 @@ class Site(object):
         for page in self:
             try:
                 page.publish(template=self.template)
-            except:
+            except ZeroDivisionError:
                 errorstring += 'Error in {0}\n'.format(page.name)
                 errors += 1
         self.update_searchindex()

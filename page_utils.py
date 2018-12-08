@@ -22,7 +22,7 @@ def pattern_indices(word, pattern):
             raise StopIteration
 
 
-def html(text):
+def html(text=None):
     mode = [None]
     divs = [None]
     return '\n'.join([convert(line, mode, divs) for line in text])

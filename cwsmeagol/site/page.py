@@ -13,15 +13,17 @@ class Page(Node):
         super(Page, self).__init__(tree, location)
 
     def __getattr__(self, attr):
-        if attr in ('name', 'text'):
+        if attr in {'name'}:
             return self.find().get(attr, '')
+        elif attr  in {'text'}:
+            return self.find().get(attr, [])
         elif attr in {'position'}:
             return self.find().get(attr, '1.0')
         elif attr is 'date':
             try:
                 date = self.find()['date']
                 return datetime.strptime(date, '%Y-%m-%d')
-            except ValueError:
+            except (ValueError, KeyError):
                 return datetime.now()
         elif attr in ('flatname', 'score'):
             try:
@@ -79,7 +81,7 @@ class Page(Node):
         content = [str(self)]
         # remove tags, and items between some tags
         change_text(
-            r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
+            r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>|^\d\]', ' ', content)
         # change punctuation to paragraph marks, so that splitlines works
         change_text(r'[!?.|]', '\n', content)
         # change punctuation to space
@@ -238,6 +240,15 @@ class Page(Node):
                 return self.matriarch.title + ' ' + self.title
 
     @property
+    def story_title(self):
+        if self.level == 0:
+            return ''
+        elif self.level == 1:
+            return self.title
+        else:
+            return self.title + ' &lt; ' + self.matriarch.title
+
+    @property
     def main_contents(self):
         contents = '<div class="main-contents">{0}</div>'
         return contents.format(html(self.text))
@@ -377,6 +388,7 @@ class Page(Node):
             ('{elder-links}', 'elder_links'),
             ('{nav-footer}', 'nav_footer'),
             ('{copyright}', 'copyright'),
+            ('{story-title}', 'story_title'),
             ('{category-title}', 'category_title')
         ]:
             if page.count(section):
