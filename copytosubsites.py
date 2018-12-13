@@ -4,6 +4,7 @@ paths = ['C:/Users/Ryan/Documents/TinellbianLanguages/grammar/',
             'C:/Users/Ryan/Documents/TinellbianLanguages/dictionary/',
             'C:/Users/Ryan/Documents/TinellbianLanguages/coelacanth/',
             'C:/Users/Ryan/Documents/TinellbianLanguages/shortstories/',
+			'C:/Users/Ryan/Documents/TinellbianLanguages/encyclopedia/'
             ]
 src = 'C:/Users/Ryan/Documents/TinellbianLanguages/main/'
 files = ['highlulani.ttf', '404search.js',

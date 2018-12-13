@@ -16,15 +16,16 @@ def ignored(*exceptions):
         yield
     except exceptions:
         pass
-        
+
 
 def tkinter():
     def decorator(function):
         @functools.wraps(function)
         def wrapper(self, *args, **kwargs):
             self.tkinter_to_html()
-            function(self, *args, **kwargs)
+            value = function(self, *args, **kwargs)
             self.html_to_tkinter()
+            return value
         return wrapper
     return decorator
 

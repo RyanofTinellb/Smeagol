@@ -353,7 +353,10 @@ class Page(Node):
         try:
             next = self.hyperlink(self.successor, 'Next page &rarr;')
         except IndexError:
-            next = self.hyperlink(self.root, 'Return to Menu &uarr;')
+            if self == self.root:
+                next = ''
+            else:
+                next = self.hyperlink(self.root, 'Return to Menu &uarr;')
         links = '\n'.join([div.format(f) for f in (previous, next)])
         return footer.format(links)
 

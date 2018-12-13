@@ -2,6 +2,7 @@ import re
 import tkFont
 import Tkinter as Tk
 import tkFileDialog as fd
+import webbrowser as web
 from ttk import Combobox
 from itertools import izip
 from cwsmeagol.translation import *
@@ -319,7 +320,8 @@ class Editor(Tk.Frame, object):
         self.html_to_tkinter()
 
     @tkinter()
-    def copy_text(self, textbox):
+    def copy_text(self, event=None):
+        textbox = event.widget
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             self.clipboard_clear()
@@ -327,11 +329,14 @@ class Editor(Tk.Frame, object):
         return borders
 
     @tkinter()
-    def cut_text(self, textbox):
-        textbox.delete(*self._copy_text(textbox))
+    def cut_text(self, event=None):
+        textbox = event.widget
+        print self.copy_text(event)
+        textbox.delete(*self.copy_text(event))
 
     @tkinter()
-    def paste_text(self, textbox):
+    def paste_text(self, event=None):
+        textbox = event.widget
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             textbox.delete(*borders)
@@ -487,7 +492,7 @@ class Editor(Tk.Frame, object):
                 textbox.insert(start, text)
 
     def markdown_open(self, event=None):
-        web.open_new_tab(self.markdown.filename)
+        web.open_new_tab(self.marker.filename)
 
     def markdown_load(self, event=None):
         filename = fd.askopenfilename(
