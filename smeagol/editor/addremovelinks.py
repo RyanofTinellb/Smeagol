@@ -1,8 +1,8 @@
 import re
 import json
 from itertools import chain
-from cwsmeagol import Translator
-from cwsmeagol.utils import urlform, ignored, buyCaps, sellCaps
+from smeagol import Translator
+from smeagol.utils import urlform, ignored, buyCaps, sellCaps
 
 class AddRemoveLinks:
     def __init__(self, link_adders):

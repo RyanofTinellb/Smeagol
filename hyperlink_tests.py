@@ -1,4 +1,4 @@
-from smeagol import Grammar
+from sites import Grammar
 import unittest
 
 class TestHyperlinks(unittest.TestCase):

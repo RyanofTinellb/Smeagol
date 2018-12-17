@@ -13,8 +13,8 @@ from properties import Properties
 from properties_window import PropertiesWindow
 from text_window import TextWindow
 from itertools import izip, izip_longest
-from cwsmeagol.utils import *
-from cwsmeagol.defaults import default
+from smeagol.utils import *
+from smeagol.defaults import default
 
 
 class SiteEditor(Properties, Editor):

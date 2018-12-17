@@ -1,4 +1,4 @@
-from cwsmeagol.translation.evolve import HighToColloquialLulani
+from smeagol.translation.evolve import HighToColloquialLulani
 import json
 import re
 import os

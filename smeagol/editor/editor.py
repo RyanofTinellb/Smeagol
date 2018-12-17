@@ -5,8 +5,8 @@ import tkFileDialog as fd
 import webbrowser as web
 from ttk import Combobox
 from itertools import izip
-from cwsmeagol.translation import *
-from cwsmeagol.utils import ignored, tkinter
+from smeagol.translation import *
+from smeagol.utils import ignored, tkinter
 
 
 class Editor(Tk.Frame, object):

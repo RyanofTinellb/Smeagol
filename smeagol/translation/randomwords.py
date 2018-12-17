@@ -4,7 +4,6 @@ import random
 import json
 import re
 
-
 class RandomWords():
     def __init__(self, language=None):
         self.maximum = 20
@@ -42,12 +41,15 @@ class English:
                   '/{0}/data.json')
         filenames = [
             'coelacanth',
-            'shortstories',
+            'writings',
         ]
         for filename in filenames:
-            with open(folder.format(filename)) as page:
-                page = json.load(page)
-            self.collate(page, self.words)
+            try:
+                with open(folder.format(filename)) as page:
+                    page = json.load(page)
+                self.collate(page, self.words)
+            except IOError:
+                pass
         self.words = list(self.words)
 
     def collate(self, page, words):

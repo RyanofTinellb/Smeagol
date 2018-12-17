@@ -3,9 +3,9 @@ import shutil
 from node import Node
 from datetime import datetime
 from page_utils import *
-from cwsmeagol.translation import *
-from cwsmeagol.utils import *
-from cwsmeagol.defaults import default
+from smeagol.translation import *
+from smeagol.utils import *
+from smeagol.defaults import default
 
 
 class Page(Node):

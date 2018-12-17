@@ -1,8 +1,8 @@
 import os
 import json
 from page import Page
-from cwsmeagol.translation import Markdown, Translator
-from cwsmeagol.utils import *
+from smeagol.translation import Markdown, Translator
+from smeagol.utils import *
 
 def increment(lst, by):
     lst = [x + by for x in lst]

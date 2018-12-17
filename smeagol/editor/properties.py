@@ -3,10 +3,10 @@ import os
 import json
 import re
 from addremovelinks import AddRemoveLinks
-from cwsmeagol.site.site import Site
-from cwsmeagol.translation import *
-from cwsmeagol.utils import *
-from cwsmeagol.defaults import default
+from smeagol.site.site import Site
+from smeagol.translation import *
+from smeagol.utils import *
+from smeagol.defaults import default
 import tkFileDialog as fd
 import tkSimpleDialog as sd
 

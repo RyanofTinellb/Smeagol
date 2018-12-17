@@ -1,5 +1,5 @@
 import re
-from cwsmeagol.utils import *
+from smeagol.utils import *
 
 alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
 punctuation = "$-'.#()!_"

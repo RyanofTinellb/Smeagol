@@ -2,10 +2,8 @@ import Tkinter as Tk
 import sys
 import os
 import json
-from cwsmeagol.editor.site_editor import SiteEditor
-from cwsmeagol.editor.dictionary_editor import DictionaryEditor
-from cwsmeagol.editor.translation_editor import TranslationEditor
-
+from smeagol.editor.site_editor import SiteEditor
+from smeagol.editor.dictionary_editor import DictionaryEditor
 
 class Smeagol(Tk.Frame, object):
     def __init__(self):

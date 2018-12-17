@@ -1,5 +1,5 @@
 import os
-from cwsmeagol.defaults import default
+from smeagol.defaults import default
 
 class Markdown:
     def __init__(self, filename=None):

@@ -1,5 +1,5 @@
 import json
-from cwsmeagol.site.site import Site
+from smeagol.site.site import Site
 from datetime import datetime
 
 class Dictionary(Site):

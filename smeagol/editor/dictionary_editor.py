@@ -1,6 +1,6 @@
 from site_editor import SiteEditor, Tk
-from cwsmeagol.site.page import Page
-from cwsmeagol.utils import *
+from smeagol.site.page import Page
+from smeagol.utils import *
 
 class DictionaryEditor(SiteEditor):
     def __init__(self, master=None, config_file=None):
