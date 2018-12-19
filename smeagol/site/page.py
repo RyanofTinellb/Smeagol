@@ -94,8 +94,9 @@ class Page(Node):
         content = buyCaps(content[0])
         lines = content.splitlines()
         content = [Markdown().to_markdown(content).lower()]
+        change_text(r'&.*?;', ' ', content)
         # change punctuation, and tags in square brackets, into spaces
-        change_text(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|&nbsp', ' ', content)
+        change_text(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|\d', ' ', content)
         # make glottal stops lower case where appropriate
         change_text(r"(?<=[ \n])''", "'", content)
         for number, line in enumerate(content[0].splitlines()):
