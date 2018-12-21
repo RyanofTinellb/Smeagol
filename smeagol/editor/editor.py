@@ -2,10 +2,11 @@ import re
 import tkFont
 import Tkinter as Tk
 import tkFileDialog as fd
+import webbrowser as web
 from ttk import Combobox
 from itertools import izip
-from cwsmeagol.translation import *
-from cwsmeagol.utils import ignored, conversion
+from smeagol.translation import *
+from smeagol.utils import ignored, tkinter
 
 
 class Editor(Tk.Frame, object):
@@ -149,10 +150,15 @@ class Editor(Tk.Frame, object):
     def setup_linguistics(self):
         self.languagevar = Tk.StringVar()
         self.language = 'en: English'
-        self.markdown = Markdown()
+        self.setup_markdown()
         self.randomwords = RandomWords()
         self.translator = Translator(self.language)
         self.evolver = HighToColloquialLulani()
+
+    def setup_markdown(self, filename=None):
+        self.marker = Markdown(filename)
+        self.markup = self.marker.to_markup
+        self.markdown = self.marker.to_markdown
 
     def change_language(self, event=None):
         self.language = self.languagevar.get()[:2]
@@ -263,10 +269,8 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(event)
         return 'break'
 
+    @tkinter()
     def move_line(self, event):
-        self.tkinter_to_tkinter(self._move_line, [event])
-
-    def _move_line(self, event):
         if event.keysym == 'Up':
             direction = ' -1 lines'
             correction = ' -1c linestart'
@@ -315,39 +319,24 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(widget=self.textbox)
         self.html_to_tkinter()
 
-    def html_to_html(self, function, args=(), kwargs={}):
-        self.html_to_tkinter()
-        function(*args, **kwargs)
-        self.tkinter_to_html()
-
-    def tkinter_to_tkinter(self, function, args=(), kwargs={}):
-        self.tkinter_to_html()
-        function(*args, **kwargs)
-        self.html_to_tkinter()
-
-    def copy_text(self, event):
-        self.tkinter_to_tkinter(self._copy_text, [event.widget])
-        return 'break'
-
-    def cut_text(self, event):
-        self.tkinter_to_tkinter(self._cut_text, [event.widget])
-        return 'break'
-
-    def paste_text(self, event):
-        self.tkinter_to_tkinter(self._paste_text, [event.widget])
-        return 'break'
-
-    def _copy_text(self, textbox):
+    @tkinter()
+    def copy_text(self, event=None):
+        textbox = event.widget
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             self.clipboard_clear()
             self.clipboard_append(textbox.get(*borders))
         return borders
 
-    def _cut_text(self, textbox):
-        textbox.delete(*self._copy_text(textbox))
+    @tkinter()
+    def cut_text(self, event=None):
+        textbox = event.widget
+        print self.copy_text(event)
+        textbox.delete(*self.copy_text(event))
 
-    def _paste_text(self, textbox):
+    @tkinter()
+    def paste_text(self, event=None):
+        textbox = event.widget
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             textbox.delete(*borders)
@@ -401,8 +390,7 @@ class Editor(Tk.Frame, object):
             text = self.select_word(event)
             textbox.tag_remove('sel', '1.0', Tk.END)
         length = len(text)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
+        text = self.markup(text)
         example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
         converter = self.translator.convert_word # default setting
         for mark in '.!?':
@@ -412,8 +400,7 @@ class Editor(Tk.Frame, object):
         text = converter(text)
         if example:
             text = '[e]' + text
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
+        self.markdown(text)
         try:
             text += '\n' if textbox.compare(Tk.SEL_LAST,
                                             '==', Tk.SEL_LAST + ' lineend') else ' '
@@ -434,15 +421,13 @@ class Editor(Tk.Frame, object):
             text = self.select_word(event)
             textbox.tag_remove('sel', '1.0', Tk.END)
         length = len(text)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
+        text = self.markup(text)
         example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
         converter = self.evolver.evolve # default setting
         text = converter(text)[-1]
         if example:
             text = '[e]' + text
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
+        text = self.markdown(text)
         try:
             text += '\n' if textbox.compare(Tk.SEL_LAST,
                                             '==', Tk.SEL_LAST + ' lineend') else ' '
@@ -507,7 +492,7 @@ class Editor(Tk.Frame, object):
                 textbox.insert(start, text)
 
     def markdown_open(self, event=None):
-        web.open_new_tab(self.markdown.filename)
+        web.open_new_tab(self.marker.filename)
 
     def markdown_load(self, event=None):
         filename = fd.askopenfilename(
@@ -515,36 +500,33 @@ class Editor(Tk.Frame, object):
             title='Load Markdown')
         if filename:
             try:
-                self.tkinter_to_tkinter(
-                    self._markdown_load, [filename])
+                self._markdown_load(filename)
             except IndexError:
                 mb.showerror('Invalid File',
                              'Please select a valid *.mkd file.')
 
+    @tkinter()
     def _markdown_load(self, filename):
         text = self.get_text(self.textbox)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
-        self.markdown = filename
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
+        text = self.markup(text)
+        self.setup_markdown(filename)
+        text = self.markdown(text)
         self.replace(self.textbox, text)
 
     def markdown_refresh(self, event=None):
         try:
-            self.tkinter_to_tkinter(self._markdown_refresh)
+            self._markdown_refresh()
             self.information.set('OK')
         except AttributeError:
             self.information.set('Not OK')
         return 'break'
 
+    @tkinter()
     def _markdown_refresh(self):
         text = self.get_text(self.textbox)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
-        self.markdown.refresh()
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
+        text = self.markup(text)
+        self.marker.refresh()
+        text = self.markdown(text)
         self.replace(self.textbox, text)
 
     @property

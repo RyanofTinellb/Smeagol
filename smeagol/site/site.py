@@ -1,8 +1,12 @@
 import os
 import json
 from page import Page
-from cwsmeagol.translation import Markdown, Translator
-from cwsmeagol.utils import *
+from smeagol.translation import Markdown, Translator
+from smeagol.utils import *
+
+def increment(lst, by):
+    lst = [x + by for x in lst]
+    return lst
 
 class Site(object):
     def __init__(self, destination=None, name=None, files=None):
@@ -117,7 +121,7 @@ class Site(object):
         for page in self:
             try:
                 page.publish(template=self.template)
-            except:
+            except ZeroDivisionError:
                 errorstring += 'Error in {0}\n'.format(page.name)
                 errors += 1
         self.update_searchindex()
@@ -143,20 +147,15 @@ class Site(object):
         names = []
         markdown = Markdown()
         for page_number, entry in enumerate(self):
-            # line numbers in each Page are incremented by the current total number of sentences
             base = len(sentences)
-            # analyse the Page
             analysis = entry.analysis
-            # add results to appropriate lists and dictionaries
             new_words = analysis['words']
             sentences += analysis['sentences']
             urls.append(entry.link)
             names.append(buyCaps(entry.name))
             for word, line_numbers in new_words.iteritems():
-                # increment line numbers by base
-                # use str(page_number) because search.js relies on that
-                locations = {str(page_number):
-                        [line_number + base for line_number in line_numbers]}
+                line_numbers = increment(line_numbers, by=base)
+                locations = {str(page_number): line_numbers}
                 try:
                     words[word].update(locations)
                 except KeyError:

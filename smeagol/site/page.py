@@ -3,9 +3,9 @@ import shutil
 from node import Node
 from datetime import datetime
 from page_utils import *
-from cwsmeagol.translation import *
-from cwsmeagol.utils import *
-from cwsmeagol.defaults import default
+from smeagol.translation import *
+from smeagol.utils import *
+from smeagol.defaults import default
 
 
 class Page(Node):
@@ -13,13 +13,17 @@ class Page(Node):
         super(Page, self).__init__(tree, location)
 
     def __getattr__(self, attr):
-        if attr in ('name', 'text'):
+        if attr in {'name'}:
             return self.find().get(attr, '')
+        elif attr  in {'text'}:
+            return self.find().get(attr, [])
+        elif attr in {'position'}:
+            return self.find().get(attr, '1.0')
         elif attr is 'date':
             try:
                 date = self.find()['date']
                 return datetime.strptime(date, '%Y-%m-%d')
-            except ValueError:
+            except (ValueError, KeyError):
                 return datetime.now()
         elif attr in ('flatname', 'score'):
             try:
@@ -36,8 +40,8 @@ class Page(Node):
             with ignored(AttributeError):
                 value = filter(None, value.split('['))
             self.find()['text'] = value
-        elif attr == 'name':
-            self.find()['name'] = value
+        elif attr in {'name', 'position'}:
+            self.find()[attr] = value
         else:
             super(Page, self).__setattr__(attr, value)
 
@@ -77,9 +81,7 @@ class Page(Node):
         content = [str(self)]
         # remove tags, and items between some tags
         change_text(
-            r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>', ' ', content)
-        # remove datestamps
-        remove_text(r'&date=\d{8}', content)
+            r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>|^\d\]', ' ', content)
         # change punctuation to paragraph marks, so that splitlines works
         change_text(r'[!?.|]', '\n', content)
         # change punctuation to space
@@ -92,8 +94,9 @@ class Page(Node):
         content = buyCaps(content[0])
         lines = content.splitlines()
         content = [Markdown().to_markdown(content).lower()]
+        change_text(r'&.*?;', ' ', content)
         # change punctuation, and tags in square brackets, into spaces
-        change_text(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|&nbsp', ' ', content)
+        change_text(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|\d', ' ', content)
         # make glottal stops lower case where appropriate
         change_text(r"(?<=[ \n])''", "'", content)
         for number, line in enumerate(content[0].splitlines()):
@@ -134,7 +137,7 @@ class Page(Node):
 
     def __eq__(self,  other):
         try:
-            return self.flatname == other.flatname and self.score == other.score
+            return self.name == other.name
         except AttributeError:
             return self == self.new(other.location)
 
@@ -167,6 +170,13 @@ class Page(Node):
 
     def publish(self, template=None):
         dumps(self.html(template), self.link)
+
+    @property
+    def list(self):
+        if self.is_root:
+            return []
+        name = lambda x: x.name
+        return map(name, self.lineage)[1:]
 
     @property
     def folder(self):
@@ -202,8 +212,10 @@ class Page(Node):
         else:
             up = self.distance(destination)
         up -= int(self.is_leaf)
-        down = '/'.join([ancestor.url for ancestor in
-                            destination.unique_lineage(self)])
+        urls = [entry.url for entry in destination.unique_lineage(self)]
+        if destination.has_children:
+            urls[-1] = 'index'
+        down = '/'.join(urls)
         address = (up * '../') + down + '.html'
         destination = template.format(buyCaps(destination.name))
         link = '<a href="{0}">{1}</a>'.format(address, destination)
@@ -211,7 +223,7 @@ class Page(Node):
 
     @property
     def title(self):
-        return remove_text(r'[[<].*?[]>]', [self.name])[0]
+        return remove_text(r'[[<].*?[]>]', [buyCaps(self.name)])[0]
 
     @property
     def title_heading(self):
@@ -227,6 +239,15 @@ class Page(Node):
                 return self.title
             else:
                 return self.matriarch.title + ' ' + self.title
+
+    @property
+    def story_title(self):
+        if self.level == 0:
+            return ''
+        elif self.level == 1:
+            return self.title
+        else:
+            return self.title + ' &lt; ' + self.matriarch.title
 
     @property
     def main_contents(self):
@@ -280,7 +301,7 @@ class Page(Node):
                 '  {{0}}'
                 '   </div>'
                 '</ul></label>').format(
-                    ' class="normal"' if not self.is_root else '',
+                    ' class="normal"' if self.is_root else '',
                     self.hyperlink(self.root))
 
     @property
@@ -333,7 +354,10 @@ class Page(Node):
         try:
             next = self.hyperlink(self.successor, 'Next page &rarr;')
         except IndexError:
-            next = 'Return to Menu &uarr;'
+            if self == self.root:
+                next = ''
+            else:
+                next = self.hyperlink(self.root, 'Return to Menu &uarr;')
         links = '\n'.join([div.format(f) for f in (previous, next)])
         return footer.format(links)
 
@@ -368,6 +392,7 @@ class Page(Node):
             ('{elder-links}', 'elder_links'),
             ('{nav-footer}', 'nav_footer'),
             ('{copyright}', 'copyright'),
+            ('{story-title}', 'story_title'),
             ('{category-title}', 'category_title')
         ]:
             if page.count(section):

@@ -1,8 +1,8 @@
 import Tkinter as Tk
 import tkFileDialog as fd
 from properties import Properties
-from cwsmeagol.utils import *
-from cwsmeagol.defaults import default
+from smeagol.utils import *
+from smeagol.defaults import default
 
 class PropertiesWindow(Tk.Toplevel, object):
     def __init__(self, properties=None, master=None):

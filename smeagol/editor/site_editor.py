@@ -13,27 +13,25 @@ from properties import Properties
 from properties_window import PropertiesWindow
 from text_window import TextWindow
 from itertools import izip, izip_longest
-from cwsmeagol.site.page import Page
-from cwsmeagol.utils import *
-from cwsmeagol.defaults import default
+from smeagol.utils import *
+from smeagol.defaults import default
 
 
-class SiteEditor(Editor, object):
+class SiteEditor(Properties, Editor):
     def __init__(self, master=None, config_file=None):
-        super(SiteEditor, self).__init__(master)
-        self.properties = Properties(config_file, self.caller)
-        self.server = None
-        self.PORT = 41809
-        self.start_server()
-        self.fill_headings()
-        self.load()
-        self.go_to(self.position)
+        super(SiteEditor, self).__init__(master=master,
+                                         config=config_file,
+                                         caller=self.caller)
+        self.entry = dict(position='1.0')
+        self.start_server(port=41809)
+        self.fill_and_load()
 
     @property
     def caller(self):
         return 'site'
 
     def setup_linguistics(self):
+        super(SiteEditor, self).setup_linguistics()
         self.languagevar = Tk.StringVar()
         self.languagevar.set(self.translator.fullname)
 
@@ -42,21 +40,6 @@ class SiteEditor(Editor, object):
         for obj in (self.translator, self.randomwords):
             obj.select(self.language[:2])
         return 'break'
-
-    def __getattr__(self, attr):
-        if attr is 'properties':
-            self.properties = Properties(self.caller)
-            return self.properties
-        try:
-            return getattr(self.properties, attr)
-        except AttributeError:
-            return getattr(super(SiteEditor, self), attr)
-
-    def __setattr__(self, attr, value):
-        if attr in ('page', 'language'):
-            self.properties.__setattr__(attr, value)
-        else:
-            super(SiteEditor, self).__setattr__(attr, value)
 
     def set_frames(self):
         super(SiteEditor, self).set_frames()
@@ -105,18 +88,8 @@ class SiteEditor(Editor, object):
 
     @property
     def heading_contents(self):
-        contents = [title.get() for title in self.headings]
-        contents = filter(None, contents)
-        return contents
-
-    def fill_headings(self):
-        entries = self.page
-        while len(self.headings) < len(entries) < 10:
-            self.add_heading()
-        while len(self.headings) > len(entries) > 0:
-            self.remove_heading()
-        for heading, entry in zip(self.headings, entries):
-            self.replace(heading, entry)
+        get = lambda x: x.get()
+        return filter(None, map(get, self.headings))
 
     def go_to_heading(self, event=None):
         with ignored(IndexError):
@@ -124,6 +97,24 @@ class SiteEditor(Editor, object):
             heading.focus_set()
             heading.select_range(0, Tk.END)
         return 'break'
+
+    def fill_and_load(self):
+        self.fill_headings()
+        self.load()
+
+    def fill_headings(self):
+        entries = self.page
+        if len(entries):
+            while len(self.headings) < len(entries) < 10:
+                self.add_heading()
+            while len(self.headings) > len(entries) > 0:
+                self.remove_heading()
+            for heading, entry in zip(self.headings, entries):
+                self.replace(heading, entry)
+        else:
+            while len(self.headings) > 1:
+                self.remove_heading()
+            self.replace(self.headings[0], '')
 
     def scroll_headings(self, event):
         root = self.site.root
@@ -157,7 +148,68 @@ class SiteEditor(Editor, object):
             self.add_heading()
         if child:
             heading.insert(Tk.INSERT, self.entry.name)
-        self.page = self.heading_contents
+        return 'break'
+
+    def enter_headings(self, event):
+        headings = self.headings
+        try:
+            level = headings.index(event.widget) + 1
+        except ValueError:
+            level = 0
+        try:
+            headings[level].focus_set()
+        except IndexError:
+            self.history += self.heading_contents
+            self.load()
+        return 'break'
+
+    def load(self, event=None):
+        try:
+            self.entry.position = self.textbox.index(Tk.INSERT)
+        except AttributeError:
+            self.entry['position'] = self.textbox.index(Tk.INSERT)
+        self.entry = self.find_entry(list(self.page))
+        self.update_titlebar()
+        text = self.prepare_entry(self.entry)
+        self.display(text)
+        self.reset_textbox()
+        self.save_text.set('Save')
+        try:
+            self.go_to(self.entry.position)
+        except AttributeError:
+            self.go_to(self.entry['position'])
+        return 'break'
+
+    def earlier_entry(self, event=None):
+        self.history.previous()
+        self.fill_and_load()
+        return 'break'
+
+    def later_entry(self, event=None):
+        self.history.next()
+        self.fill_and_load()
+        return 'break'
+
+    def previous_entry(self, event=None):
+        try:
+            entry = self.entry.predecessor
+        except IndexError:
+            entry = self.entry.youngest_granddaughter
+        except AttributeError:
+            return 'break'
+        self.history += entry.list
+        self.fill_and_load()
+        return 'break'
+
+    def next_entry(self, event=None):
+        try:
+            entry = self.entry.successor
+        except IndexError:
+            entry = self.entry.root
+        except AttributeError:
+            return 'break'
+        self.history += entry.list
+        self.fill_and_load()
         return 'break'
 
     def add_heading(self, event=None):
@@ -173,42 +225,27 @@ class SiteEditor(Editor, object):
             heading.destroy()
         return 'break'
 
-    def enter_headings(self, event):
-        headings = self.headings
-        level = headings.index(event.widget)
-        try:
-            headings[level + 1].focus_set()
-        except IndexError:
-            self.load()
-        return 'break'
-
-    def previous_entry(self, event):
-        self.load_entry(self.entry.previous)
-        return 'break'
-
-    def next_entry(self, event):
-        self.load_entry(self.entry.next_node)
-        return 'break'
-
-    def load_entry(self, entry):
-        ancestors = entry.ancestors[1:]
-        actual_level = len(ancestors)
-        while len(self.headings) > max(1, actual_level):
-            self.remove_heading()
-        while len(self.headings) < min(actual_level, 10):
-            self.add_heading()
-        for heading, ancestor in izip(self.headings, ancestors):
-            heading.delete(0, Tk.END)
-            heading.insert(0, ancestor.name)
-        self.load()
-
     def site_open(self, event=None):
         source = self.open_site()
         self.languagevar.set(self.language)
         self.reset()
         return 'break'
 
-    def start_server(self):
+    def site_save(self):
+        self.fontsize = self.font.actual(option='size')
+        self.save_site()
+
+    def site_properties(self, event=None):
+        properties_window = PropertiesWindow(self)
+        self.wait_window(properties_window)
+        self.site.root.name = self.site.name
+        self.save_site()
+
+    def site_publish(self, event=None):
+        self.information.set(self.site.publish())
+
+    def start_server(self, port):
+        self.PORT = port
         handler = SimpleHTTPServer.SimpleHTTPRequestHandler
         while True:
             try:
@@ -235,26 +272,7 @@ class SiteEditor(Editor, object):
     def reset(self, event=None):
         self.entry = self.site.root
         self.clear_interface()
-        self.fill_headings()
-        self.load()
-
-    def site_properties(self, event=None):
-        properties_window = PropertiesWindow(self.properties)
-        self.wait_window(properties_window)
-        self.site.root.name = self.site.name
-        self.save_site()
-
-    def site_publish(self, event=None):
-        self.information.set(self.site.publish())
-
-    def load(self, event=None):
-        self.entry = self.find_entry(self.heading_contents)
-        self.update_titlebar()
-        text = self.prepare_entry(self.entry)
-        self.display(text)
-        self.reset_textbox()
-        self.save_text.set('Save')
-        return 'break'
+        self.fill_and_load()
 
     def update_titlebar(self):
         try:
@@ -269,17 +287,17 @@ class SiteEditor(Editor, object):
             heading = headings.pop(0)
         except IndexError:
             return entry
-        try:
-            return self.find_entry(headings, entry[heading])
-        except KeyError:
-            return dict(name=heading, parent=entry)
+        if not isinstance(entry, dict):
+            with ignored(KeyError):
+                return self.find_entry(headings, entry[heading])
+        child = dict(name=heading, parent=entry, position='1.0')
+        return self.find_entry(headings, child)
 
     def list_pages(self, event=None):
         def text_thing(page):
             return ' ' * 2 * page.level + page.name
         text = '\n'.join(map(text_thing, self.site))
-        with conversion(self.markdown, 'to_markdown') as converter:
-            text = converter(text)
+        text = self.markdown(text)
         textwindow = TextWindow(text)
         self.wait_window(textwindow)
         return 'break'
@@ -289,37 +307,53 @@ class SiteEditor(Editor, object):
             text = self.initial_content(entry) # entry is a dict
         except AttributeError:
             text = str(entry)
-        for converter, function in ((self.linkadder, 'remove_links'),
-                                    (self.markdown, 'to_markdown')):
-            with conversion(converter, function) as converter:
-                text = converter(text)
+        for converter in (self.remove_links, self.markdown):
+            text = converter(text)
         return text
+
+    def prepare_text(self, text):
+        text = re.sub(r'\n\n+', '\n', text)
+        text = self.markup(text)
+        text = self.add_links(text, self.entry)
+        try:
+            self.entry.text = text
+        except AttributeError:
+            self.entry['text'] = text
 
     def save_page(self, event=None):
         if self.is_new:
             self.site_properties()
         self.textbox.tag_remove(self.current_style.get(), Tk.INSERT)
         self.current_style.set('')
-        self.tkinter_to_tkinter(self._save_page)
+        self._save_page()
         self.save_text.set('Save')
         self.information.set('Saved!')
         self.save_site()
         return 'break'
 
+    @tkinter()
     def _save_page(self):
         text = self.get_text(self.textbox)
-        with ignored(AttributeError):
+        with ignored(AttributeError): # entry could be a dict
             parent = self.entry.pop('parent')
-            self.entry = parent.append(self.entry)
+            self.entry = self.chain_append(self.entry, parent)
             if parent.num_children == 1:
                 parent.delete_html()
             self.update_tocs()
         self.prepare_text(text)
         self.publish(self.entry, self.site)
 
+    def chain_append(self, child, parent):
+        try:
+            return parent.append(child)
+        except AttributeError: # parent is also a dict
+            parent['children'] = [child]
+            grandparent = parent.pop('parent')
+            return self.chain_append(parent, grandparent)
+
     def update_tocs(self):
         # don't publish the whole site again if you're a dictionary
-        self.site.publish()
+        self.publish(site=self.site, allpages=True)
 
     def save_wholepage(self):
         try:
@@ -354,6 +388,29 @@ class SiteEditor(Editor, object):
             self.errors += 1
             return ''
 
+    def save_search_page(self):
+        try:
+            with open('searchtemplate.html') as template:
+                page = template.read()
+        except IOError:
+            return
+        replacements = (
+            ('{stylesheet}', 'stylesheet_and_icon'),
+            ('{family-links}', 'family_links'),
+            ('{elder-links}', 'elder_links'),
+        )
+        for (text, function) in replacements:
+            page = page.replace(text, getattr(self.site.root, function))
+        page = re.sub(
+            r'<li class="normal">(.*?)</li>',
+            r'<li><a href="index.html">\1</a></li>',
+            page
+        )
+        dumps(page, 'search.html')
+        page = page.replace('search.js', '/404search.js')
+        page = re.sub(r'href="/*', 'href="/', page)
+        dumps(page, '404.html')
+
     @property
     def copyright(self):
         strftime = datetime.strftime
@@ -384,7 +441,7 @@ class SiteEditor(Editor, object):
 
     @staticmethod
     def get_text(textbox):
-        return str(textbox.get(1.0, Tk.END + '-1c'))
+        return textbox.get(1.0, Tk.END + '-1c').encode('ascii', 'replace')
 
     def delete_page(self, event=None):
         template = 'Are you sure you wish to delete {0}?'
@@ -396,31 +453,23 @@ class SiteEditor(Editor, object):
             self.reset()
         return 'break'
 
-    def prepare_text(self, text):
-        text = re.sub(r'\n\n+', '\n', text)
-        with conversion(self.markdown, 'to_markup') as converter:
-            text = converter(text)
-        with conversion(self.linkadder, 'add_links') as converter:
-            text = converter(text, self.entry)
-        self.entry.text = text
-
     def rename_page(self):
-        if self.entry.level:
-            new_name = sd.askstring('Rename', 'What is the new name?',
-                                     initialvalue=self.entry.name)
-            if new_name:
-                try:
-                    self.entry.delete_html()
-                    self.entry.name = new_name
-                except AttributeError:
-                    self.entry['name'] = new_name
+        new_name = sd.askstring('Rename', 'What is the new name?',
+                                 initialvalue=self.entry.name)
+        if new_name:
+            try:
+                self.entry.delete_html()
+                self.entry.name = new_name
+            except AttributeError:
+                self.entry['name'] = new_name
+            with ignored(IndexError):
                 self.page[-1] = new_name
-                self.fill_headings()
-                self.update_titlebar()
-                self.update_tocs()
+            self.fill_headings()
+            self.update_titlebar()
+            self.update_tocs()
 
     @staticmethod
-    def publish(entry, site, allpages=False):
+    def publish(entry=None, site=None, allpages=False):
         if allpages:
             site.publish()
         elif entry is not None:
@@ -441,12 +490,12 @@ class SiteEditor(Editor, object):
             textbox.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(after)))
 
     def insert_formatting(self, event, tag):
-        with conversion(self.markdown, 'find_formatting') as converter:
-            self.insert_characters(event.widget, *converter(tag))
+        converter = self.marker.find_formatting
+        self.insert_characters(event.widget, *converter(tag))
 
     def insert_markdown(self, event, tag):
-        with conversion(self.markdown, 'find') as converter:
-            self.insert_characters(event.widget, converter(tag))
+        converter = self.marker.find
+        self.insert_characters(event.widget, converter(tag))
 
     def format_paragraph(self, style, code, textbox):
         linestart = Tk.INSERT + ' linestart'
@@ -476,13 +525,11 @@ class SiteEditor(Editor, object):
         return 'break'
 
     def quit(self):
-        if self.save_wholepage():
-            return
-        self.server.shutdown()
-        self.page = self.heading_contents
-        self.language = self.languagevar.get()
-        self.position = self.textbox.index(Tk.INSERT)
-        self.fontsize = self.font.actual(option='size')
+        self.master.destroy()
+        self.save_wholepage()
+        self.save_search_page()
+        with ignored(AttributeError):
+            self.server.shutdown()
         self.save_site()
         self.master.quit()
 
@@ -498,6 +545,9 @@ class SiteEditor(Editor, object):
         return super(SiteEditor, self).textbox_commands + [
             ('<Control-Prior>', self.previous_entry),
             ('<Control-Next>', self.next_entry),
+            ('<Control-Shift-Prior>', self.earlier_entry),
+            ('<Control-Shift-Next>', self.later_entry),
+            ('<Alt-d>', self.go_to_heading),
             ('<Control-N>', self.insert_new),
             ('<Control-o>', self.site_open),
             ('<Control-s>', self.save_page)]

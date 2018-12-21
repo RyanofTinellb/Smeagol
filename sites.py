@@ -1,5 +1,5 @@
 import json
-from cwsmeagol.site.site import Site
+from smeagol.site.site import Site
 from datetime import datetime
 
 class Dictionary(Site):
@@ -33,11 +33,20 @@ class Story(Site):
 class Stories(Site):
     def __init__(self):
         d = Default()
-        name = 'shortstories/'
+        name = 'writings/'
         files = {file: d.destination + name + filename
                     for file, filename in d.files.iteritems()}
         super(Stories, self).__init__(d.destination + name,
             'Short Stories', files)
+
+class Encyclopedia(Site):
+    def __init__(self):
+        d = Default()
+        name = 'encyclopedia/'
+        files = {file: d.destination + name + filename
+                    for file, filename in d.files.iteritems()}
+        super(Stories, self).__init__(d.destination + name,
+            'The Universe of Tinellb', files)    
 
 
 class TheCoelacanthQuartet(Story):
@@ -55,7 +64,7 @@ class Default():
 
 if __name__ == '__main__':
     oldtime = datetime.now()
-    for site in Dictionary, Grammar, Story, Stories:
+    for site in Grammar, Story, Stories, Dictionary:
         site = site()
         print(site.name + ': ')
         site.update_searchindex()

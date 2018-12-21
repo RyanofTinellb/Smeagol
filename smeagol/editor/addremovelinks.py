@@ -1,8 +1,8 @@
 import re
 import json
 from itertools import chain
-from cwsmeagol import Translator
-from cwsmeagol.utils import urlform, ignored, buyCaps, sellCaps
+from smeagol import Translator
+from smeagol.utils import urlform, ignored, buyCaps, sellCaps
 
 class AddRemoveLinks:
     def __init__(self, link_adders):
@@ -33,12 +33,12 @@ class AddRemoveLinks:
                 'AddRemoveLinks has no attribute {0}'.format(attr))
 
     def add_links(self, text, entry):
-        for link_adder in self.link_adders.items():
+        for link_adder in self.link_adders.values():
             text = link_adder.add_links(text, entry)
         return text
 
     def remove_links(self, text):
-        for link_adder in self.link_adders.items():
+        for link_adder in self.link_adders.values():
             text = link_adder.remove_links(text)
         return text
 
@@ -83,7 +83,7 @@ class ExternalDictionary:
         """
         self.language = '#'
         with ignored(IndexError):
-            self.language += entry.matriarch.urlform
+            self.language += entry.matriarch.url
         return re.sub(r'<{0}>(.*?)</{0}>'.format('link'), self._link, text)
 
     def _link(self, matchobj):

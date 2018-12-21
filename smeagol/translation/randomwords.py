@@ -4,14 +4,13 @@ import random
 import json
 import re
 
-
 class RandomWords():
     def __init__(self, language=None):
         self.maximum = 20
         languages = OrderedDict()
         languages['en'] = English
         languages['hl'] = HighLulani
-        languages['cl'] = ColloquialLulani
+        languages['dl'] = DemoticLulani
         self.languages = languages
         self.select(language)
 
@@ -42,16 +41,19 @@ class English:
                   '/{0}/data.json')
         filenames = [
             'coelacanth',
-            'shortstories',
+            'writings',
         ]
         for filename in filenames:
-            with open(folder.format(filename)) as page:
-                page = json.load(page)
-            self.collate(page, self.words)
+            try:
+                with open(folder.format(filename)) as page:
+                    page = json.load(page)
+                self.collate(page, self.words)
+            except IOError:
+                pass
         self.words = list(self.words)
 
     def collate(self, page, words):
-        words.update({word for line in page['text']
+        words.update({word for line in page.get('text', [])
                 for word in line.split()})
         for child in page.get('children', []):
             self.collate(child, self.words)
@@ -68,7 +70,6 @@ class English:
                 r'.*?>',
                 r'<.*?',
                 r'&.*?;',
-                r'&date=',
                 r'\W|\d'
             ):
                 choice = re.sub(sub, '', choice)
@@ -127,9 +128,9 @@ class HighLulani:
             return consonant + syllable
         return syllable
 
-class ColloquialLulani:
+class DemoticLulani:
     def __init__(self):
-        self.name = 'Colloquial Lulani'
+        self.name = 'Demotic Lulani'
         self.lulani = HighLulani()
         self.vulgar = HighToColloquialLulani()
         self.rewrites = [

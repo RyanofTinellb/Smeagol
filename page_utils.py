@@ -1,5 +1,5 @@
 import re
-from cwsmeagol.utils import *
+from smeagol.utils import *
 
 alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
 punctuation = "$-'.#()!_"
@@ -22,7 +22,7 @@ def pattern_indices(word, pattern):
             raise StopIteration
 
 
-def html(text):
+def html(text=None):
     mode = [None]
     divs = [None]
     return '\n'.join([convert(line, mode, divs) for line in text])
