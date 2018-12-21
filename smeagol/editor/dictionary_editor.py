@@ -62,6 +62,7 @@ class DictionaryEditor(SiteEditor):
         self.serialise()
 
     @staticmethod
+    @async
     def publish(entry, site, allpages=False):
         if allpages:
             site.publish()
@@ -82,6 +83,7 @@ class DictionaryEditor(SiteEditor):
         text = self.remove_links(text)
         return re.sub(r'<link>(?:\w\w:)*(.*?)</link>', r'\1', text)
 
+    @async
     def serialise(self):
         output = []
         transliteration = None
