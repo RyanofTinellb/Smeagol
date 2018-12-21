@@ -33,7 +33,7 @@ class Story(Site):
 class Stories(Site):
     def __init__(self):
         d = Default()
-        name = 'shortstories/'
+        name = 'writings/'
         files = {file: d.destination + name + filename
                     for file, filename in d.files.iteritems()}
         super(Stories, self).__init__(d.destination + name,

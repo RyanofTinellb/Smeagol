@@ -91,12 +91,12 @@ if option == '1':
     web.open('colloquialverbs.html')
 elif option == '2':
     wordlist = sandhi_check()
-    with open('colloquiallulani.json', 'w') as f:
+    with open('demoticlulani.json', 'w') as f:
         json.dump(wordlist, f, indent=2)
-    web.open('colloquiallulani.html')
+    web.open('demoticlulani.html')
 elif option == '3':
     with open('wordlist.json') as f:
         wordlist = lexicon(f)
-    with open('colloquiallulani.json', 'w') as f:
+    with open('demoticlulani.json', 'w') as f:
         json.dump(wordlist, f, indent=2)
-    web.open('colloquiallulani.html')
+    web.open('demoticlulani.html')

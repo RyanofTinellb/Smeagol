@@ -10,7 +10,7 @@ class RandomWords():
         languages = OrderedDict()
         languages['en'] = English
         languages['hl'] = HighLulani
-        languages['cl'] = ColloquialLulani
+        languages['dl'] = DemoticLulani
         self.languages = languages
         self.select(language)
 
@@ -128,9 +128,9 @@ class HighLulani:
             return consonant + syllable
         return syllable
 
-class ColloquialLulani:
+class DemoticLulani:
     def __init__(self):
-        self.name = 'Colloquial Lulani'
+        self.name = 'Demotic Lulani'
         self.lulani = HighLulani()
         self.vulgar = HighToColloquialLulani()
         self.rewrites = [
