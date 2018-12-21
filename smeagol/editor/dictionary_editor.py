@@ -78,10 +78,6 @@ class DictionaryEditor(SiteEditor):
         # override super().update_tocs()
         pass
 
-    def _quit(self):
-        # override super()._quit()
-        return False
-
     def remove_all_links(self, text):
         text = self.remove_links(text)
         return re.sub(r'<link>(?:\w\w:)*(.*?)</link>', r'\1', text)
