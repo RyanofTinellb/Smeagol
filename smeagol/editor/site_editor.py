@@ -441,7 +441,7 @@ class SiteEditor(Properties, Editor):
 
     @staticmethod
     def get_text(textbox):
-        return str(textbox.get(1.0, Tk.END + '-1c'))
+        return textbox.get(1.0, Tk.END + '-1c').encode('ascii', 'replace')
 
     def delete_page(self, event=None):
         template = 'Are you sure you wish to delete {0}?'

@@ -53,7 +53,7 @@ class English:
         self.words = list(self.words)
 
     def collate(self, page, words):
-        words.update({word for line in page['text']
+        words.update({word for line in page.get('text', [])
                 for word in line.split()})
         for child in page.get('children', []):
             self.collate(child, self.words)
