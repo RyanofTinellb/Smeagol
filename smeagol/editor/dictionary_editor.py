@@ -84,14 +84,15 @@ class DictionaryEditor(SiteEditor):
 
     def remove_all_links(self, text):
         text = self.remove_links(text)
-        return text[3:] if ':' in text else text
+        return re.sub(r'<link>(?:\w\w:)*(.*?)</link>', r'\1', text)
 
     def serialise(self):
         output = []
         transliteration = None
         language = None
         pos = None
-        sieve = re.compile(r'3\](.*?) <div class="definition">(.*?)</div>')
+        sieve = re.compile(
+            r'3\](.*?) <div class=\"definition\">(.*?)</div>.*', re.S)
         for entry in self.site:
             transliteration = entry.name
             for line in entry.text:
@@ -102,6 +103,7 @@ class DictionaryEditor(SiteEditor):
                     try:
                         newpos, meaning = line.splitlines()
                     except:
+                        print crap, transliteration, line, '*****'
                         continue
                     if newpos:
                         pos = re.sub(r'\(.*?\)', '', newpos).split(' ')
