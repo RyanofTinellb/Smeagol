@@ -525,13 +525,16 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def quit(self):
-        if self.save_wholepage():
+        if self._quit():
             return
         self.save_search_page()
         with ignored(AttributeError):
             self.server.shutdown()
         self.save_site()
         self.master.quit()
+
+    def _quit(self):
+        return self.save_wholepage()
 
     def initial_content(self, entry=None):
         # blank for sites, filled for dictionary entries

@@ -29,6 +29,15 @@ def tkinter():
         return wrapper
     return decorator
 
+def timeit(function):
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        oldtime = datetime.now()
+        value = function(*args, **kwargs)
+        newtime = datetime.now()
+        print('Done: ' + str(newtime - oldtime))
+        return value
+    return wrapper
 
 def dump(dictionary, filename):
     if filename:

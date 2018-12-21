@@ -2,6 +2,7 @@ from site_editor import SiteEditor, Tk
 from smeagol.site.page import Page
 from smeagol.utils import *
 
+
 class DictionaryEditor(SiteEditor):
     def __init__(self, master=None, config_file=None):
         super(DictionaryEditor, self).__init__(master, config_file)
@@ -77,6 +78,14 @@ class DictionaryEditor(SiteEditor):
         # override super().update_tocs()
         pass
 
+    def _quit(self):
+        # override super()._quit()
+        return False
+
+    def remove_all_links(self, text):
+        text = self.remove_links(text)
+        return text[3:] if ':' in text else text
+
     def serialise(self):
         output = []
         transliteration = None
@@ -89,7 +98,7 @@ class DictionaryEditor(SiteEditor):
                 if line.startswith('1]'):
                     language = re.sub('1](.*?)\n', r'\1', line)
                 elif line.startswith('3]'):
-                    line = sieve.sub(r'\1\n\2', self.remove_links(line))
+                    line = sieve.sub(r'\1\n\2', self.remove_all_links(line))
                     try:
                         newpos, meaning = line.splitlines()
                     except:
