@@ -5,8 +5,9 @@ import json
 import urllib
 import inspect
 import functools
-from contextlib import contextmanager
+from threading import Thread
 from datetime import datetime
+from contextlib import contextmanager
 from translation.markdown import Markdown
 
 
@@ -38,6 +39,14 @@ def timeit(function):
         print('Done: ' + str(newtime - oldtime))
         return value
     return wrapper
+
+def async(function):
+	@functools.wraps(function)
+	def async_function(*args, **kwargs):
+		thread = Thread(target=function, args=args, kwargs=kwargs)
+		thread.start()
+		return thread
+	return async_function
 
 def dump(dictionary, filename):
     if filename:
