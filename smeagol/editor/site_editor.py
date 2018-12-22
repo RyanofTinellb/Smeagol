@@ -1,18 +1,17 @@
-import SimpleHTTPServer
-import SocketServer
-from socket import error as socket_error
-import threading
 import os
 import random
-import webbrowser as web
+import SocketServer
+import SimpleHTTPServer
 import Tkinter as Tk
-import tkSimpleDialog as sd
+import webbrowser as web
 import tkMessageBox as mb
+import tkSimpleDialog as sd
+from itertools import izip, izip_longest
+from socket import error as socket_error
 from editor import Editor
 from properties import Properties
-from properties_window import PropertiesWindow
 from text_window import TextWindow
-from itertools import izip, izip_longest
+from properties_window import PropertiesWindow
 from smeagol.utils import *
 from smeagol.defaults import default
 
@@ -241,9 +240,11 @@ class SiteEditor(Properties, Editor):
         self.site.root.name = self.site.name
         self.save_site()
 
+    @async
     def site_publish(self, event=None):
         self.information.set(self.site.publish())
 
+    @async
     def start_server(self, port):
         self.PORT = port
         handler = SimpleHTTPServer.SimpleHTTPRequestHandler
@@ -261,8 +262,7 @@ class SiteEditor(Properties, Editor):
                 break
             except socket_error:
                 self.PORT += 1
-        self.thread = threading.Thread(target=self.server.serve_forever)
-        self.thread.start()
+        self.server.serve_forever()
 
     def open_in_browser(self, event=None):
         web.open_new_tab(os.path.join('http://localhost:' +
@@ -351,10 +351,12 @@ class SiteEditor(Properties, Editor):
             grandparent = parent.pop('parent')
             return self.chain_append(parent, grandparent)
 
+    @async
     def update_tocs(self):
         # don't publish the whole site again if you're a dictionary
         self.publish(site=self.site, allpages=True)
 
+    @async
     def save_wholepage(self):
         try:
             with open('wholetemplate.html') as template:
@@ -388,6 +390,7 @@ class SiteEditor(Properties, Editor):
             self.errors += 1
             return ''
 
+    @async
     def save_search_page(self):
         try:
             with open('searchtemplate.html') as template:
@@ -469,6 +472,7 @@ class SiteEditor(Properties, Editor):
             self.update_tocs()
 
     @staticmethod
+    @async
     def publish(entry=None, site=None, allpages=False):
         if allpages:
             site.publish()
