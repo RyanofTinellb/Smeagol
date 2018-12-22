@@ -64,7 +64,7 @@ class SiteEditor(Properties, Editor):
         self.save_text = Tk.StringVar()
         self.save_text.set('Save')
         self.load_button = Tk.Button(master, text='Load',
-                            command=self.load, width=10)
+                            command=self.load_from_headings, width=10)
         self.save_button = Tk.Button(master, command=self.save_page,
                             textvariable=self.save_text, width=10)
         self.buttons = [self.load_button, self.save_button]
@@ -158,9 +158,13 @@ class SiteEditor(Properties, Editor):
         try:
             headings[level].focus_set()
         except IndexError:
-            self.history += self.heading_contents
-            self.load()
+            self.load_from_headings()
         return 'break'
+
+    def load_from_headings(self):
+        if self.page <> self.heading_contents:
+            self.history += self.heading_contents
+        self.load()
 
     def load(self, event=None):
         try:
@@ -336,24 +340,23 @@ class SiteEditor(Properties, Editor):
         text = self.get_text(self.textbox)
         with ignored(AttributeError): # entry could be a dict
             parent = self.entry.pop('parent')
-            self.entry = self.chain_append(self.entry, parent)
-            if parent.num_children == 1:
-                parent.delete_html()
-            self.update_tocs()
+            self.entry, new_parent = self.chain_append(self.entry, parent)
+            self.update_tocs(new_parent)
         self.prepare_text(text)
         self.publish(self.entry, self.site)
 
-    def chain_append(self, child, parent):
+    def chain_append(self, child, parent, new_parent=False):
         try:
-            return parent.append(child)
+            return parent.append(child), new_parent
         except AttributeError: # parent is also a dict
             parent['children'] = [child]
             grandparent = parent.pop('parent')
-            return self.chain_append(parent, grandparent)
+            return self.chain_append(parent, grandparent, True)
 
     @async
-    def update_tocs(self):
-        # don't publish the whole site again if you're a dictionary
+    def update_tocs(self, new=None):
+        # don't publish the whole site again if you're a dictionary,
+        # unless the parent was also new.
         self.publish(site=self.site, allpages=True)
 
     @async
@@ -518,11 +521,6 @@ class SiteEditor(Properties, Editor):
         elif text in ('[e', '[f'):
             textbox.delete(linestart, linestart + '+3c')
 
-    def insert_new(self, event):
-        self.entry.content = self.initial_content()
-        self.load()
-        return 'break'
-
     def select_paragraph(self, event=None):
         event.widget.tag_add('sel', Tk.INSERT + ' linestart',
                              Tk.INSERT + ' lineend +1c')
@@ -552,7 +550,6 @@ class SiteEditor(Properties, Editor):
             ('<Control-Shift-Prior>', self.earlier_entry),
             ('<Control-Shift-Next>', self.later_entry),
             ('<Alt-d>', self.go_to_heading),
-            ('<Control-N>', self.insert_new),
             ('<Control-o>', self.site_open),
             ('<Control-s>', self.save_page)]
 

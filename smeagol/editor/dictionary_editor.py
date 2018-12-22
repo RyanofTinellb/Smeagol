@@ -63,7 +63,7 @@ class DictionaryEditor(SiteEditor):
 
     @staticmethod
     @async
-    def publish(entry, site, allpages=False):
+    def publish(entry=None, site=None, allpages=False):
         if allpages:
             site.publish()
         elif entry is not None:
@@ -75,9 +75,10 @@ class DictionaryEditor(SiteEditor):
             site.update_source()
             site.update_searchindex()
 
-    def update_tocs(self):
+    def update_tocs(self, new):
         # override super().update_tocs()
-        pass
+        if new:
+            super(DictionaryEditor, self).update_tocs()
 
     def remove_all_links(self, text):
         text = self.remove_links(text)
