@@ -95,13 +95,13 @@ class DictionaryEditor(SiteEditor):
             transliteration = entry.name
             for line in entry.text:
                 if line.startswith('1]'):
-                    language = re.sub('1](.*?)\n', r'\1', line)
+                    language = re.sub('1](.*?)\n(?:.*)', r'\1', line, flags=re.S)
                 elif line.startswith('3]'):
                     line = sieve.sub(r'\1\n\2', self.remove_all_links(line))
                     try:
                         newpos, meaning = line.splitlines()
                     except:
-                        print crap, transliteration, line, '*****'
+                        print transliteration, line, '*****'
                         continue
                     if newpos:
                         pos = re.sub(r'\(.*?\)', '', newpos).split(' ')
