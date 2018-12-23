@@ -65,7 +65,7 @@ def dumps(string, filename):
 
 
 def buyCaps(word):
-    return re.sub(r'[$](.)', _buy, word)
+    return re.sub(r'[$](.)', _buy, word).replace('.', '&nbsp;')
 
 
 def _buy(regex):
@@ -95,7 +95,7 @@ def urlform(text, markdown=None):
     except AttributeError:
         markdown = Markdown().to_markdown
     name = [text.lower()]
-    safe_punctuation = '\'._+!(),'
+    safe_punctuation = '\'_+!(),'
     # remove safe punctuations that should only be used to encode non-ascii characters
     remove_text(r'[{0}]'.format(safe_punctuation), name)
     name[0] = markdown(name[0])
@@ -105,7 +105,7 @@ def urlform(text, markdown=None):
     remove_text(r'<(div|ipa).*?\1>', name)
     # remove tags, spaces and punctuation
     remove_text(r'<.*?>|[/*;: ]', name)
-    name = urllib.quote(name[0], safe_punctuation + '$')
+    name = urllib.quote(name[0], safe_punctuation + '.$')
     return name
 
 
