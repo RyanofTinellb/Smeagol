@@ -37,11 +37,19 @@ class DictionaryEditor(SiteEditor):
             widget, m('<div class="definition">'), m('</div>'))
         return 'break'
 
+    def update_titlebar(self):
+        #override super().update_titlebar()
+        try:
+            name = self.entry.url
+        except AttributeError:
+            name = urlform(self.entry.get('name', ''))
+        self._titlebar(buyCaps(name).replace('&nbsp;', ' '))
+
     def find_entry(self, headings, entry=None):
         # override super().find_entry()
         entry = self.site.root
         try:
-            heading = headings[0]
+            heading = un_url(headings[0])
         except IndexError:
             return entry
         initial = re.sub(r'.*?(\w).*', r'\1',

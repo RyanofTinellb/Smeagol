@@ -280,9 +280,12 @@ class SiteEditor(Properties, Editor):
 
     def update_titlebar(self):
         try:
-            self.master.title('Editing ' + self.entry.name)
+            self._titlebar(self.entry.name)
         except AttributeError:
-            self.master.title('Editing ' + self.entry.get('name', ''))
+            self._titlebar(self.entry.get('name', ''))
+
+    def _titlebar(self, name):
+        self.master.title('Editing ' + name)
 
     def find_entry(self, headings, entry=None):
         if entry is None:

@@ -73,7 +73,7 @@ def _buy(regex):
 
 
 def sellCaps(word):
-    return re.sub(r'([A-Z])', _sell, word)
+    return re.sub(r'([A-Z])', _sell, word.replace('&nbsp;', '.'))
 
 
 def _sell(regex):
@@ -88,6 +88,13 @@ def change_text(item, replacement, text):
 def remove_text(item, text):
     return change_text(item, '', text)
 
+def un_url(text, markdown=None):
+    try:
+        markup = markdown.to_markup
+    except AttributeError:
+        markup = Markdown().to_markup
+    text = text.replace(' ', '.')
+    return sellCaps(markup(text))
 
 def urlform(text, markdown=None):
     try:
