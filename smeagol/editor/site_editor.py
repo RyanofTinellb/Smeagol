@@ -398,8 +398,14 @@ class SiteEditor(Properties, Editor):
 
     @async
     def save_search_page(self):
+        for template in (
+                ('searchtemplate.html', 'search.html'),
+                ('404template.html', '404.html')):
+            self._search(*template)
+
+    def _search(self, template, filename):
         try:
-            with open('searchtemplate.html') as template:
+            with open(template) as template:
                 page = template.read()
         except IOError:
             return
@@ -415,10 +421,9 @@ class SiteEditor(Properties, Editor):
             r'<li><a href="index.html">\1</a></li>',
             page
         )
-        dumps(page, 'search.html')
-        page = page.replace('search.js', '/404search.js')
-        page = re.sub(r'href="/*', 'href="/', page)
-        dumps(page, '404.html')
+        if filename.startswith('404'):
+            page = re.sub(r'href="/*', 'href="/', page)
+        dumps(page, filename)
 
     @property
     def copyright(self):
