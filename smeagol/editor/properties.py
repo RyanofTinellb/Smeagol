@@ -83,7 +83,7 @@ class Properties(object):
         if isinstance(history, ShortList):
             return history
         else:
-            self.history = ShortList(history, 3)
+            self.history = ShortList(history, 20)
             return self.history
 
     def get_page(self):

@@ -99,6 +99,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
             <input type="radio" name="andor" id="or" value="or">OR
           </form>
           <div class="results" id="results" name="results"></div>
+          <script src="/search.js"></script>
           <script src="/404search.js"></script>
         </div>
       </div>
