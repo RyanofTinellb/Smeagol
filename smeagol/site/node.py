@@ -60,7 +60,7 @@ class Node(object):
             self.children.append(child)
         else:
             self.children = [child]
-        return self.youngest_daughter
+        return self.youngest_granddaughter
 
     def delete(self):
         sisters = self.parent.children

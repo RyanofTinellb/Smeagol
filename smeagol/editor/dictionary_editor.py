@@ -37,11 +37,19 @@ class DictionaryEditor(SiteEditor):
             widget, m('<div class="definition">'), m('</div>'))
         return 'break'
 
+    def update_titlebar(self):
+        #override super().update_titlebar()
+        try:
+            name = self.entry.url
+        except AttributeError:
+            name = urlform(self.entry.get('name', ''))
+        self._titlebar(buyCaps(name).replace('&nbsp;', ' '))
+
     def find_entry(self, headings, entry=None):
         # override super().find_entry()
         entry = self.site.root
         try:
-            heading = headings[0]
+            heading = un_url(headings[0])
         except IndexError:
             return entry
         initial = re.sub(r'.*?(\w).*', r'\1',
@@ -63,7 +71,7 @@ class DictionaryEditor(SiteEditor):
 
     @staticmethod
     @async
-    def publish(entry, site, allpages=False):
+    def publish(entry=None, site=None, allpages=False):
         if allpages:
             site.publish()
         elif entry is not None:
@@ -75,9 +83,10 @@ class DictionaryEditor(SiteEditor):
             site.update_source()
             site.update_searchindex()
 
-    def update_tocs(self):
+    def update_tocs(self, new):
         # override super().update_tocs()
-        pass
+        if new:
+            super(DictionaryEditor, self).update_tocs()
 
     def remove_all_links(self, text):
         text = self.remove_links(text)
@@ -95,13 +104,13 @@ class DictionaryEditor(SiteEditor):
             transliteration = entry.name
             for line in entry.text:
                 if line.startswith('1]'):
-                    language = re.sub('1](.*?)\n', r'\1', line)
+                    language = re.sub('1](.*?)\n(?:.*)', r'\1', line, flags=re.S)
                 elif line.startswith('3]'):
                     line = sieve.sub(r'\1\n\2', self.remove_all_links(line))
                     try:
                         newpos, meaning = line.splitlines()
                     except:
-                        print crap, transliteration, line, '*****'
+                        print transliteration, line, '*****'
                         continue
                     if newpos:
                         pos = re.sub(r'\(.*?\)', '', newpos).split(' ')

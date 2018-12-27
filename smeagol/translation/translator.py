@@ -32,7 +32,7 @@ class Translator:
         self.select(language)
 
     def select(self, language):
-        language = language.lower()
+        language = language.lower()[:2]
         try:
             self.converter = self.languages[language]()
         except (IndexError, AttributeError, KeyError):

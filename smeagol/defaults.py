@@ -41,7 +41,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
 &#x157; | ,r | <!--r cedilla--> <br>
 &rsquo; | ' | <br>
 &#x294; | '' | <!--glottal stop--> <br>
-&middot; | . | <br>
+&middot; | .. | <br>
 &lparen; | \( | <br>
 &rparen; | )/ | <br>
 &under; | \\_ | <br>
