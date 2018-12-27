@@ -422,7 +422,8 @@ class SiteEditor(Properties, Editor):
             page
         )
         if filename.startswith('404'):
-            page = re.sub(r'href="/*', 'href="/', page)
+            page = re.sub(r'href="/*', 'href="/', re.sub(
+                r'src="/*', 'src="/', page))
         dumps(page, filename)
 
     @property
