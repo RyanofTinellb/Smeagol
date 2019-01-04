@@ -88,6 +88,7 @@ class DictionaryEditor(SiteEditor):
     def update_tocs(self, new=False):
         # override super().update_tocs()
         if new:
+            self.entry.root.sort()
             super(DictionaryEditor, self).update_tocs()
 
     def remove_all_links(self, text):

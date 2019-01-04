@@ -374,7 +374,7 @@ class Page(Node):
         else:
             suffix = ['st', 'nd', 'rd'][date.day % 10 - 1]
         span = '<span class="no-breaks">{0}</span>'
-        templates = (('&copy;%Y '
+        templates = (('&copy;2017-%Y '
                       '<a href="http://www.tinellb.com/about.html">'
                       'Ryan Eakins</a>.'),
                 'Last updated: %A, %B %#d' + suffix + ', %Y.')
