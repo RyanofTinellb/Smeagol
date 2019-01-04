@@ -76,14 +76,15 @@ class DictionaryEditor(SiteEditor):
             site.publish()
         elif entry is not None:
             entry.update_date()
-            entry.parent.update_date()
             entry.publish(site.template)
+            entry.parent.sort()
+            entry.parent.update_date()
             entry.parent.publish(site.template)
         if site is not None:
             site.update_source()
             site.update_searchindex()
 
-    def update_tocs(self, new):
+    def update_tocs(self, new=False):
         # override super().update_tocs()
         if new:
             super(DictionaryEditor, self).update_tocs()

@@ -475,13 +475,13 @@ class SiteEditor(Properties, Editor):
             try:
                 self.entry.delete_html()
                 self.entry.name = new_name
+                entry.refresh_flatname()
             except AttributeError:
                 self.entry['name'] = new_name
             with ignored(IndexError):
                 self.page[-1] = new_name
-            self.fill_headings()
             self.update_titlebar()
-            self.update_tocs()
+            self.fill_headings()
 
     @staticmethod
     @async

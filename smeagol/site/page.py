@@ -168,6 +168,9 @@ class Page(Node):
     def __le__(self, other):
         return self == other or self < other
 
+    def sort(self):
+        self.children = [child.find() for child in sorted(self.daughters)]
+
     def publish(self, template=None):
         dumps(self.html(template), self.link)
 

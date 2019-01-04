@@ -120,8 +120,8 @@ class InternalDictionary:
         output = []
         regex = r'<{0}>(.*?)</{0}>'.format('link')
         for line in text.split('['):
-            if line.startswith(lang):
-                self.language = line[len(lang):-1]
+            if lang in line:
+                self.language = re.sub(lang + '(.*?)\n', r'\1', line)
             output.append(re.sub(regex, self._link, line))
         return '['.join(output)
 
@@ -142,8 +142,8 @@ class InternalDictionary:
         output = []
         regex = r'<a href="(?:\w+\.html|\.\./.*?)#(.*?)">(.*?)</a>'
         for line in text.split('['):
-            if line.startswith(lang):
-                self.language = line[len(lang):-1]
+            if lang in line:
+                self.language = re.sub(lang + '(.*?)\n', r'\1', line)
             output.append(re.sub(regex, self._unlink, line))
         return '['.join(output)
 
