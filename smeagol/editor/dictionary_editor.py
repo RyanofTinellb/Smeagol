@@ -66,6 +66,7 @@ class DictionaryEditor(SiteEditor):
 
     def _save_page(self):
         # override super()._save_page
+        self.entry = self.find_entry(self.heading_contents)
         super(DictionaryEditor, self)._save_page()
         self.serialise()
 

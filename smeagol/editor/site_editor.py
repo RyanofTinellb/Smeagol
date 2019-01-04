@@ -461,8 +461,7 @@ class SiteEditor(Properties, Editor):
     def delete_page(self, event=None):
         template = 'Are you sure you wish to delete {0}?'
         message = template.format(self.entry.name)
-        ans = mb.askokcancel('Delete', message)
-        if ans:
+        if mb.askokcancel('Delete', message):
             self.entry.delete()
             self.page.pop()
             self.reset()
@@ -475,7 +474,7 @@ class SiteEditor(Properties, Editor):
             try:
                 self.entry.delete_html()
                 self.entry.name = new_name
-                entry.refresh_flatname()
+                self.entry.refresh_flatname()
             except AttributeError:
                 self.entry['name'] = new_name
             with ignored(IndexError):
