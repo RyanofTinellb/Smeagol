@@ -29,7 +29,7 @@ class Properties(object):
     def setup_linguistics(self):
         # override Editor.setup_linguistics()
         self.translator = Translator(self.language)
-        self.evolver = HighToColloquialLulani()
+        self.evolver = HighToDemoticLulani()
         self.randomwords = RandomWords(self.language)
         self.marker = Markdown(self.markdown_file)
 

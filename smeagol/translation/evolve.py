@@ -66,7 +66,7 @@ class Evolver:
         return output
 
 
-class HighToColloquialLulani:
+class HighToDemoticLulani:
     def __init__(self, debug=False):
         self.rewrites = [
             ('&rsquo;', "'"),

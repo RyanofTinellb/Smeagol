@@ -153,7 +153,7 @@ class Editor(Tk.Frame, object):
         self.setup_markdown()
         self.randomwords = RandomWords()
         self.translator = Translator(self.language)
-        self.evolver = HighToColloquialLulani()
+        self.evolver = HighToDemoticLulani()
 
     def setup_markdown(self, filename=None):
         self.marker = Markdown(filename)

@@ -291,7 +291,7 @@ class Page(Node):
     def links(self):
         return ('<label>\n'
                 '  <input type="checkbox" class="menu">\n'
-                '  <ul>\n  <li{0}>{1}</li>\n'
+                '  <ul>\n  <li{0}>{2}</li>\n'
                 '    <div class="javascript">\n'
                 '      <form id="search">\n'
                 '        <li class="search">\n'
@@ -300,11 +300,12 @@ class Page(Node):
                 '        </li>\n'
                 '      </form>\n'
                 '    </div>\n'
-                '   <div class="links">'
+                '   <div class="links{1}">'
                 '  {{0}}'
                 '   </div>'
                 '</ul></label>').format(
                     ' class="normal"' if self.is_root else '',
+                    '-root' if self.is_root else '',
                     self.hyperlink(self.root))
 
     @property
@@ -314,7 +315,7 @@ class Page(Node):
     @property
     def family_links(self):
         link_array = ''
-        level = 1
+        level = 0
         for relative in self.family:
             old_level = level
             level = relative.level
