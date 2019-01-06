@@ -46,7 +46,7 @@ class Page(Node):
             super(Page, self).__setattr__(attr, value)
 
     def __str__(self):
-        return '['.join(self.text)
+        return '[' + '['.join(self.text)
 
     def update_date(self):
         self.find()['date'] = datetime.strftime(datetime.today(), '%Y-%m-%d')

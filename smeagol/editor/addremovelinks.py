@@ -180,6 +180,7 @@ class ExternalGrammar:
                     pos, rest = line[len(wcs):].split(div, 1)  # part of speech
                 except ValueError:
                     pos, rest = line[len(wcs):], ''
+                self.poses = set(re.sub(r'\(.*?\)', '', pos).split(' '))
                 pos = ''.join(map(self._link, re.split(r'([^a-zA-Z0-9_\'-])', pos)))
                 line = wcs + pos + div + rest
             output.append(line)
@@ -190,8 +191,18 @@ class ExternalGrammar:
             return pos
         with ignored(KeyError):
             link = self.replacements['languages'][self.language][pos]
-            language = urlform(self.language)
-            return '<a href="{0}/{1}/{2}">{3}</a>'.format(self.url, language, link, pos)
+            try:
+                notwith = link.get('not with', [])
+                link = link.get('link', '')
+            except AttributeError:
+                notwith = []
+            show = self.poses.isdisjoint(notwith)
+            show = '{0}' if show else '<span class="hidden">{0}</span>'
+            if link:
+                language = urlform(self.language)
+                href = '<a href="{0}/{1}/{2}">{3}</a>'
+                pos = href.format(self.url, language, link, pos)
+            return show.format(pos)
         return pos
 
     def remove_links(self, text):
@@ -212,6 +223,7 @@ class ExternalGrammar:
                 pos, rest = line[len(wcs):].split(div, 1)
             except ValueError:
                 pos, rest = line[len(wcs):], ''
+            pos = re.sub(r'<span class="hidden">(.*?)</span>', r'\1', pos)
             pos = re.sub(r'<a href=.*?>(.*?)</a>', r'\1', pos)
             return wcs + pos + div + rest
         else:
