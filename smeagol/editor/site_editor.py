@@ -193,6 +193,9 @@ class SiteEditor(Properties, Editor):
         self.fill_and_load()
         return 'break'
 
+    def list_out(self, entry):
+        return entry.list
+
     def previous_entry(self, event=None):
         try:
             entry = self.entry.predecessor
@@ -200,8 +203,10 @@ class SiteEditor(Properties, Editor):
             entry = self.entry.youngest_granddaughter
         except AttributeError:
             return 'break'
-        self.history += entry.list
-        self.fill_and_load()
+        entry = self.list_out(entry)
+        if entry is not None:
+            self.history += entry
+            self.fill_and_load()
         return 'break'
 
     def next_entry(self, event=None):
@@ -211,8 +216,10 @@ class SiteEditor(Properties, Editor):
             entry = self.entry.root
         except AttributeError:
             return 'break'
-        self.history += entry.list
-        self.fill_and_load()
+        entry = self.list_out(entry)
+        if entry is not None:
+            self.history += entry
+            self.fill_and_load()
         return 'break'
 
     def add_heading(self, event=None):
@@ -398,8 +405,14 @@ class SiteEditor(Properties, Editor):
 
     @async
     def save_search_page(self):
+        for template in (
+                ('searchtemplate.html', 'search.html'),
+                ('404template.html', '404.html')):
+            self._search(*template)
+
+    def _search(self, template, filename):
         try:
-            with open('searchtemplate.html') as template:
+            with open(template) as template:
                 page = template.read()
         except IOError:
             return
@@ -415,10 +428,10 @@ class SiteEditor(Properties, Editor):
             r'<li><a href="index.html">\1</a></li>',
             page
         )
-        dumps(page, 'search.html')
-        page = page.replace('search.js', '/404search.js')
-        page = re.sub(r'href="/*', 'href="/', page)
-        dumps(page, '404.html')
+        if filename.startswith('404'):
+            page = re.sub(r'href="/*', 'href="/', re.sub(
+                r'src="/*', 'src="/', page))
+        dumps(page, filename)
 
     @property
     def copyright(self):
@@ -455,8 +468,7 @@ class SiteEditor(Properties, Editor):
     def delete_page(self, event=None):
         template = 'Are you sure you wish to delete {0}?'
         message = template.format(self.entry.name)
-        ans = mb.askokcancel('Delete', message)
-        if ans:
+        if mb.askokcancel('Delete', message):
             self.entry.delete()
             self.page.pop()
             self.reset()
@@ -469,13 +481,13 @@ class SiteEditor(Properties, Editor):
             try:
                 self.entry.delete_html()
                 self.entry.name = new_name
+                self.entry.refresh_flatname()
             except AttributeError:
                 self.entry['name'] = new_name
             with ignored(IndexError):
                 self.page[-1] = new_name
-            self.fill_headings()
             self.update_titlebar()
-            self.update_tocs()
+            self.fill_headings()
 
     @staticmethod
     @async

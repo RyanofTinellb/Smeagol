@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from evolve import HighToColloquialLulani
+from evolve import HighToDemoticLulani
 import random
 import json
 import re
@@ -132,7 +132,7 @@ class DemoticLulani:
     def __init__(self):
         self.name = 'Demotic Lulani'
         self.lulani = HighLulani()
-        self.vulgar = HighToColloquialLulani()
+        self.vulgar = HighToDemoticLulani()
         self.rewrites = [
                 ('&rsquo;', u"\u2019"),
                 ('&middot;', u'\u00b7'),

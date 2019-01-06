@@ -73,7 +73,7 @@ def _buy(regex):
 
 
 def sellCaps(word):
-    return re.sub(r'([A-Z])', _sell, word.replace('&nbsp;', '.'))
+    return re.sub(r'([A-Z])', _sell, word.replace(' ', '.'))
 
 
 def _sell(regex):

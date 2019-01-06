@@ -1,4 +1,4 @@
-from smeagol.translation.evolve import HighToColloquialLulani
+from smeagol.translation.evolve import HighToDemoticLulani
 import json
 import re
 import os
@@ -42,7 +42,7 @@ class Verbs:
 
     @property
     def conjugation(self):
-        colloquial = HighToColloquialLulani()
+        demotic = HighToDemoticLulani()
         output = json.load(self.file)
         verbs = [entry['t'] for entry in output if 'verb' in entry['p'] and
             entry['l'] == 'High Lulani']
@@ -56,7 +56,7 @@ class Verbs:
             for aux in auxes:
                 y = verb
                 output += [verb + aux]
-        return unique([colloquial.evolve(x) for x in output])
+        return unique([demotic.evolve(x) for x in output])
 
 def lexi_sort(word):
     last_vowel = word[-1]
@@ -65,12 +65,12 @@ def lexi_sort(word):
     return hyphen, last_vowel, syll_number
 
 def lexicon(file):
-    return unique([HighToColloquialLulani().evolve(entry['t'].lower())
+    return unique([HighToDemoticLulani(debug=True).evolve(entry['t'].lower())
         for entry in json.load(file) if entry['l'] == 'High Lulani'])
 
 def sandhi_check():
     consonants = 'pbtdcjkgmnqlrfsxh'
-    return [HighToColloquialLulani().evolve(x) for y in [
+    return [HighToDemoticLulani().evolve(x) for y in [
         [string.format(a, b) for string in [
             '{0}a{1}a&rsquo;a', '&rsquo;a{0}a{1}a&rsquo;a', '&rsquo;a{0}{0}a{1}a']
         ]
@@ -86,9 +86,9 @@ option = raw_input('Choice: ')
 if option == '1':
     with open('wordlist.json') as f:
         wordlist = Verbs(f).conjugation
-    with open('colloquialverbs.json', 'w') as f:
+    with open('demoticverbs.json', 'w') as f:
         json.dump(wordlist, f, indent=2)
-    web.open('colloquialverbs.html')
+    web.open('demoticverbs.html')
 elif option == '2':
     wordlist = sandhi_check()
     with open('demoticlulani.json', 'w') as f:

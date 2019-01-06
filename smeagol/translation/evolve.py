@@ -66,7 +66,7 @@ class Evolver:
         return output
 
 
-class HighToColloquialLulani:
+class HighToDemoticLulani:
     def __init__(self, debug=False):
         self.rewrites = [
             ('&rsquo;', "'"),
@@ -74,15 +74,14 @@ class HighToColloquialLulani:
             ('&#x294;', "''"),
             ('&ouml;', 'O'),
             ('&uuml;', 'U'),
-            ('&ntilde;', 'N'),
-            ('l&#x330;', 'L'),
-            ('h&#x330;', 'H'),
             ('&#x17e;', 'Z'),
-            ('&#x1ee5;', '^'), # u with dot
-            ('&#x1ecd;', '('), # o with dot
-            ('&#x1ecb;', '*'), # i with dot
-            ('&uuml;&#x323;', '+'), # u with umlaut and dot
-            ('&ouml;&#x323;', ')'), # o with umlaut and dot
+            ('&agrave;', 'A'),
+            ('&igrave;', 'I'),
+            ('&ugrave;', '^'),
+            ('&ograve;', '('),
+            ('&egrave;', 'E'),
+            ('&#x20d;', ')'), # o with double grave
+            ('&#x215;', '*'), # u with double grave
             ('&#x2c8;', '1'),
             ('&#x2cc;', '2')]
         self.consonants = r'[pbvtdDcjkg\'mnqrlfsxhNLHy]'
@@ -137,18 +136,24 @@ class HighToColloquialLulani:
             (r'([pbvtdDcjkg\'mnqrlfsxhNLHyw])\1', r'\1'), # degemination
             (r'(?<!2)([aieouOU])\'2*([aieouOU])',
                     self.simplify_vowel_cluster),
-            (r'2([ae.iuoUO])', self.vowel_elision),
+            (r'2([ae.])', ''), # remove unstressed open vowels
+            # (r'2', ''), # remove stress marks
             (r'.*', self.simplify_consonant_cluster),
             (r'^[mnNq](?=[pbmftdDcjkgnqsxNLH])', 'm'),
             (r'^[lL](?=[pbmftdDcjkgnqsxNLH])', 'l'),
             (r'^((\w)\2)', r'\2'), # degeminate initials
             (r'[cj]([cj])', r'\1'), # degeminate affricates
-            (r'([aiueUoO^*()])2\1,*', r'\1'), # shorten long vowel
+            (r'([aiueUoO])2\1,*', r'\1'), # shorten long vowel
+            (r'([aiueUoO])([pbmfvtdDcjkgnqsxNLH]+2[aiueUoO][pbmfvtdDcjkgnqsxNLH]+[aiueUoO]*$)', self.stress_antepenult), # stress antepenultimate closed syllable when appropriate
+            (r'(2[aiueUoO][pbmfvtdDcjkgnqsxNLH]+)([aiueUoO])$', self.stress_antepenult), # re-write final semivowels
             (r'(?<=[^i])y$', 'i'), # re-write final semivowels
             (r'w$', 'u'),
             (r'U$', 'O'),
             ('dd', 'd.d'),
-            ('D', 'dd')
+            ('D', 'dd'),
+            ('L', 'll'),
+            ('N', 'nn'),
+            ('H', 'hh'),
             ]
         self.evolver = Evolver(replacements, debug)
         self.debug = debug
@@ -182,13 +187,6 @@ class HighToColloquialLulani:
         if (first + second).lower() in ('ui', 'oi'):
             return first + 'w2' + second
         return first
-
-    def vowel_elision(self, regex):
-        vowel = regex.group(1)
-        if vowel in 'ae.':
-            return ''
-        else:
-            return '2' + dict(i='*', u='^', U='+', o='(', O=')')[vowel]
 
     def fortify_vowel(self, regex):
         if regex.group(1) == 'i':
@@ -244,3 +242,11 @@ class HighToColloquialLulani:
             pattern, string = sandhi
             cluster = pattern.sub(string, cluster)
         return cluster
+
+    def stress_antepenult(self, regex):
+        vowels = dict(a='A', e='E', i='I', o='(', O=')',
+                                    u='^', U='*')
+        try:
+            return vowels[regex.group(1)]
+        except IndexError:
+            return vowels[regex.group(0)]

@@ -46,7 +46,7 @@ class Page(Node):
             super(Page, self).__setattr__(attr, value)
 
     def __str__(self):
-        return '['.join(self.text)
+        return '[' + '['.join(self.text)
 
     def update_date(self):
         self.find()['date'] = datetime.strftime(datetime.today(), '%Y-%m-%d')
@@ -168,6 +168,9 @@ class Page(Node):
     def __le__(self, other):
         return self == other or self < other
 
+    def sort(self):
+        self.children = [child.find() for child in sorted(self.daughters)]
+
     def publish(self, template=None):
         dumps(self.html(template), self.link)
 
@@ -288,7 +291,7 @@ class Page(Node):
     def links(self):
         return ('<label>\n'
                 '  <input type="checkbox" class="menu">\n'
-                '  <ul>\n  <li{0}>{1}</li>\n'
+                '  <ul>\n  <li{0}>{2}</li>\n'
                 '    <div class="javascript">\n'
                 '      <form id="search">\n'
                 '        <li class="search">\n'
@@ -297,11 +300,12 @@ class Page(Node):
                 '        </li>\n'
                 '      </form>\n'
                 '    </div>\n'
-                '   <div class="links">'
+                '   <div class="links{1}">'
                 '  {{0}}'
                 '   </div>'
                 '</ul></label>').format(
                     ' class="normal"' if self.is_root else '',
+                    '-root' if self.is_root else '',
                     self.hyperlink(self.root))
 
     @property
@@ -311,7 +315,7 @@ class Page(Node):
     @property
     def family_links(self):
         link_array = ''
-        level = 1
+        level = 0
         for relative in self.family:
             old_level = level
             level = relative.level
@@ -371,7 +375,7 @@ class Page(Node):
         else:
             suffix = ['st', 'nd', 'rd'][date.day % 10 - 1]
         span = '<span class="no-breaks">{0}</span>'
-        templates = (('&copy;%Y '
+        templates = (('&copy;2017-%Y '
                       '<a href="http://www.tinellb.com/about.html">'
                       'Ryan Eakins</a>.'),
                 'Last updated: %A, %B %#d' + suffix + ', %Y.')

@@ -66,6 +66,7 @@ class DictionaryEditor(SiteEditor):
 
     def _save_page(self):
         # override super()._save_page
+        self.entry = self.find_entry(self.heading_contents)
         super(DictionaryEditor, self)._save_page()
         self.serialise()
 
@@ -76,21 +77,31 @@ class DictionaryEditor(SiteEditor):
             site.publish()
         elif entry is not None:
             entry.update_date()
-            entry.parent.update_date()
             entry.publish(site.template)
+            entry.parent.sort()
+            entry.parent.update_date()
             entry.parent.publish(site.template)
         if site is not None:
             site.update_source()
             site.update_searchindex()
 
-    def update_tocs(self, new):
+    def update_tocs(self, new=False):
         # override super().update_tocs()
         if new:
+            self.entry.root.sort()
             super(DictionaryEditor, self).update_tocs()
 
     def remove_all_links(self, text):
         text = self.remove_links(text)
         return re.sub(r'<link>(?:\w\w:)*(.*?)</link>', r'\1', text)
+
+    def list_out(self, entry):
+        # overrides super().list_out()
+        lst = entry.list
+        if len(lst) == 2:
+            return lst[-1:]
+        else:
+            return None
 
     @async
     def serialise(self):
