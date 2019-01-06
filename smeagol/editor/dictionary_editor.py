@@ -95,6 +95,14 @@ class DictionaryEditor(SiteEditor):
         text = self.remove_links(text)
         return re.sub(r'<link>(?:\w\w:)*(.*?)</link>', r'\1', text)
 
+    def list_out(self, entry):
+        # overrides super().list_out()
+        lst = entry.list
+        if len(lst) == 2:
+            return lst[-1:]
+        else:
+            return None
+
     @async
     def serialise(self):
         output = []

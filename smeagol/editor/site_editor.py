@@ -193,6 +193,9 @@ class SiteEditor(Properties, Editor):
         self.fill_and_load()
         return 'break'
 
+    def list_out(self, entry):
+        return entry.list
+
     def previous_entry(self, event=None):
         try:
             entry = self.entry.predecessor
@@ -200,8 +203,10 @@ class SiteEditor(Properties, Editor):
             entry = self.entry.youngest_granddaughter
         except AttributeError:
             return 'break'
-        self.history += entry.list
-        self.fill_and_load()
+        entry = self.list_out(entry)
+        if entry is not None:
+            self.history += entry
+            self.fill_and_load()
         return 'break'
 
     def next_entry(self, event=None):
@@ -211,8 +216,10 @@ class SiteEditor(Properties, Editor):
             entry = self.entry.root
         except AttributeError:
             return 'break'
-        self.history += entry.list
-        self.fill_and_load()
+        entry = self.list_out(entry)
+        if entry is not None:
+            self.history += entry
+            self.fill_and_load()
         return 'break'
 
     def add_heading(self, event=None):
