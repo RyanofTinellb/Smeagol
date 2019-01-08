@@ -18,6 +18,13 @@ class Markdown:
             for line in default.markdown.splitlines():
                 self.append_markdown(line)
 
+    def __str__(self):
+        try:
+            with open(self.filename) as markdown:
+                return markdown.read()
+        except IOError:
+            return ''
+
     def append_markdown(self, line):
         line = line.replace(r'\n', '\n')
         line = line.split(' | ')
@@ -62,7 +69,10 @@ class Markdown:
         except ValueError:
             return ''
 
-    def refresh(self):
+    def refresh(self, new_markdown=''):
+        if new_markdown and self.filename:
+            with open(self.filename, 'w') as markdown:
+                markdown.write(new_markdown)
         self.markup, self.markdown = [], []
         self.source = None
         self.destination = None

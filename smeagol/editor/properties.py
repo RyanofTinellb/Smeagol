@@ -35,7 +35,7 @@ class Properties(object):
 
     def __getattr__(self, attr):
         if attr in {'files', 'source', 'destination', 'template',
-                'template_file', 'name', 'searchindex'}:
+                'template_file', 'refresh_template', 'name', 'searchindex'}:
             return getattr(self.site, attr)
         elif attr in {'language', 'fontsize'}:
             return self.configuration['current'][attr]

@@ -27,6 +27,13 @@ class Site(object):
             template = ''
         self.template = template
 
+    def refresh_template(self, new_template):
+        if new_template and self.template_file:
+            with ignored(IOError):
+                with open(self.template_file, 'w') as template:
+                    template.write(new_template)
+        self.template = new_template
+
     def load_site(self):
         if self.source:
             with open(self.source) as source:

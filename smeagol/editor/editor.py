@@ -10,8 +10,10 @@ from smeagol.utils import ignored, tkinter
 
 
 class Editor(Tk.Frame, object):
-    def __init__(self, master=None):
+    def __init__(self, master=None, parent=None):
         super(Editor, self).__init__(master)
+        self.parent = parent
+        self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.set_frames()
         self.row = 0
         self.font = tkFont.Font(family='Calibri', size=18)
@@ -331,7 +333,6 @@ class Editor(Tk.Frame, object):
     @tkinter()
     def cut_text(self, event=None):
         textbox = event.widget
-        print self.copy_text(event)
         textbox.delete(*self.copy_text(event))
 
     @tkinter()
@@ -513,25 +514,49 @@ class Editor(Tk.Frame, object):
         text = self.markdown(text)
         self.replace(self.textbox, text)
 
-    def markdown_refresh(self, event=None):
+    def markdown_refresh(self, event=None, new_markdown=''):
         try:
-            self._markdown_refresh()
+            self._markdown_refresh(new_markdown)
             self.information.set('OK')
         except AttributeError:
             self.information.set('Not OK')
         return 'break'
 
     @tkinter()
-    def _markdown_refresh(self):
+    def _markdown_refresh(self, new_markdown):
         text = self.get_text(self.textbox)
         text = self.markup(text)
-        self.marker.refresh()
+        self.marker.refresh(new_markdown)
         text = self.markdown(text)
         self.replace(self.textbox, text)
+
+    def markdown_edit(self, event=None):
+        text = self.edit_file(text=str(self.marker))
+        self.markdown_refresh(new_markdown=text)
+
+    def edit_file(self, text=''):
+        # editor returns a value in self._return
+        self.show_file(text)
+        return self._return
+
+    def show_file(self, text=''):
+        top = Tk.Toplevel()
+        editor = Editor(master=top, parent=self)
+        editor.textbox.insert(Tk.INSERT, text)
+        self.master.withdraw()
+        self.wait_window(top)
+        self.show_window()
+
+    def show_window(self):
+        self.master.update()
+        self.master.deiconify()
+        self.top.state('zoomed')
+        self.add_commands('Text', self.textbox_commands)
 
     @property
     def menu_commands(self):
         return [('Markdown', [
+                 ('Edit', self.markdown_edit),
                  ('Load', self.markdown_load),
                  ('Refresh', self.markdown_refresh),
                  ('Change to _Tkinter', self.html_to_tkinter),
@@ -563,6 +588,11 @@ class Editor(Tk.Frame, object):
             ('<Control-BackSpace>', self.backspace_word),
             ('<Control-Delete>', self.delete_word),
             (('<Control-Up>', '<Control-Down>'), self.move_line)]
+
+    def quit(self):
+        # with ignored(AttributeError):
+        self.parent._return = self.textbox.get('1.0', Tk.END)
+        self.master.destroy()
 
 if __name__ == '__main__':
     Editor().mainloop()

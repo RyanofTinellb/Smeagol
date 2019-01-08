@@ -10,7 +10,6 @@ from itertools import izip, izip_longest
 from socket import error as socket_error
 from editor import Editor
 from properties import Properties
-from text_window import TextWindow
 from properties_window import PropertiesWindow
 from smeagol.utils import *
 from smeagol.defaults import default
@@ -309,12 +308,10 @@ class SiteEditor(Properties, Editor):
 
     def list_pages(self, event=None):
         def text_thing(page):
-            return ' ' * 2 * page.level + page.name
+            return ' ' * 10 * page.level + page.name
         text = '\n'.join(map(text_thing, self.site))
         text = self.markdown(text)
-        textwindow = TextWindow(text)
-        self.wait_window(textwindow)
-        return 'break'
+        self.show_file(text)
 
     def prepare_entry(self, entry):
         try:
@@ -541,6 +538,18 @@ class SiteEditor(Properties, Editor):
                              Tk.INSERT + ' lineend +1c')
         return 'break'
 
+    def edit_script(self, event=None):
+        try:
+            text = self.entry.script
+            self.entry.script = self.edit_file(text)
+        except AttributeError:
+            text = self.entry.get('script', 'Enter new JavaScript here')
+            self.entry['script'] = self.edit_file(text)
+
+    def edit_template(self, event=None):
+        text = self.edit_file(text=self.template)
+        self.refresh_template(new_template=text)
+
     def quit(self):
         self.master.destroy()
         self.save_wholepage()
@@ -587,7 +596,9 @@ class SiteEditor(Properties, Editor):
                 ('Publish All', self.site_publish)]),
                 ('Page', [('Rename', self.rename_page),
                 ('Delete', self.delete_page),
-                ('Open in _Browser', self.open_in_browser)])
+                ('Open in _Browser', self.open_in_browser)]),
+                ('Edit', [('Script', self.edit_script),
+                ('Template', self.edit_template)])
             ] + super(SiteEditor, self).menu_commands
 
 
