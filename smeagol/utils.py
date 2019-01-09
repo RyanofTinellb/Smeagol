@@ -88,11 +88,13 @@ def change_text(item, replacement, text):
 def remove_text(item, text):
     return change_text(item, '', text)
 
+own_markdown = Markdown()
+
 def un_url(text, markdown=None):
     try:
         markup = markdown.to_markup
     except AttributeError:
-        markup = Markdown().to_markup
+        markup = own_markdown.to_markup
     text = text.replace(' ', '.')
     return sellCaps(markup(text))
 
@@ -100,7 +102,7 @@ def urlform(text, markdown=None):
     try:
         markdown = markdown.to_markdown
     except AttributeError:
-        markdown = Markdown().to_markdown
+        markdown = own_markdown.to_markdown
     name = [text.lower()]
     safe_punctuation = '\'_+!(),'
     # remove safe punctuations that should only be used to encode non-ascii characters

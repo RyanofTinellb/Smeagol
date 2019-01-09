@@ -7,13 +7,14 @@ from smeagol.translation import *
 from smeagol.utils import *
 from smeagol.defaults import default
 
+markdown = Markdown()
 
 class Page(Node):
     def __init__(self, tree, location):
         super(Page, self).__init__(tree, location)
 
     def __getattr__(self, attr):
-        if attr in {'name', 'script'}:
+        if attr in {'name', 'script', 'old'}:
             return self.find().get(attr, '')
         elif attr  in {'text'}:
             return self.find().get(attr, [])
@@ -40,7 +41,7 @@ class Page(Node):
             with ignored(AttributeError):
                 value = filter(None, value.split('['))
             self.find()['text'] = value
-        elif attr in {'name', 'position'}:
+        elif attr in {'name', 'position', 'old'}:
             self.find()[attr] = value
         else:
             super(Page, self).__setattr__(attr, value)
@@ -95,7 +96,7 @@ class Page(Node):
         remove_text(r'\n+(?=\n)|\[.*?\]', content)
         content = buyCaps(content[0])
         lines = content.splitlines()
-        content = [Markdown().to_markdown(content).lower()]
+        content = [markdown.to_markdown(content).lower()]
         change_text(r'&.*?;', ' ', content)
         # change punctuation, and tags in square brackets, into spaces
         change_text(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|\d', ' ', content)
@@ -174,7 +175,10 @@ class Page(Node):
         self.children = [child.find() for child in sorted(self.daughters)]
 
     def publish(self, template=None):
-        dumps(self.html(template), self.link)
+        text = self.html(template)
+        if self.old <> text:
+            dumps(text, self.link)
+            self.old = text
 
     @property
     def list(self):
