@@ -81,9 +81,7 @@ class Editor(Tk.Frame, object):
         font = self.font
         self.textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
                                 undo=True, font=font)
-        self.add_commands('Text', self.textbox_commands)
-        for command in ('<KeyPress>', '<Button-1>'):
-            self.textbox.bind(command, self.edit_text_changed)
+        self.add_commands(self.textbox, self.textbox_commands)
         self.ready_scrollbar()
         for (name, style) in self.text_styles:
             self.textbox.tag_config(name, **style)
@@ -100,13 +98,19 @@ class Editor(Tk.Frame, object):
         scrollbar.config(command=self.textbox.yview)
         self.textbox.config(yscrollcommand=scrollbar.set)
 
-    def add_commands(self, tkclass, commands):
+    def add_commands(self, tkobj, commands):
         for (keys, command) in commands:
             if isinstance(keys, basestring):
-                self.bind_class(tkclass, keys, command)
+                try:
+                    tkobj.bind(keys, command)
+                except AttributeError:
+                    self.bind_class(tkobj, keys, command)
             else:
                 for key in keys:
-                    self.bind_class(tkclass, key, command)
+                    try:
+                        tkobj.bind(key, command)
+                    except AttributeError:
+                        self.bind_class(tkobj, key, command)
 
     @property
     def text_styles(self):
@@ -551,7 +555,6 @@ class Editor(Tk.Frame, object):
         self.master.update()
         self.master.deiconify()
         self.top.state('zoomed')
-        self.add_commands('Text', self.textbox_commands)
 
     @property
     def menu_commands(self):
@@ -568,6 +571,7 @@ class Editor(Tk.Frame, object):
         return [
             ('<MouseWheel>', self.scroll_textbox),
             ('<Control-MouseWheel>', self.change_fontsize),
+            (('<KeyPress>', '<Button-1>'), self.edit_text_changed),
             ('<Control-0>', self.reset_fontsize),
             ('<Control-a>', self.select_all),
             ('<Control-b>', self.bold),
