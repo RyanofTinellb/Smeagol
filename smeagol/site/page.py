@@ -13,7 +13,7 @@ class Page(Node):
         super(Page, self).__init__(tree, location)
 
     def __getattr__(self, attr):
-        if attr in {'name'}:
+        if attr in {'name', 'script'}:
             return self.find().get(attr, '')
         elif attr  in {'text'}:
             return self.find().get(attr, [])
@@ -55,8 +55,10 @@ class Page(Node):
         self.find()['flatname'] = self._flatname
 
     def remove_flatname(self):
-        with ignored(KeyError):
-            self.find().pop('flatname')
+        self.find().pop('flatname', None)
+
+    def remove_script(self):
+        self.find().pop('script', None)
 
     @property
     def link(self):
@@ -383,6 +385,13 @@ class Page(Node):
                             for template in templates])
         return copyright.format(spans)
 
+    @property
+    def scripts(self):
+        if self.script:
+            return '<script>\n{0}\n</script>'.format(self.script)
+        else:
+            return ''
+
     def html(self, template=None):
         page = template or default.template
         for (section, function) in [
@@ -397,7 +406,8 @@ class Page(Node):
             ('{nav-footer}', 'nav_footer'),
             ('{copyright}', 'copyright'),
             ('{story-title}', 'story_title'),
-            ('{category-title}', 'category_title')
+            ('{category-title}', 'category_title'),
+            ('{scripts}', 'scripts')
         ]:
             if page.count(section):
                 try:

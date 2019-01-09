@@ -540,11 +540,18 @@ class SiteEditor(Properties, Editor):
 
     def edit_script(self, event=None):
         try:
-            text = self.entry.script
-            self.entry.script = self.edit_file(text)
+            script = self.edit_file(self.entry.script)
+            if script:
+                self.entry.script = script
+            else:
+                self.entry.remove_script()
         except AttributeError:
             text = self.entry.get('script', 'Enter new JavaScript here')
-            self.entry['script'] = self.edit_file(text)
+            script = self.edit_file(text)
+            if script:
+                self.entry['script'] = self.edit_file(text)
+            else:
+                self.entry.pop('script', None)
 
     def edit_template(self, event=None):
         text = self.edit_file(text=self.template)
