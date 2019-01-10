@@ -12,6 +12,7 @@ from smeagol.utils import ignored, tkinter
 class Editor(Tk.Frame, object):
     def __init__(self, master=None, parent=None):
         super(Editor, self).__init__(master)
+        self.master.withdraw()
         self.parent = parent
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.set_frames()
@@ -363,6 +364,10 @@ class Editor(Tk.Frame, object):
         self.change_style(event, 'link')
         return 'break'
 
+    def insert_tabs(self, event=None):
+        self.textbox.insert(Tk.INSERT, ' ' * 4)
+        return 'break'
+
     def change_style(self, event, style):
         textbox = event.widget
         if style in textbox.tag_names(Tk.INSERT):
@@ -483,7 +488,7 @@ class Editor(Tk.Frame, object):
                     break
         self.reset_textbox()
 
-    def tkinter_to_html(self):
+    def tkinter_to_html(self, event=None):
         textbox = self.textbox
         for (style, _) in self.text_styles:
             for end, start in izip(*[reversed(textbox.tag_ranges(style))] * 2):
@@ -547,14 +552,12 @@ class Editor(Tk.Frame, object):
         top = Tk.Toplevel()
         editor = Editor(master=top, parent=self)
         editor.textbox.insert(Tk.INSERT, text)
-        self.master.withdraw()
         self.wait_window(top)
-        self.show_window()
 
     def show_window(self):
+        self.top.state('zoomed')
         self.master.update()
         self.master.deiconify()
-        self.top.state('zoomed')
 
     @property
     def menu_commands(self):
@@ -572,6 +575,7 @@ class Editor(Tk.Frame, object):
             ('<MouseWheel>', self.scroll_textbox),
             ('<Control-MouseWheel>', self.change_fontsize),
             (('<KeyPress>', '<Button-1>'), self.edit_text_changed),
+            ('<Tab>', self.insert_tabs),
             ('<Control-0>', self.reset_fontsize),
             ('<Control-a>', self.select_all),
             ('<Control-b>', self.bold),
@@ -585,6 +589,7 @@ class Editor(Tk.Frame, object):
             ('<Control-m>', self.markdown_refresh),
             ('<Control-n>', self.add_link),
             ('<Control-r>', self.refresh_random),
+            ('<Control-s>', self.tkinter_to_html),
             ('<Control-t>', self.add_translation),
             ('<Control-v>', self.paste_text),
             ('<Control-w>', self.select_word),
@@ -595,6 +600,8 @@ class Editor(Tk.Frame, object):
 
     def quit(self):
         # with ignored(AttributeError):
+        self.tkinter_to_html()
+        self.parent.show_window()
         self.parent._return = self.textbox.get('1.0', Tk.END)
         self.master.destroy()
 

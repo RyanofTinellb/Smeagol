@@ -252,7 +252,7 @@ class SiteEditor(Properties, Editor):
 
     @async
     def site_publish(self, event=None):
-        self.information.set(self.site.publish())
+        self.site.publish()
 
     @async
     def start_server(self, port):
@@ -556,6 +556,34 @@ class SiteEditor(Properties, Editor):
     def edit_template(self, event=None):
         text = self.edit_file(text=self.template)
         self.refresh_template(new_template=text)
+        message = 'Do you wish to apply this template to all pages?'
+        if mb.askyesno('Delete', message):
+            self.site_publish()
+
+    def edit_linkadder(self, adder):
+        linkadder = self.linkadder
+        text = self.edit_file(text=linkadder.string(adder))
+        linkadder.refresh(text=text, adder=adder)
+        message = 'Do you wish to apply these changes to all pages?'
+        if mb.askyesno('Delete', message):
+            self.update_pages()
+
+    @async
+    def update_pages(self):
+        for entry in self.site:
+            old = str(entry)
+            text = self.linkadder.remove_links(old)
+            text = self.linkadder.add_links(text, entry)
+            if old <> text:
+                entry.text = text
+                entry.publish(self.site.template)
+        self.site.update_source()
+
+    def edit_external_grammar(self):
+        self.edit_linkadder('ExternalGrammar')
+
+    def edit_glossary(self):
+        self.edit_linkadder('Glossary')
 
     def quit(self):
         self.master.destroy()
@@ -605,7 +633,9 @@ class SiteEditor(Properties, Editor):
                 ('Delete', self.delete_page),
                 ('Open in _Browser', self.open_in_browser)]),
                 ('Edit', [('Script', self.edit_script),
-                ('Template', self.edit_template)])
+                ('Template', self.edit_template),
+                ('Edit _External Grammar Links', self.edit_external_grammar),
+                ('Edit _Glossary', self.edit_glossary)])
             ] + super(SiteEditor, self).menu_commands
 
 

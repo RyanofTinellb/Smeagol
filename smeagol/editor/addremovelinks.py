@@ -42,19 +42,36 @@ class AddRemoveLinks:
             text = link_adder.remove_links(text)
         return text
 
+    def string(self, adder):
+        return str(self.link_adders[adder])
+
+    def refresh(self, text, adder):
+        self.link_adders[adder].refresh(text)
+
 
 class Glossary:
     def __init__(self, filename):
         self.adder = {'Glossary': filename}
         try:
             with open(filename) as glossary:
-                self.glossary = json.load(glossary)
+                self._file = glossary.read()
+            self.glossary = json.loads(self._file)
         except IOError:
             self.glossary = {}
         self.tooltip = ('<span class="tooltip">'
                         '<small-caps>{0}</small-caps>'
                         '<span class="tooltip-text">{1}</span>'
                         '</span>')
+        self.filename = filename
+
+    def __str__(self):
+        return self._file
+
+    def refresh(self, new_file=''):
+        self._file = new_file
+        with open(self.filename, 'w') as f:
+            f.write(new_file)
+        self.glossary = json.loads(new_file)
 
     def add_links(self, text, entry):
         for abbrev, full_form in self.glossary.iteritems():
@@ -159,9 +176,20 @@ class ExternalGrammar:
     def __init__(self, filename):
         self.adder = {'ExternalGrammar': filename}
         with open(filename) as replacements:
-            self.replacements = json.load(replacements)
+            self._file = replacements.read()
+        self.replacements = json.loads(self._file)
         self.url = self.replacements['url']
         self.language = None
+        self.filename = filename
+
+    def __str__(self):
+        return self._file
+
+    def refresh(self, new_file=''):
+        self._file = new_file
+        with open(self.filename, 'w') as f:
+            f.write(new_file)
+        self.replacements = json.loads(new_file)
 
     def add_links(self, text, entry):
         """

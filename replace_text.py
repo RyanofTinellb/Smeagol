@@ -1,15 +1,17 @@
-from sites import Dictionary
+from sites import Grammar
 from smeagol.editor.addremovelinks import AddRemoveLinks
 from smeagol.translation.markdown import Markdown
 
-d = Dictionary()
-i = AddRemoveLinks(dict(ExternalGrammar="c:/users/ryan/documents/tinellbianlanguages/dictionary/links.glk"))
-m = Markdown('c:/users/ryan/documents/tinellbianlanguages/dictionary/dictionary.mkd')
+d = Grammar()
+i = AddRemoveLinks(dict(
+    Glossary="C:/Users/Ryan/Documents/TinellbianLanguages/grammar/glossary.gls",
+    ExternalDictionary="http://dictionary.tinellb.com"
+))
+m = Markdown('c:/users/ryan/documents/tinellbianlanguages/grammar/grammar.mkd')
 for entry in d:
     old = str(entry)
     text = i.remove_links(old)
     text = m.to_markdown(text)
-    text = text.replace('List of Elements', '*elements*')
     text = m.to_markup(text)
     text = i.add_links(text, entry)
     if old <> text:
