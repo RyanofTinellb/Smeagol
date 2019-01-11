@@ -371,23 +371,16 @@ class Page(Node):
         links = '\n'.join([div.format(f) for f in (previous, next)])
         return footer.format(links)
 
-    @property
-    def copyright(self):
+    def copyright(self, regexp):
         strftime = datetime.strftime
-        copyright = '<div class="copyright">{0}</div>'
         date = self.date
+        template = regexp.group(1)
         if 4 <= date.day <= 20 or 24 <= date.day <= 30:
             suffix = 'th'
         else:
             suffix = ['st', 'nd', 'rd'][date.day % 10 - 1]
-        span = '<span class="no-breaks">{0}</span>'
-        templates = (('&copy;2017-%Y '
-                      '<a href="http://www.tinellb.com/about.html">'
-                      'Ryan Eakins</a>.'),
-                'Last updated: %A, %B %#d' + suffix + ', %Y.')
-        spans = '\n'.join([span.format(strftime(date, template))
-                            for template in templates])
-        return copyright.format(spans)
+        template = template.replace('%t', suffix)
+        return strftime(date, template)
 
     @property
     def scripts(self):
@@ -408,7 +401,6 @@ class Page(Node):
             ('{family-links}', 'family_links'),
             ('{elder-links}', 'elder_links'),
             ('{nav-footer}', 'nav_footer'),
-            ('{copyright}', 'copyright'),
             ('{story-title}', 'story_title'),
             ('{category-title}', 'category_title'),
             ('{scripts}', 'scripts')
@@ -418,6 +410,13 @@ class Page(Node):
                     page = page.replace(section, getattr(self, function))
                 except TypeError:
                     raise TypeError(section, function)
+        for (section, function) in [
+            (r'{copyright: (.*?)}', 'copyright')
+        ]:
+            try:
+                page = re.sub(section, getattr(self, function), page)
+            except TypeError:
+                raise TypeError(section, function)
         return page
 
     def delete_html(self):

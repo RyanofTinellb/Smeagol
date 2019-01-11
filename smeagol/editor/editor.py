@@ -339,6 +339,7 @@ class Editor(Tk.Frame, object):
     def cut_text(self, event=None):
         textbox = event.widget
         textbox.delete(*self.copy_text(event))
+        return 'break'
 
     @tkinter()
     def paste_text(self, event=None):
@@ -347,6 +348,7 @@ class Editor(Tk.Frame, object):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             textbox.delete(*borders)
         textbox.insert(Tk.INSERT, self.clipboard_get())
+        return 'break'
 
     def bold(self, event):
         self.change_style(event, 'strong')
@@ -552,6 +554,7 @@ class Editor(Tk.Frame, object):
         top = Tk.Toplevel()
         editor = Editor(master=top, parent=self)
         editor.textbox.insert(Tk.INSERT, text)
+        self.master.withdraw()
         self.wait_window(top)
 
     def show_window(self):
