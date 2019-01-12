@@ -533,12 +533,19 @@ class Editor(Tk.Frame, object):
             self.information.set('Not OK')
         return 'break'
 
+
     @tkinter()
     def _markdown_refresh(self, new_markdown):
         text = self.get_text(self.textbox)
         text = self.markup(text)
         self.marker.refresh(new_markdown)
         text = self.markdown(text)
+        self.replace(self.textbox, text)
+
+    @tkinter()    
+    def markdown_clear(self, event=None):
+        text = self.get_text(self.textbox)
+        text = self.markup(text)
         self.replace(self.textbox, text)
 
     def markdown_edit(self, event=None):
@@ -566,6 +573,7 @@ class Editor(Tk.Frame, object):
     def menu_commands(self):
         return [('Markdown', [
                  ('Edit', self.markdown_edit),
+                 ('Clear', self.markdown_clear),
                  ('Load', self.markdown_load),
                  ('Refresh', self.markdown_refresh),
                  ('Change to _Tkinter', self.html_to_tkinter),

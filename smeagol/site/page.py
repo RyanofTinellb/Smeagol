@@ -263,15 +263,16 @@ class Page(Node):
         contents = '<div class="main-contents">{0}</div>'
         return contents.format(html(self.text))
 
-    @property
-    def stylesheet_and_icon(self):
-        destinations = ['basic_style.css', 'style.css', 'favicon.png']
-        hyperlinks = [self.hyperlink(destination, anchors=False)
-                        for destination in destinations]
-        return ('<link rel="stylesheet" type="text/css" href="{0}">\n'
-                '<link rel="stylesheet" type="text/css" href="{1}">\n'
-                '<link rel="icon" type="image/png" href="{2}">\n'
-                ).format(*hyperlinks)
+    def stylesheets(self, sheets):
+        links = sheets.split(' ')
+        links = [self.hyperlink(link, anchors=False) for link in links]
+        template = '<link rel="stylesheet" type="text/css" href={0}>\n'
+        return ''.join([template.format(link) for link in links])
+
+    def icon(self, icon):
+        icon = self.hyperlink(icon, anchors=False)
+        template = '<link rel="icon" type="image/png" href="{0}">\n'
+        return template.format(icon)
 
     @property
     def search_script(self):
@@ -371,16 +372,22 @@ class Page(Node):
         links = '\n'.join([div.format(f) for f in (previous, next)])
         return footer.format(links)
 
-    def copyright(self, regexp):
+    def copyright(self, template):
         strftime = datetime.strftime
         date = self.date
-        template = regexp.group(1)
         if 4 <= date.day <= 20 or 24 <= date.day <= 30:
             suffix = 'th'
         else:
-            suffix = ['st', 'nd', 'rd'][date.day % 10 - 1]
+            suffix = ('th', 'st', 'nd', 'rd')[date.day % 10]
         template = template.replace('%t', suffix)
         return strftime(date, template)
+
+    def section_replace(self, regex):
+        regex = [regex.group(i+1) for i in xrange(2)]
+        if regex[0] in {'copyright', 'stylesheets', 'icon'}:
+            return getattr(self, regex[0])(regex[1])
+        else:
+            return getattr(self, '{1}_{0}'.format(*regex))
 
     @property
     def scripts(self):
@@ -392,17 +399,12 @@ class Page(Node):
     def html(self, template=None):
         page = template or default.template
         for (section, function) in [
-            ('{title}', 'title'),
-            ('{stylesheet}', 'stylesheet_and_icon'),
             ('{search-script}', 'search_script'),
             ('{title-heading}', 'title_heading'),
             ('{main-contents}', 'main_contents'),
             ('{toc}', 'toc'),
-            ('{family-links}', 'family_links'),
-            ('{elder-links}', 'elder_links'),
             ('{nav-footer}', 'nav_footer'),
-            ('{story-title}', 'story_title'),
-            ('{category-title}', 'category_title'),
+            ('{title}', 'title'),
             ('{scripts}', 'scripts')
         ]:
             if page.count(section):
@@ -410,13 +412,10 @@ class Page(Node):
                     page = page.replace(section, getattr(self, function))
                 except TypeError:
                     raise TypeError(section, function)
-        for (section, function) in [
-            (r'{copyright: (.*?)}', 'copyright')
-        ]:
-            try:
-                page = re.sub(section, getattr(self, function), page)
-            except TypeError:
-                raise TypeError(section, function)
+        try:
+            page = re.sub(r'{(.*?): (.*?)}', self.section_replace, page)
+        except TypeError:
+            raise TypeError(section, function)
         return page
 
     def delete_html(self):

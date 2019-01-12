@@ -196,21 +196,17 @@ class ExternalGrammar:
         '<a href="http://grammar.tinellb.com/highlulani/
                                             morphology/nouns">noun</a>'
         """
-        div = ' <div class="definition">'
         lang = '1]'  # language marker
-        wcs = '3]'  # word classes marker
+        wcs = '2]'  # word classes marker
         output = []
         for line in text.split('['):
             if line.startswith(lang):
                 self.language = line[len(lang):-1]
             elif line.startswith(wcs):
-                try:
-                    pos, rest = line[len(wcs):].split(div, 1)  # part of speech
-                except ValueError:
-                    pos, rest = line[len(wcs):], ''
+                pos = line[len(wcs):-1]
                 self.poses = set(re.sub(r'\(.*?\)', '', pos).split(' '))
                 pos = ''.join(map(self._link, re.split(r'([^a-zA-Z0-9_\'-])', pos)))
-                line = wcs + pos + div + rest
+                line = wcs + pos + '\n'
             output.append(line)
         return '['.join(output)
 
@@ -244,15 +240,11 @@ class ExternalGrammar:
         return '['.join(map(self._unlink, text.split('[')))
 
     def _unlink(self, line):
-        div = ' <div class="definition">'
-        wcs = '3]'
+        wcs = '2]'
         if line.startswith(wcs):
-            try:
-                pos, rest = line[len(wcs):].split(div, 1)
-            except ValueError:
-                pos, rest = line[len(wcs):], ''
+            pos = line[len(wcs):-1]
             pos = re.sub(r'<span class="hidden">(.*?)</span>', r'\1', pos)
             pos = re.sub(r'<a href=.*?>(.*?)</a>', r'\1', pos)
-            return wcs + pos + div + rest
+            return wcs + pos + '\n'
         else:
             return line

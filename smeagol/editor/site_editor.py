@@ -377,10 +377,10 @@ class SiteEditor(Properties, Editor):
         self.errors = 0
         self.errorstring = ''
         k = '\n'.join(map(self._save_wholepage, g))
-        page = template.replace('{toc}', g[0].family_links).replace(
+        page = re.sub('{(.*?): (.*?)}', g[0].section_replace,
+            template.replace('{toc}', g[0].family_links).replace(
             '{main-contents}', k).replace(
-            '{stylesheet}', g[0].stylesheet_and_icon).replace(
-            '{copyright}', self.copyright)
+            '{copyright}', self.copyright))
         information = '{3}{0} error{2}\n{1}'.format(
                 self.errors,
                 '-' * 10,
@@ -413,13 +413,8 @@ class SiteEditor(Properties, Editor):
                 page = template.read()
         except IOError:
             return
-        replacements = (
-            ('{stylesheet}', 'stylesheet_and_icon'),
-            ('{family-links}', 'family_links'),
-            ('{elder-links}', 'elder_links'),
-        )
-        for (text, function) in replacements:
-            page = page.replace(text, getattr(self.site.root, function))
+        g = self.site.root
+        page = re.sub('{(.*?): (.*?)}', g.section_replace, page)
         page = re.sub(
             r'<li class="normal">(.*?)</li>',
             r'<li><a href="index.html">\1</a></li>',
@@ -559,6 +554,7 @@ class SiteEditor(Properties, Editor):
         message = 'Do you wish to apply this template to all pages?'
         if mb.askyesno('Delete', message):
             self.site_publish()
+        self.textbox.focus_set()
 
     def edit_linkadder(self, adder):
         linkadder = self.linkadder
@@ -567,6 +563,7 @@ class SiteEditor(Properties, Editor):
         message = 'Do you wish to apply these changes to all pages?'
         if mb.askyesno('Delete', message):
             self.update_pages()
+        self.textbox.focus_set()
 
     @async
     def update_pages(self):
