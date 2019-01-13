@@ -123,7 +123,6 @@ class DictionaryEditor(SiteEditor):
         filename = ('c:/users/ryan/documents/tinellbianlanguages'
                         '/dictionary/wordlist.json')
         dump(output, filename)
-        print 'Done!'
 
     def _pos(self, line):
         line = re.sub(r'2](.*?)\n+', r'\1', line)

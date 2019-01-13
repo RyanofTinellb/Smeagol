@@ -266,7 +266,7 @@ class Page(Node):
     def stylesheets(self, sheets):
         links = sheets.split(' ')
         links = [self.hyperlink(link, anchors=False) for link in links]
-        template = '<link rel="stylesheet" type="text/css" href={0}>\n'
+        template = '<link rel="stylesheet" type="text/css" href="{0}">\n'
         return ''.join([template.format(link) for link in links])
 
     def icon(self, icon):

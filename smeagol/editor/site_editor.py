@@ -394,7 +394,7 @@ class SiteEditor(Properties, Editor):
 
     def _save_wholepage(self, page):
         try:
-            return page.main_contents
+            return page.title_heading + page.main_contents + '<p></p>'
         except ZeroDivisionError:
             self.errorstring += 'Error in ' + page.folder + '/' + page.name + '\n'
             self.errors += 1
