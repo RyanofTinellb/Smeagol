@@ -326,8 +326,12 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(widget=self.textbox)
         self.html_to_tkinter()
 
-    @tkinter()
     def copy_text(self, event=None):
+        self._copy(event)
+        return 'break'
+
+    @tkinter()
+    def _copy(self, event=None):
         textbox = event.widget
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
@@ -338,7 +342,7 @@ class Editor(Tk.Frame, object):
     @tkinter()
     def cut_text(self, event=None):
         textbox = event.widget
-        textbox.delete(*self.copy_text(event))
+        textbox.delete(*self._copy(event))
         return 'break'
 
     @tkinter()
@@ -542,7 +546,7 @@ class Editor(Tk.Frame, object):
         text = self.markdown(text)
         self.replace(self.textbox, text)
 
-    @tkinter()    
+    @tkinter()
     def markdown_clear(self, event=None):
         text = self.get_text(self.textbox)
         text = self.markup(text)

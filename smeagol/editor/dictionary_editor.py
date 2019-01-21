@@ -142,9 +142,12 @@ class DictionaryEditor(SiteEditor):
         code = tr.code[:2]
         output = [
             '[1]{0}'.format(tr.safename),
-            tr.convert_word(name),
+            '[d native-script]',
+            '{0}[/d]'.format(tr.convert_word(name)),
             '[p {0}]//[/p]'.format(code),
-            '[2] {{ }}'
+            '[2]',
+            '[d definition]',
+            '[/d]'
         ]
         if code == 'en':
             output.pop(1)
