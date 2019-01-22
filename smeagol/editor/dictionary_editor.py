@@ -19,6 +19,7 @@ class DictionaryEditor(SiteEditor):
         self.save_page()
         self.page = [entry]
         self.fill_and_load()
+        return 'break'
 
     def set_jump_to_entry(self, event):
         textbox = event.widget

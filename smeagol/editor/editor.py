@@ -303,6 +303,7 @@ class Editor(Tk.Frame, object):
         if selected:
             textbox.tag_add('sel', *map(lambda x: x + direction, selected))
         textbox.mark_set(Tk.INSERT, position + direction)
+        return 'break'
 
     def delete_line(self, event=None):
         try:
