@@ -105,7 +105,7 @@ class ExternalDictionary:
 
     def _link(self, matchobj):
         word = matchobj.group(1)
-        link = urlform(word)
+        link = urlform(sellCaps(word))
         try:
             initial = re.findall(r'\w', link)[0]
         except IndexError:
