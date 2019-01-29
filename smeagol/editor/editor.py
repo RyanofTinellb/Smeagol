@@ -136,6 +136,7 @@ class Editor(Tk.Frame, object):
             ('em', {'font': em}),
             ('small-caps', {'font': small_caps}),
             ('link', {'foreground': 'blue', 'font': underline}),
+            ('bink', {'foreground': 'red', 'font': underline}),
             ('high-lulani', {'font': highlulani})]
 
     def modify_fontsize(self, size):
@@ -230,7 +231,6 @@ class Editor(Tk.Frame, object):
             event.widget.edit_modified(False)
         elif event.keysym in cancelkeys or event.num == 1:
             event.widget.edit_modified(False)
-            event.widget.tag_remove(self.current_style.get(), Tk.INSERT)
             self.current_style.set('')
         elif event.widget.edit_modified():
             event.widget.tag_add(self.current_style.get(),
@@ -377,18 +377,20 @@ class Editor(Tk.Frame, object):
 
     def change_style(self, event, style):
         textbox = event.widget
-        if style in textbox.tag_names(Tk.INSERT):
-            try:
-                textbox.tag_remove(style, Tk.SEL_FIRST, Tk.SEL_LAST)
-            except Tk.TclError:
-                textbox.tag_remove(style, Tk.INSERT)
-                self.current_style.set('')
+        for other in textbox.tag_names():
+            if other <> 'sel':
+                try:
+                    textbox.tag_remove(other, Tk.SEL_FIRST, Tk.SEL_LAST)
+                except Tk.TclError:
+                    textbox.tag_remove(other, Tk.INSERT)
+        if style == self.current_style.get():
+            self.current_style.set('')
         else:
+            self.current_style.set(style)
             try:
                 textbox.tag_add(style, Tk.SEL_FIRST, Tk.SEL_LAST)
             except Tk.TclError:
                 textbox.tag_add(style, Tk.INSERT)
-                self.current_style.set(style)
 
     def example_no_lines(self, event):
         self.format_paragraph('example-no-lines', 'e ', event.widget)

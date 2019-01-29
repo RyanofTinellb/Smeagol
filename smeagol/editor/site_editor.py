@@ -160,7 +160,7 @@ class SiteEditor(Properties, Editor):
             self.load_from_headings()
         return 'break'
 
-    def load_from_headings(self):
+    def load_from_headings(self, event=None):
         if self.page <> self.heading_contents:
             self.history += self.heading_contents
         self.load()
@@ -606,6 +606,7 @@ class SiteEditor(Properties, Editor):
             ('<Control-Shift-Prior>', self.earlier_entry),
             ('<Control-Shift-Next>', self.later_entry),
             ('<Alt-d>', self.go_to_heading),
+            ('<Control-l>', self.load_from_headings),
             ('<Control-o>', self.site_open),
             ('<Control-s>', self.save_page)]
 

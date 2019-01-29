@@ -92,6 +92,7 @@ class ExternalDictionary:
         self.url = url
         self.language = ''
         self.adder = {'ExternalDictionary': url}
+        self.wordlist_setup()
 
     def add_links(self, text, entry):
         """
@@ -101,7 +102,7 @@ class ExternalDictionary:
         self.language = '#'
         with ignored(IndexError):
             self.language += entry.matriarch.url
-        return re.sub(r'<{0}>(.*?)</{0}>'.format('link'), self._link, text)
+        return re.sub(r'<{0}>(.*?)</{0}>'.format('[bl]ink'), self._link, text)
 
     def _link(self, matchobj):
         word = matchobj.group(1)
@@ -119,13 +120,24 @@ class ExternalDictionary:
                     'foo<link>bar</link>baz'
 
         """
-        return re.sub(r'<a href="{0}.*?>(.*?)</a>'.format(self.url), r'<{0}>\1</{0}>'.format('link'), text)
+        return re.sub(r'<a href="{0}.*?>(.*?)</a>'.format(self.url), self._remove, text)
+
+    def _remove(self, regex):
+        link = regex.group(1)
+        tag = 'link' if link in self.wordlist else 'bink'
+        return '<{0}>{1}</{0}>'.format(tag, link)
+
+    def wordlist_setup(self):
+        with open('c:/users/ryan/documents/tinellbianlanguages/dictionary/wordlist.json') as f:
+            wordlist = json.load(f)
+        self.wordlist = [word['t'] for word in wordlist]
 
 
 class InternalDictionary:
     def __init__(self, resource=None):
         self.adder = {'InternalDictionary': resource}
         self.translator = Translator()
+        self.wordlist_setup()
 
     def add_links(self, text, entry):
         """
@@ -135,7 +147,7 @@ class InternalDictionary:
         self.language = 'also'
         lang = '1]'  # language marker
         output = []
-        regex = r'<{0}>(.*?)</{0}>'.format('link')
+        regex = r'<{0}>(.*?)</{0}>'.format('[bl]ink')
         for line in text.split('['):
             if lang in line:
                 self.language = re.sub(lang + '(.*?)\n', r'\1', line)
@@ -167,9 +179,15 @@ class InternalDictionary:
     def _unlink(self, regex):
         tr = self.translator
         language, link = [regex.group(x) for x in xrange(1,3)]
+        tag = 'link' if link in self.wordlist else 'bink'
         if language == urlform(self.language):
-            return r'<{0}>{1}</{0}>'.format('link', link)
-        return r'<{0}>{1}:{2}</{0}>'.format('link', tr.encode(language), link)
+            return r'<{0}>{1}</{0}>'.format(tag, link)
+        return r'<{0}>{1}:{2}</{0}>'.format(tag, tr.encode(language), link)
+
+    def wordlist_setup(self):
+        with open('c:/users/ryan/documents/tinellbianlanguages/dictionary/wordlist.json') as f:
+            wordlist = json.load(f)
+        self.wordlist = [word['t'] for word in wordlist]
 
 
 class ExternalGrammar:
