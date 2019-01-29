@@ -69,10 +69,6 @@ class Page(Node):
         return hyperlink + '.html'
 
     @property
-    def level(self):
-        return len(self.location)
-
-    @property
     def url(self):
         if self.location is None:
             return 'index'
@@ -246,6 +242,9 @@ class Page(Node):
         else:
             if self.matriarch.name == 'Introduction':
                 return self.title
+            elif self.ancestor(2).name == 'Sample Texts':
+                titles = [self.title, self.ancestor(1).title]
+                return '{0} - Sample Text in {1}'.format(*titles)
             else:
                 return self.matriarch.title + ' ' + self.title
 

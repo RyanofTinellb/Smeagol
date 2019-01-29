@@ -33,6 +33,10 @@ class Node(object):
     def __len__(self):
         return len(self.location)
 
+    @property
+    def level(self):
+        return len(self)
+
     def new(self, location=None):
         if location is None:
             location = self.location
@@ -187,9 +191,12 @@ class Node(object):
     def parent(self):
         return self.new(self.location[:-1])
 
+    def ancestor(self, level):
+        return self.new(self.location[:level])
+
     @property
     def ancestors(self):
-        for i in xrange(len(self.location) - 1):
+        for i in xrange(self.level - 1):
             yield self.new(self.location[:i + 1])
 
     @property
@@ -210,7 +217,7 @@ class Node(object):
 
     @property
     def matriarch(self):
-        return self.new([self.location[0]])
+        return self.ancestor(1)
 
     @property
     def matriarchs(self):
