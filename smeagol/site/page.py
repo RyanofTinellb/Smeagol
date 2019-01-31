@@ -243,7 +243,7 @@ class Page(Node):
             if self.matriarch.name == 'Introduction':
                 return self.title
             elif self.ancestor(2).name == 'Sample Texts':
-                titles = [self.title, self.ancestor(1).title]
+                titles = [self.title, self.matriarch.title]
                 return '{0} - Sample Text in {1}'.format(*titles)
             else:
                 return self.matriarch.title + ' ' + self.title

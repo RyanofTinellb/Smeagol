@@ -576,6 +576,11 @@ class SiteEditor(Properties, Editor):
                 entry.publish(self.site.template)
         self.site.update_source()
 
+    def refresh_broken_links(self):
+        for linker in ('ExternalDictionary', 'InternalDictionary'):
+            with ignored(KeyError):
+                self.linkadder.refresh('', linker)
+
     def edit_external_grammar(self):
         self.edit_linkadder('ExternalGrammar')
 
@@ -630,10 +635,11 @@ class SiteEditor(Properties, Editor):
                 ('Page', [('Rename', self.rename_page),
                 ('Delete', self.delete_page),
                 ('Open in _Browser', self.open_in_browser)]),
+                ('Links', [('Edit _External Grammar Links', self.edit_external_grammar),
+                ('Edit _Glossary', self.edit_glossary),
+                ('Refresh Broken Links', self.refresh_broken_links)]),
                 ('Edit', [('Script', self.edit_script),
-                ('Template', self.edit_template),
-                ('Edit _External Grammar Links', self.edit_external_grammar),
-                ('Edit _Glossary', self.edit_glossary)])
+                ('Template', self.edit_template)])
             ] + super(SiteEditor, self).menu_commands
 
 

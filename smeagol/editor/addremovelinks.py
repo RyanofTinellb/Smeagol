@@ -132,6 +132,9 @@ class ExternalDictionary:
             wordlist = json.load(f)
         self.wordlist = [word['t'] for word in wordlist]
 
+    def refresh(self, text=''):
+        self.wordlist_setup()
+
 
 class InternalDictionary:
     def __init__(self, resource=None):
@@ -189,6 +192,8 @@ class InternalDictionary:
             wordlist = json.load(f)
         self.wordlist = [word['t'] for word in wordlist]
 
+    def refresh(self, text=''):
+        self.wordlist_setup()
 
 class ExternalGrammar:
     def __init__(self, filename):

@@ -232,9 +232,6 @@ class Editor(Tk.Frame, object):
         elif event.keysym in cancelkeys or event.num == 1:
             event.widget.edit_modified(False)
             self.current_style.set('')
-        elif event.widget.edit_modified():
-            event.widget.tag_add(self.current_style.get(),
-                                 Tk.INSERT + '-1c', Tk.INSERT)
 
     def scroll_textbox(self, event=None):
         self.textbox.yview_scroll(-1 * (event.delta / 20), Tk.UNITS)
