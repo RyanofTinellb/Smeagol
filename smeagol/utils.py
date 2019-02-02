@@ -75,10 +75,11 @@ def _buy(regex):
 def sellCaps(word):
     return re.sub(r'([A-Z])', _sell, word.replace(' ', '.'))
 
-
 def _sell(regex):
     return '$' + regex.group(1).lower()
 
+def is_key(text):
+    return not re.match('^[A-Z].+', text)
 
 def change_text(item, replacement, text):
     text[0] = re.sub(item, replacement, text[0])

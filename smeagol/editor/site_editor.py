@@ -587,6 +587,12 @@ class SiteEditor(Properties, Editor):
     def edit_glossary(self):
         self.edit_linkadder('Glossary')
 
+    def edit_text_changed(self, event):
+        value = super(SiteEditor, self).edit_text_changed(event)
+        if event.widget.edit_modified():
+            self.save_text.set('*Save')
+        return value
+
     def quit(self):
         self.master.destroy()
         self.save_wholepage()

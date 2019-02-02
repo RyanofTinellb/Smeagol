@@ -6,7 +6,7 @@ import webbrowser as web
 from ttk import Combobox
 from itertools import izip
 from smeagol.translation import *
-from smeagol.utils import ignored, tkinter
+from smeagol.utils import ignored, tkinter, is_key
 
 
 class Editor(Tk.Frame, object):
@@ -225,12 +225,20 @@ class Editor(Tk.Frame, object):
         self.information.set('')
 
     def edit_text_changed(self, event):
-        cancelkeys = ['Left', 'Right', 'Up', 'Down', 'Return']
         self.update_wordcount(event)
-        if event.keysym.startswith('Control_'):
-            event.widget.edit_modified(False)
-        elif event.keysym in cancelkeys or event.num == 1:
-            event.widget.edit_modified(False)
+        key = event.char
+        keysym = event.keysym
+        textbox = event.widget
+        if key.startswith('Control_'):
+            textbox.edit_modified(False)
+        elif key and is_key(keysym) and event.num == '??':
+            style = self.current_style.get()
+            with ignored(Tk.TclError):
+                textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
+            textbox.insert(Tk.INSERT, key)
+            textbox.tag_add(style, Tk.INSERT + '-1c')
+            return 'break'
+        elif keysym not in {'BackSpace', 'Shift_L', 'Shift_R'}:
             self.current_style.set('')
 
     def scroll_textbox(self, event=None):
@@ -376,18 +384,14 @@ class Editor(Tk.Frame, object):
         textbox = event.widget
         for other in textbox.tag_names():
             if other <> 'sel':
-                try:
+                with ignored(Tk.TclError):
                     textbox.tag_remove(other, Tk.SEL_FIRST, Tk.SEL_LAST)
-                except Tk.TclError:
-                    textbox.tag_remove(other, Tk.INSERT)
         if style == self.current_style.get():
             self.current_style.set('')
         else:
             self.current_style.set(style)
-            try:
+            with ignored(Tk.TclError):
                 textbox.tag_add(style, Tk.SEL_FIRST, Tk.SEL_LAST)
-            except Tk.TclError:
-                textbox.tag_add(style, Tk.INSERT)
 
     def example_no_lines(self, event):
         self.format_paragraph('example-no-lines', 'e ', event.widget)
