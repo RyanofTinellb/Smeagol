@@ -12,14 +12,14 @@ def copy(paths, files, src):
 paths = [
             'C:/Users/Ryan/Documents/TinellbianLanguages/coelacanth/',
             'C:/Users/Ryan/Documents/TinellbianLanguages/writings/',
-			'C:/Users/Ryan/Documents/TinellbianLanguages/encyclopedia/'
+			'C:/Users/Ryan/Documents/TinellbianLanguages/encyclopedia/',
+            'C:/Users/Ryan/Documents/TinellbianLanguages/grammar/',
         ]
 files =  ['404search.js', 'search.js']
 
 copy(paths, files, src)
 
 paths += [
-            'C:/Users/Ryan/Documents/TinellbianLanguages/grammar/',
             'C:/Users/Ryan/Documents/TinellbianLanguages/dictionary/'
          ]
 

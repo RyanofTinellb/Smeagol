@@ -7,13 +7,14 @@ from smeagol.translation import *
 from smeagol.utils import *
 from smeagol.defaults import default
 
+markdown = Markdown()
 
 class Page(Node):
     def __init__(self, tree, location):
         super(Page, self).__init__(tree, location)
 
     def __getattr__(self, attr):
-        if attr in {'name'}:
+        if attr in {'name', 'script', 'old'}:
             return self.find().get(attr, '')
         elif attr  in {'text'}:
             return self.find().get(attr, [])
@@ -40,13 +41,13 @@ class Page(Node):
             with ignored(AttributeError):
                 value = filter(None, value.split('['))
             self.find()['text'] = value
-        elif attr in {'name', 'position'}:
+        elif attr in {'name', 'position', 'old'}:
             self.find()[attr] = value
         else:
             super(Page, self).__setattr__(attr, value)
 
     def __str__(self):
-        return '[' + '['.join(self.text)
+        return '['.join(self.text)
 
     def update_date(self):
         self.find()['date'] = datetime.strftime(datetime.today(), '%Y-%m-%d')
@@ -55,8 +56,10 @@ class Page(Node):
         self.find()['flatname'] = self._flatname
 
     def remove_flatname(self):
-        with ignored(KeyError):
-            self.find().pop('flatname')
+        self.find().pop('flatname', None)
+
+    def remove_script(self):
+        self.find().pop('script', None)
 
     @property
     def link(self):
@@ -64,10 +67,6 @@ class Page(Node):
         url = self.url if not self.has_children else 'index'
         hyperlink = '{0}/{1}'.format(link, url) if link else url
         return hyperlink + '.html'
-
-    @property
-    def level(self):
-        return len(self.location)
 
     @property
     def url(self):
@@ -93,7 +92,7 @@ class Page(Node):
         remove_text(r'\n+(?=\n)|\[.*?\]', content)
         content = buyCaps(content[0])
         lines = content.splitlines()
-        content = [Markdown().to_markdown(content).lower()]
+        content = [markdown.to_markdown(content).lower()]
         change_text(r'&.*?;', ' ', content)
         # change punctuation, and tags in square brackets, into spaces
         change_text(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|\d', ' ', content)
@@ -172,7 +171,10 @@ class Page(Node):
         self.children = [child.find() for child in sorted(self.daughters)]
 
     def publish(self, template=None):
-        dumps(self.html(template), self.link)
+        text = self.html(template)
+        if self.old <> text:
+            dumps(text, self.link)
+            self.old = text
 
     @property
     def list(self):
@@ -240,6 +242,9 @@ class Page(Node):
         else:
             if self.matriarch.name == 'Introduction':
                 return self.title
+            elif self.ancestor(2).name == 'Sample Texts':
+                titles = [self.title, self.matriarch.title]
+                return '{0} - Sample Text in {1}'.format(*titles)
             else:
                 return self.matriarch.title + ' ' + self.title
 
@@ -257,26 +262,27 @@ class Page(Node):
         contents = '<div class="main-contents">{0}</div>'
         return contents.format(html(self.text))
 
-    @property
-    def stylesheet_and_icon(self):
-        destinations = ['basic_style.css', 'style.css', 'favicon.png']
-        hyperlinks = [self.hyperlink(destination, anchors=False)
-                        for destination in destinations]
-        return ('<link rel="stylesheet" type="text/css" href="{0}">\n'
-                '<link rel="stylesheet" type="text/css" href="{1}">\n'
-                '<link rel="icon" type="image/png" href="{2}">\n'
-                ).format(*hyperlinks)
+    def stylesheets(self, sheets):
+        links = sheets.split(' ')
+        links = [self.hyperlink(link, anchors=False) for link in links]
+        template = '<link rel="stylesheet" type="text/css" href="{0}">\n'
+        return ''.join([template.format(link) for link in links])
+
+    def icon(self, icon):
+        icon = self.hyperlink(icon, anchors=False)
+        template = '<link rel="icon" type="image/png" href="{0}">\n'
+        return template.format(icon)
 
     @property
     def search_script(self):
         hyperlink = self.hyperlink('search.html', anchors=False)
-        return ('<script type="text/javascript">'
-                'if (window.location.href.indexOf("?") != -1) {{'
-                'window.location.href = "{0}" +'
-                'window.location.href.substring('
-                'window.location.href.indexOf("?")) + "&andOr=and";'
-                '}}'
-                '</script>').format(hyperlink)
+        return ('    <script type="text/javascript">\n'
+                'let href = window.location.href;\n'
+                'if (href.indexOf("?") != -1) {{\n'
+                '    let term = href.replace(/(.*?\?)(.*?)(#.*|$)/, "$2");\n'
+                '    window.location.href = `{0}?${{term}}&andOr=and`;\n'
+                '}}\n'
+            '</script>\n').format(hyperlink)
 
     @property
     def toc(self):
@@ -365,45 +371,50 @@ class Page(Node):
         links = '\n'.join([div.format(f) for f in (previous, next)])
         return footer.format(links)
 
-    @property
-    def copyright(self):
+    def copyright(self, template):
         strftime = datetime.strftime
-        copyright = '<div class="copyright">{0}</div>'
         date = self.date
         if 4 <= date.day <= 20 or 24 <= date.day <= 30:
             suffix = 'th'
         else:
-            suffix = ['st', 'nd', 'rd'][date.day % 10 - 1]
-        span = '<span class="no-breaks">{0}</span>'
-        templates = (('&copy;2017-%Y '
-                      '<a href="http://www.tinellb.com/about.html">'
-                      'Ryan Eakins</a>.'),
-                'Last updated: %A, %B %#d' + suffix + ', %Y.')
-        spans = '\n'.join([span.format(strftime(date, template))
-                            for template in templates])
-        return copyright.format(spans)
+            suffix = ('th', 'st', 'nd', 'rd')[date.day % 10]
+        template = template.replace('%t', suffix)
+        return strftime(date, template)
+
+    def section_replace(self, regex):
+        regex = [regex.group(i+1) for i in xrange(2)]
+        if regex[0] in {'copyright', 'stylesheets', 'icon'}:
+            return getattr(self, regex[0])(regex[1])
+        else:
+            return getattr(self, '{1}_{0}'.format(*regex))
+
+    @property
+    def scripts(self):
+        if self.script:
+            return '<script>\n{0}\n</script>'.format(self.script)
+        else:
+            return ''
 
     def html(self, template=None):
         page = template or default.template
         for (section, function) in [
-            ('{title}', 'title'),
-            ('{stylesheet}', 'stylesheet_and_icon'),
             ('{search-script}', 'search_script'),
             ('{title-heading}', 'title_heading'),
             ('{main-contents}', 'main_contents'),
             ('{toc}', 'toc'),
-            ('{family-links}', 'family_links'),
-            ('{elder-links}', 'elder_links'),
             ('{nav-footer}', 'nav_footer'),
-            ('{copyright}', 'copyright'),
-            ('{story-title}', 'story_title'),
-            ('{category-title}', 'category_title')
+            ('{title}', 'title'),
+            ('{scripts}', 'scripts')
         ]:
             if page.count(section):
                 try:
                     page = page.replace(section, getattr(self, function))
                 except TypeError:
                     raise TypeError(section, function)
+        try:
+            page = re.sub(r'{(.*?): (.*?)}', self.section_replace, page)
+        except TypeError:
+            raise TypeError(section, function)
         return page
 
     def delete_html(self):

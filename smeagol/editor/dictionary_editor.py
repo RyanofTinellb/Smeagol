@@ -19,6 +19,7 @@ class DictionaryEditor(SiteEditor):
         self.save_page()
         self.page = [entry]
         self.fill_and_load()
+        return 'break'
 
     def set_jump_to_entry(self, event):
         textbox = event.widget
@@ -91,10 +92,6 @@ class DictionaryEditor(SiteEditor):
             self.entry.root.sort()
             super(DictionaryEditor, self).update_tocs()
 
-    def remove_all_links(self, text):
-        text = self.remove_links(text)
-        return re.sub(r'<link>(?:\w\w:)*(.*?)</link>', r'\1', text)
-
     def list_out(self, entry):
         # overrides super().list_out()
         lst = entry.list
@@ -109,23 +106,15 @@ class DictionaryEditor(SiteEditor):
         transliteration = None
         language = None
         pos = None
-        sieve = re.compile(
-            r'3\](.*?) <div class=\"definition\">(.*?)</div>.*', re.S)
         for entry in self.site:
             transliteration = entry.name
-            for line in entry.text:
+            for line in self.remove_links(str(entry)).split('['):
                 if line.startswith('1]'):
                     language = re.sub('1](.*?)\n(?:.*)', r'\1', line, flags=re.S)
-                elif line.startswith('3]'):
-                    line = sieve.sub(r'\1\n\2', self.remove_all_links(line))
-                    try:
-                        newpos, meaning = line.splitlines()
-                    except:
-                        print transliteration, line, '*****'
-                        continue
-                    if newpos:
-                        pos = re.sub(r'\(.*?\)', '', newpos).split(' ')
-                    definition = re.split(r'\W*', re.sub(r'<.*?>', '', meaning))
+                elif line.startswith('2]'):
+                    pos = self._pos(line)
+                elif line.startswith('d definition]'):
+                    meaning, definition = self._meaning(line)
                     output.append(dict(
                         t=buyCaps(transliteration),
                         l=language,
@@ -136,6 +125,16 @@ class DictionaryEditor(SiteEditor):
                         '/dictionary/wordlist.json')
         dump(output, filename)
 
+    def _pos(self, line):
+        line = re.sub(r'2](.*?)\n+', r'\1', line)
+        return filter(None, re.sub(r'\(.*?\)', '', line).split(' '))
+
+    def _meaning(self, line):
+        meaning = re.sub(r'd definition](.*?)\n+', r'\1', line)
+        meaning = re.sub(r'</*.*?>|..:', '', meaning)
+        definition = meaning.split(' ')
+        return meaning, definition
+
     def initial_content(self, entry=None):
         if entry is None:
             entry = self.entry
@@ -144,9 +143,12 @@ class DictionaryEditor(SiteEditor):
         code = tr.code[:2]
         output = [
             '[1]{0}'.format(tr.safename),
-            '[2]{0}'.format(tr.convert_word(name)),
+            '[d native-script]',
+            '{0}[/d]'.format(tr.convert_word(name)),
             '[p {0}]//[/p]'.format(code),
-            '[3] {{ }}'
+            '[2]',
+            '[d definition]',
+            '[/d]'
         ]
         if code == 'en':
             output.pop(1)

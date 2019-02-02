@@ -6,12 +6,15 @@ import webbrowser as web
 from ttk import Combobox
 from itertools import izip
 from smeagol.translation import *
-from smeagol.utils import ignored, tkinter
+from smeagol.utils import ignored, tkinter, is_key
 
 
 class Editor(Tk.Frame, object):
-    def __init__(self, master=None):
+    def __init__(self, master=None, parent=None):
         super(Editor, self).__init__(master)
+        self.master.withdraw()
+        self.parent = parent
+        self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.set_frames()
         self.row = 0
         self.font = tkFont.Font(family='Calibri', size=18)
@@ -79,9 +82,7 @@ class Editor(Tk.Frame, object):
         font = self.font
         self.textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
                                 undo=True, font=font)
-        self.add_commands('Text', self.textbox_commands)
-        for command in ('<KeyPress>', '<Button-1>'):
-            self.textbox.bind(command, self.edit_text_changed)
+        self.add_commands(self.textbox, self.textbox_commands)
         self.ready_scrollbar()
         for (name, style) in self.text_styles:
             self.textbox.tag_config(name, **style)
@@ -98,13 +99,19 @@ class Editor(Tk.Frame, object):
         scrollbar.config(command=self.textbox.yview)
         self.textbox.config(yscrollcommand=scrollbar.set)
 
-    def add_commands(self, tkclass, commands):
+    def add_commands(self, tkobj, commands):
         for (keys, command) in commands:
             if isinstance(keys, basestring):
-                self.bind_class(tkclass, keys, command)
+                try:
+                    tkobj.bind(keys, command)
+                except AttributeError:
+                    self.bind_class(tkobj, keys, command)
             else:
                 for key in keys:
-                    self.bind_class(tkclass, key, command)
+                    try:
+                        tkobj.bind(key, command)
+                    except AttributeError:
+                        self.bind_class(tkobj, key, command)
 
     @property
     def text_styles(self):
@@ -129,6 +136,7 @@ class Editor(Tk.Frame, object):
             ('em', {'font': em}),
             ('small-caps', {'font': small_caps}),
             ('link', {'foreground': 'blue', 'font': underline}),
+            ('bink', {'foreground': 'red', 'font': underline}),
             ('high-lulani', {'font': highlulani})]
 
     def modify_fontsize(self, size):
@@ -217,17 +225,21 @@ class Editor(Tk.Frame, object):
         self.information.set('')
 
     def edit_text_changed(self, event):
-        cancelkeys = ['Left', 'Right', 'Up', 'Down', 'Return']
         self.update_wordcount(event)
-        if event.keysym.startswith('Control_'):
-            event.widget.edit_modified(False)
-        elif event.keysym in cancelkeys or event.num == 1:
-            event.widget.edit_modified(False)
-            event.widget.tag_remove(self.current_style.get(), Tk.INSERT)
+        key = event.char
+        keysym = event.keysym
+        textbox = event.widget
+        if key.startswith('Control_'):
+            textbox.edit_modified(False)
+        elif key and is_key(keysym) and event.num == '??':
+            style = self.current_style.get()
+            with ignored(Tk.TclError):
+                textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
+            textbox.insert(Tk.INSERT, key)
+            textbox.tag_add(style, Tk.INSERT + '-1c')
+            return 'break'
+        elif keysym not in {'BackSpace', 'Shift_L', 'Shift_R'}:
             self.current_style.set('')
-        elif event.widget.edit_modified():
-            event.widget.tag_add(self.current_style.get(),
-                                 Tk.INSERT + '-1c', Tk.INSERT)
 
     def scroll_textbox(self, event=None):
         self.textbox.yview_scroll(-1 * (event.delta / 20), Tk.UNITS)
@@ -296,6 +308,7 @@ class Editor(Tk.Frame, object):
         if selected:
             textbox.tag_add('sel', *map(lambda x: x + direction, selected))
         textbox.mark_set(Tk.INSERT, position + direction)
+        return 'break'
 
     def delete_line(self, event=None):
         try:
@@ -319,8 +332,12 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(widget=self.textbox)
         self.html_to_tkinter()
 
-    @tkinter()
     def copy_text(self, event=None):
+        self._copy(event)
+        return 'break'
+
+    @tkinter()
+    def _copy(self, event=None):
         textbox = event.widget
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
@@ -331,8 +348,8 @@ class Editor(Tk.Frame, object):
     @tkinter()
     def cut_text(self, event=None):
         textbox = event.widget
-        print self.copy_text(event)
-        textbox.delete(*self.copy_text(event))
+        textbox.delete(*self._copy(event))
+        return 'break'
 
     @tkinter()
     def paste_text(self, event=None):
@@ -341,6 +358,7 @@ class Editor(Tk.Frame, object):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             textbox.delete(*borders)
         textbox.insert(Tk.INSERT, self.clipboard_get())
+        return 'break'
 
     def bold(self, event):
         self.change_style(event, 'strong')
@@ -358,20 +376,22 @@ class Editor(Tk.Frame, object):
         self.change_style(event, 'link')
         return 'break'
 
+    def insert_tabs(self, event=None):
+        self.textbox.insert(Tk.INSERT, ' ' * 4)
+        return 'break'
+
     def change_style(self, event, style):
         textbox = event.widget
-        if style in textbox.tag_names(Tk.INSERT):
-            try:
-                textbox.tag_remove(style, Tk.SEL_FIRST, Tk.SEL_LAST)
-            except Tk.TclError:
-                textbox.tag_remove(style, Tk.INSERT)
-                self.current_style.set('')
+        for other in textbox.tag_names():
+            if other <> 'sel':
+                with ignored(Tk.TclError):
+                    textbox.tag_remove(other, Tk.SEL_FIRST, Tk.SEL_LAST)
+        if style == self.current_style.get():
+            self.current_style.set('')
         else:
-            try:
+            self.current_style.set(style)
+            with ignored(Tk.TclError):
                 textbox.tag_add(style, Tk.SEL_FIRST, Tk.SEL_LAST)
-            except Tk.TclError:
-                textbox.tag_add(style, Tk.INSERT)
-                self.current_style.set(style)
 
     def example_no_lines(self, event):
         self.format_paragraph('example-no-lines', 'e ', event.widget)
@@ -478,7 +498,7 @@ class Editor(Tk.Frame, object):
                     break
         self.reset_textbox()
 
-    def tkinter_to_html(self):
+    def tkinter_to_html(self, event=None):
         textbox = self.textbox
         for (style, _) in self.text_styles:
             for end, start in izip(*[reversed(textbox.tag_ranges(style))] * 2):
@@ -513,25 +533,55 @@ class Editor(Tk.Frame, object):
         text = self.markdown(text)
         self.replace(self.textbox, text)
 
-    def markdown_refresh(self, event=None):
+    def markdown_refresh(self, event=None, new_markdown=''):
         try:
-            self._markdown_refresh()
+            self._markdown_refresh(new_markdown)
             self.information.set('OK')
         except AttributeError:
             self.information.set('Not OK')
         return 'break'
 
+
     @tkinter()
-    def _markdown_refresh(self):
+    def _markdown_refresh(self, new_markdown):
         text = self.get_text(self.textbox)
         text = self.markup(text)
-        self.marker.refresh()
+        self.marker.refresh(new_markdown)
         text = self.markdown(text)
         self.replace(self.textbox, text)
+
+    @tkinter()
+    def markdown_clear(self, event=None):
+        text = self.get_text(self.textbox)
+        text = self.markup(text)
+        self.replace(self.textbox, text)
+
+    def markdown_edit(self, event=None):
+        text = self.edit_file(text=str(self.marker))
+        self.markdown_refresh(new_markdown=text)
+
+    def edit_file(self, text=''):
+        # editor returns a value in self._return
+        self.show_file(text)
+        return self._return
+
+    def show_file(self, text=''):
+        top = Tk.Toplevel()
+        editor = Editor(master=top, parent=self)
+        editor.textbox.insert(Tk.INSERT, text)
+        self.master.withdraw()
+        self.wait_window(top)
+
+    def show_window(self):
+        self.top.state('zoomed')
+        self.master.update()
+        self.master.deiconify()
 
     @property
     def menu_commands(self):
         return [('Markdown', [
+                 ('Edit', self.markdown_edit),
+                 ('Clear', self.markdown_clear),
                  ('Load', self.markdown_load),
                  ('Refresh', self.markdown_refresh),
                  ('Change to _Tkinter', self.html_to_tkinter),
@@ -543,6 +593,8 @@ class Editor(Tk.Frame, object):
         return [
             ('<MouseWheel>', self.scroll_textbox),
             ('<Control-MouseWheel>', self.change_fontsize),
+            (('<KeyPress>', '<Button-1>'), self.edit_text_changed),
+            ('<Tab>', self.insert_tabs),
             ('<Control-0>', self.reset_fontsize),
             ('<Control-a>', self.select_all),
             ('<Control-b>', self.bold),
@@ -556,6 +608,7 @@ class Editor(Tk.Frame, object):
             ('<Control-m>', self.markdown_refresh),
             ('<Control-n>', self.add_link),
             ('<Control-r>', self.refresh_random),
+            ('<Control-s>', self.tkinter_to_html),
             ('<Control-t>', self.add_translation),
             ('<Control-v>', self.paste_text),
             ('<Control-w>', self.select_word),
@@ -563,6 +616,13 @@ class Editor(Tk.Frame, object):
             ('<Control-BackSpace>', self.backspace_word),
             ('<Control-Delete>', self.delete_word),
             (('<Control-Up>', '<Control-Down>'), self.move_line)]
+
+    def quit(self):
+        # with ignored(AttributeError):
+        self.tkinter_to_html()
+        self.parent.show_window()
+        self.parent._return = self.textbox.get('1.0', Tk.END)
+        self.master.destroy()
 
 if __name__ == '__main__':
     Editor().mainloop()

@@ -42,19 +42,36 @@ class AddRemoveLinks:
             text = link_adder.remove_links(text)
         return text
 
+    def string(self, adder):
+        return str(self.link_adders[adder])
+
+    def refresh(self, text, adder):
+        self.link_adders[adder].refresh(text)
+
 
 class Glossary:
     def __init__(self, filename):
         self.adder = {'Glossary': filename}
         try:
             with open(filename) as glossary:
-                self.glossary = json.load(glossary)
+                self._file = glossary.read()
+            self.glossary = json.loads(self._file)
         except IOError:
             self.glossary = {}
         self.tooltip = ('<span class="tooltip">'
                         '<small-caps>{0}</small-caps>'
                         '<span class="tooltip-text">{1}</span>'
                         '</span>')
+        self.filename = filename
+
+    def __str__(self):
+        return self._file
+
+    def refresh(self, new_file=''):
+        self._file = new_file
+        with open(self.filename, 'w') as f:
+            f.write(new_file)
+        self.glossary = json.loads(new_file)
 
     def add_links(self, text, entry):
         for abbrev, full_form in self.glossary.iteritems():
@@ -75,6 +92,7 @@ class ExternalDictionary:
         self.url = url
         self.language = ''
         self.adder = {'ExternalDictionary': url}
+        self.wordlist_setup()
 
     def add_links(self, text, entry):
         """
@@ -84,11 +102,11 @@ class ExternalDictionary:
         self.language = '#'
         with ignored(IndexError):
             self.language += entry.matriarch.url
-        return re.sub(r'<{0}>(.*?)</{0}>'.format('link'), self._link, text)
+        return re.sub(r'<{0}>(.*?)</{0}>'.format('[bl]ink'), self._link, text)
 
     def _link(self, matchobj):
         word = matchobj.group(1)
-        link = urlform(word)
+        link = urlform(sellCaps(word))
         try:
             initial = re.findall(r'\w', link)[0]
         except IndexError:
@@ -102,13 +120,27 @@ class ExternalDictionary:
                     'foo<link>bar</link>baz'
 
         """
-        return re.sub(r'<a href="{0}.*?>(.*?)</a>'.format(self.url), r'<{0}>\1</{0}>'.format('link'), text)
+        return re.sub(r'<a href="{0}.*?>(.*?)</a>'.format(self.url), self._remove, text)
+
+    def _remove(self, regex):
+        link = regex.group(1)
+        tag = 'link' if link in self.wordlist else 'bink'
+        return '<{0}>{1}</{0}>'.format(tag, link)
+
+    def wordlist_setup(self):
+        with open('c:/users/ryan/documents/tinellbianlanguages/dictionary/wordlist.json') as f:
+            wordlist = json.load(f)
+        self.wordlist = [word['t'] for word in wordlist]
+
+    def refresh(self, text=''):
+        self.wordlist_setup()
 
 
 class InternalDictionary:
     def __init__(self, resource=None):
         self.adder = {'InternalDictionary': resource}
         self.translator = Translator()
+        self.wordlist_setup()
 
     def add_links(self, text, entry):
         """
@@ -118,7 +150,7 @@ class InternalDictionary:
         self.language = 'also'
         lang = '1]'  # language marker
         output = []
-        regex = r'<{0}>(.*?)</{0}>'.format('link')
+        regex = r'<{0}>(.*?)</{0}>'.format('[bl]ink')
         for line in text.split('['):
             if lang in line:
                 self.language = re.sub(lang + '(.*?)\n', r'\1', line)
@@ -150,39 +182,54 @@ class InternalDictionary:
     def _unlink(self, regex):
         tr = self.translator
         language, link = [regex.group(x) for x in xrange(1,3)]
+        tag = 'link' if link in self.wordlist else 'bink'
         if language == urlform(self.language):
-            return r'<{0}>{1}</{0}>'.format('link', link)
-        return r'<{0}>{1}:{2}</{0}>'.format('link', tr.encode(language), link)
+            return r'<{0}>{1}</{0}>'.format(tag, link)
+        return r'<{0}>{1}:{2}</{0}>'.format(tag, tr.encode(language), link)
 
+    def wordlist_setup(self):
+        with open('c:/users/ryan/documents/tinellbianlanguages/dictionary/wordlist.json') as f:
+            wordlist = json.load(f)
+        self.wordlist = [word['t'] for word in wordlist]
+
+    def refresh(self, text=''):
+        self.wordlist_setup()
 
 class ExternalGrammar:
     def __init__(self, filename):
         self.adder = {'ExternalGrammar': filename}
         with open(filename) as replacements:
-            self.replacements = json.load(replacements)
+            self._file = replacements.read()
+        self.replacements = json.loads(self._file)
         self.url = self.replacements['url']
         self.language = None
+        self.filename = filename
+
+    def __str__(self):
+        return self._file
+
+    def refresh(self, new_file=''):
+        self._file = new_file
+        with open(self.filename, 'w') as f:
+            f.write(new_file)
+        self.replacements = json.loads(new_file)
 
     def add_links(self, text, entry):
         """
         '<a href="http://grammar.tinellb.com/highlulani/
                                             morphology/nouns">noun</a>'
         """
-        div = ' <div class="definition">'
         lang = '1]'  # language marker
-        wcs = '3]'  # word classes marker
+        wcs = '2]'  # word classes marker
         output = []
         for line in text.split('['):
             if line.startswith(lang):
                 self.language = line[len(lang):-1]
             elif line.startswith(wcs):
-                try:
-                    pos, rest = line[len(wcs):].split(div, 1)  # part of speech
-                except ValueError:
-                    pos, rest = line[len(wcs):], ''
+                pos = line[len(wcs):-1]
                 self.poses = set(re.sub(r'\(.*?\)', '', pos).split(' '))
                 pos = ''.join(map(self._link, re.split(r'([^a-zA-Z0-9_\'-])', pos)))
-                line = wcs + pos + div + rest
+                line = wcs + pos + '\n'
             output.append(line)
         return '['.join(output)
 
@@ -216,15 +263,11 @@ class ExternalGrammar:
         return '['.join(map(self._unlink, text.split('[')))
 
     def _unlink(self, line):
-        div = ' <div class="definition">'
-        wcs = '3]'
+        wcs = '2]'
         if line.startswith(wcs):
-            try:
-                pos, rest = line[len(wcs):].split(div, 1)
-            except ValueError:
-                pos, rest = line[len(wcs):], ''
+            pos = line[len(wcs):-1]
             pos = re.sub(r'<span class="hidden">(.*?)</span>', r'\1', pos)
             pos = re.sub(r'<a href=.*?>(.*?)</a>', r'\1', pos)
-            return wcs + pos + div + rest
+            return wcs + pos + '\n'
         else:
             return line

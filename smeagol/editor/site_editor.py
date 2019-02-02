@@ -10,7 +10,6 @@ from itertools import izip, izip_longest
 from socket import error as socket_error
 from editor import Editor
 from properties import Properties
-from text_window import TextWindow
 from properties_window import PropertiesWindow
 from smeagol.utils import *
 from smeagol.defaults import default
@@ -161,7 +160,7 @@ class SiteEditor(Properties, Editor):
             self.load_from_headings()
         return 'break'
 
-    def load_from_headings(self):
+    def load_from_headings(self, event=None):
         if self.page <> self.heading_contents:
             self.history += self.heading_contents
         self.load()
@@ -253,7 +252,7 @@ class SiteEditor(Properties, Editor):
 
     @async
     def site_publish(self, event=None):
-        self.information.set(self.site.publish())
+        self.site.publish()
 
     @async
     def start_server(self, port):
@@ -309,12 +308,10 @@ class SiteEditor(Properties, Editor):
 
     def list_pages(self, event=None):
         def text_thing(page):
-            return ' ' * 2 * page.level + page.name
+            return ' ' * 10 * page.level + page.name
         text = '\n'.join(map(text_thing, self.site))
         text = self.markdown(text)
-        textwindow = TextWindow(text)
-        self.wait_window(textwindow)
-        return 'break'
+        self.show_file(text)
 
     def prepare_entry(self, entry):
         try:
@@ -380,10 +377,10 @@ class SiteEditor(Properties, Editor):
         self.errors = 0
         self.errorstring = ''
         k = '\n'.join(map(self._save_wholepage, g))
-        page = template.replace('{toc}', g[0].family_links).replace(
+        page = re.sub('{(.*?): (.*?)}', g[0].section_replace,
+            template.replace('{toc}', g[0].family_links).replace(
             '{main-contents}', k).replace(
-            '{stylesheet}', g[0].stylesheet_and_icon).replace(
-            '{copyright}', self.copyright)
+            '{copyright}', self.copyright))
         information = '{3}{0} error{2}\n{1}'.format(
                 self.errors,
                 '-' * 10,
@@ -397,7 +394,7 @@ class SiteEditor(Properties, Editor):
 
     def _save_wholepage(self, page):
         try:
-            return page.main_contents
+            return page.title_heading + page.main_contents + '<p></p>'
         except ZeroDivisionError:
             self.errorstring += 'Error in ' + page.folder + '/' + page.name + '\n'
             self.errors += 1
@@ -416,13 +413,8 @@ class SiteEditor(Properties, Editor):
                 page = template.read()
         except IOError:
             return
-        replacements = (
-            ('{stylesheet}', 'stylesheet_and_icon'),
-            ('{family-links}', 'family_links'),
-            ('{elder-links}', 'elder_links'),
-        )
-        for (text, function) in replacements:
-            page = page.replace(text, getattr(self.site.root, function))
+        g = self.site.root
+        page = re.sub('{(.*?): (.*?)}', g.section_replace, page)
         page = re.sub(
             r'<li class="normal">(.*?)</li>',
             r'<li><a href="index.html">\1</a></li>',
@@ -541,6 +533,66 @@ class SiteEditor(Properties, Editor):
                              Tk.INSERT + ' lineend +1c')
         return 'break'
 
+    def edit_script(self, event=None):
+        try:
+            script = self.edit_file(self.entry.script)
+            if script:
+                self.entry.script = script
+            else:
+                self.entry.remove_script()
+        except AttributeError:
+            text = self.entry.get('script', 'Enter new JavaScript here')
+            script = self.edit_file(text)
+            if script:
+                self.entry['script'] = self.edit_file(text)
+            else:
+                self.entry.pop('script', None)
+
+    def edit_template(self, event=None):
+        text = self.edit_file(text=self.template)
+        self.refresh_template(new_template=text)
+        message = 'Do you wish to apply this template to all pages?'
+        if mb.askyesno('Delete', message):
+            self.site_publish()
+        self.textbox.focus_set()
+
+    def edit_linkadder(self, adder):
+        linkadder = self.linkadder
+        text = self.edit_file(text=linkadder.string(adder))
+        linkadder.refresh(text=text, adder=adder)
+        message = 'Do you wish to apply these changes to all pages?'
+        if mb.askyesno('Delete', message):
+            self.update_pages()
+        self.textbox.focus_set()
+
+    @async
+    def update_pages(self):
+        for entry in self.site:
+            old = str(entry)
+            text = self.linkadder.remove_links(old)
+            text = self.linkadder.add_links(text, entry)
+            if old <> text:
+                entry.text = text
+                entry.publish(self.site.template)
+        self.site.update_source()
+
+    def refresh_broken_links(self):
+        for linker in ('ExternalDictionary', 'InternalDictionary'):
+            with ignored(KeyError):
+                self.linkadder.refresh('', linker)
+
+    def edit_external_grammar(self):
+        self.edit_linkadder('ExternalGrammar')
+
+    def edit_glossary(self):
+        self.edit_linkadder('Glossary')
+
+    def edit_text_changed(self, event):
+        value = super(SiteEditor, self).edit_text_changed(event)
+        if event.widget.edit_modified():
+            self.save_text.set('*Save')
+        return value
+
     def quit(self):
         self.master.destroy()
         self.save_wholepage()
@@ -565,6 +617,7 @@ class SiteEditor(Properties, Editor):
             ('<Control-Shift-Prior>', self.earlier_entry),
             ('<Control-Shift-Next>', self.later_entry),
             ('<Alt-d>', self.go_to_heading),
+            ('<Control-l>', self.load_from_headings),
             ('<Control-o>', self.site_open),
             ('<Control-s>', self.save_page)]
 
@@ -587,7 +640,12 @@ class SiteEditor(Properties, Editor):
                 ('Publish All', self.site_publish)]),
                 ('Page', [('Rename', self.rename_page),
                 ('Delete', self.delete_page),
-                ('Open in _Browser', self.open_in_browser)])
+                ('Open in _Browser', self.open_in_browser)]),
+                ('Links', [('Edit _External Grammar Links', self.edit_external_grammar),
+                ('Edit _Glossary', self.edit_glossary),
+                ('Refresh Broken Links', self.refresh_broken_links)]),
+                ('Edit', [('Script', self.edit_script),
+                ('Template', self.edit_template)])
             ] + super(SiteEditor, self).menu_commands
 
 

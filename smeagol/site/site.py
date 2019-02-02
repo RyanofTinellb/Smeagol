@@ -8,6 +8,8 @@ def increment(lst, by):
     lst = [x + by for x in lst]
     return lst
 
+markdown = Markdown()
+
 class Site(object):
     def __init__(self, destination=None, name=None, files=None):
         self.name = name
@@ -26,6 +28,13 @@ class Site(object):
         except (IOError, KeyError):
             template = ''
         self.template = template
+
+    def refresh_template(self, new_template):
+        if new_template and self.template_file:
+            with ignored(IOError):
+                with open(self.template_file, 'w') as template:
+                    template.write(new_template)
+        self.template = new_template
 
     def load_site(self):
         if self.source:
@@ -145,7 +154,6 @@ class Site(object):
         sentences = []
         urls = []
         names = []
-        markdown = Markdown()
         for page_number, entry in enumerate(self):
             base = len(sentences)
             analysis = entry.analysis
