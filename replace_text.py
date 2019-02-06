@@ -1,20 +1,21 @@
-from sites import Dictionary
+from sites import Grammar
 import re
 from smeagol.editor.addremovelinks import AddRemoveLinks
 from smeagol.translation.markdown import Markdown
 
-d = Dictionary()
+def geminate(regex):
+    return re.sub(r'(&.*?;)\1', r'\1&#x2d0;', regex.group(0))
+
+d = Grammar()
 i = AddRemoveLinks(dict(
-    ExternalGrammar="C:/Users/Ryan/Documents/TinellbianLanguages/dictionary/links.glk"
+    ExternalDictionary="http://dictionary.tinellb.com"
 ))
-m = Markdown('c:/users/ryan/documents/tinellbianlanguages/dictionary/dictionary.mkd')
+m = Markdown('c:/users/ryan/documents/tinellbianlanguages/grammar/grammar.mkd')
 for entry in d:
-    old = str(entry)
-    text = old.replace('\n', '&para;')
-    text = text.replace('[/d][d pronunciation]', '[/d]&para;[d pronunciation]')
-    text = text.replace('&para;', '\n')
+    old = i.remove_links(str(entry))
+    text = re.sub(r'<ipa>.*?</ipa>', geminate, old)
     if old <> text:
-        entry.text = text
+        entry.text = i.add_links(text, entry)
         entry.publish(d.template)
         print entry.name
 d.update_source()

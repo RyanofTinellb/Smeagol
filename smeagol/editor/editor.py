@@ -8,6 +8,13 @@ from itertools import izip
 from smeagol.translation import *
 from smeagol.utils import ignored, tkinter, is_key
 
+Tk.LINESTART = Tk.INSERT + ' linestart'
+Tk.LINEEND = Tk.INSERT + ' lineend'
+Tk.CURRLINE = (Tk.LINESTART, Tk.LINEEND)
+Tk.UPLINE = Tk.INSERT + ' -1 lines'
+Tk.PREVLINE = (Tk.UPLINE + ' linestart', Tk.UPLINE + ' lineend')
+
+BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
 
 class Editor(Tk.Frame, object):
     def __init__(self, master=None, parent=None):
@@ -235,8 +242,16 @@ class Editor(Tk.Frame, object):
             style = self.current_style.get()
             with ignored(Tk.TclError):
                 textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
-            textbox.insert(Tk.INSERT, key)
-            textbox.tag_add(style, Tk.INSERT + '-1c')
+            text = key + BRACKETS.get(key, '')
+            textbox.insert(Tk.INSERT, text)
+            bounds = '{0}-{1}c'.format(Tk.INSERT, len(text))
+            textbox.tag_add(style, bounds, Tk.INSERT)
+            mark = '{0}-{1}c'.format(Tk.INSERT, len(text) - 1)
+            textbox.mark_set(Tk.INSERT, mark)
+            return 'break'
+        elif keysym == 'Return':
+            spaces = re.sub(r'( *).*', r'\1', textbox.get(*Tk.CURRLINE))
+            textbox.insert(Tk.INSERT, '\n' + spaces)
             return 'break'
         elif keysym not in {'BackSpace', 'Shift_L', 'Shift_R'}:
             self.current_style.set('')
@@ -315,8 +330,8 @@ class Editor(Tk.Frame, object):
             event.widget.delete(Tk.SEL_FIRST + ' linestart',
                                 Tk.SEL_LAST + ' lineend +1c')
         except Tk.TclError:
-            event.widget.delete(Tk.INSERT + ' linestart',
-                                Tk.INSERT + ' lineend +1c')
+            event.widget.delete(Tk.LINESTART,
+                                Tk.LINEEND + ' +1c')
         return 'break'
 
     def update_wordcount(self, event=None, widget=None):
@@ -377,7 +392,12 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def insert_tabs(self, event=None):
-        self.textbox.insert(Tk.INSERT, ' ' * 4)
+        self.textbox.insert(Tk.LINESTART, ' ' * 4)
+        return 'break'
+
+    def remove_tabs(self, event=None):
+        if self.textbox.get(Tk.LINESTART, Tk.LINEEND).startswith(' ' * 4):
+            self.textbox.delete(Tk.LINESTART, Tk.LINESTART + '+4c')
         return 'break'
 
     def change_style(self, event, style):
@@ -595,6 +615,7 @@ class Editor(Tk.Frame, object):
             ('<Control-MouseWheel>', self.change_fontsize),
             (('<KeyPress>', '<Button-1>'), self.edit_text_changed),
             ('<Tab>', self.insert_tabs),
+            ('<Shift-Tab>', self.remove_tabs),
             ('<Control-0>', self.reset_fontsize),
             ('<Control-a>', self.select_all),
             ('<Control-b>', self.bold),

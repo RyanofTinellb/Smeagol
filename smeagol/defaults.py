@@ -15,6 +15,8 @@ _ | &under; | <br>
 &egrave; | )e | <br>
 &igrave; | )i | <br>
 &ograve; | )o | <br>
+&#x1e6c; | )T | <br>
+&#x1e6d; | )t | <br>
 &ugrave; | )u | <br>
 &acirc; | ()a | <br>
 &ecirc; | ()e | <br>

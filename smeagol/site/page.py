@@ -16,7 +16,7 @@ class Page(Node):
     def __getattr__(self, attr):
         if attr in {'name', 'script', 'old'}:
             return self.find().get(attr, '')
-        elif attr  in {'text'}:
+        elif attr in {'text'}:
             return self.find().get(attr, [])
         elif attr in {'position'}:
             return self.find().get(attr, '1.0')
@@ -335,7 +335,7 @@ class Page(Node):
             else:
                 link_array += '<li>{0}</li>\n'.format(
                     self.hyperlink(relative))
-        link_array += (level - 1) * '</ul>\n'
+        link_array += (level) * '</ul>\n'
         return self.links.format(link_array)
 
     @property
