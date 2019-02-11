@@ -580,17 +580,26 @@ class Editor(Tk.Frame, object):
         text = self.edit_file(text=str(self.marker))
         self.markdown_refresh(new_markdown=text)
 
-    def edit_file(self, text=''):
+    def edit_file(self, text='', command=None):
         # editor returns a value in self._return
-        self.show_file(text)
+        self.show_file(text, command)
         return self._return
 
-    def show_file(self, text=''):
+    def show_file(self, text='', command=None):
         top = Tk.Toplevel()
         editor = Editor(master=top, parent=self)
         editor.textbox.insert(Tk.INSERT, text)
+        if command:
+            editor.exit_command = command
         self.master.withdraw()
         self.wait_window(top)
+
+    def _command(self, event=None):
+        self.tkinter_to_html()
+        text = self.textbox.get('1.0', Tk.END)[:-1]
+        with ignored(AttributeError):
+            self.exit_command(text)
+            self.information.set('Saved!')
 
     def show_window(self):
         self.top.state('zoomed')
@@ -629,7 +638,7 @@ class Editor(Tk.Frame, object):
             ('<Control-m>', self.markdown_refresh),
             ('<Control-n>', self.add_link),
             ('<Control-r>', self.refresh_random),
-            ('<Control-s>', self.tkinter_to_html),
+            ('<Control-s>', self._command),
             ('<Control-t>', self.add_translation),
             ('<Control-v>', self.paste_text),
             ('<Control-w>', self.select_word),
@@ -642,7 +651,10 @@ class Editor(Tk.Frame, object):
         # with ignored(AttributeError):
         self.tkinter_to_html()
         self.parent.show_window()
-        self.parent._return = self.textbox.get('1.0', Tk.END)
+        text = self.textbox.get('1.0', Tk.END)
+        with ignored(AttributeError):
+            self.exit_command(text)
+        self.parent._return = text
         self.master.destroy()
 
 if __name__ == '__main__':

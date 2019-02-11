@@ -275,7 +275,7 @@ class SiteEditor(Properties, Editor):
         self.server.serve_forever()
 
     def open_in_browser(self, event=None):
-        web.open_new_tab(os.path.join('http://localhost:' +
+        web.open_new_tab(os.path.join('http://127.0.0.1:' +
                                       str(self.PORT), self.entry.link))
         return 'break'
 
@@ -534,19 +534,25 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def edit_script(self, event=None):
+        default = 'Enter new JavaScript here'
         try:
-            script = self.edit_file(self.entry.script)
+            text = self.entry.script or default
+        except AttributeError:
+            text = self.entry.get('script', default)
+        self.edit_file(text, self._edit_script)
+
+    def _edit_script(self, script=None):
+        try:
             if script:
                 self.entry.script = script
             else:
                 self.entry.remove_script()
         except AttributeError:
-            text = self.entry.get('script', 'Enter new JavaScript here')
-            script = self.edit_file(text)
             if script:
-                self.entry['script'] = self.edit_file(text)
+                self.entry['script'] = script
             else:
                 self.entry.pop('script', None)
+        self.save_page()
 
     def edit_template(self, event=None):
         text = self.edit_file(text=self.template)

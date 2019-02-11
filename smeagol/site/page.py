@@ -41,7 +41,7 @@ class Page(Node):
             with ignored(AttributeError):
                 value = filter(None, value.split('['))
             self.find()['text'] = value
-        elif attr in {'name', 'position', 'old'}:
+        elif attr in {'name', 'position', 'old', 'script'}:
             self.find()[attr] = value
         else:
             super(Page, self).__setattr__(attr, value)
