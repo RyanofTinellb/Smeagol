@@ -81,6 +81,8 @@ class Page(Node):
         # remove tags, and items between some tags
         change_text(
             r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>|^\d\]', ' ', content)
+        # remove heading markers from tables
+        remove_text(r'\|\w*', content)
         # change punctuation to paragraph marks, so that splitlines works
         change_text(r'[!?.|]', '\n', content)
         # change punctuation to space
@@ -278,7 +280,7 @@ class Page(Node):
         hyperlink = self.hyperlink('search.html', anchors=False)
         return ('    <script type="text/javascript">\n'
                 'let href = window.location.href;\n'
-                'if (href.indexOf("?") != -1) {{\n'
+                'if (href.indexOf("?") != -1 && href.indexOf("?highlight=") == -1) {{\n'
                 '    let term = href.replace(/(.*?\?)(.*?)(#.*|$)/, "$2");\n'
                 '    window.location.href = `{0}?${{term}}&andOr=and`;\n'
                 '}}\n'

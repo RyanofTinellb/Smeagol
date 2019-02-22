@@ -46,7 +46,7 @@ class Encyclopedia(Site):
         files = {file: d.destination + name + filename
                     for file, filename in d.files.iteritems()}
         super(Stories, self).__init__(d.destination + name,
-            'The Universe of Tinellb', files)    
+            'The Universe of Tinellb', files)
 
 
 class TheCoelacanthQuartet(Story):
@@ -64,7 +64,7 @@ class Default():
 
 if __name__ == '__main__':
     oldtime = datetime.now()
-    for site in Grammar, Story, Stories, Dictionary:
+    for site in Story, Stories, Dictionary, Grammar:
         site = site()
         print(site.name + ': ')
         site.update_searchindex()
