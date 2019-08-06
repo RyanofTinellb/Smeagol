@@ -11,16 +11,16 @@ class AddRemoveLinks:
     @property
     def adders(self):
         chain_up = chain.from_iterable
-        adders = [adder.adder for adder in self.link_adders.values()]
-        return dict(chain_up(adder.iteritems() for adder in adders))
+        adders = [adder.adder for adder in list(self.link_adders.values())]
+        return dict(chain_up(iter(adder.items()) for adder in adders))
 
     def __add__(self, adder):
-        for adder, resource in adder.iteritems():
+        for adder, resource in adder.items():
             self.link_adders[adder] = globals()[adder](resource)
         return self
 
     def __sub__(self, adder):
-        for adder, resource in adder.iteritems():
+        for adder, resource in adder.items():
             self.link_adders.pop(adder, None)
         return self
 
@@ -33,12 +33,12 @@ class AddRemoveLinks:
                 'AddRemoveLinks has no attribute {0}'.format(attr))
 
     def add_links(self, text, entry):
-        for link_adder in self.link_adders.values():
+        for link_adder in list(self.link_adders.values()):
             text = link_adder.add_links(text, entry)
         return text
 
     def remove_links(self, text):
-        for link_adder in self.link_adders.values():
+        for link_adder in list(self.link_adders.values()):
             text = link_adder.remove_links(text)
         return text
 
@@ -74,14 +74,14 @@ class Glossary:
         self.glossary = json.loads(new_file)
 
     def add_links(self, text, entry):
-        for abbrev, full_form in self.glossary.iteritems():
+        for abbrev, full_form in self.glossary.items():
             text = text.replace(
                 '<small-caps>{0}</small-caps>'.format(abbrev),
                                 self.tooltip.format(abbrev, full_form))
         return text
 
     def remove_links(self, text):
-        for abbrev, full_form in self.glossary.iteritems():
+        for abbrev, full_form in self.glossary.items():
             text = text.replace(self.tooltip.format(abbrev, full_form),
                 '<small-caps>{0}</small-caps>'.format(abbrev))
         return text
@@ -181,7 +181,7 @@ class InternalDictionary:
 
     def _unlink(self, regex):
         tr = self.translator
-        language, link = [regex.group(x) for x in xrange(1,3)]
+        language, link = [regex.group(x) for x in range(1,3)]
         tag = 'link' if link in self.wordlist else 'bink'
         if language == urlform(self.language):
             return r'<{0}>{1}</{0}>'.format(tag, link)

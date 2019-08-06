@@ -1,6 +1,6 @@
-import Tkinter as Tk
-import tkFileDialog as fd
-from properties import Properties
+import tkinter as Tk
+import tkinter.filedialog as fd
+from .properties import Properties
 from smeagol.utils import *
 from smeagol.defaults import default
 

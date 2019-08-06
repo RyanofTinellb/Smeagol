@@ -1,6 +1,6 @@
 import os
 import json
-from page import Page
+from .page import Page
 from smeagol.translation import Markdown, Translator
 from smeagol.utils import *
 
@@ -88,12 +88,12 @@ class Site(object):
         self.current = None
         return self
 
-    def next(self):
+    def __next__(self):
         # changed this behaviour because it's better with Page objects
         # may need to change back if something needs the node object
             # itself.
         try:
-            self.current.next()
+            next(self.current)
         except AttributeError:
             self.current = Page(self.tree, [])
         except IndexError:
@@ -106,7 +106,7 @@ class Site(object):
         count = 0
         try:
             while page.name != entry != count:
-                page.next()
+                next(page)
                 count += 1
         except IndexError:
             raise KeyError(entry)
@@ -161,7 +161,7 @@ class Site(object):
             sentences += analysis['sentences']
             urls.append(entry.link)
             names.append(buyCaps(entry.name))
-            for word, line_numbers in new_words.iteritems():
+            for word, line_numbers in new_words.items():
                 line_numbers = increment(line_numbers, by=base)
                 locations = {str(page_number): line_numbers}
                 try:

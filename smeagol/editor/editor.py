@@ -1,10 +1,10 @@
 import re
-import tkFont
-import Tkinter as Tk
-import tkFileDialog as fd
+import tkinter as Tk
+from tkinter.font import Font
+import tkinter.filedialog as fd
 import webbrowser as web
-from ttk import Combobox
-from itertools import izip
+from tkinter.ttk import Combobox
+
 from smeagol.translation import *
 from smeagol.utils import ignored, tkinter, is_key
 
@@ -24,7 +24,7 @@ class Editor(Tk.Frame, object):
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.set_frames()
         self.row = 0
-        self.font = tkFont.Font(family='Calibri', size=18)
+        self.font = Font(family='Calibri', size=18)
         self.setup_linguistics()
         self.ready()
         self.place_widgets()
@@ -72,8 +72,8 @@ class Editor(Tk.Frame, object):
     def ready_option_menu(self):
         self.languagevar.set(self.language)
         translator = self.translator
-        languages = [u'{0}: {1}'.format(code, lang().name)
-                for code, lang in translator.languages.items()]
+        languages = ['{0}: {1}'.format(code, lang().name)
+                for code, lang in list(translator.languages.items())]
         self.language_menu = Combobox(self.sidebar,
                                 textvariable=self.languagevar,
                                 values=languages,
@@ -108,7 +108,7 @@ class Editor(Tk.Frame, object):
 
     def add_commands(self, tkobj, commands):
         for (keys, command) in commands:
-            if isinstance(keys, basestring):
+            if isinstance(keys, str):
                 try:
                     tkobj.bind(keys, command)
                 except AttributeError:
@@ -124,7 +124,7 @@ class Editor(Tk.Frame, object):
     def text_styles(self):
         (strong, em, underline, small_caps, highlulani,
          example, example_no_lines) = iter(
-                                [self.font.copy() for _ in xrange(7)])
+                                [self.font.copy() for _ in range(7)])
         strong.configure(weight='bold')
         em.configure(slant='italic')
         underline.configure(underline=True, family='Calibri')
@@ -312,7 +312,7 @@ class Editor(Tk.Frame, object):
             ends = (Tk.SEL_FIRST + ' linestart',
                     Tk.SEL_LAST + ' lineend +1c')
             text = textbox.get(*ends)
-            selected = map(textbox.index, (Tk.SEL_FIRST, Tk.SEL_LAST))
+            selected = list(map(textbox.index, (Tk.SEL_FIRST, Tk.SEL_LAST)))
         except Tk.TclError:
             ends = (Tk.INSERT + ' linestart',
                     Tk.INSERT + ' lineend +1c')
@@ -321,7 +321,7 @@ class Editor(Tk.Frame, object):
         textbox.delete(*ends)
         textbox.insert(Tk.INSERT + correction, text)
         if selected:
-            textbox.tag_add('sel', *map(lambda x: x + direction, selected))
+            textbox.tag_add('sel', *[x + direction for x in selected])
         textbox.mark_set(Tk.INSERT, position + direction)
         return 'break'
 
@@ -403,7 +403,7 @@ class Editor(Tk.Frame, object):
     def change_style(self, event, style):
         textbox = event.widget
         for other in textbox.tag_names():
-            if other <> 'sel':
+            if other != 'sel':
                 with ignored(Tk.TclError):
                     textbox.tag_remove(other, Tk.SEL_FIRST, Tk.SEL_LAST)
         if style == self.current_style.get():
@@ -521,7 +521,7 @@ class Editor(Tk.Frame, object):
     def tkinter_to_html(self, event=None):
         textbox = self.textbox
         for (style, _) in self.text_styles:
-            for end, start in izip(*[reversed(textbox.tag_ranges(style))] * 2):
+            for end, start in zip(*[reversed(textbox.tag_ranges(style))] * 2):
                 if style.startswith('example'):
                     text = textbox.get(start, end)[0]
                     text = '[{0}]'.format(text)

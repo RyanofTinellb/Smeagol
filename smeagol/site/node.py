@@ -1,7 +1,7 @@
-from itertools import chain, izip_longest
+from itertools import chain, zip_longest
 
 
-class Node(object):
+class Node:
     def __init__(self, root, location):
         self.tree = root
         self.location = location
@@ -28,7 +28,7 @@ class Node(object):
         return self.location <= other.location
 
     def __ne__(self, other):
-        return self.location <> other.location
+        return self.location != other.location
 
     def __len__(self):
         return len(self.location)
@@ -132,7 +132,7 @@ class Node(object):
     @property
     def successor(self):
         try:
-            return self.new().next()
+            return next(self.new())
         except StopIteration:
             raise IndexError('No more nodes!')
 
@@ -171,7 +171,7 @@ class Node(object):
                     zip(self, destination)].index(True)
             return len(self) - dist
         except ValueError:
-            return min(map(len, [self, destination]))
+            return min(list(map(len, [self, destination])))
 
     def descendant_of(self, other):
         tail = self.location[:other.level]
@@ -196,7 +196,7 @@ class Node(object):
 
     @property
     def ancestors(self):
-        for i in xrange(self.level - 1):
+        for i in range(self.level - 1):
             yield self.new(self.location[:i + 1])
 
     @property
@@ -207,8 +207,8 @@ class Node(object):
         yield self
 
     def unique_lineage(self, other):
-        superset, subset = [set(location.lineage)
-                                for location in (self, other)]
+        a, b = (self, other)
+        superset, subset = [set(location.lineage) for location in (self, other)]
         level = lambda node: node.level
         for ancestor in sorted(superset - subset, key=level):
             yield ancestor
@@ -231,7 +231,7 @@ class Node(object):
         if len(self.location) == 0:
             raise StopIteration
         location = self.location[:-1]
-        for child in xrange(self.new(location).num_children):
+        for child in range(self.new(location).num_children):
             yield self.new(location + [child])
 
     @property
@@ -242,7 +242,7 @@ class Node(object):
 
     @property
     def daughters(self):
-        for child in xrange(self.num_children):
+        for child in range(self.num_children):
             yield self.new(self.location + [child])
 
     @property
@@ -263,11 +263,11 @@ class Node(object):
     def descendants(self):
         generation = len(self.location)
         location = self.location[:]
-        next = self.new(location).next()
-        while len(next.location) <> generation:
+        next = next(self.new(location))
+        while len(next.location) != generation:
             yield next
             try:
-                next = self.new(next.location).next()
+                next = next(self.new(next.location))
             except IndexError:
                 raise StopIteration
 

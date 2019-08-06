@@ -1,16 +1,16 @@
 import os
 import random
-import SocketServer
-import SimpleHTTPServer
-import Tkinter as Tk
+import socketserver
+import http.server
+import tkinter as Tk
 import webbrowser as web
-import tkMessageBox as mb
-import tkSimpleDialog as sd
-from itertools import izip, izip_longest
+import tkinter.messagebox as mb
+import tkinter.simpledialog as sd
+from itertools import zip_longest
 from socket import error as socket_error
-from editor import Editor
-from properties import Properties
-from properties_window import PropertiesWindow
+from .editor import Editor
+from .properties import Properties
+from .properties_window import PropertiesWindow
 from smeagol.utils import *
 from smeagol.defaults import default
 
@@ -87,7 +87,7 @@ class SiteEditor(Properties, Editor):
     @property
     def heading_contents(self):
         get = lambda x: x.get()
-        return filter(None, map(get, self.headings))
+        return [_f for _f in map(get, self.headings) if _f]
 
     def go_to_heading(self, event=None):
         with ignored(IndexError):
@@ -161,7 +161,7 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def load_from_headings(self, event=None):
-        if self.page <> self.heading_contents:
+        if self.page != self.heading_contents:
             self.history += self.heading_contents
         self.load()
 
@@ -188,7 +188,7 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def later_entry(self, event=None):
-        self.history.next()
+        next(self.history)
         self.fill_and_load()
         return 'break'
 
@@ -250,17 +250,17 @@ class SiteEditor(Properties, Editor):
         self.site.root.name = self.site.name
         self.save_site()
 
-    @async
+    @asynca
     def site_publish(self, event=None):
         self.site.publish()
 
-    @async
+    @asynca
     def start_server(self, port):
         self.PORT = port
-        handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+        handler = http.server.SimpleHTTPRequestHandler
         while True:
             try:
-                self.server = SocketServer.TCPServer(("", self.PORT), handler)
+                self.server = socketserver.TCPServer(("", self.PORT), handler)
                 name = self.site.name
                 page404 = default.page404.format(
                     self.site[0].elder_links).replace(
@@ -360,13 +360,13 @@ class SiteEditor(Properties, Editor):
             grandparent = parent.pop('parent')
             return self.chain_append(parent, grandparent, True)
 
-    @async
+    @asynca
     def update_tocs(self, new=None):
         # don't publish the whole site again if you're a dictionary,
         # unless the parent was also new.
         self.publish(site=self.site, allpages=True)
 
-    @async
+    @asynca
     def save_wholepage(self):
         try:
             with open('wholetemplate.html') as template:
@@ -400,7 +400,7 @@ class SiteEditor(Properties, Editor):
             self.errors += 1
             return ''
 
-    @async
+    @asynca
     def save_search_page(self):
         for template in (
                 ('searchtemplate.html', 'search.html'),
@@ -482,7 +482,7 @@ class SiteEditor(Properties, Editor):
             self.fill_headings()
 
     @staticmethod
-    @async
+    @asynca
     def publish(entry=None, site=None, allpages=False):
         if allpages:
             site.publish()
@@ -571,13 +571,13 @@ class SiteEditor(Properties, Editor):
             self.update_pages()
         self.textbox.focus_set()
 
-    @async
+    @asynca
     def update_pages(self):
         for entry in self.site:
             old = str(entry)
             text = self.linkadder.remove_links(old)
             text = self.linkadder.add_links(text, entry)
-            if old <> text:
+            if old != text:
                 entry.text = text
                 entry.publish(self.site.template)
         self.site.update_source()

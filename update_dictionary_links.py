@@ -7,8 +7,8 @@ for entry in d:
     old = str(entry)
     text = i.remove_links(old)
     text = i.add_links(text, entry)
-    if old <> text:
+    if old != text:
         entry.text = text
         entry.publish(d.template)
-        print entry.name
+        print(entry.name)
 d.update_source()

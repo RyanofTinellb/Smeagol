@@ -1,4 +1,4 @@
-from site_editor import SiteEditor, Tk
+from .site_editor import SiteEditor, Tk
 from smeagol.site.page import Page
 from smeagol.utils import *
 
@@ -72,7 +72,7 @@ class DictionaryEditor(SiteEditor):
         self.serialise()
 
     @staticmethod
-    @async
+    @asynca
     def publish(entry=None, site=None, allpages=False):
         if allpages:
             site.publish()
@@ -100,7 +100,7 @@ class DictionaryEditor(SiteEditor):
         else:
             return None
 
-    @async
+    @asynca
     def serialise(self):
         output = []
         transliteration = None
@@ -127,7 +127,7 @@ class DictionaryEditor(SiteEditor):
 
     def _pos(self, line):
         line = re.sub(r'2](.*?)\n+', r'\1', line)
-        return filter(None, re.sub(r'\(.*?\)', '', line).split(' '))
+        return [_f for _f in re.sub(r'\(.*?\)', '', line).split(' ') if _f]
 
     def _meaning(self, line):
         meaning = re.sub(r'd definition](.*?)\n+', r'\1', line)

@@ -1,6 +1,6 @@
 import os
 import shutil
-from node import Node
+from .node import Node
 from datetime import datetime
 from page_utils import *
 from smeagol.translation import *
@@ -12,6 +12,9 @@ markdown = Markdown()
 class Page(Node):
     def __init__(self, tree, location):
         super(Page, self).__init__(tree, location)
+
+    def __hash__(self):
+        return hash(tuple(self.location))
 
     def __getattr__(self, attr):
         if attr in {'name', 'script', 'old'}:
@@ -39,7 +42,7 @@ class Page(Node):
     def __setattr__(self, attr, value):
         if attr == 'text':
             with ignored(AttributeError):
-                value = filter(None, value.split('['))
+                value = [_f for _f in value.split('[') if _f]
             self.find()['text'] = value
         elif attr in {'name', 'position', 'old', 'script'}:
             self.find()[attr] = value
@@ -130,7 +133,7 @@ class Page(Node):
             raise KeyError('{0} has no children'.format(self.name))
         try:
             while page.name != entry != count:
-                page.next()
+                self.next()
                 count += 1
         except (IndexError, StopIteration):
             raise KeyError(entry)
@@ -164,7 +167,7 @@ class Page(Node):
         return not self < other
 
     def __gt__(self, other):
-        return self <> other and self >= other
+        return self != other and self >= other
 
     def __le__(self, other):
         return self == other or self < other
@@ -174,7 +177,7 @@ class Page(Node):
 
     def publish(self, template=None):
         text = self.html(template)
-        if self.old <> text:
+        if self.old != text:
             dumps(text, self.link)
             self.old = text
 
@@ -183,7 +186,7 @@ class Page(Node):
         if self.is_root:
             return []
         name = lambda x: x.name
-        return map(name, self.lineage)[1:]
+        return list(map(name, self.lineage))[1:]
 
     @property
     def folder(self):
@@ -384,7 +387,7 @@ class Page(Node):
         return strftime(date, template)
 
     def section_replace(self, regex):
-        regex = [regex.group(i+1) for i in xrange(2)]
+        regex = [regex.group(i+1) for i in range(2)]
         if regex[0] in {'copyright', 'stylesheets', 'icon'}:
             return getattr(self, regex[0])(regex[1])
         else:
