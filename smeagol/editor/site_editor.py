@@ -301,7 +301,7 @@ class SiteEditor(Properties, Editor):
         except IndexError:
             return entry
         if not isinstance(entry, dict):
-            with ignored(KeyError):
+            # with ignored(KeyError):
                 return self.find_entry(headings, entry[heading])
         child = dict(name=heading, parent=entry, position='1.0')
         return self.find_entry(headings, child)
@@ -455,7 +455,7 @@ class SiteEditor(Properties, Editor):
 
     @staticmethod
     def get_text(textbox):
-        return textbox.get(1.0, Tk.END + '-1c').encode('ascii', 'replace')
+        return textbox.get(1.0, Tk.END + '-1c')
 
     def delete_page(self, event=None):
         template = 'Are you sure you wish to delete {0}?'
@@ -613,6 +613,7 @@ class SiteEditor(Properties, Editor):
         if entry is None:
             entry = self.entry
         name = entry.get('name', '')
+        raise Exception
         return 'Describe {0} here!\n'.format(name)
 
     @property

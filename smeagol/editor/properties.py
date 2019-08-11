@@ -11,7 +11,7 @@ import tkinter.filedialog as fd
 import tkinter.simpledialog as sd
 
 
-class Properties(object):
+class Properties:
     def __init__(self, config=None, caller=None, master=None):
         self.setup(config)
         super(Properties, self).__init__(master)
@@ -23,7 +23,7 @@ class Properties(object):
                 self.configuration = json.load(config)
         except (IOError, TypeError):
             self.configuration = json.loads(default.config)
-        self.site = Site(**self.site_info)
+        self.setup_site()
         self.linkadder = AddRemoveLinks(self.links)
 
     def setup_linguistics(self):
@@ -31,7 +31,37 @@ class Properties(object):
         self.translator = Translator(self.language)
         self.evolver = HighToDemoticLulani()
         self.randomwords = RandomWords(self.language)
-        self.marker = Markdown(self.markdown_file)
+        self.setup_markdown()
+
+    def setup_site(self):
+        while True:
+            try:
+                self.site = Site(**self.site_info)
+                break
+            except SourceFileNotFoundError:
+                filetypes = [('Source Data File', '*.src')]
+                title = 'Open Source'
+                filename = fd.askopenfilename(filetypes=filetypes, title=title,
+                    defaultextension=filetypes[0][1][1:])
+                self.source = filename
+            except TemplateFileNotFoundError:
+                filetypes = [('HTML Template', '*.html')]
+                title = 'Open Template'
+                filename = fd.askopenfilename(filetypes=filetypes, title=title,
+                    defaultextension=filetypes[0][1][1:])
+                self.template_file = filename
+
+    def setup_markdown(self):
+        while True:
+            try:
+                self.marker = Markdown(self.markdown_file)
+                break
+            except MarkdownFileNotFoundError:
+                filetypes = [('Markdown File', '*.mkd')]
+                title = 'Open Markdown file'
+                filename = fd.askopenfilename(filetypes=filetypes, title=title,
+                    defaultextension=filetypes[0][1][1:])
+                self.markdown_file = filename
 
     def __getattr__(self, attr):
         if attr in {'files', 'source', 'destination', 'template',
@@ -65,6 +95,8 @@ class Properties(object):
             self.set_markdown(attr, value)
         elif attr in {'name', 'destination'}:
             self.configuration['site'][attr] = value
+        elif attr in {'source', 'template_file'}:
+            self.configuration['site']['files'][attr] = value
         elif attr in {'links', 'history'}:
             self.configuration[attr] = value
         elif attr == 'page':

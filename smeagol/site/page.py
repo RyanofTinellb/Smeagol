@@ -68,7 +68,7 @@ class Page(Node):
     def link(self):
         link = self.folder
         url = self.url if not self.has_children else 'index'
-        hyperlink = '{0}/{1}'.format(link, url) if link else url
+        hyperlink = f'{link}/{url}' if link else url
         return hyperlink + '.html'
 
     @property
@@ -130,10 +130,10 @@ class Page(Node):
         try:
             page = self.eldest_daughter
         except AttributeError:
-            raise KeyError('{0} has no children'.format(self.name))
+            raise KeyError('{self.name} has no children')
         try:
             while page.name != entry != count:
-                self.next()
+                page = page.next()
                 count += 1
         except (IndexError, StopIteration):
             raise KeyError(entry)
@@ -198,7 +198,7 @@ class Page(Node):
             yield ancestor.url
         if not self.is_root and not self.is_leaf:
             yield self.url
-        raise StopIteration
+        return
 
     def hyperlink(self, destination, template='{0}', anchors=True):
         try:

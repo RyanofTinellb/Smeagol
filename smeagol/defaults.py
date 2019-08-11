@@ -159,6 +159,17 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
         }
       },
       {
+        "name": "Wordlist",
+        "property": "wordlist",
+        "owner": "files",
+        "textbox": true,
+        "browse": {
+          "text": "Wordlist File",
+          "action": "save",
+          "extension": ".json"
+        }
+      },
+      {
         "name": "Links within Dictionaries",
         "property": "InternalDictionary",
         "owner": "links",

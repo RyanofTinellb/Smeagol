@@ -5,6 +5,7 @@ import json
 import urllib.request, urllib.parse, urllib.error
 import inspect
 import functools
+from .errors import *
 from threading import Thread
 from datetime import datetime
 from contextlib import contextmanager

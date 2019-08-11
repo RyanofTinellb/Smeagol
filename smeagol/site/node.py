@@ -7,7 +7,7 @@ class Node:
         self.location = location
 
     def __repr__(self):
-        return 'Node: location = {0}'.format(self.location)
+        return f'Node: location = {self.location}'
 
     def __hash__(self):
         return hash(tuple(self.location))
@@ -74,16 +74,19 @@ class Node:
     def sister(self, index):
         if not len(self.location):
             raise IndexError('No such sister')
-        children = self.new(self.location[:-1]).children
-        if len(children) > self.location[-1] + index >= 0:
-            self.location[-1] += index
-            return self
+        location = self.location[:]
+        children = self.new(location[:-1]).children
+        if len(children) > location[-1] + index >= 0:
+            location[-1] += index
+            return self.new(location)
         else:
             raise IndexError('No such sister')
 
+    @property
     def previous_sister(self):
         return self.sister(-1)
 
+    @property
     def next_sister(self):
         return self.sister(1)
 
@@ -117,61 +120,57 @@ class Node:
 
     def next(self, _seen_children=False):
         if not _seen_children and self.has_children:
-            self.location += [0]
-            return self
+            return self.new(self.location + [0])
         else:
             try:
-                return self.next_sister()
+                return self.next_sister
             except IndexError:
                 try:
                     self.location.pop()
                     return self.next(_seen_children=True)
                 except IndexError:
-                    raise StopIteration
+                    raise IndexError('No more nodes!')
 
     @property
     def successor(self):
-        try:
-            return next(self.new())
-        except StopIteration:
-            raise IndexError('No more nodes!')
+        return self.next()
 
     @property
     def predecessor(self):
-        return self.new().previous()
+        return self.previous()
 
     def previous(self):
         try:
-            self.previous_sister()
-            self._last_grandchild()
-            return self
+            return self.previous_sister._last_grandchild()
         except IndexError:
-            if len(self.location):
-                self.location.pop()
-                return self
+            location = self.location[:]
+            if len(location):
+                location.pop()
+                return self.new(location)
             else:
                 raise IndexError('No more nodes')
 
-    def _last_grandchild(self):
-        children = self.num_children
+    def _last_grandchild(self, node=None):
+        node = node or self.new()
+        children = node.num_children
         if children:
-            self.location += [children - 1]
-            self._last_grandchild()
+            location = node.location[:] + [children - 1]
+            return self._last_grandchild(self.new(location))
+        else:
+            return node
 
     @property
     def youngest_granddaughter(self):
-        new = self.new()
-        new._last_grandchild()
-        return new
+        return self._last_grandchild()
 
     def distance(self, destination):
-        self, destination = [x.location for x in (self, destination)]
+        source, destination = [x.location for x in (self, destination)]
         try:
             dist = [i != j for i, j in
-                    zip(self, destination)].index(True)
-            return len(self) - dist
+                    zip(source, destination)].index(True)
+            return len(source) - dist
         except ValueError:
-            return min(list(map(len, [self, destination])))
+            return min(list(map(len, [source, destination])))
 
     def descendant_of(self, other):
         tail = self.location[:other.level]
@@ -204,7 +203,7 @@ class Node:
         yield self.root
         for ancestor in self.ancestors:
             yield ancestor
-        yield self
+        yield self.new()
 
     def unique_lineage(self, other):
         a, b = (self, other)
@@ -224,12 +223,12 @@ class Node:
         for i, _ in enumerate(self.root.children):
             yield self.new([i])
         else:
-            raise StopIteration
+            return
 
     @property
     def sisters(self):
         if len(self.location) == 0:
-            raise StopIteration
+            return
         location = self.location[:-1]
         for child in range(self.new(location).num_children):
             yield self.new(location + [child])
@@ -263,13 +262,13 @@ class Node:
     def descendants(self):
         generation = len(self.location)
         location = self.location[:]
-        next = next(self.new(location))
-        while len(next.location) != generation:
-            yield next
+        node = self.next()
+        while len(node.location) != generation:
+            yield node
             try:
-                next = next(self.new(next.location))
+                node = node.next()
             except IndexError:
-                raise StopIteration
+                return
 
     def reunion(self, *groups):
         location = lambda node: node.location

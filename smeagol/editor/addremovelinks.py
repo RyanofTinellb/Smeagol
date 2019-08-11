@@ -128,7 +128,7 @@ class ExternalDictionary:
         return '<{0}>{1}</{0}>'.format(tag, link)
 
     def wordlist_setup(self):
-        with open('c:/users/ryan/documents/tinellbianlanguages/dictionary/wordlist.json') as f:
+        with open('c:/users/ryan/tinellbianlanguages/dictionary/wordlist.json') as f:
             wordlist = json.load(f)
         self.wordlist = [word['t'] for word in wordlist]
 

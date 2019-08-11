@@ -14,7 +14,8 @@ class Site(object):
     def __init__(self, destination=None, name=None, files=None):
         self.name = name
         self.files = files or dict(
-            source='', template_file='', searchindex=''
+            source='', template_file='', searchindex='', wordlist='',
+            wholepage=dict(template='', file='')
         )
         self.setup_template()
         self.destination = destination
@@ -25,8 +26,10 @@ class Site(object):
         try:
             with open(self.template_file) as template:
                 template = template.read()
-        except (IOError, KeyError):
+        except KeyError:
             template = ''
+        except FileNotFoundError:
+            raise TemplateFileNotFoundError
         self.template = template
 
     def refresh_template(self, new_template):
@@ -38,8 +41,11 @@ class Site(object):
 
     def load_site(self):
         if self.source:
-            with open(self.source) as source:
-                self.tree = json.load(source)
+            try:
+                with open(self.source) as source:
+                    self.tree = json.load(source)
+            except FileNotFoundError:
+                raise SourceFileNotFoundError
         else:
             self.tree = dict(name=self.name)
 
@@ -71,18 +77,12 @@ class Site(object):
             super(Site, self).__setattr__(attr, value)
 
     def change_destination(self):
+        print (f'*{self.destination}*')
         if self.destination:
             destination = self.destination
             with ignored(os.error):
-                os.makedirs(destination)
-            try:
-                os.chdir(destination)
-            except os.error:
-                win32api.MessageBox(0, ('That does not seem to be a valid'
-                        ' destination. Please try again.'),
-                    'Unable to Create Destination')
-                return
-            os.chdir(destination)
+                os.makedirs(self.destination)
+            os.chdir(self.destination)
 
     def __iter__(self):
         self.current = None
@@ -93,7 +93,7 @@ class Site(object):
         # may need to change back if something needs the node object
             # itself.
         try:
-            next(self.current)
+            self.current.next()
         except AttributeError:
             self.current = Page(self.tree, [])
         except IndexError:
