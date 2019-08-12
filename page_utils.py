@@ -144,10 +144,10 @@ def table_cell(cell):
         except ValueError:
             form, cell = cell, ''
     heading = 'h' if 'h' in form else 'd'
-    rowcol = map(check_rowcol, [
+    rowcol = list(map(check_rowcol, [
         ['rowspan', r'(?<=r)\d*', form],
         ['colspan', r'(?<=c)\d*', form]
-    ])
+    ]))
     return '<t{0}{2}{3}>{1}</t{0}>'.format(heading, cell, *rowcol)
 
 

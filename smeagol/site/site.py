@@ -1,6 +1,6 @@
 import os
 import json
-from page import Page
+from .page import Page
 from smeagol.translation import Markdown, Translator
 from smeagol.utils import *
 
@@ -14,7 +14,8 @@ class Site(object):
     def __init__(self, destination=None, name=None, files=None):
         self.name = name
         self.files = files or dict(
-            source='', template_file='', searchindex=''
+            source='', template_file='', searchindex='', wordlist='',
+            wholepage=dict(template='', file='')
         )
         self.setup_template()
         self.destination = destination
@@ -25,8 +26,10 @@ class Site(object):
         try:
             with open(self.template_file) as template:
                 template = template.read()
-        except (IOError, KeyError):
+        except KeyError:
             template = ''
+        except FileNotFoundError:
+            raise TemplateFileNotFoundError
         self.template = template
 
     def refresh_template(self, new_template):
@@ -38,8 +41,11 @@ class Site(object):
 
     def load_site(self):
         if self.source:
-            with open(self.source) as source:
-                self.tree = json.load(source)
+            try:
+                with open(self.source) as source:
+                    self.tree = json.load(source)
+            except FileNotFoundError:
+                raise SourceFileNotFoundError
         else:
             self.tree = dict(name=self.name)
 
@@ -71,24 +77,18 @@ class Site(object):
             super(Site, self).__setattr__(attr, value)
 
     def change_destination(self):
+        print (f'*{self.destination}*')
         if self.destination:
             destination = self.destination
             with ignored(os.error):
-                os.makedirs(destination)
-            try:
-                os.chdir(destination)
-            except os.error:
-                win32api.MessageBox(0, ('That does not seem to be a valid'
-                        ' destination. Please try again.'),
-                    'Unable to Create Destination')
-                return
-            os.chdir(destination)
+                os.makedirs(self.destination)
+            os.chdir(self.destination)
 
     def __iter__(self):
         self.current = None
         return self
 
-    def next(self):
+    def __next__(self):
         # changed this behaviour because it's better with Page objects
         # may need to change back if something needs the node object
             # itself.
@@ -106,7 +106,7 @@ class Site(object):
         count = 0
         try:
             while page.name != entry != count:
-                page.next()
+                next(page)
                 count += 1
         except IndexError:
             raise KeyError(entry)
@@ -161,7 +161,7 @@ class Site(object):
             sentences += analysis['sentences']
             urls.append(entry.link)
             names.append(buyCaps(entry.name))
-            for word, line_numbers in new_words.iteritems():
+            for word, line_numbers in new_words.items():
                 line_numbers = increment(line_numbers, by=base)
                 locations = {str(page_number): line_numbers}
                 try:

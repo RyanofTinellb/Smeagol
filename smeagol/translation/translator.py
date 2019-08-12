@@ -47,11 +47,11 @@ class Translator:
 
     @property
     def fullname(self):
-        return u'{0}: {1}'.format(self.code, self.name)
+        return '{0}: {1}'.format(self.code, self.name)
 
     def encode(self, languagename):
         languagename = languagename.lower()
-        for code, language in self.languages.iteritems():
+        for code, language in self.languages.items():
             language = language()
             try:
                 if language.urlname == languagename:
@@ -163,101 +163,101 @@ class DemoticLulani(HighLulani):
 
 class EarlyFezhle(English):
     def __init__(self):
-        self.name = u'Early Fezhl\u00ea'
+        self.name = 'Early Fezhl\u00ea'
         self.safename = 'Early Fezhl&ecirc;'
         self.urlname = 'earlyfezhl()e'
 
 
 class LateFezhle(English):
     def __init__(self):
-        self.name = u'Late Fezhl\u00ea'
+        self.name = 'Late Fezhl\u00ea'
         self.safename = 'Late Fezhl&ecirc;'
         self.urlname = 'latefezhl()e'
 
 
 class KoineFezhle(English):
     def __init__(self):
-        self.name = u'Koine Fezhl\u00ea'
+        self.name = 'Koine Fezhl\u00ea'
         self.safename = 'Koine Fezhl&ecirc;'
         self.urlname = 'koinefezhl()e'
 
 
 class OldPtokan(English):
     def __init__(self):
-        self.name = u'Old Ptokan'
+        self.name = 'Old Ptokan'
 
 
 class MiddlePtokan(English):
     def __init__(self):
-        self.name = u'Middle Ptokan'
+        self.name = 'Middle Ptokan'
 
 
 class StandardPtokan(English):
     def __init__(self):
-        self.name = u'Standard Ptokan'
+        self.name = 'Standard Ptokan'
 
 
 class PreBrequen(English):
     def __init__(self):
-        self.name = u'Pre-Brequ\u00e8n'
+        self.name = 'Pre-Brequ\u00e8n'
         self.safename = 'Pre-Brequ&egrave;n'
         self.urlname = 'pre-brequ)en'
 
 
 class ArchaicBrequen(English):
     def __init__(self):
-        self.name = u'Archaic Brequ\u00e8n'
+        self.name = 'Archaic Brequ\u00e8n'
         self.safename = 'Archaic Brequ&egrave;n'
         self.urlname = 'archaicbrequ)en'
 
 
 class CommonBrequen(English):
     def __init__(self):
-        self.name = u'Common Brequ\u00e8n'
+        self.name = 'Common Brequ\u00e8n'
         self.safename = 'Common Brequ&egrave;n'
         self.urlname = 'commonbrequ)en'
 
 
 class ProtoZhaladi(English):
     def __init__(self):
-        self.name = u'Proto-Zhaladi'
+        self.name = 'Proto-Zhaladi'
 
 
 class ContemporaryZhaladi(English):
     def __init__(self):
-        self.name = u'Contemporary Zhaladi'
+        self.name = 'Contemporary Zhaladi'
 
 
 class ReformedZhaladi(English):
     def __init__(self):
-        self.name = u'Reformed Zhaladi'
+        self.name = 'Reformed Zhaladi'
 
 
 class ClassicalTsarin(English):
     def __init__(self):
-        self.name = u'Classical Tsarin'
+        self.name = 'Classical Tsarin'
 
 
 class ModernTsarin(English):
     def __init__(self):
-        self.name = u'Modern Tsarin'
+        self.name = 'Modern Tsarin'
 
 
 class AncientSolajin(English):
     def __init__(self):
-        self.name = u'Ancient Solajin'
+        self.name = 'Ancient Solajin'
 
 
 class MedievalSolajin(English):
     def __init__(self):
-        self.name = u'Medieval Solajin'
+        self.name = 'Medieval Solajin'
 
 
 class TraditionalSolajin(English):
     def __init__(self):
-        self.name = u'Traditional Solajin'
+        self.name = 'Traditional Solajin'
 
 
 class NewSolajin(English):
     def __init__(self):
-        self.name = u'New Solajin'
+        self.name = 'New Solajin'

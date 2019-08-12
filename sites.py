@@ -7,7 +7,7 @@ class Dictionary(Site):
         d = Default()
         name = 'dictionary/'
         files = {file: d.destination + name + filename
-                    for file, filename in d.files.iteritems()}
+                    for file, filename in d.files.items()}
         super(Dictionary, self).__init__(d.destination + name, 'Dictionary',
             files)
 
@@ -17,7 +17,7 @@ class Grammar(Site):
         d = Default()
         name = 'grammar/'
         files = {file: d.destination + name + filename
-                    for file, filename in d.files.iteritems()}
+                    for file, filename in d.files.items()}
         super(Grammar, self).__init__(d.destination + name, 'Grammar', files)
 
 
@@ -26,7 +26,7 @@ class Story(Site):
         d = Default()
         name = 'coelacanth/'
         files = {file: d.destination + name + filename
-                    for file, filename in d.files.iteritems()}
+                    for file, filename in d.files.items()}
         super(Story, self).__init__(d.destination + name,
             'The Coelacanth Quartet', files)
 
@@ -35,7 +35,7 @@ class Stories(Site):
         d = Default()
         name = 'writings/'
         files = {file: d.destination + name + filename
-                    for file, filename in d.files.iteritems()}
+                    for file, filename in d.files.items()}
         super(Stories, self).__init__(d.destination + name,
             'Short Stories', files)
 
@@ -44,7 +44,7 @@ class Encyclopedia(Site):
         d = Default()
         name = 'encyclopedia/'
         files = {file: d.destination + name + filename
-                    for file, filename in d.files.iteritems()}
+                    for file, filename in d.files.items()}
         super(Stories, self).__init__(d.destination + name,
             'The Universe of Tinellb', files)
 
@@ -66,9 +66,9 @@ if __name__ == '__main__':
     oldtime = datetime.now()
     for site in Story, Stories, Dictionary, Grammar:
         site = site()
-        print(site.name + ': ')
+        print((site.name + ': '))
         site.update_searchindex()
-        print(site.publish())
+        print((site.publish()))
         newtime = datetime.now()
-        print('Done: ' + str(newtime - oldtime))
+        print(('Done: ' + str(newtime - oldtime)))
         oldtime = newtime

@@ -14,8 +14,8 @@ m = Markdown('c:/users/ryan/documents/tinellbianlanguages/grammar/grammar.mkd')
 for entry in d:
     old = i.remove_links(str(entry))
     text = re.sub(r'<ipa>.*?</ipa>', geminate, old)
-    if old <> text:
+    if old != text:
         entry.text = i.add_links(text, entry)
         entry.publish(d.template)
-        print entry.name
+        print(entry.name)
 d.update_source()

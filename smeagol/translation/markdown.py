@@ -1,5 +1,6 @@
 import os
 from smeagol.defaults import default
+from smeagol.errors import MarkdownFileNotFoundError
 
 class Markdown:
     def __init__(self, filename=None):
@@ -11,9 +12,12 @@ class Markdown:
 
     def setup(self, filename):
         if filename:
-            with open(filename) as replacements:
-                for line in replacements:
-                    self.append_markdown(line)
+            try:
+                with open(filename) as replacements:
+                    for line in replacements:
+                        self.append_markdown(line)
+            except FileNotFoundError:
+                raise MarkdownFileNotFoundError
         else:
             for line in default.markdown.splitlines():
                 self.append_markdown(line)

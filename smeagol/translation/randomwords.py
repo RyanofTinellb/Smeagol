@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from evolve import HighToDemoticLulani
+from .evolve import HighToDemoticLulani
 import random
 import json
 import re
@@ -27,7 +27,7 @@ class RandomWords():
 
     @property
     def words(self):
-        return [self.converter.word for x in xrange(self.maximum)]
+        return [self.converter.word for x in range(self.maximum)]
 
     def __iter__(self):
         return self
@@ -83,12 +83,12 @@ class HighLulani:
 
     @property
     def word(self):
-        return u''.join(self.syllables)
+        return ''.join(self.syllables)
 
     @property
     def consonant(self):
         lst = ['b', 'g', 'j', 'f', 'h', 'd', 'p', 'r', 't', 'm',
-               'c', 'x', 'q', 'n', 'k', 'l', unichr(8217), 's']
+               'c', 'x', 'q', 'n', 'k', 'l', chr(8217), 's']
         scale = [10, 10, 11, 12, 13, 14, 15, 16,
                  17, 19, 21, 24, 27, 32, 38, 47, 79, 82]
         return self.pick(lst, scale)
@@ -103,14 +103,14 @@ class HighLulani:
     def syllables(self):
         lst = [1, 2, 3, 4]
         scale = [7, 18, 15, 2]
-        for i in xrange(self.pick(lst, scale)):
+        for i in range(self.pick(lst, scale)):
             yield self.double(self.syllable, i)
 
     @staticmethod
     def pick(lst, scale):
         rand = random.randint(1, sum(scale))
         try:
-            sums = [sum(scale[:x]) for x in xrange(len(scale))]
+            sums = [sum(scale[:x]) for x in range(len(scale))]
             letter = [x <= rand for x in sums].index(False) - 1
             return lst[letter]
         except ValueError:
@@ -123,8 +123,8 @@ class HighLulani:
     def double(self, syllable, num):
         consonant, vowel = syllable
         if num and not random.randint(0, self.geminate):
-            if consonant == unichr(8217):  # right single quote
-                return unichr(660) + vowel # glottal stop
+            if consonant == chr(8217):  # right single quote
+                return chr(660) + vowel # glottal stop
             return consonant + syllable
         return syllable
 
@@ -134,23 +134,23 @@ class DemoticLulani:
         self.lulani = HighLulani()
         self.vulgar = HighToDemoticLulani()
         self.rewrites = [
-                ('&rsquo;', u"\u2019"),
-                ('&middot;', u'\u00b7'),
-                ('&#x294;', u'\u0294'),
-                ('&eth;', u'\u00f0'),
-                ('&thorn;', u'\u00fe'),
-                ('&ouml;', u'\u00f6'),
-                ('&uuml;', u'\u00fc'),
-                ('&ntilde;', u'\u00f1'),
-                ('&#x330;', u'\u0330'),
-                ('h&#x330;', u'h\u0330'),
-                ('&#x17e;', u'\u017e'),
-                ('&#x1ee5;', u'\u1ee5'), # u with dot
-                ('&#x1ecd;', u'\u1ecd'), # o with dot
-                ('&#x1ecb;', u'\u1ecb'), # i with dot
-                ('&#x323;', u'\u0323'), # lower dot
-                ('&#x2c8;', u'\u02c8'),
-                ('&#x2cc;', u'\u02cc')]
+                ('&rsquo;', "\u2019"),
+                ('&middot;', '\u00b7'),
+                ('&#x294;', '\u0294'),
+                ('&eth;', '\u00f0'),
+                ('&thorn;', '\u00fe'),
+                ('&ouml;', '\u00f6'),
+                ('&uuml;', '\u00fc'),
+                ('&ntilde;', '\u00f1'),
+                ('&#x330;', '\u0330'),
+                ('h&#x330;', 'h\u0330'),
+                ('&#x17e;', '\u017e'),
+                ('&#x1ee5;', '\u1ee5'), # u with dot
+                ('&#x1ecd;', '\u1ecd'), # o with dot
+                ('&#x1ecb;', '\u1ecb'), # i with dot
+                ('&#x323;', '\u0323'), # lower dot
+                ('&#x2c8;', '\u02c8'),
+                ('&#x2cc;', '\u02cc')]
 
     @property
     def word(self):
@@ -171,5 +171,5 @@ class DemoticLulani:
     def lulani_word(self):
         word = self.lulani.word
         return word.replace(
-            unichr(8217), "&rsquo;").replace(
-            unichr(660), "&#x294;")
+            chr(8217), "&rsquo;").replace(
+            chr(660), "&#x294;")

@@ -78,11 +78,11 @@ def sandhi_check():
             for x in y]
 
 os.chdir('c:/users/ryan/documents/tinellbianlanguages/dictionary')
-print '''1. Verbs conjugation
+print('''1. Verbs conjugation
 2. Sandhi check
 3. Normal lexicon
-4. Exit'''
-option = raw_input('Choice: ')
+4. Exit''')
+option = input('Choice: ')
 if option == '1':
     with open('wordlist.json') as f:
         wordlist = Verbs(f).conjugation

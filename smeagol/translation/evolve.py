@@ -179,7 +179,7 @@ class HighToDemoticLulani:
             )[regex.group(2)] * len(regex.group(1))
 
     def simplify_vowel_cluster(self, regex):
-        first, second = [regex.group(x) for x in xrange(1, 3)]
+        first, second = [regex.group(x) for x in range(1, 3)]
         if (first + second).lower() in ('au', 'ao'):
             return second.upper()
         if (first + second).lower() in ('ae', 'aa', 'ia', 'iu'):

@@ -2,13 +2,14 @@ import os
 import re
 import sys
 import json
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import inspect
 import functools
+from .errors import *
 from threading import Thread
 from datetime import datetime
 from contextlib import contextmanager
-from translation.markdown import Markdown
+from .translation.markdown import Markdown
 
 
 @contextmanager
@@ -36,11 +37,11 @@ def timeit(function):
         oldtime = datetime.now()
         value = function(*args, **kwargs)
         newtime = datetime.now()
-        print('Done: ' + str(newtime - oldtime))
+        print(('Done: ' + str(newtime - oldtime)))
         return value
     return wrapper
 
-def async(function):
+def asynca(function):
 	@functools.wraps(function)
 	def async_function(*args, **kwargs):
 		thread = Thread(target=function, args=args, kwargs=kwargs)
@@ -115,7 +116,7 @@ def urlform(text, markdown=None):
     remove_text(r'<(div|ipa).*?\1>', name)
     # remove tags, spaces and punctuation
     remove_text(r'<.*?>|[/*;: ]', name)
-    name = urllib.quote(name[0], safe_punctuation + '.$')
+    name = urllib.parse.quote(name[0], safe_punctuation + '.$')
     return name
 
 
@@ -139,7 +140,7 @@ class ShortList(list):
             self += other
         return self
 
-    def next(self):
+    def __next__(self):
         try:
             page = self.pop(0)
         except IndexError:
