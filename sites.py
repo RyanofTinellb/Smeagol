@@ -56,8 +56,8 @@ class TheCoelacanthQuartet(Story):
 
 class Default():
     def __init__(self):
-        self.destination = 'c:/users/ryan/documents/tinellbianlanguages/'
-        self.files = dict(source='data.json',
+        self.destination = 'c:/users/ryan/tinellbianlanguages/'
+        self.files = dict(source='data.src',
                           template_file='template.html',
                           searchindex='searching.json')
 

@@ -233,7 +233,7 @@ class Page(Node):
 
     @property
     def title(self):
-        return remove_text(r'[[<].*?[]>]', [buyCaps(self.name)])[0]
+        return remove_text(r'[\[<].*?[\]>]', [buyCaps(self.name)])[0]
 
     @property
     def title_heading(self):

@@ -387,7 +387,7 @@ class SiteEditor(Properties, Editor):
                 '' if self.errors == 1 else 's',
                 self.errorstring
             )
-        self.information.set(information)
+        # self.information.set(information)
         with open('wholepage.html', 'w') as p:
             p.write(page)
         return self.errors

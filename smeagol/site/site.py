@@ -77,7 +77,6 @@ class Site(object):
             super(Site, self).__setattr__(attr, value)
 
     def change_destination(self):
-        print (f'*{self.destination}*')
         if self.destination:
             destination = self.destination
             with ignored(os.error):
@@ -93,7 +92,7 @@ class Site(object):
         # may need to change back if something needs the node object
             # itself.
         try:
-            self.current.next()
+            self.current = self.current.next()
         except AttributeError:
             self.current = Page(self.tree, [])
         except IndexError:

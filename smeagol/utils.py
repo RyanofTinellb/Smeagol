@@ -42,12 +42,12 @@ def timeit(function):
     return wrapper
 
 def asynca(function):
-	@functools.wraps(function)
-	def async_function(*args, **kwargs):
-		thread = Thread(target=function, args=args, kwargs=kwargs)
-		thread.start()
-		return thread
-	return async_function
+    @functools.wraps(function)
+    def async_function(*args, **kwargs):
+        thread = Thread(target=function, args=args, kwargs=kwargs)
+        thread.start()
+        return thread
+    return async_function
 
 def dump(dictionary, filename):
     if filename:
@@ -83,9 +83,11 @@ def is_key(text):
     return not re.match('^[A-Z].+', text)
 
 def change_text(item, replacement, text):
-    text[0] = re.sub(item, replacement, text[0])
+    try:
+        text[0] = re.sub(item, replacement, text[0])
+    except FutureWarning:
+        print(item)
     return text
-
 
 def remove_text(item, text):
     return change_text(item, '', text)
