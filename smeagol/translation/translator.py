@@ -47,7 +47,7 @@ class Translator:
 
     @property
     def fullname(self):
-        return '{0}: {1}'.format(self.code, self.name)
+        return f'{self.code}: {self.name}'
 
     def encode(self, languagename):
         languagename = languagename.lower()
@@ -147,12 +147,12 @@ class HighLulani:
 
     def convert_sentence(self, text):
         if text == '* **':
-            return '<high-lulani>* **</high-lulani>'.format(text)
-        output = '<high-lulani>.{0}.</high-lulani>'.format(self.convert_text(text))
+            return '<high-lulani>* **</high-lulani>'
+        output = f'<high-lulani>.{self.convert_text(text)}.</high-lulani>'
         return output
 
     def convert_word(self, text):
-        output = '<high-lulani>{0}</high-lulani>'.format(self.convert_text(text))
+        output = f'<high-lulani>{self.convert_text(text)}</high-lulani>'
         return output
 
 

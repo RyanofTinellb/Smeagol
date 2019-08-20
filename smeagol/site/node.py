@@ -121,15 +121,13 @@ class Node:
     def next(self, _seen_children=False):
         if not _seen_children and self.has_children:
             return self.new(self.location + [0])
+        elif _seen_children and self.is_root:        
+            raise IndexError('No more nodes!')
         else:
             try:
                 return self.next_sister
             except IndexError:
-                try:
-                    self.location.pop()
-                    return self.next(_seen_children=True)
-                except IndexError:
-                    raise IndexError('No more nodes!')
+                return self.new(self.location[:-1]).next(_seen_children=True)
 
     @property
     def successor(self):

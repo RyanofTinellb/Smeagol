@@ -142,10 +142,10 @@ class DictionaryEditor(SiteEditor):
         tr = self.translator
         code = tr.code[:2]
         output = [
-            '[1]{0}'.format(tr.safename),
+            f'[1]{tr.safename}',
             '[d native-script]',
-            '{0}[/d]'.format(tr.convert_word(name)),
-            '[p {0}]//[/p]'.format(code),
+            f'{tr.convert_word(name)}[/d]',
+            f'[p {code}]//[/p]',
             '[2]',
             '[d definition]',
             '[/d]'

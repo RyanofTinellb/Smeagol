@@ -29,8 +29,7 @@ class AddRemoveLinks:
             self.link_adders = {}
             return self.link_adders
         else:
-            raise AttributeError(
-                'AddRemoveLinks has no attribute {0}'.format(attr))
+            raise AttributeError(f'AddRemoveLinks has no attribute {attr}')
 
     def add_links(self, text, entry):
         for link_adder in list(self.link_adders.values()):
@@ -76,14 +75,14 @@ class Glossary:
     def add_links(self, text, entry):
         for abbrev, full_form in self.glossary.items():
             text = text.replace(
-                '<small-caps>{0}</small-caps>'.format(abbrev),
-                                self.tooltip.format(abbrev, full_form))
+                f'<small-caps>{abbrev}</small-caps>',
+                self.tooltip.format(abbrev, full_form))
         return text
 
     def remove_links(self, text):
         for abbrev, full_form in self.glossary.items():
             text = text.replace(self.tooltip.format(abbrev, full_form),
-                '<small-caps>{0}</small-caps>'.format(abbrev))
+                f'<small-caps>{abbrev}</small-caps>')
         return text
 
 
@@ -120,7 +119,7 @@ class ExternalDictionary:
                     'foo<link>bar</link>baz'
 
         """
-        return re.sub(r'<a href="{0}.*?>(.*?)</a>'.format(self.url), self._remove, text)
+        return re.sub(rf'<a href="{self.url}.*?>(.*?)</a>', self._remove, text)
 
     def _remove(self, regex):
         link = regex.group(1)

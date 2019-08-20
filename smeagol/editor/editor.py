@@ -54,7 +54,7 @@ class Editor(Tk.Frame, object):
                 keypress = label[underline]
                 submenu.add_command(label=label, command=command,
                                     underline=underline)
-                submenu.bind('<KeyPress-{0}>'.format(keypress), command)
+                submenu.bind(f'<KeyPress-{keypress}>', command)
 
     def ready_labels(self):
         master = self.sidebar
@@ -72,7 +72,7 @@ class Editor(Tk.Frame, object):
     def ready_option_menu(self):
         self.languagevar.set(self.language)
         translator = self.translator
-        languages = ['{0}: {1}'.format(code, lang().name)
+        languages = [f'{code}: {lang().name}'
                 for code, lang in list(translator.languages.items())]
         self.language_menu = Combobox(self.sidebar,
                                 textvariable=self.languagevar,
@@ -244,9 +244,9 @@ class Editor(Tk.Frame, object):
                 textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
             text = key + BRACKETS.get(key, '')
             textbox.insert(Tk.INSERT, text)
-            bounds = '{0}-{1}c'.format(Tk.INSERT, len(text))
+            bounds = f'{Tk.INSERT}-{len(text)}c'
             textbox.tag_add(style, bounds, Tk.INSERT)
-            mark = '{0}-{1}c'.format(Tk.INSERT, len(text) - 1)
+            mark = f'{Tk.INSERT}-{len(text) - 1}c'
             textbox.mark_set(Tk.INSERT, mark)
             return 'break'
         elif keysym == 'Return':
@@ -488,18 +488,18 @@ class Editor(Tk.Frame, object):
                     if style.startswith('example'):
                         letter = 'e' if style.endswith('lines') else 'f'
                         start = textbox.search(
-                            '\[[{0}]\]'.format(letter),
+                            f'\[[{letter}]\]',
                             '1.0',
                             regexp=True,
                             count=count
                         )
-                        end = '{0}+3c'.format(start)
+                        end = f'{start}+3c'
                         text = textbox.get(start, end)
                         text = text[1] + ' '
                         textbox.delete(start, end)
                         textbox.insert(start, text)
                         textbox.tag_add(
-                            style, start, '{0}+{1}c'.format(start, len(text)))
+                            style, start, f'{start}+{len(text)}c')
                     else:
                         start = textbox.search(
                             '<{0}>.*?</{0}>'.format(style),
@@ -507,13 +507,12 @@ class Editor(Tk.Frame, object):
                             regexp=True,
                             count=count
                         )
-                        end = '{0}+{1}c'.format(start, count.get())
+                        end = f'{start}+{count.get()}c'
                         text = textbox.get(start, end)
                         text = text[(len(style) + 2):(-3 - len(style))]
                         textbox.delete(start, end)
                         textbox.insert(start, text)
-                        textbox.tag_add(style, start,
-                                        '{0}+{1}c'.format(start, len(text)))
+                        textbox.tag_add(style, start, f'{start}+{len(text)}c')
                 except Tk.TclError:
                     break
         self.reset_textbox()
@@ -524,7 +523,7 @@ class Editor(Tk.Frame, object):
             for end, start in zip(*[reversed(textbox.tag_ranges(style))] * 2):
                 if style.startswith('example'):
                     text = textbox.get(start, end)[0]
-                    text = '[{0}]'.format(text)
+                    text = f'[{text}]'
                 else:
                     text = textbox.get(start, end)
                     text = '<{1}>{0}</{1}>'.format(text, style)

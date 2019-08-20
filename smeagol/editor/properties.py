@@ -72,7 +72,7 @@ class Properties:
         elif attr == 'markdown_file':
             return self.configuration['current']['markdown']
         elif attr in {'markdown', 'markup'}:
-            return getattr(self.marker, 'to_{0}'.format(attr))
+            return getattr(self.marker, f'to_{attr}')
         elif attr in {'remove_links', 'add_links'}:
             return getattr(self.linkadder, attr)
         elif attr == 'links':

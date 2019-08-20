@@ -264,8 +264,8 @@ class SiteEditor(Properties, Editor):
                 name = self.site.name
                 page404 = default.page404.format(
                     self.site[0].elder_links).replace(
-                        '<li class="normal">{0}</li>'.format(name),
-                        '<li><a href="/index.html">{0}</a></li>'.format(name)
+                        f'<li class="normal">{name}</li>',
+                        f'<li><a href="/index.html">{name}</a></li>'
                 )
                 page404 = re.sub(r'href="/*', 'href="/', page404)
                 handler.error_message_format = page404
@@ -340,6 +340,8 @@ class SiteEditor(Properties, Editor):
         self.save_text.set('Save')
         self.information.set('Saved!')
         self.save_site()
+        self.save_wholepage()
+        self.save_search_page()
         return 'break'
 
     @tkinter()
@@ -381,24 +383,42 @@ class SiteEditor(Properties, Editor):
             template.replace('{toc}', g[0].family_links).replace(
             '{main-contents}', k).replace(
             '{copyright}', self.copyright))
+        page = re.sub(
+            r'<li class="normal">(.*?)</li>',
+            r'<li><a href="index.html">\1</a></li>',
+            page
+            )
         information = '{3}{0} error{2}\n{1}'.format(
                 self.errors,
                 '-' * 10,
                 '' if self.errors == 1 else 's',
                 self.errorstring
             )
-        # self.information.set(information)
+        self.information.set(information)
         with open('wholepage.html', 'w') as p:
             p.write(page)
         return self.errors
 
     def _save_wholepage(self, page):
         try:
-            return page.title_heading + page.main_contents + '<p></p>'
+            content = page.title_heading + page.main_contents + '<p></p>'
+            return self.increment_headings(content, page.level)
         except ZeroDivisionError:
-            self.errorstring += 'Error in ' + page.folder + '/' + page.name + '\n'
+            self.errorstring += f'Error in {page.folder}/{page.name}\n'
             self.errors += 1
             return ''
+
+    def increment_headings(self, content, level):
+        return re.sub(r'(</*h)(\d)', lambda x: self._heading(x, level), content)
+
+    def _heading(self, match, level):
+        level += int(match.group(2))
+        if level > 6:
+            class_level = f' class="h{level}"'
+            level = 6
+        else:
+            class_level = ''
+        return f'{match.group(1)}{level}'
 
     @asynca
     def save_search_page(self):
@@ -427,8 +447,7 @@ class SiteEditor(Properties, Editor):
 
     @property
     def copyright(self):
-        strftime = datetime.strftime
-        copyright = '<div class="copyright">{0}</div>'
+        format_date = datetime.strftime
         date = datetime.today()
         if 4 <= date.day <= 20 or 24 <= date.day <= 30:
             suffix = 'th'
@@ -439,9 +458,9 @@ class SiteEditor(Properties, Editor):
                       '<a href="http://www.tinellb.com/about.html">'
                       'Ryan Eakins</a>.'),
                 'Last updated: %A, %B %#d' + suffix + ', %Y.')
-        spans = '\n'.join([span.format(strftime(date, template))
+        spans = '\n'.join([span.format(format_date(date, template))
                             for template in templates])
-        return copyright.format(spans)
+        return f'<div class="copyright">{spans}</div>'
 
     @property
     def is_new(self):
@@ -458,8 +477,7 @@ class SiteEditor(Properties, Editor):
         return textbox.get(1.0, Tk.END + '-1c')
 
     def delete_page(self, event=None):
-        template = 'Are you sure you wish to delete {0}?'
-        message = template.format(self.entry.name)
+        message = f'Are you sure you wish to delete {self.entry.name}?'
         if mb.askokcancel('Delete', message):
             self.entry.delete()
             self.page.pop()
@@ -501,7 +519,7 @@ class SiteEditor(Properties, Editor):
             textbox.insert(Tk.INSERT, before + text + after)
         except Tk.TclError:
             textbox.insert(Tk.INSERT, before + after)
-            textbox.mark_set(Tk.INSERT, Tk.INSERT + '-{0}c'.format(len(after)))
+            textbox.mark_set(Tk.INSERT, Tk.INSERT + f'-{len(after)}c')
 
     def insert_formatting(self, event, tag):
         converter = self.marker.find_formatting
@@ -601,11 +619,8 @@ class SiteEditor(Properties, Editor):
 
     def quit(self):
         self.master.destroy()
-        self.save_wholepage()
-        self.save_search_page()
         with ignored(AttributeError):
             self.server.shutdown()
-        self.save_site()
         self.master.quit()
 
     def initial_content(self, entry=None):
@@ -614,7 +629,7 @@ class SiteEditor(Properties, Editor):
             entry = self.entry
         name = entry.get('name', '')
         raise Exception
-        return 'Describe {0} here!\n'.format(name)
+        return f'Describe {name} here!\n'
 
     @property
     def textbox_commands(self):

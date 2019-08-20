@@ -213,7 +213,7 @@ class Page(Node):
         up = self.level + int(self.has_children) - 1
         address = (up * '../') + destination
         destination = template.format(destination)
-        link = '<a href="{0}">{1}</a>'.format(address, destination)
+        link = f'<a href="{address}">{destination}</a>'
         return address, link
 
     def _direct(self, destination, template):
@@ -228,7 +228,7 @@ class Page(Node):
         down = '/'.join(urls)
         address = (up * '../') + down + '.html'
         destination = template.format(buyCaps(destination.name))
-        link = '<a href="{0}">{1}</a>'.format(address, destination)
+        link = f'<a href="{address}">{destination}</a>'
         return address, link
 
     @property
@@ -237,8 +237,7 @@ class Page(Node):
 
     @property
     def title_heading(self):
-        title = '<h1>{0}</h1>'
-        return title.format(buyCaps(self.name))
+        return f'<h1>{buyCaps(self.name)}</h1>'
 
     @property
     def category_title(self):
@@ -264,8 +263,7 @@ class Page(Node):
 
     @property
     def main_contents(self):
-        contents = '<div class="main-contents">{0}</div>'
-        return contents.format(html(self.text))
+        return f'<div class="main-contents">{html(self.text)}</div>'
 
     def stylesheets(self, sheets):
         links = sheets.split(' ')
@@ -275,28 +273,27 @@ class Page(Node):
 
     def icon(self, icon):
         icon = self.hyperlink(icon, anchors=False)
-        template = '<link rel="icon" type="image/png" href="{0}">\n'
-        return template.format(icon)
+        return f'<link rel="icon" type="image/png" href="{icon}">\n'
 
     @property
     def search_script(self):
         hyperlink = self.hyperlink('search.html', anchors=False)
-        return ('    <script type="text/javascript">\n'
+        return (f'    <script type="text/javascript">\n'
                 'let href = window.location.href;\n'
                 'if (href.indexOf("?") != -1 && href.indexOf("?highlight=") == -1) {{\n'
                 '    let term = href.replace(/(.*?\?)(.*?)(#.*|$)/, "$2");\n'
-                '    window.location.href = `{0}?${{term}}&andOr=and`;\n'
+                '    window.location.href = `{hyperlink}?${{term}}&andOr=and`;\n'
                 '}}\n'
-            '</script>\n').format(hyperlink)
+            '</script>\n')
 
     @property
     def toc(self):
         if self.is_root or self.is_leaf:
             return ''
-        toc = '<div class="toc">\n{0}\n</div>'
-        hyperlinks = ['<p>{0}</p>'.format(self.hyperlink(daughter))
-                            for daughter in self.daughters]
-        return toc.format('\n'.join(hyperlinks))
+        links = '\n'.join([f'<p>{self.hyperlink(d)}</p>' for d in self.daughters])
+        return (f'<div class="toc">\n'
+                 '{links}\n'
+                 '</div>')
 
     @property
     def links(self):
@@ -331,50 +328,44 @@ class Page(Node):
             old_level = level
             level = relative.level
             if level > old_level:
-                link_array += '<ul class="level-{0}">'.format(str(level))
+                link_array += f'<ul class="level-{str(level)}">'
             elif level < old_level:
                 link_array += (old_level - level) * '</ul>\n'
             if relative == self:
-                link_array += '<li class="normal">{0}</li>\n'.format(
-                    self.name)
+                link_array += f'<li class="normal">{self.name}</li>\n'
             else:
-                link_array += '<li>{0}</li>\n'.format(
-                    self.hyperlink(relative))
+                link_array += f'<li>{self.hyperlink(relative)}</li>\n'
         link_array += (level) * '</ul>\n'
         return self.links.format(link_array)
 
     @property
     def matriarch_links(self):
         links = '\n'.join(map(self._link, self.matriarchs))
-        return '<ul>\n{0}\n</ul>'.format(links)
+        return f'<ul>\n{links}\n</ul>'
 
     def _link(self, other):
         other = self.new(other.location)
         if self == other:
-            template = '<li class="normal">{0}</li>'
+            return f'<li class="normal">{self.hyperlink(other)}</li>'
         else:
-            template = '<li>{0}</li>'
-        return template.format(self.hyperlink(other))
+            return f'<li>{self.hyperlink(other)}</li>'
 
     @property
     def nav_footer(self):
-        footer = '<div class="nav-footer">{0}</div>'
-        div = '<div>\n{0}\n</div>\n'
         try:
-            previous = self.hyperlink(self.predecessor,
-                                      '&larr; Previous page')
+            previous = self.hyperlink(self.predecessor, '&larr; Previous page')
         except IndexError:
             previous = ('<a href="http://www.tinellb.com">'
                         '&uarr; Go to Main Page</a>')
         try:
             next = self.hyperlink(self.successor, 'Next page &rarr;')
         except IndexError:
-            if self == self.root:
+            if self.is_root:
                 next = ''
             else:
                 next = self.hyperlink(self.root, 'Return to Menu &uarr;')
-        links = '\n'.join([div.format(f) for f in (previous, next)])
-        return footer.format(links)
+        links = '\n'.join([f'<div>\n{x}\n</div>\n' for x in (previous, next)])
+        return f'<div class="nav-footer">{links}</div>'
 
     def copyright(self, template):
         strftime = datetime.strftime
@@ -396,7 +387,7 @@ class Page(Node):
     @property
     def scripts(self):
         if self.script:
-            return '<script>\n{0}\n</script>'.format(self.script)
+            return f'<script>\n{self.script}\n</script>'
         else:
             return ''
 

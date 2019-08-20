@@ -50,16 +50,11 @@ class Site(object):
             self.tree = dict(name=self.name)
 
     def __repr__(self):
-        return ('Site(destination="{0}", '
-                'name="{1}", '
-                'source="{2}", '
-                'template="{3}", '
-                'searchindex="{4})"').format(
-                self.destination,
-                self.name,
-                self.source,
-                self.template_file,
-                self.searchindex)
+        return (f'Site(destination="{self.destination}", '
+                f'name="{self.name}", '
+                f'source="{self.source}", '
+                f'template="{self.template_file}", '
+                f'searchindex="{self.searchindex})"')
 
     def __getattr__(self, attr):
         if attr in {'source', 'template_file', 'searchindex'}:
@@ -105,7 +100,7 @@ class Site(object):
         count = 0
         try:
             while page.name != entry != count:
-                next(page)
+                page = page.successor
                 count += 1
         except IndexError:
             raise KeyError(entry)
@@ -130,7 +125,7 @@ class Site(object):
             try:
                 page.publish(template=self.template)
             except ZeroDivisionError:
-                errorstring += 'Error in {0}\n'.format(page.name)
+                errorstring += f'Error in {page.name}\n'
                 errors += 1
         self.update_searchindex()
         self.update_source()
