@@ -56,9 +56,20 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
     "name": "",
     "destination": "",
     "files": {
-      "searchindex": "",
       "source": "",
-      "template_file": ""
+      "template_file": "",
+      "wordlist": "",
+      "wholepage": {
+        "file": "",
+        "template": ""
+      },
+      "search": {
+        "index": "",
+        "template": "",
+        "page": "",
+        "template404": "",
+        "page404": ""
+      }
     }
   },
   "current": {
@@ -95,7 +106,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
           <p class="introduction">Use this search page to get back on track, or choose an option from the navigation pane.</p>
           <p class="introduction"></p>
           <form>
-            <input type="text" class="term" id="term" name="term" placeholder="Search..." autofocus><br>
+            <input type="text" class="term" id="term" name="term" placeholder="Search-" autofocus><br>
             <input type="submit" class="submit" value="Search">
             <input type="radio" name="andor" id="and" value="and" checked="true">AND
             <input type="radio" name="andor" id="or" value="or">OR
@@ -148,36 +159,111 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
         }
       },
       {
-        "name": "Searchterms File",
-        "property": "searchindex",
-        "owner": "files",
-        "textbox": true,
-        "browse": {
-          "text": "JSON File",
-          "action": "save",
-          "extension": ".json"
-        }
-      },
-      {
         "name": "Wordlist",
         "property": "wordlist",
         "owner": "files",
         "textbox": true,
         "browse": {
           "text": "Wordlist File",
-          "action": "save",
+          "action": "open",
           "extension": ".json"
         }
       },
       {
-        "name": "Links within Dictionaries",
+        "name": "Wholepage:"
+      },
+      {
+        "name": "--Location",
+        "property": "wholepage_file",
+        "owner": "files/wholepage",
+        "textbox": true,
+        "browse": {
+          "text": "Wholepage File",
+          "action": "save",
+          "extension": ".html"
+        }
+      },
+      {
+        "name": "--Template",
+        "property": "wholepage_template",
+        "owner": "files/wholepage",
+        "textbox": true,
+        "browse": {
+          "text": "Wholepage Template",
+          "action": "open",
+          "extension": ".html"
+        }
+      },
+      {
+        "name": "Search:"
+      },
+      {
+        "name": "--Location",
+        "property": "search_page",
+        "owner": "files/search",
+        "textbox": true,
+        "browse": {
+          "text": "Seach Page Location",
+          "action": "save",
+          "extension": ".html"
+        }
+      },
+      {
+        "name": "--Template",
+        "property": "search_template",
+        "owner": "files/search",
+        "textbox": true,
+        "browse": {
+          "text": "Search Page Template",
+          "action": "open",
+          "extension": ".html"
+        }
+      },
+      {
+        "name": "--404 Location",
+        "property": "search_page404",
+        "owner": "files/search",
+        "textbox": true,
+        "browse": {
+          "text": "404 Page Not Found File",
+          "action": "save",
+          "extension": ".html"
+        }
+      },
+      {
+        "name": "--404 Template",
+        "property": "search_template404",
+        "owner": "files/search",
+        "textbox": true,
+        "browse": {
+          "text": "404 Page Not Found File Template",
+          "action": "open",
+          "extension": ".html"
+        }
+      },
+      {
+        "name": "--Index",
+        "property": "search_index",
+        "owner": "files/search",
+        "textbox": true,
+        "browse": {
+          "text": "404 Page Not Found File Template",
+          "action": "open",
+          "extension": ".html"
+        }
+      },
+      {
+        "name": "Links:"
+      },
+      {
+        "name": "--Internal Dictionaries",
         "property": "InternalDictionary",
         "owner": "links",
         "textbox": false,
         "browse": false
       },
       {
-        "name": "Links to an external Grammar",
+        "name": "--External Grammar",
         "property": "ExternalGrammar",
         "owner": "links",
         "textbox": true,
@@ -188,7 +274,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
         }
       },
       {
-        "name": "Glossing Abbreviation Tooltips",
+        "name": "--Glossing Abbreviation Tooltips",
         "property": "Glossary",
         "owner": "links",
         "textbox": true,
@@ -199,7 +285,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
         }
       },
       {
-        "name": "Links to an external Dictionary",
+        "name": "--External Dictionary",
         "property": "ExternalDictionary",
         "owner": "links",
         "textbox": true,

@@ -64,9 +64,11 @@ class Properties:
                 self.markdown_file = filename
 
     def __getattr__(self, attr):
-        if attr in {'files', 'source', 'destination', 'template',
-                'template_file', 'refresh_template', 'name', 'searchindex'}:
-            return getattr(self.site, attr)
+        if attr in {'name', 'destination', 'source', 'template_file', 'wordlist',
+            'wholepage_file', 'wholepage_template',
+            'search_index', 'search_template', 'search_page',
+            'search_template404', 'search_page404'}:
+                return getattr(self.site, attr)
         elif attr in {'language', 'fontsize'}:
             return self.configuration['current'][attr]
         elif attr == 'markdown_file':

@@ -10,12 +10,13 @@ def increment(lst, by):
 
 markdown = Markdown()
 
-class Site(object):
+class Site:
     def __init__(self, destination=None, name=None, files=None):
         self.name = name
         self.files = files or dict(
-            source='', template_file='', searchindex='', wordlist='',
-            wholepage=dict(template='', file='')
+            source='', template_file='', wordlist='',
+            wholepage=dict(file='', template=''),
+            search=dict(index='', template='', page='', template404='', page404='')
         )
         self.setup_template()
         self.destination = destination
@@ -23,13 +24,13 @@ class Site(object):
         self.load_site()
 
     def setup_template(self):
-        try:
-            with open(self.template_file) as template:
-                template = template.read()
-        except KeyError:
-            template = ''
-        except FileNotFoundError:
-            raise TemplateFileNotFoundError
+        template = ''
+        if self.template_file:
+            try:
+                with open(self.template_file) as template:
+                    template = template.read()
+            except FileNotFoundError:
+                raise TemplateFileNotFoundError
         self.template = template
 
     def refresh_template(self, new_template):
@@ -40,14 +41,14 @@ class Site(object):
         self.template = new_template
 
     def load_site(self):
+        tree = dict(name=self.name)
         if self.source:
             try:
                 with open(self.source) as source:
-                    self.tree = json.load(source)
+                    tree = json.load(source)
             except FileNotFoundError:
                 raise SourceFileNotFoundError
-        else:
-            self.tree = dict(name=self.name)
+        self.tree = tree
 
     def __repr__(self):
         return (f'Site(destination="{self.destination}", '
@@ -57,8 +58,11 @@ class Site(object):
                 f'searchindex="{self.searchindex})"')
 
     def __getattr__(self, attr):
-        if attr in {'source', 'template_file', 'searchindex'}:
+        if attr in {'source', 'template_file', 'wordlist'}:
             return self.files[attr]
+        elif attr.startswith('wholepage_') or attr.startswith('search_'):
+            attr, sub = attr.split('_')
+            return self.files[attr][sub]
         else:
             return getattr(super(Site, self), attr)
 
@@ -124,8 +128,8 @@ class Site(object):
         for page in self:
             try:
                 page.publish(template=self.template)
-            except ZeroDivisionError:
-                errorstring += f'Error in {page.name}\n'
+            except Exception as err:
+                errorstring += f'{err} Error in {page.name}\n'
                 errors += 1
         self.update_searchindex()
         self.update_source()

@@ -22,12 +22,12 @@ class PropertiesWindow(Tk.Toplevel, object):
 
     def prepare(self, properties, row):
         properties['row'] = row
-        owner = properties['owner']
-        property = properties['property']
+        owner = properties.get('owner', None)
+        property = properties.get('property', None)
         if owner == 'links':
             properties['value'] = self.links.get(property, '')
             properties['checked'] = property in self.links
-        else:
+        elif owner is not None:
             properties['value'] = getattr(self, property)
 
     def configure_buttons(self, row):
@@ -45,7 +45,7 @@ class PropertiesWindow(Tk.Toplevel, object):
     def cancel(self, event=None):
         self.destroy()
 
-class PropertyFrame(object):
+class PropertyFrame:
     def __init__(self, property, master):
         self.property = property
         self.master = master
@@ -61,7 +61,7 @@ class PropertyFrame(object):
     def __getattr__(self, attr):
         if attr in {'name', 'owner', 'textbox', 'browse',
                         'value', 'checked', 'row'}:
-            return self.property[attr]
+            return self.property.get(attr, None)
         else:
             return getattr(super(PropertyFrame, self), attr)
 
