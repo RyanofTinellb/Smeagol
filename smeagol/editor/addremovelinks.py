@@ -5,7 +5,8 @@ from smeagol import Translator
 from smeagol.utils import urlform, ignored, buyCaps, sellCaps
 
 class AddRemoveLinks:
-    def __init__(self, link_adders):
+    def __init__(self, link_adders, wordlist):
+        self.wordlist = wordlist
         self += link_adders
 
     @property
@@ -16,11 +17,11 @@ class AddRemoveLinks:
 
     def __add__(self, adder):
         for adder, resource in adder.items():
-            self.link_adders[adder] = globals()[adder](resource)
+            self.link_adders[adder] = globals()[adder](resource, self.wordlist)
         return self
 
     def __sub__(self, adder):
-        for adder, resource in adder.items():
+        for adder, resources in adder.items():
             self.link_adders.pop(adder, None)
         return self
 
@@ -49,7 +50,7 @@ class AddRemoveLinks:
 
 
 class Glossary:
-    def __init__(self, filename):
+    def __init__(self, filename, wordlist=None):
         self.adder = {'Glossary': filename}
         try:
             with open(filename) as glossary:
@@ -87,8 +88,9 @@ class Glossary:
 
 
 class ExternalDictionary:
-    def __init__(self, url):
+    def __init__(self, url, wordlist=None):
         self.url = url
+        self.wordlist_file = wordlist
         self.language = ''
         self.adder = {'ExternalDictionary': url}
         self.wordlist_setup()
@@ -123,22 +125,26 @@ class ExternalDictionary:
 
     def _remove(self, regex):
         link = regex.group(1)
-        tag = 'link' if link in self.wordlist else 'bink'
+        tag = 'link' if not self.wordlist or link in self.wordlist else 'bink'
         return '<{0}>{1}</{0}>'.format(tag, link)
 
     def wordlist_setup(self):
-        with open('c:/users/ryan/tinellbianlanguages/dictionary/wordlist.json') as f:
-            wordlist = json.load(f)
-        self.wordlist = [word['t'] for word in wordlist]
+        if self.wordlist_file:
+            with open(self.wordlist_file) as wordlist:
+                wordlist = json.load(wordlist)
+            self.wordlist = [word['t'] for word in wordlist]
+        else:
+            self.wordlist = None
 
     def refresh(self, text=''):
         self.wordlist_setup()
 
 
 class InternalDictionary:
-    def __init__(self, resource=None):
+    def __init__(self, resource=None, wordlist=None):
         self.adder = {'InternalDictionary': resource}
         self.translator = Translator()
+        self.wordlist_file = wordlist
         self.wordlist_setup()
 
     def add_links(self, text, entry):
@@ -181,21 +187,24 @@ class InternalDictionary:
     def _unlink(self, regex):
         tr = self.translator
         language, link = [regex.group(x) for x in range(1,3)]
-        tag = 'link' if link in self.wordlist else 'bink'
+        tag = 'link' if not self.wordlist or link in self.wordlist else 'bink'
         if language == urlform(self.language):
             return r'<{0}>{1}</{0}>'.format(tag, link)
         return r'<{0}>{1}:{2}</{0}>'.format(tag, tr.encode(language), link)
 
     def wordlist_setup(self):
-        with open('c:/users/ryan/documents/tinellbianlanguages/dictionary/wordlist.json') as f:
-            wordlist = json.load(f)
-        self.wordlist = [word['t'] for word in wordlist]
+        if self.wordlist_file:
+            with open(self.wordlist_file) as wordlist:
+                wordlist = json.load(wordlist)
+            self.wordlist = [word['t'] for word in wordlist]
+        else:
+            self.wordlist = None
 
     def refresh(self, text=''):
         self.wordlist_setup()
 
 class ExternalGrammar:
-    def __init__(self, filename):
+    def __init__(self, filename, wordlist=None):
         self.adder = {'ExternalGrammar': filename}
         with open(filename) as replacements:
             self._file = replacements.read()

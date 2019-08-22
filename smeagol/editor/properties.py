@@ -16,21 +16,25 @@ class Properties:
         self.setup(config)
         super(Properties, self).__init__(master)
 
-    def setup(self, config):
-        self.config_filename = config
-        try:
-            with open(self.config_filename) as config:
-                self.configuration = json.load(config)
-        except (IOError, TypeError):
+    def setup(self, filename, source=False):
+        if source: # filename refers to a .src file
             self.configuration = json.loads(default.config)
+            self.source = filename
+        else: # filename refers to a .smg file
+            self.config_filename = filename
+            try:
+                with open(self.config_filename) as config:
+                    self.configuration = json.load(config)
+            except (IOError, TypeError):
+                self.configuration = json.loads(default.config)
         self.setup_site()
-        self.linkadder = AddRemoveLinks(self.links)
+        self.linkadder = AddRemoveLinks(self.links, self.wordlist)
 
     def setup_linguistics(self):
         # override Editor.setup_linguistics()
         self.translator = Translator(self.language)
         self.evolver = HighToDemoticLulani()
-        self.randomwords = RandomWords(self.language)
+        self.randomwords = RandomWords(self.language, self.sample_texts)
         self.setup_markdown()
 
     def setup_site(self):
@@ -50,6 +54,24 @@ class Properties:
                 filename = fd.askopenfilename(filetypes=filetypes, title=title,
                     defaultextension=filetypes[0][1][1:])
                 self.template_file = filename
+            except WholepageTemplateFileNotFoundError:
+                filetypes = [('Wholepage Template', '*.html')]
+                title = 'Open Template'
+                filename = fd.askopenfilename(filetypes=filetypes, title=title,
+                    defaultextension=filetypes[0][1][1:])
+                self.wholepage_template = filename
+            except SearchTemplateFileNotFoundError:
+                filetypes = [('Search Page Template', '*.html')]
+                title = 'Open Template for Search Page'
+                filename = fd.askopenfilename(filetypes=filetypes, title=title,
+                    defaultextension=filetypes[0][1][1:])
+                self.search_template = filename
+            except Search404TemplateFileNotFoundError:
+                filetypes = [('404 Page Template', '*.html')]
+                title = 'Open Template for 404 Page'
+                filename = fd.askopenfilename(filetypes=filetypes, title=title,
+                    defaultextension=filetypes[0][1][1:])
+                self.search_template404 = filename
 
     def setup_markdown(self):
         while True:
@@ -64,8 +86,10 @@ class Properties:
                 self.markdown_file = filename
 
     def __getattr__(self, attr):
-        if attr in {'name', 'destination', 'source', 'template_file', 'wordlist',
-            'wholepage_file', 'wholepage_template',
+        if attr in {'name', 'destination',
+            'source', 'template_file', 'wordlist',
+            'wholepage', 'wholepage_file', 'wholepage_template',
+            'search', 'search404',
             'search_index', 'search_template', 'search_page',
             'search_template404', 'search_page404'}:
                 return getattr(self.site, attr)
@@ -78,7 +102,9 @@ class Properties:
         elif attr in {'remove_links', 'add_links'}:
             return getattr(self.linkadder, attr)
         elif attr == 'links':
-            return self.configuration['links']
+            return self.configuration[attr]
+        elif attr == 'sample_texts':
+            return self.configuration['sample texts']
         elif attr == 'site_info':
             return self.configuration['site']
         elif attr == 'history':
@@ -101,6 +127,8 @@ class Properties:
             self.configuration['site']['files'][attr] = value
         elif attr in {'links', 'history'}:
             self.configuration[attr] = value
+        elif attr == 'sample_texts':
+            self.configuration['randomwords']
         elif attr == 'page':
             self.history.replace(value)
         else:
@@ -132,13 +160,11 @@ class Properties:
         self.links = self.linkadder.adders
 
     def open_site(self):
-        filetypes = [('Sm\xe9agol File', '*.smg'), ('Source Data File', '*.txt')]
+        filetypes = [('Sméagol File', '*.smg'), ('Source Data File', '*.src')]
         title = 'Open Site'
         filename = fd.askopenfilename(filetypes=filetypes, title=title)
-        if filename and filename.endswith('.smg'):
-            self.setup(filename)
-            return False
-        return filename
+        if filename:
+            self.setup(filename, source=filename.endswith('.src'))
 
     def save_site(self, filename=None):
         self.config_filename = filename or self.config_filename
@@ -170,16 +196,19 @@ class Properties:
         self.save_site_as() # unsuccessful save
 
     def save_site_as(self):
-        filetypes = [('Sm\xe9agol File', '*.smg')]
+        filetypes = [('Sméagol File', '*.smg')]
         title = 'Save Site'
-        filename = fd.asksaveasfilename(filetypes=filetypes, title=title)
+        filename = fd.asksaveasfilename(filetypes=filetypes, title=title,
+                                        defaultextension='.smg')
         if filename:
-            filename = re.sub(r'(\.smg)?$', r'.smg', filename)
             self.config_filename = filename
             self.save_site()
 
     def update(self, properties):
-        property = properties['property']
+        try:
+            property = properties['property']
+        except KeyError:
+            return
         owner = properties['owner']
         value = properties.get('value')
         checked = properties.get('checked')
@@ -188,5 +217,9 @@ class Properties:
                 self.linkadder += {property: value}
             else:
                 self.linkadder -= {property: value}
+        elif owner == 'random words':
+            setattr(self.randomwords, property, value)
+            if self.randomwords.name == 'English':
+                self.randomwords.select()
         else:
             setattr(self.site, property, value)

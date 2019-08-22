@@ -144,7 +144,7 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
         "browse": {
           "action": "save",
           "text": "Data File",
-          "extension": ".json"
+          "extension": ".src"
         }
       },
       {
@@ -167,6 +167,17 @@ l&#x330; | !!l | <br> <!-- l with tilde below -->
           "text": "Wordlist File",
           "action": "open",
           "extension": ".json"
+        }
+      },
+      {
+        "name": "Sample Texts",
+        "property": "sample_texts",
+        "owner": "random words",
+        "textbox": true,
+        "browse": {
+          "text": "Source File",
+          "action": "open multiple",
+          "extension": ".src"
         }
       },
       {

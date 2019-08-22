@@ -18,20 +18,30 @@ class Site:
             wholepage=dict(file='', template=''),
             search=dict(index='', template='', page='', template404='', page404='')
         )
-        self.setup_template()
+        self.setup_templates()
         self.destination = destination
         self.change_destination()
         self.load_site()
 
-    def setup_template(self):
+    def setup_templates(self):
+        templates = (
+            (self.template_file, 'template', TemplateFileNotFoundError),
+            (self.wholepage_template, 'wholepage', WholepageTemplateFileNotFoundError),
+            (self.search_template, 'search', SearchTemplateFileNotFoundError),
+            (self.search_template404, 'search404', Search404TemplateFileNotFoundError)
+        )
+        for template in templates:
+            self._template(*template)
+
+    def _template(self, filename, attr, Error):
         template = ''
-        if self.template_file:
+        if filename:
             try:
-                with open(self.template_file) as template:
+                with open(filename) as template:
                     template = template.read()
             except FileNotFoundError:
-                raise TemplateFileNotFoundError
-        self.template = template
+                raise Error
+        setattr(self, attr, template)
 
     def refresh_template(self, new_template):
         if new_template and self.template_file:
@@ -59,17 +69,33 @@ class Site:
 
     def __getattr__(self, attr):
         if attr in {'source', 'template_file', 'wordlist'}:
-            return self.files[attr]
+            try:
+                return self.files[attr]
+            except KeyError:
+                self.files[attr] = ''
+                return ''
         elif attr.startswith('wholepage_') or attr.startswith('search_'):
             attr, sub = attr.split('_')
-            return self.files[attr][sub]
+            while True:
+                try:
+                    return self.files[attr][sub]
+                except KeyError:
+                    try:
+                        self.files[attr][sub] = ''
+                    except KeyError:
+                        self.files[attr] = {sub: ''}
+                else:
+                    break
         else:
             return getattr(super(Site, self), attr)
 
     def __setattr__(self, attr, value):
-        if attr in {'source', 'template_file', 'searchindex'}:
+        if attr in {'source', 'template_file', 'wordlist'}:
             self.files[attr] = value
-        if attr == 'destination':
+        elif attr.startswith('wholepage_') or attr.startswith('search_'):
+            attr, sub = attr.split('_')
+            self.files[attr][sub] = value
+        elif attr == 'destination':
             super(Site, self).__setattr__(attr, value)
             self.change_destination()
         else:
@@ -144,7 +170,7 @@ class Site:
         dump(self.tree, self.source)
 
     def update_searchindex(self):
-        dump(self.analysis, self.searchindex)
+        dump(self.analysis, self.search_index)
 
     @property
     def analysis(self):

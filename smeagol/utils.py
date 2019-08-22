@@ -110,7 +110,7 @@ def urlform(text, markdown=None):
     name = [text.lower()]
     safe_punctuation = '\'_+!(),'
     # remove safe punctuations that should only be used to encode non-ascii characters
-    remove_text(r'[{safe_punctuation}]', name)
+    remove_text(fr'[{safe_punctuation}]', name)
     name[0] = markdown(name[0])
     # remove extraneous initial apostrophes
     change_text(r"^''+", "'", name)
@@ -118,7 +118,7 @@ def urlform(text, markdown=None):
     remove_text(r'<(div|ipa).*?\1>', name)
     # remove tags, spaces and punctuation
     remove_text(r'<.*?>|[/*;: ]', name)
-    name = urllib.parse.quote(name[0], safe_punctuation + '.$')
+    name = urllib.parse.quote(name[0], f'{safe_punctuation}.$')
     return name
 
 

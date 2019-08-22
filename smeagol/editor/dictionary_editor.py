@@ -69,7 +69,7 @@ class DictionaryEditor(SiteEditor):
         # override super()._save_page
         self.entry = self.find_entry(self.heading_contents)
         super(DictionaryEditor, self)._save_page()
-        self.serialise()
+        self.make_wordlist()
 
     @staticmethod
     @asynca
@@ -101,7 +101,7 @@ class DictionaryEditor(SiteEditor):
             return None
 
     @asynca
-    def serialise(self):
+    def make_wordlist(self):
         output = []
         transliteration = None
         language = None
@@ -121,9 +121,7 @@ class DictionaryEditor(SiteEditor):
                         p=pos,
                         d=definition,
                         m=meaning))
-        filename = ('c:/users/ryan/documents/tinellbianlanguages'
-                        '/dictionary/wordlist.json')
-        dump(output, filename)
+        dump(output, self.wordlist)
 
     def _pos(self, line):
         line = re.sub(r'2](.*?)\n+', r'\1', line)
@@ -164,13 +162,4 @@ class DictionaryEditor(SiteEditor):
 
 
 if __name__ == '__main__':
-    links = [ExternalGrammar('c:/users/ryan/documents/'
-                             'tinellbianlanguages/dictionarylinks.txt'),
-             InternalDictionary()]
-    app = DictionaryEditor(site=Dictionary(),
-                           markdown=Markdown('c:/users/ryan/documents/'
-                                             'tinellbianlanguages/dictionaryreplacements.mkd'),
-                           links=AddRemoveLinks(links),
-                           randomwords=RandomWords(20, 3))
-    app.master.title('Dictionary Editor')
-    app.mainloop()
+    DictionaryEditor().mainloop()

@@ -278,12 +278,12 @@ class Page(Node):
     @property
     def search_script(self):
         hyperlink = self.hyperlink('search.html', anchors=False)
-        return (f'    <script type="text/javascript">\n'
+        return ('    <script type="text/javascript">\n'
                 'let href = window.location.href;\n'
-                'if (href.indexOf("?") != -1 && href.indexOf("?highlight=") == -1) {{\n'
+                'if (href.indexOf("?") != -1 && href.indexOf("?highlight=") == -1) {\n'
                 '    let term = href.replace(/(.*?\?)(.*?)(#.*|$)/, "$2");\n'
-                '    window.location.href = `{hyperlink}?${{term}}&andOr=and`;\n'
-                '}}\n'
+                f'    window.location.href = `{hyperlink}?${{term}}&andOr=and`;\n'
+                '}\n'
             '</script>\n')
 
     @property

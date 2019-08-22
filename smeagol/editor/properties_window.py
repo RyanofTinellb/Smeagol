@@ -116,13 +116,13 @@ class PropertyFrame:
         filetype = (browse['text'], browse['extension'])
         def browse_file():
             action = browse['action']
-            if action == 'open':
+            if action.startswith('open'):
                 browser = fd.askopenfilename
             elif action == 'save':
                 browser = fd.asksaveasfilename
             filename = browser(filetypes=[filetype], title='Select File')
             extension = filetype[1]
-            self.insert(filename)
+            self.insert(filename, multiple=(action == 'open multiple'))
             if filename:
                 if action == 'save':
                     with open(filename, 'a') as textfile:
@@ -132,8 +132,10 @@ class PropertyFrame:
             self.entry.focus_set()
         return browse_file
 
-    def insert(self, text=''):
+    def insert(self, text='', multiple=False):
         if text:
+            if multiple:
+                text = f'{self.entryvar.get()};{text}'
             self.entryvar.set(text)
         self.entry.xview('end')
 

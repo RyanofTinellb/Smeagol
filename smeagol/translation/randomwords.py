@@ -4,9 +4,10 @@ import random
 import json
 import re
 
-class RandomWords():
-    def __init__(self, language=None):
+class RandomWords:
+    def __init__(self, language=None, sample_texts=''):
         self.maximum = 20
+        self.sample_texts = sample_texts
         languages = OrderedDict()
         languages['en'] = English
         languages['hl'] = HighLulani
@@ -14,13 +15,13 @@ class RandomWords():
         self.languages = languages
         self.select(language)
 
-    def select(self, language):
+    def select(self, language=None):
         self.language = language
         try:
             language = language.lower()
             self.converter = self.languages[language]()
-        except (IndexError, AttributeError, KeyError):
-            self.converter = English()
+        except:
+            self.converter = English(self.sample_texts)
         self.name = self.converter.name
         self.code = language
         self.number = len(self.languages)
@@ -34,18 +35,13 @@ class RandomWords():
 
 
 class English:
-    def __init__(self):
+    def __init__(self, sample_texts):
         self.name = 'English'
         self.words = set()
-        folder = ('c:/users/ryan/documents/tinellbianlanguages'
-                  '/{0}/data.json')
-        filenames = [
-            'coelacanth',
-            'writings',
-        ]
+        filenames = sample_texts.split(';')
         for filename in filenames:
             try:
-                with open(folder.format(filename)) as page:
+                with open(filename) as page:
                     page = json.load(page)
                 self.collate(page, self.words)
             except IOError:
@@ -61,18 +57,19 @@ class English:
     @property
     def word(self):
         choice = ''
-        while not choice:
-            choice = random.choice(self.words)
-            for sub in (
-                r'\[.*?\]',
-                r'<(ipa|high-lulani).*?/\1>',
-                r'<.*?>',
-                r'.*?>',
-                r'<.*?',
-                r'&.*?;',
-                r'\W|\d'
-            ):
-                choice = re.sub(sub, '', choice)
+        if self.words:
+            while not choice:
+                choice = random.choice(self.words)
+                for sub in (
+                    r'\[.*?\]',
+                    r'<(ipa|high-lulani).*?/\1>',
+                    r'<.*?>',
+                    r'.*?>',
+                    r'<.*?',
+                    r'&.*?;',
+                    r'\W|\d'
+                ):
+                    choice = re.sub(sub, '', choice)
         return choice.lower()
 
 

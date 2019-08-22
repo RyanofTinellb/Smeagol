@@ -35,6 +35,7 @@ class SiteEditor(Properties, Editor):
 
     def change_language(self, event=None):
         self.language = self.languagevar.get()
+        self.randomwords.sample_texts = self.sample_texts
         for obj in (self.translator, self.randomwords):
             obj.select(self.language[:2])
         return 'break'
@@ -235,7 +236,7 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def site_open(self, event=None):
-        source = self.open_site()
+        self.open_site()
         self.languagevar.set(self.language)
         self.reset()
         return 'break'
@@ -341,7 +342,7 @@ class SiteEditor(Properties, Editor):
         self.information.set('Saved!')
         self.save_site()
         self.save_wholepage()
-        self.save_search_page()
+        self.save_search_pages()
         return 'break'
 
     @tkinter()
@@ -370,19 +371,16 @@ class SiteEditor(Properties, Editor):
 
     @asynca
     def save_wholepage(self):
-        try:
-            with open('wholetemplate.html') as template:
-                template = template.read()
-        except IOError:
-            return False
-        g = self.site
+        site = self.site
+        root = site.root
         self.errors = 0
         self.errorstring = ''
-        k = '\n'.join(map(self._save_wholepage, g))
-        page = re.sub('{(.*?): (.*?)}', g[0].section_replace,
-            template.replace('{toc}', g[0].family_links).replace(
-            '{main-contents}', k).replace(
-            '{copyright}', self.copyright))
+        contents = '\n'.join(map(self._save_wholepage, site))
+        page = self.wholepage.replace(
+                '{toc}', root.family_links).replace(
+                '{main-contents}', contents).replace(
+                '{copyright}', self.copyright)
+        page = re.sub('{(.*?): (.*?)}', root.section_replace, page)
         page = re.sub(
             r'<li class="normal">(.*?)</li>',
             r'<li><a href="index.html">\1</a></li>',
@@ -395,18 +393,17 @@ class SiteEditor(Properties, Editor):
                 self.errorstring
             )
         self.information.set(information)
-        with open('wholepage.html', 'w') as p:
-            p.write(page)
+        dumps(page, self.wholepage_file)
         return self.errors
 
     def _save_wholepage(self, page):
         try:
             content = page.title_heading + page.main_contents + '<p></p>'
             return self.increment_headings(content, page.level)
-        except ZeroDivisionError:
-            self.errorstring += f'Error in {page.folder}/{page.name}\n'
+        except Exception as err:
+            self.errorstring += f'{err} Error in {page.folder}/{page.name}\n'
             self.errors += 1
-            return ''
+            return self.errorstring
 
     def increment_headings(self, content, level):
         return re.sub(r'(</*h)(\d)', lambda x: self._heading(x, level), content)
@@ -418,31 +415,25 @@ class SiteEditor(Properties, Editor):
             level = 6
         else:
             class_level = ''
-        return f'{match.group(1)}{level}'
+        return f'{match.group(1)}{level}{class_level}'
 
     @asynca
-    def save_search_page(self):
+    def save_search_pages(self):
         for template in (
-                ('searchtemplate.html', 'search.html'),
-                ('404template.html', '404.html')):
+                (self.search, self.search_page),
+                (self.search404, self.search_page404)):
             self._search(*template)
 
     def _search(self, template, filename):
-        try:
-            with open(template) as template:
-                page = template.read()
-        except IOError:
-            return
-        g = self.site.root
-        page = re.sub('{(.*?): (.*?)}', g.section_replace, page)
+        root = self.site.root
+        page = re.sub('{(.*?): (.*?)}', root.section_replace, template)
         page = re.sub(
             r'<li class="normal">(.*?)</li>',
             r'<li><a href="index.html">\1</a></li>',
             page
         )
-        if filename.startswith('404'):
-            page = re.sub(r'href="/*', 'href="/', re.sub(
-                r'src="/*', 'src="/', page))
+        if filename is self.search_page404:
+            page = re.sub(r'(href|src)="/*', r'\1="/', page)
         dumps(page, filename)
 
     @property
