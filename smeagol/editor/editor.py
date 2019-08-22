@@ -123,18 +123,19 @@ class Editor(Tk.Frame, object):
     @property
     def text_styles(self):
         (strong, em, underline, small_caps, highlulani,
-         example, example_no_lines) = iter(
-                                [self.font.copy() for _ in range(7)])
+         example, example_no_lines, ipa) = iter(
+                                [self.font.copy() for _ in range(8)])
         strong.configure(weight='bold')
         em.configure(slant='italic')
         underline.configure(underline=True, family='Calibri')
         small_caps.configure(
-            size=small_caps.actual(option='size') - 3,
-            family='Algerian')
+            family='Alegreya SC')
         highlulani.configure(
             size=highlulani.actual(option='size') + 3,
             family='Lulani')
         example.configure(size=-1)
+        ipa.configure(
+            family='lucida sans unicode')
         return [
             ('example',
                 {'lmargin1': '2c', 'spacing1': '5m', 'font': example}),
@@ -144,7 +145,8 @@ class Editor(Tk.Frame, object):
             ('small-caps', {'font': small_caps}),
             ('link', {'foreground': 'blue', 'font': underline}),
             ('bink', {'foreground': 'red', 'font': underline}),
-            ('high-lulani', {'font': highlulani})]
+            ('high-lulani', {'font': highlulani}),
+            ('ipa', {'font': ipa})]
 
     def modify_fontsize(self, size):
         self.font.config(size=size)
@@ -257,7 +259,7 @@ class Editor(Tk.Frame, object):
             self.current_style.set('')
 
     def scroll_textbox(self, event=None):
-        self.textbox.yview_scroll(-1 * (event.delta / 20), Tk.UNITS)
+        self.textbox.yview_scroll(int(-1 * (event.delta / 20)), Tk.UNITS)
         return 'break'
 
     @staticmethod
@@ -385,6 +387,10 @@ class Editor(Tk.Frame, object):
 
     def small_caps(self, event):
         self.change_style(event, 'small-caps')
+        return 'break'
+
+    def ipa(self, event):
+        self.change_style(event, 'ipa')
         return 'break'
 
     def add_link(self, event):
@@ -632,6 +638,7 @@ class Editor(Tk.Frame, object):
             ('<Control-e>', self.example_no_lines),
             ('<Control-f>', self.example),
             ('<Control-i>', self.italic),
+            ('<Control-I>', self.ipa),
             ('<Control-k>', self.small_caps),
             ('<Control-K>', self.delete_line),
             ('<Control-m>', self.markdown_refresh),

@@ -143,13 +143,14 @@ class DictionaryEditor(SiteEditor):
             f'[1]{tr.safename}',
             '[d native-script]',
             f'{tr.convert_word(name)}[/d]',
-            f'[p {code}]//[/p]',
+            f'[p {code}]<ipa>//</ipa>[/p]',
             '[2]',
             '[d definition]',
             '[/d]'
         ]
         if code == 'en':
             output.pop(1)
+            output.pop(2)
         return self.markup('\n'.join(output))
 
     @property

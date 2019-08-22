@@ -53,7 +53,7 @@ def dump(dictionary, filename):
     if filename:
         with ignored(os.error):
             os.makedirs(os.path.dirname(filename))
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding='utf-8') as f:
             json.dump(dictionary, f, indent=4)
 
 
@@ -61,7 +61,7 @@ def dumps(string, filename):
     if filename:
         with ignored(os.error):
             os.makedirs(os.path.dirname(filename))
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding='utf-8') as f:
             f.write(string)
 
 

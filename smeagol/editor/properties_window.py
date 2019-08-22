@@ -125,7 +125,7 @@ class PropertyFrame:
             self.insert(filename, multiple=(action == 'open multiple'))
             if filename:
                 if action == 'save':
-                    with open(filename, 'a') as textfile:
+                    with open(filename, 'a', encoding='utf-8') as textfile:
                         textfile.write
                 with ignored(AttributeError):
                     self.check.select()

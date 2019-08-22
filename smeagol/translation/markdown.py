@@ -13,7 +13,7 @@ class Markdown:
     def setup(self, filename):
         if filename:
             try:
-                with open(filename) as replacements:
+                with open(filename, encoding='utf-8') as replacements:
                     for line in replacements:
                         self.append_markdown(line)
             except FileNotFoundError:
@@ -24,7 +24,7 @@ class Markdown:
 
     def __str__(self):
         try:
-            with open(self.filename) as markdown:
+            with open(self.filename, encoding='utf-8') as markdown:
                 return markdown.read()
         except IOError:
             return ''
@@ -75,7 +75,7 @@ class Markdown:
 
     def refresh(self, new_markdown=''):
         if new_markdown and self.filename:
-            with open(self.filename, 'w') as markdown:
+            with open(self.filename, 'w', encoding='utf-8') as markdown:
                 markdown.write(new_markdown)
         self.markup, self.markdown = [], []
         self.source = None

@@ -53,7 +53,7 @@ class Glossary:
     def __init__(self, filename, wordlist=None):
         self.adder = {'Glossary': filename}
         try:
-            with open(filename) as glossary:
+            with open(filename, encoding='utf-8') as glossary:
                 self._file = glossary.read()
             self.glossary = json.loads(self._file)
         except IOError:
@@ -69,7 +69,7 @@ class Glossary:
 
     def refresh(self, new_file=''):
         self._file = new_file
-        with open(self.filename, 'w') as f:
+        with open(self.filename, 'w', encoding='utf-8') as f:
             f.write(new_file)
         self.glossary = json.loads(new_file)
 
@@ -130,7 +130,7 @@ class ExternalDictionary:
 
     def wordlist_setup(self):
         if self.wordlist_file:
-            with open(self.wordlist_file) as wordlist:
+            with open(self.wordlist_file, encoding='utf-8') as wordlist:
                 wordlist = json.load(wordlist)
             self.wordlist = [word['t'] for word in wordlist]
         else:
@@ -194,7 +194,7 @@ class InternalDictionary:
 
     def wordlist_setup(self):
         if self.wordlist_file:
-            with open(self.wordlist_file) as wordlist:
+            with open(self.wordlist_file, encoding='utf-8') as wordlist:
                 wordlist = json.load(wordlist)
             self.wordlist = [word['t'] for word in wordlist]
         else:
@@ -206,7 +206,7 @@ class InternalDictionary:
 class ExternalGrammar:
     def __init__(self, filename, wordlist=None):
         self.adder = {'ExternalGrammar': filename}
-        with open(filename) as replacements:
+        with open(filename, encoding='utf-8') as replacements:
             self._file = replacements.read()
         self.replacements = json.loads(self._file)
         self.url = self.replacements['url']
@@ -218,7 +218,7 @@ class ExternalGrammar:
 
     def refresh(self, new_file=''):
         self._file = new_file
-        with open(self.filename, 'w') as f:
+        with open(self.filename, 'w', encoding='utf-8') as f:
             f.write(new_file)
         self.replacements = json.loads(new_file)
 

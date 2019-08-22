@@ -17,7 +17,7 @@ class Page(Node):
         return hash(tuple(self.location))
 
     def __getattr__(self, attr):
-        if attr in {'name', 'script', 'old'}:
+        if attr in {'name', 'script'}:
             return self.find().get(attr, '')
         elif attr in {'text'}:
             return self.find().get(attr, [])
@@ -44,7 +44,7 @@ class Page(Node):
             with ignored(AttributeError):
                 value = [_f for _f in value.split('[') if _f]
             self.find()['text'] = value
-        elif attr in {'name', 'position', 'old', 'script'}:
+        elif attr in {'name', 'position', 'script'}:
             self.find()[attr] = value
         else:
             super(Page, self).__setattr__(attr, value)
@@ -177,9 +177,7 @@ class Page(Node):
 
     def publish(self, template=None):
         text = self.html(template)
-        if self.old != text:
-            dumps(text, self.link)
-            self.old = text
+        dumps(text, self.link)
 
     @property
     def list(self):
@@ -291,8 +289,8 @@ class Page(Node):
         if self.is_root or self.is_leaf:
             return ''
         links = '\n'.join([f'<p>{self.hyperlink(d)}</p>' for d in self.daughters])
-        return (f'<div class="toc">\n'
-                 '{links}\n'
+        return ('<div class="toc">\n'
+                 f'{links}\n'
                  '</div>')
 
     @property

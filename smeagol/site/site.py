@@ -37,7 +37,7 @@ class Site:
         template = ''
         if filename:
             try:
-                with open(filename) as template:
+                with open(filename, encoding='utf-8') as template:
                     template = template.read()
             except FileNotFoundError:
                 raise Error
@@ -46,7 +46,7 @@ class Site:
     def refresh_template(self, new_template):
         if new_template and self.template_file:
             with ignored(IOError):
-                with open(self.template_file, 'w') as template:
+                with open(self.template_file, 'w', encoding='utf-8') as template:
                     template.write(new_template)
         self.template = new_template
 
@@ -54,7 +54,7 @@ class Site:
         tree = dict(name=self.name)
         if self.source:
             try:
-                with open(self.source) as source:
+                with open(self.source, encoding='utf-8') as source:
                     tree = json.load(source)
             except FileNotFoundError:
                 raise SourceFileNotFoundError

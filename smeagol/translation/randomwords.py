@@ -41,7 +41,7 @@ class English:
         filenames = sample_texts.split(';')
         for filename in filenames:
             try:
-                with open(filename) as page:
+                with open(filename, encoding='utf-8') as page:
                     page = json.load(page)
                 self.collate(page, self.words)
             except IOError:

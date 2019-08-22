@@ -23,7 +23,7 @@ class Properties:
         else: # filename refers to a .smg file
             self.config_filename = filename
             try:
-                with open(self.config_filename) as config:
+                with open(self.config_filename, encoding='utf-8') as config:
                     self.configuration = json.load(config)
             except (IOError, TypeError):
                 self.configuration = json.loads(default.config)
@@ -73,7 +73,7 @@ class Properties:
                     defaultextension=filetypes[0][1][1:])
                 self.search_template404 = filename
 
-    def setup_markdown(self):
+    def setup_markdown(self, filename=None):
         while True:
             try:
                 self.marker = Markdown(self.markdown_file)
@@ -171,21 +171,21 @@ class Properties:
         self.collate_config()
         if self.config_filename:
             with ignored(IOError):
-                with open(self.config_filename, 'w') as config:
+                with open(self.config_filename, 'w', encoding='utf-8') as config:
                     json.dump(self.configuration, config, indent=2)
                 folder = os.getenv('LOCALAPPDATA')
                 inifolder = os.path.join(folder, 'smeagol')
                 inifile = os.path.join(inifolder, self.caller + '.ini')
                 with ignored(os.error): # folder already exists
                     os.makedirs(inifolder)
-                with open(inifile, 'a') as inisave:
+                with open(inifile, 'a', encoding='utf-8') as inisave:
                     pass    # ensure file exists
                 try:
-                    with open(inifile, 'r') as inisave:
+                    with open(inifile, 'r', encoding='utf-8') as inisave:
                         sites = json.load(inisave)
                 except ValueError:
                     sites = dict()
-                with open(inifile, 'w') as inisave:
+                with open(inifile, 'w', encoding='utf-8') as inisave:
                     name = re.match(
                             r'.*/(.*?)\.',
                             self.config_filename
