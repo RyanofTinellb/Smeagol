@@ -2,7 +2,7 @@ import re
 from smeagol.utils import *
 
 alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
-punctuation = "$-'.#()!_"
+punctuation = "$-.#()!_"
 radix = len(punctuation)
 double_letter = r'([{0}])\1'.format(alphabet)
 
@@ -19,7 +19,7 @@ def pattern_indices(word, pattern):
             index = word.index(pattern, index + 1)
             yield index
         except ValueError:
-            raise StopIteration
+            return
 
 
 def html(text=None):

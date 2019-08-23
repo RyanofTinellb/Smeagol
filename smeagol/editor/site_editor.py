@@ -253,7 +253,10 @@ class SiteEditor(Properties, Editor):
 
     @asynca
     def site_publish(self, event=None):
+        for page in self.site.all_pages:
+            page.text = self.add_links(self.remove_links(str(page)), page)
         self.site.publish()
+        print('Site Published!')
 
     @asynca
     def start_server(self, port):
@@ -310,7 +313,7 @@ class SiteEditor(Properties, Editor):
     def list_pages(self, event=None):
         def text_thing(page):
             return ' ' * 10 * page.level + page.name
-        text = '\n'.join(map(text_thing, self.site))
+        text = '\n'.join(map(text_thing, self.site.all_pages))
         text = self.markdown(text)
         self.show_file(text)
 
@@ -375,7 +378,7 @@ class SiteEditor(Properties, Editor):
         root = site.root
         self.errors = 0
         self.errorstring = ''
-        contents = '\n'.join(map(self._save_wholepage, site))
+        contents = '\n'.join(map(self._save_wholepage, site.all_pages))
         page = self.wholepage.replace(
                 '{toc}', root.family_links).replace(
                 '{main-contents}', contents).replace(
@@ -582,7 +585,7 @@ class SiteEditor(Properties, Editor):
 
     @asynca
     def update_pages(self):
-        for entry in self.site:
+        for entry in self.site.all_pages:
             old = str(entry)
             text = self.linkadder.remove_links(old)
             text = self.linkadder.add_links(text, entry)

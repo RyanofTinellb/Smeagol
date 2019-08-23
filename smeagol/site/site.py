@@ -124,6 +124,16 @@ class Site:
             self.__iter__()
             raise StopIteration
         return self.current
+    
+    @property
+    def all_pages(self):
+        node = self.root
+        while True:
+            yield node
+            try:
+                node = node.next()
+            except IndexError:
+                return
 
     def __getitem__(self, entry):
         page = Page(self.tree, [])
@@ -141,17 +151,18 @@ class Site:
         return self[0]
 
     def refresh_flatnames(self):
-        for page in self:
+        for page in self.all_pages:
             page.refresh_flatname()
 
     def remove_flatnames(self):
-        for page in self:
+        for page in self.all_pages:
             page.remove_flatname()
 
     def publish(self):
         errors = 0
         errorstring = ''
-        for page in self:
+        for page in self.all_pages:
+            page.publish(template=self.template)
             try:
                 page.publish(template=self.template)
             except Exception as err:
@@ -178,7 +189,7 @@ class Site:
         sentences = []
         urls = []
         names = []
-        for page_number, entry in enumerate(self):
+        for page_number, entry in enumerate(self.all_pages):
             base = len(sentences)
             analysis = entry.analysis
             new_words = analysis['words']

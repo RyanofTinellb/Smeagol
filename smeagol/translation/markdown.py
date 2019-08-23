@@ -35,6 +35,9 @@ class Markdown:
         try:
             self.markdown.append(line[1])
             self.markup.append(line[0])
+            if line[2].startswith('s'):
+                self.markdown.append(line[0])
+                self.markup.append(line[1])
         except IndexError:
             pass
 

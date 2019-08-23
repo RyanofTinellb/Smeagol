@@ -115,13 +115,13 @@ class Page(Node):
 
     @property
     def _flatname(self):
-        name = [self.url]
+        name = markdown.to_markdown(self.name)
         score = 0
-        change_text(double_letter, r'#\1', name)
+        name = re.sub(double_letter, r'#\1', name)
         for points, pattern in enumerate(punctuation):
-            score += score_pattern(name[0], pattern, radix, points + 1)
-            remove_text('\\' + pattern, name)
-        return dict(name=name[0], score=score)
+            score += score_pattern(name, pattern, radix, points + 1)
+            name = re.sub('\\' + pattern, '', name)
+        return dict(name=name, score=score)
 
     def __getitem__(self, entry):
         if entry is '':

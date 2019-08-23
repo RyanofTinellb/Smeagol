@@ -2,7 +2,7 @@ import re
 import json
 from itertools import chain
 from smeagol import Translator
-from smeagol.utils import urlform, ignored, buyCaps, sellCaps
+from smeagol.utils import urlform, ignored, buyCaps, sellCaps, page_initial
 
 class AddRemoveLinks:
     def __init__(self, link_adders, wordlist):
@@ -109,7 +109,7 @@ class ExternalDictionary:
         word = matchobj.group(1)
         link = urlform(sellCaps(word))
         try:
-            initial = re.findall(r'\w', link)[0]
+            initial = page_initial(link)
         except IndexError:
             return word
         return '<a href="{0}/{1}/{2}.html{3}">{4}</a>'.format(
@@ -165,11 +165,9 @@ class InternalDictionary:
     def _link(self, text):
         word = text.group(1).split(':')
         tr = self.translator
-        language, link = [urlform(name) for name in (
-            self.language if len(word) == 1 else tr.select(word[0]),
-            sellCaps(word[-1])
-        )]
-        initial = re.findall(r'\w', link)[0]
+        language = urlform(self.language if len(word) == 1 else tr.select(word[0]))
+        link = urlform(sellCaps(word[-1]))
+        initial = page_initial(link)
         return '<a href="../{0}/{1}.html#{2}">{3}</a>'.format(
             initial, link, language, word[-1])
 

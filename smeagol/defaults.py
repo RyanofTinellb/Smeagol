@@ -1,53 +1,42 @@
 class default:
     markdown = '''<!DOCTYPE text/html>
-( | &lparen; | <br>
-) | &rparen; | <br>
-_ | &under; | <br>
-' | &squot; | <br>
-&aacute; | (a | <br>
-&eth; | (d | <br>
-&thorn; | (t | <br>
-&eacute; | (e | <br>
-&iacute; | (i | <br>
-&oacute; | (o | <br>
-&uacute; | (u | <br>
-&agrave; | )a | <br>
-&egrave; | )e | <br>
-&igrave; | )i | <br>
-&ograve; | )o | <br>
-&#x1e6c; | )T | <br>
-&#x1e6d; | )t | <br>
-&ugrave; | )u | <br>
-&acirc; | ()a | <br>
-&ecirc; | ()e | <br>
-&icirc; | ()i | <br>
-&ocirc; | ()o | <br>
-&ucirc; | ()u | <br>
-&#x17e; | )(z | <br>
-&ntilde; | !!n | <br>
-&atilde; | !!a | <br>
-&otilde; | !!o | <br>
-h&#x330; | !!h | <br> <!-- h with tilde below -->
-l&#x330; | !!l | <br> <!-- l with tilde below -->
-&auml; | !a | <br>
-&euml; | !e | <br>
-&iuml; | !i | <br>
-&ouml; | !o | <br>
-&uuml; | !u | <br>
-&#x323; | :d | <!--underdot--> <br>
-&#x101; | _a | <!--a macron--> <br>
-&#x113; | _e | <!--e macron--> <br>
-&#x12b; | _i | <!--i macron--> <br>
-&#x14d; | _o | <!--o macron--> <br>
-&#x16b; | _u | <!--u macron--> <br>
-&#x157; | ,r | <!--r cedilla--> <br>
-&rsquo; | ' | <br>
-&#x294; | '' | <!--glottal stop--> <br>
-&middot; | .. | <br>
-&lparen; | \( | <br>
-&rparen; | )/ | <br>
-&under; | \\_ | <br>
-&squot; | \\' | <br>
+\u00e1 | (a | <br>
+\u00e9 | (e | <br>
+\u00ed | (i | <br>
+\u00f3 | (o | <br>
+\u00fa | (u | <br>
+\u00e0 | )a | <br>
+\u00e8 | )e | <br>
+\u00ec | )i | <br>
+\u00f2 | )o | <br>
+\u1e6c | )T | <br>
+\u1e6d | )t | <br>
+\u00f9 | )u | <br>
+\u00e2 | ()a | <br>
+\u00ea | ()e | <br>
+\u00ee | ()i | <br>
+\u00f4 | ()o | <br>
+\u00fb | ()u | <br>
+\u017e | )(z | <br>
+\u00f1 | !!n | <br>
+\u00e3 | !!a | <br>
+\u00f5 | !!o | <br>
+h\u0330 | !!h | <br>
+l\u0330 | !!l | <br>
+\u00e4 | !a | <br>
+\u00eb | !e | <br>
+\u00ef | !i | <br>
+\u00f6 | !o | <br>
+\u00fc | !u | <br>
+\u0101 | _a | <br>
+\u0113 | _e | <br>
+\u012b | _i | <br>
+\u014d | _o | <br>
+\u016b | _u | <br>
+\u0157 | ,r | <br>
+\u2019 | ' | <br>
+\u0294 | '' | <br>
+\u00b7 | .. | <br>
 '''
 
     config = '''

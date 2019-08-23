@@ -60,6 +60,16 @@ class Default():
         self.files = dict(source='data.src',
                           template_file='template.html',
                           searchindex='searching.json')
+        self.files = dict(source='data.src',
+                          template_file='template.html',
+                          wholepage=dict(file='wholepage.html',
+                                         template='wholetemplate.html'),
+                          search=dict(index='searching.json',
+                                      template='',
+                                      page='',
+                                      template404='',
+                                      page404='')
+        )
 
 
 if __name__ == '__main__':
@@ -67,7 +77,6 @@ if __name__ == '__main__':
     for site in Story, Stories, Dictionary, Grammar:
         site = site()
         print((site.name + ': '))
-        site.update_searchindex()
         print((site.publish()))
         newtime = datetime.now()
         print(('Done: ' + str(newtime - oldtime)))

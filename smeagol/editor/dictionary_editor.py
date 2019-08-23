@@ -16,7 +16,6 @@ class DictionaryEditor(SiteEditor):
             entry = textbox.get(*borders)
         except Tk.TclError:
             entry = self.select_word(event)
-        self.save_page()
         self.page = [entry]
         self.fill_and_load()
         return 'break'
@@ -53,8 +52,7 @@ class DictionaryEditor(SiteEditor):
             heading = un_url(headings[0])
         except IndexError:
             return entry
-        initial = re.sub(r'.*?(\w).*', r'\1',
-            urlform(heading)).capitalize()
+        initial = page_initial(headings[0]).capitalize()
         try:
             return entry[initial][heading]
         except KeyError:
@@ -65,6 +63,7 @@ class DictionaryEditor(SiteEditor):
             entry = dict(name=heading, parent=parent, position='1.0')
         return entry
 
+    @tkinter()
     def _save_page(self):
         # override super()._save_page
         self.entry = self.find_entry(self.heading_contents)
@@ -106,7 +105,8 @@ class DictionaryEditor(SiteEditor):
         transliteration = None
         language = None
         pos = None
-        for entry in self.site:
+        for entry in self.site.all_pages:
+            print(entry.name)
             transliteration = entry.name
             for line in self.remove_links(str(entry)).split('['):
                 if line.startswith('1]'):

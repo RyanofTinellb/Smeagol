@@ -74,10 +74,14 @@ def _buy(regex):
 
 
 def sellCaps(word):
-    return re.sub(r'([A-Z])', _sell, word.replace(' ', '.'))
+    return re.sub(r'(.)', _sell, word.replace(' ', '.'))
 
 def _sell(regex):
-    return '$' + regex.group(1).lower()
+    letter = regex.group(1)
+    if letter != letter.lower():
+        return '$' + letter.lower()
+    else:
+        return letter
 
 def is_key(text):
     return not re.match('^[A-Z].+', text)
@@ -102,25 +106,19 @@ def un_url(text, markdown=None):
     text = text.replace(' ', '.')
     return sellCaps(markup(text))
 
-def urlform(text, markdown=None):
-    try:
-        markdown = markdown.to_markdown
-    except AttributeError:
-        markdown = own_markdown.to_markdown
-    name = [text.lower()]
-    safe_punctuation = '\'_+!(),'
-    # remove safe punctuations that should only be used to encode non-ascii characters
-    remove_text(fr'[{safe_punctuation}]', name)
-    name[0] = markdown(name[0])
-    # remove extraneous initial apostrophes
-    change_text(r"^''+", "'", name)
-    # remove text within tags
-    remove_text(r'<(div|ipa).*?\1>', name)
-    # remove tags, spaces and punctuation
-    remove_text(r'<.*?>|[/*;: ]', name)
-    name = urllib.parse.quote(name[0], f'{safe_punctuation}.$')
+def urlform(text):
+    name = text.lower()
+    # remove tags, text within tags, and spaces
+    name = re.sub(r'(<(div|ipa).*?\2>)|<.*?>| ', '', name)
     return name
 
+def page_initial(text):
+    '''Returns the first letter of a word, i.e.: the folder of the Dictionary
+        in which that word would appear
+        @error: IndexError if the text only contains punctuation'''
+    name = own_markdown.to_markdown(text)
+    name = re.sub("'", '', name)
+    return re.findall(r'\w', name)[0]
 
 class ShortList(list):
     def __init__(self, arr, max_length):
