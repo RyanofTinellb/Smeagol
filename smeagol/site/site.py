@@ -163,7 +163,6 @@ class Site:
         errors = 0
         errorstring = ''
         for page in self.all_pages:
-            page.publish(template=self.template)
             try:
                 page.publish(template=self.template)
             except Exception as err:
@@ -173,13 +172,14 @@ class Site:
                 pages += 1
         self.update_searchindex()
         self.update_source()
-        return '{4} page{5}\n{0}{1} error{2}\n{3}'.format(
+        return '{4} page{5} printed to {6}\n{0}{1} error{2}\n{3}'.format(
                 errorstring,
                 errors,
                 '' if errors == 1 else 's',
                 '-' * 10,
                 pages,
-                '' if pages == 1 else 's'
+                '' if pages == 1 else 's',
+                os.getcwd()
             )
 
     def update_source(self):

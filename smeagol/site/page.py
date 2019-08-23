@@ -175,10 +175,11 @@ class Page(Node):
     def sort(self):
         self.children = [child.find() for child in sorted(self.daughters)]
 
+    @asynca
     def publish(self, template=None):
         text = self.html(template)
         dumps(text, self.link)
-
+    
     @property
     def list(self):
         if self.is_root:

@@ -305,7 +305,7 @@ class SiteEditor(Properties, Editor):
         except IndexError:
             return entry
         if not isinstance(entry, dict):
-            # with ignored(KeyError):
+            with ignored(KeyError):
                 return self.find_entry(headings, entry[heading])
         child = dict(name=heading, parent=entry, position='1.0')
         return self.find_entry(headings, child)
@@ -622,7 +622,6 @@ class SiteEditor(Properties, Editor):
         if entry is None:
             entry = self.entry
         name = entry.get('name', '')
-        raise Exception
         return f'Describe {name} here!\n'
 
     @property

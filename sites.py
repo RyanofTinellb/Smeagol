@@ -48,10 +48,9 @@ sites.update(get_list('dictionary'))
 if __name__ == '__main__':
     oldtime = datetime.now()
     for name, filename in sites.items():
-        if filename.find('encycl') > -1:
-            props = Properties(filename)
-            print(f'{name}:')
-            print(props.site.publish())
-            newtime = datetime.now()
-            print(('Done: ' + str(newtime - oldtime)))
-            oldtime = newtime
+        props = Properties(filename)
+        print(f'{name}:')
+        print(props.site.publish())
+        newtime = datetime.now()
+        print(('Done: ' + str(newtime - oldtime)))
+        oldtime = newtime
