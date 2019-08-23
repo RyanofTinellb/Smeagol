@@ -9,9 +9,6 @@ class Site:
         self.props = Properties(config)
         self.site = self.props.site
     
-    def __iter__(self):
-        return self.props.site
-
 class Grammar(Site):
     def __init__(self):
         super().__init__('grammar')

@@ -258,13 +258,15 @@ class Node:
 
     @property
     def descendants(self):
-        node = self.new()
-        while node.level != self.level or node == self:
+        if not self.has_children:
+            return
+        node = self.eldest_daughter
+        while node.level > self.level:
+            yield node
             try:
                 node = node.next()
             except IndexError:
                 return
-            yield node
 
     def reunion(self, *groups):
         location = lambda node: node.location
