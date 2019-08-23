@@ -1,14 +1,17 @@
+import functools
+import inspect
+import json
 import os
 import re
 import sys
-import json
-import urllib.request, urllib.parse, urllib.error
-import inspect
-import functools
-from .errors import *
-from threading import Thread
-from datetime import datetime
+import urllib.error
+import urllib.parse
+import urllib.request
 from contextlib import contextmanager
+from datetime import datetime
+from threading import Thread
+
+from .errors import *
 from .translation.markdown import Markdown
 
 
@@ -31,6 +34,7 @@ def tkinter():
         return wrapper
     return decorator
 
+
 def timeit(function):
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
@@ -41,6 +45,7 @@ def timeit(function):
         return value
     return wrapper
 
+
 def asynca(function):
     @functools.wraps(function)
     def async_function(*args, **kwargs):
@@ -48,6 +53,7 @@ def asynca(function):
         thread.start()
         return thread
     return async_function
+
 
 def dump(dictionary, filename):
     if filename:
@@ -76,6 +82,7 @@ def _buy(regex):
 def sellCaps(word):
     return re.sub(r'(.)', _sell, word.replace(' ', '.'))
 
+
 def _sell(regex):
     letter = regex.group(1)
     if letter != letter.lower():
@@ -83,8 +90,10 @@ def _sell(regex):
     else:
         return letter
 
+
 def is_key(text):
     return not re.match('^[A-Z].+', text)
+
 
 def change_text(item, replacement, text):
     try:
@@ -93,10 +102,13 @@ def change_text(item, replacement, text):
         print(item)
     return text
 
+
 def remove_text(item, text):
     return change_text(item, '', text)
 
+
 own_markdown = Markdown()
+
 
 def un_url(text, markdown=None):
     try:
@@ -106,11 +118,13 @@ def un_url(text, markdown=None):
     text = text.replace(' ', '.')
     return sellCaps(markup(text))
 
+
 def urlform(text):
     name = text.lower()
     # remove tags, text within tags, and spaces
     name = re.sub(r'(<(div|ipa).*?\2>)|<.*?>| ', '', name)
     return name
+
 
 def page_initial(text):
     '''Returns the first letter of a word, i.e.: the folder of the Dictionary
@@ -119,6 +133,7 @@ def page_initial(text):
     name = own_markdown.to_markdown(text)
     name = re.sub("'", '', name)
     return re.findall(r'\w', name)[0]
+
 
 class ShortList(list):
     def __init__(self, arr, max_length):

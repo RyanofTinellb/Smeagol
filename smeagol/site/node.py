@@ -121,7 +121,7 @@ class Node:
     def next(self, _seen_children=False):
         if not _seen_children and self.has_children:
             return self.new(self.location + [0])
-        elif _seen_children and self.is_root:        
+        elif _seen_children and self.is_root:
             raise IndexError('No more nodes!')
         else:
             try:
@@ -205,8 +205,10 @@ class Node:
 
     def unique_lineage(self, other):
         a, b = (self, other)
-        superset, subset = [set(location.lineage) for location in (self, other)]
-        level = lambda node: node.level
+        superset, subset = [set(location.lineage)
+                            for location in (self, other)]
+
+        def level(node): return node.level
         for ancestor in sorted(superset - subset, key=level):
             yield ancestor
         if self.has_children:
@@ -269,7 +271,7 @@ class Node:
                 return
 
     def reunion(self, *groups):
-        location = lambda node: node.location
+        def location(node): return node.location
         relatives = sorted(set(chain(*groups)), key=location)
         for relative in relatives:
             yield relative

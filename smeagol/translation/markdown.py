@@ -2,12 +2,13 @@ import os
 from smeagol.defaults import default
 from smeagol.errors import MarkdownFileNotFoundError
 
+
 class Markdown:
     def __init__(self, filename=None):
         self.filename = filename
         self.string = self.load()
         self.setup()
-    
+
     def load(self):
         if self.filename:
             try:

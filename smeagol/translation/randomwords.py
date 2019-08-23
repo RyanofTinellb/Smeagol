@@ -4,6 +4,7 @@ import random
 import json
 import re
 
+
 class RandomWords:
     def __init__(self, language=None, sample_texts=''):
         self.maximum = 20
@@ -50,7 +51,7 @@ class English:
 
     def collate(self, page, words):
         words.update({word for line in page.get('text', [])
-                for word in line.split()})
+                      for word in line.split()})
         for child in page.get('children', []):
             self.collate(child, self.words)
 
@@ -121,9 +122,10 @@ class HighLulani:
         consonant, vowel = syllable
         if num and not random.randint(0, self.geminate):
             if consonant == chr(8217):  # right single quote
-                return chr(660) + vowel # glottal stop
+                return chr(660) + vowel  # glottal stop
             return consonant + syllable
         return syllable
+
 
 class DemoticLulani:
     def __init__(self):
@@ -131,23 +133,23 @@ class DemoticLulani:
         self.lulani = HighLulani()
         self.vulgar = HighToDemoticLulani()
         self.rewrites = [
-                ('&rsquo;', "\u2019"),
-                ('&middot;', '\u00b7'),
-                ('&#x294;', '\u0294'),
-                ('&eth;', '\u00f0'),
-                ('&thorn;', '\u00fe'),
-                ('&ouml;', '\u00f6'),
-                ('&uuml;', '\u00fc'),
-                ('&ntilde;', '\u00f1'),
-                ('&#x330;', '\u0330'),
-                ('h&#x330;', 'h\u0330'),
-                ('&#x17e;', '\u017e'),
-                ('&#x1ee5;', '\u1ee5'), # u with dot
-                ('&#x1ecd;', '\u1ecd'), # o with dot
-                ('&#x1ecb;', '\u1ecb'), # i with dot
-                ('&#x323;', '\u0323'), # lower dot
-                ('&#x2c8;', '\u02c8'),
-                ('&#x2cc;', '\u02cc')]
+            ('&rsquo;', "\u2019"),
+            ('&middot;', '\u00b7'),
+            ('&#x294;', '\u0294'),
+            ('&eth;', '\u00f0'),
+            ('&thorn;', '\u00fe'),
+            ('&ouml;', '\u00f6'),
+            ('&uuml;', '\u00fc'),
+            ('&ntilde;', '\u00f1'),
+            ('&#x330;', '\u0330'),
+            ('h&#x330;', 'h\u0330'),
+            ('&#x17e;', '\u017e'),
+            ('&#x1ee5;', '\u1ee5'),  # u with dot
+            ('&#x1ecd;', '\u1ecd'),  # o with dot
+            ('&#x1ecb;', '\u1ecb'),  # i with dot
+            ('&#x323;', '\u0323'),  # lower dot
+            ('&#x2c8;', '\u02c8'),
+            ('&#x2cc;', '\u02cc')]
 
     @property
     def word(self):

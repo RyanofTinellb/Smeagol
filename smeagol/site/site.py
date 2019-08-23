@@ -1,14 +1,19 @@
-import os
 import json
-from .page import Page
+import os
+
 from smeagol.translation import Markdown, Translator
 from smeagol.utils import *
+
+from .page import Page
+
 
 def increment(lst, by):
     lst = [x + by for x in lst]
     return lst
 
+
 markdown = Markdown()
+
 
 class Site:
     def __init__(self, destination=None, name=None, files=None):
@@ -16,7 +21,8 @@ class Site:
         self.files = files or dict(
             source='', template_file='', wordlist='',
             wholepage=dict(file='', template=''),
-            search=dict(index='', template='', page='', template404='', page404='')
+            search=dict(index='', template='', page='',
+                        template404='', page404='')
         )
         self.setup_templates()
         self.destination = destination
@@ -26,9 +32,11 @@ class Site:
     def setup_templates(self):
         templates = (
             (self.template_file, 'template', TemplateFileNotFoundError),
-            (self.wholepage_template, 'wholepage', WholepageTemplateFileNotFoundError),
+            (self.wholepage_template, 'wholepage',
+             WholepageTemplateFileNotFoundError),
             (self.search_template, 'search', SearchTemplateFileNotFoundError),
-            (self.search_template404, 'search404', Search404TemplateFileNotFoundError)
+            (self.search_template404, 'search404',
+             Search404TemplateFileNotFoundError)
         )
         for template in templates:
             self._template(*template)
@@ -124,7 +132,7 @@ class Site:
             self.__iter__()
             raise StopIteration
         return self.current
-    
+
     @property
     def all_pages(self):
         node = self.root
@@ -173,14 +181,14 @@ class Site:
         self.update_searchindex()
         self.update_source()
         return '{4} page{5} printed to {6}\n{0}{1} error{2}\n{3}'.format(
-                errorstring,
-                errors,
-                '' if errors == 1 else 's',
-                '-' * 10,
-                pages,
-                '' if pages == 1 else 's',
-                os.getcwd()
-            )
+            errorstring,
+            errors,
+            '' if errors == 1 else 's',
+            '-' * 10,
+            pages,
+            '' if pages == 1 else 's',
+            os.getcwd()
+        )
 
     def update_source(self):
         dump(self.tree, self.source)

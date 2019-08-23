@@ -1,9 +1,11 @@
-import tkinter as Tk
-import sys
-import os
 import json
-from smeagol.editor.site_editor import SiteEditor
+import os
+import sys
+import tkinter as Tk
+
 from smeagol.editor.dictionary_editor import DictionaryEditor
+from smeagol.editor.site_editor import SiteEditor
+
 
 class Smeagol(Tk.Frame, object):
     def __init__(self):
@@ -13,13 +15,13 @@ class Smeagol(Tk.Frame, object):
         for i, (editor, text) in enumerate(zip(editors, texts)):
             button = Tk.Button(command=editor, text=text, height=8, width=14)
             button.grid(column=i, row=0)
-        editors = self.sites # returns a dict: {"name": "filename"}
+        editors = self.sites  # returns a dict: {"name": "filename"}
         for i, (name, filename) in enumerate(editors.items()):
             def handler(event=None, filename=filename):
                 return self.open_site(event, filename=filename)
             button = Tk.Button(command=handler, text=name, height=2, width=14)
             button.grid(column=0, row=i+1)
-        editors = self.dictionaries # returns a dict: {"name": "filename"}
+        editors = self.dictionaries  # returns a dict: {"name": "filename"}
         for i, (name, filename) in enumerate(editors.items()):
             def handler(event=None, filename=filename):
                 return self.open_dictionary(event, filename=filename)
@@ -40,7 +42,7 @@ class Smeagol(Tk.Frame, object):
     @property
     def dictionaries(self):
         return self.get_list('dictionary')
-    
+
     def get_list(self, name):
         folder = os.getenv('LOCALAPPDATA')
         inifolder = os.path.join(folder, 'Smeagol')
@@ -61,6 +63,7 @@ class Smeagol(Tk.Frame, object):
 
     def open_dictionary(self, event=None, filename=None):
         self.open_editor(DictionaryEditor, filename)
+
 
 if __name__ == '__main__':
     Smeagol().mainloop()

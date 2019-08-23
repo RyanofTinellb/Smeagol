@@ -1,13 +1,16 @@
 import os
 import shutil
-from .node import Node
 from datetime import datetime
+
 from page_utils import *
+from smeagol.defaults import default
 from smeagol.translation import *
 from smeagol.utils import *
-from smeagol.defaults import default
+
+from .node import Node
 
 markdown = Markdown()
+
 
 class Page(Node):
     def __init__(self, tree, location):
@@ -179,12 +182,13 @@ class Page(Node):
     def publish(self, template=None):
         text = self.html(template)
         dumps(text, self.link)
-    
+
     @property
     def list(self):
         if self.is_root:
             return []
-        name = lambda x: x.name
+
+        def name(x): return x.name
         return list(map(name, self.lineage))[1:]
 
     @property
@@ -283,16 +287,17 @@ class Page(Node):
                 '    let term = href.replace(/(.*?\?)(.*?)(#.*|$)/, "$2");\n'
                 f'    window.location.href = `{hyperlink}?${{term}}&andOr=and`;\n'
                 '}\n'
-            '</script>\n')
+                '</script>\n')
 
     @property
     def toc(self):
         if self.is_root or self.is_leaf:
             return ''
-        links = '\n'.join([f'<p>{self.hyperlink(d)}</p>' for d in self.daughters])
+        links = '\n'.join(
+            [f'<p>{self.hyperlink(d)}</p>' for d in self.daughters])
         return ('<div class="toc">\n'
-                 f'{links}\n'
-                 '</div>')
+                f'{links}\n'
+                '</div>')
 
     @property
     def links(self):

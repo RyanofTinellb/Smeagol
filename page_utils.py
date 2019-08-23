@@ -1,4 +1,5 @@
 import re
+
 from smeagol.utils import *
 
 alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"

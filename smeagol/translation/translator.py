@@ -2,6 +2,7 @@
 import re
 from collections import OrderedDict
 
+
 class Translator:
     def __init__(self, language=None):
         language = language or 'en'
