@@ -106,7 +106,6 @@ class DictionaryEditor(SiteEditor):
         language = None
         pos = None
         for entry in self.site.all_pages:
-            print(entry.name)
             transliteration = entry.name
             for line in self.remove_links(str(entry)).split('['):
                 if line.startswith('1]'):

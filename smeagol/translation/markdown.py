@@ -4,30 +4,29 @@ from smeagol.errors import MarkdownFileNotFoundError
 
 class Markdown:
     def __init__(self, filename=None):
-        self.markup, self.markdown = [], []
-        self.source = None
-        self.destination = None
         self.filename = filename
-        self.setup(filename)
-
-    def setup(self, filename):
-        if filename:
+        self.string = self.load()
+        self.setup()
+    
+    def load(self):
+        if self.filename:
             try:
-                with open(filename, encoding='utf-8') as replacements:
-                    for line in replacements:
-                        self.append_markdown(line)
+                with open(self.filename, encoding='utf-8') as replacements:
+                    return replacements.read()
             except FileNotFoundError:
                 raise MarkdownFileNotFoundError
         else:
-            for line in default.markdown.splitlines():
-                self.append_markdown(line)
+            return default.markdown
+
+    def setup(self):
+        self.markup, self.markdown = [], []
+        self.source = None
+        self.destination = None
+        for line in self.string.splitlines():
+            self.append_markdown(line)
 
     def __str__(self):
-        try:
-            with open(self.filename, encoding='utf-8') as markdown:
-                return markdown.read()
-        except IOError:
-            return ''
+        return self.string
 
     def append_markdown(self, line):
         line = line.replace(r'\n', '\n')
@@ -80,7 +79,5 @@ class Markdown:
         if new_markdown and self.filename:
             with open(self.filename, 'w', encoding='utf-8') as markdown:
                 markdown.write(new_markdown)
-        self.markup, self.markdown = [], []
-        self.source = None
-        self.destination = None
-        self.setup(self.filename)
+        self.string = new_markdown
+        self.setup()

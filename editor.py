@@ -35,20 +35,16 @@ class Smeagol(Tk.Frame, object):
 
     @property
     def sites(self):
-        folder = os.getenv('LOCALAPPDATA')
-        inifolder = os.path.join(folder, 'Smeagol')
-        inifile = os.path.join(inifolder, 'site.ini')
-        try:
-            with open(inifile) as iniload:
-                return json.load(iniload)
-        except (IOError, ValueError):
-            return dict()
+        return self.get_list('site')
 
     @property
     def dictionaries(self):
+        return self.get_list('dictionary')
+    
+    def get_list(self, name):
         folder = os.getenv('LOCALAPPDATA')
         inifolder = os.path.join(folder, 'Smeagol')
-        inifile = os.path.join(inifolder, 'dictionary.ini')
+        inifile = os.path.join(inifolder, f'{name}.ini')
         try:
             with open(inifile) as iniload:
                 return json.load(iniload)

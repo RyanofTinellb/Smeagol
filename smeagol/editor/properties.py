@@ -14,7 +14,10 @@ import tkinter.simpledialog as sd
 class Properties:
     def __init__(self, config=None, caller=None, master=None):
         self.setup(config)
-        super(Properties, self).__init__(master)
+        try:
+            super().__init__(master)
+        except TypeError: # Properties being used without a master
+            super().__init__()
 
     def setup(self, filename, source=False):
         if source: # filename refers to a .src file
@@ -74,6 +77,7 @@ class Properties:
                 self.search_template404 = filename
 
     def setup_markdown(self, filename=None):
+        self.markdown_file = filename or self.markdown_file
         while True:
             try:
                 self.marker = Markdown(self.markdown_file)
@@ -104,7 +108,7 @@ class Properties:
         elif attr == 'links':
             return self.configuration[attr]
         elif attr == 'sample_texts':
-            return self.configuration['sample texts']
+            return self.configuration.get('sample texts', '')
         elif attr == 'site_info':
             return self.configuration['site']
         elif attr == 'history':

@@ -1,83 +1,57 @@
+import os
 import json
-from smeagol.site.site import Site
 from datetime import datetime
+from smeagol.editor.properties import Properties
 
-class Dictionary(Site):
-    def __init__(self):
-        d = Default()
-        name = 'dictionary/'
-        files = {file: d.destination + name + filename
-                    for file, filename in d.files.items()}
-        super(Dictionary, self).__init__(d.destination + name, 'Dictionary',
-            files)
-
+class Site:
+    def __init__(self, filename):
+        config = f'c:/users/ryan/tinellbianlanguages/{filename}/{filename}.smg'
+        self.props = Properties(config)
+        self.site = self.props.site
+    
+    def __iter__(self):
+        return self.props.site
 
 class Grammar(Site):
     def __init__(self):
-        d = Default()
-        name = 'grammar/'
-        files = {file: d.destination + name + filename
-                    for file, filename in d.files.items()}
-        super(Grammar, self).__init__(d.destination + name, 'Grammar', files)
+        super().__init__('grammar')
 
+class Dictionary(Site):
+    def __init__(self):
+        super().__init__('dictionary')
 
 class Story(Site):
     def __init__(self):
-        d = Default()
-        name = 'coelacanth/'
-        files = {file: d.destination + name + filename
-                    for file, filename in d.files.items()}
-        super(Story, self).__init__(d.destination + name,
-            'The Coelacanth Quartet', files)
+        super().__init__('coelacanth')
 
 class Stories(Site):
     def __init__(self):
-        d = Default()
-        name = 'writings/'
-        files = {file: d.destination + name + filename
-                    for file, filename in d.files.items()}
-        super(Stories, self).__init__(d.destination + name,
-            'Short Stories', files)
+        super().__init__('writings')
 
-class Encyclopedia(Site):
+class Stories(Site):
     def __init__(self):
-        d = Default()
-        name = 'encyclopedia/'
-        files = {file: d.destination + name + filename
-                    for file, filename in d.files.items()}
-        super(Stories, self).__init__(d.destination + name,
-            'The Universe of Tinellb', files)
+        super().__init__('encyclopedia')
+    
+def get_list(name):
+    folder = os.getenv('LOCALAPPDATA')
+    inifolder = os.path.join(folder, 'Smeagol')
+    inifile = os.path.join(inifolder, f'{name}.ini')
+    try:
+        with open(inifile) as iniload:
+            return json.load(iniload)
+    except (IOError, ValueError):
+        return dict()
 
-
-class TheCoelacanthQuartet(Story):
-    def __init__(self):
-        super(TheCoelacanthQuartet, self).__init__()
-
-
-class Default():
-    def __init__(self):
-        self.destination = 'c:/users/ryan/tinellbianlanguages/'
-        self.files = dict(source='data.src',
-                          template_file='template.html',
-                          searchindex='searching.json')
-        self.files = dict(source='data.src',
-                          template_file='template.html',
-                          wholepage=dict(file='wholepage.html',
-                                         template='wholetemplate.html'),
-                          search=dict(index='searching.json',
-                                      template='',
-                                      page='',
-                                      template404='',
-                                      page404='')
-        )
-
+sites = get_list('site')
+sites.update(get_list('dictionary'))
 
 if __name__ == '__main__':
     oldtime = datetime.now()
-    for site in Story, Stories, Dictionary, Grammar:
-        site = site()
-        print((site.name + ': '))
-        print((site.publish()))
-        newtime = datetime.now()
-        print(('Done: ' + str(newtime - oldtime)))
-        oldtime = newtime
+    for name, filename in sites.items():
+        if filename.find('encycl') > -1:
+            props = Properties(filename)
+            print(f'{name}:')
+            print(props.site.publish())
+            newtime = datetime.now()
+            print(('Done: ' + str(newtime - oldtime)))
+            oldtime = newtime

@@ -541,7 +541,7 @@ class Editor(Tk.Frame, object):
 
     def markdown_load(self, event=None):
         filename = fd.askopenfilename(
-            filetypes=[('Sm\xe9agol Markdown File', '*.mkd')],
+            filetypes=[('Sméagol Markdown File', '*.mkd')],
             title='Load Markdown')
         if filename:
             try:
@@ -565,7 +565,6 @@ class Editor(Tk.Frame, object):
         except AttributeError:
             self.information.set('Not OK')
         return 'break'
-
 
     @tkinter()
     def _markdown_refresh(self, new_markdown):
