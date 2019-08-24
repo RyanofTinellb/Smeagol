@@ -1,4 +1,5 @@
 import re
+import json
 import tkinter as Tk
 from tkinter.font import Font
 import tkinter.filedialog as fd
@@ -15,6 +16,7 @@ Tk.UPLINE = Tk.INSERT + ' -1 lines'
 Tk.PREVLINE = (Tk.UPLINE + ' linestart', Tk.UPLINE + ' lineend')
 
 BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
+
 
 class Editor(Tk.Frame, object):
     def __init__(self, master=None, parent=None):
@@ -73,22 +75,22 @@ class Editor(Tk.Frame, object):
         self.languagevar.set(self.language)
         translator = self.translator
         languages = [f'{code}: {lang().name}'
-                for code, lang in list(translator.languages.items())]
+                     for code, lang in list(translator.languages.items())]
         self.language_menu = Combobox(self.sidebar,
-                                textvariable=self.languagevar,
-                                values=languages,
-                                height=2000,
-                                width=25,
-                                justify=Tk.CENTER)
+                                      textvariable=self.languagevar,
+                                      values=languages,
+                                      height=2000,
+                                      width=25,
+                                      justify=Tk.CENTER)
         self.language_menu.state(['readonly'])
         self.language_menu.bind('<<ComboboxSelected>>',
-                self.change_language)
+                                self.change_language)
 
     def ready_textbox(self):
         master = self.textframe
         font = self.font
         self.textbox = Tk.Text(master, height=1, width=1, wrap=Tk.WORD,
-                                undo=True, font=font)
+                               undo=True, font=font)
         self.add_commands(self.textbox, self.textbox_commands)
         self.ready_scrollbar()
         for (name, style) in self.text_styles:
@@ -124,7 +126,7 @@ class Editor(Tk.Frame, object):
     def text_styles(self):
         (strong, em, underline, small_caps, highlulani,
          example, example_no_lines, ipa) = iter(
-                                [self.font.copy() for _ in range(8)])
+            [self.font.copy() for _ in range(8)])
         strong.configure(weight='bold')
         em.configure(slant='italic')
         underline.configure(underline=True, family='Calibri')
@@ -353,28 +355,41 @@ class Editor(Tk.Frame, object):
         self._copy(event)
         return 'break'
 
-    @tkinter()
+    # @tkinter()
     def _copy(self, event=None):
         textbox = event.widget
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             self.clipboard_clear()
-            self.clipboard_append(textbox.get(*borders))
+            text = json.dumps(textbox.dump(*borders), ensure_ascii=False)
+            self.clipboard_append(f'\u0008{text}')
         return borders
 
-    @tkinter()
+    # @tkinter()
     def cut_text(self, event=None):
         textbox = event.widget
         textbox.delete(*self._copy(event))
         return 'break'
 
-    @tkinter()
+    # @tkinter()
     def paste_text(self, event=None):
         textbox = event.widget
         with ignored(Tk.TclError):
             borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
             textbox.delete(*borders)
-        textbox.insert(Tk.INSERT, self.clipboard_get())
+        text = self.clipboard_get()
+        if text.startswith('\u0008'):
+            tags = json.loads(text[1:])
+            for key, value, index in tags:
+                if key == 'tagon':
+                    tag = value
+                elif key == 'text':
+                    textbox.insert(Tk.INSERT, value, tag)
+                    # textbox.mark_set(Tk.INSERT, f'{Tk.INSERT}+{len(value)}c')
+                elif key == 'tagoff':
+                    tag = ''
+        else:
+            textbox.insert(Tk.INSERT, text)
         return 'break'
 
     def bold(self, event):
@@ -438,7 +453,7 @@ class Editor(Tk.Frame, object):
         length = len(text)
         text = self.markup(text)
         example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
-        converter = self.translator.convert_word # default setting
+        converter = self.translator.convert_word  # default setting
         for mark in '.!?':
             if mark in text:
                 converter = self.translator.convert_word
@@ -469,7 +484,7 @@ class Editor(Tk.Frame, object):
         length = len(text)
         text = self.markup(text)
         example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
-        converter = self.evolver.evolve # default setting
+        converter = self.evolver.evolve  # default setting
         text = converter(text)[-1]
         if example:
             text = '[e]' + text
@@ -656,11 +671,12 @@ class Editor(Tk.Frame, object):
         # with ignored(AttributeError):
         self.tkinter_to_html()
         self.parent.show_window()
-        text = self.textbox.get('1.0', Tk.END)
+        text = self.textbox.get('1.0', Tk.END + '-1c')
         with ignored(AttributeError):
             self.exit_command(text)
         self.parent._return = text
         self.master.destroy()
+
 
 if __name__ == '__main__':
     Editor().mainloop()

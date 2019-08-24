@@ -31,7 +31,7 @@ class Stories(Site):
         super().__init__('writings')
 
 
-class Stories(Site):
+class Encyclopedia(Site):
     def __init__(self):
         super().__init__('encyclopedia')
 

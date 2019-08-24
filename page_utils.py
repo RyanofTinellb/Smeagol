@@ -5,7 +5,7 @@ from smeagol.utils import *
 alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
 punctuation = "$-.#()!_"
 radix = len(punctuation)
-double_letter = r'([{0}])\1'.format(alphabet)
+double_letter = rf'([^{punctuation}])\1'
 
 
 def score_pattern(word, pattern, radix, points):
