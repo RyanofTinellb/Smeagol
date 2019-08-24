@@ -34,7 +34,9 @@ section_mark = {'n': '<ol>',
                 'l': '<ul>',
                 '/l': '</ul>',
                 'e': '<p class="example_no_lines">',
-                'f': '<p class="example">'}
+                'f': '<p class="example">',
+                'e ': '<p class="example_no_lines">',
+                'f ': '<p class="example">'}
 
 delimiters = {'n': 'li', 'l': 'li'}
 
@@ -62,7 +64,7 @@ def convert(line, mode, divs):
                 mode.pop()
             elif category in ('n', 'l'):
                 mode.append(category)
-            elif category in ('e', 'f'):
+            elif category in ('e', 'f', 'e ', 'f '):
                 marks = False
             delimiter = delimiters.get(mode[-1], 'p')
             category = section_mark.get(category, '<p>')

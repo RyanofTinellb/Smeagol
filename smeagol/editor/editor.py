@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 import json
 import tkinter as Tk
@@ -17,6 +18,13 @@ Tk.PREVLINE = (Tk.UPLINE + ' linestart', Tk.UPLINE + ' lineend')
 
 BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
 
+
+def get_text(textbox):
+    return textbox.get(1.0, Tk.END + '-1c')
+
+
+def get_formatted_text(textbox):
+    return textbox.dump(1.0, Tk.END + '-1c')
 
 class Editor(Tk.Frame, object):
     def __init__(self, master=None, parent=None):
@@ -125,8 +133,8 @@ class Editor(Tk.Frame, object):
     @property
     def text_styles(self):
         (strong, em, underline, small_caps, highlulani,
-         example, example_no_lines, ipa) = iter(
-            [self.font.copy() for _ in range(8)])
+         example, ipa) = iter(
+            [self.font.copy() for _ in range(7)])
         strong.configure(weight='bold')
         em.configure(slant='italic')
         underline.configure(underline=True, family='Calibri')
@@ -355,7 +363,6 @@ class Editor(Tk.Frame, object):
         self._copy(event)
         return 'break'
 
-    # @tkinter()
     def _copy(self, event=None):
         textbox = event.widget
         with ignored(Tk.TclError):
@@ -365,13 +372,11 @@ class Editor(Tk.Frame, object):
             self.clipboard_append(f'\u0008{text}')
         return borders
 
-    # @tkinter()
     def cut_text(self, event=None):
         textbox = event.widget
         textbox.delete(*self._copy(event))
         return 'break'
 
-    # @tkinter()
     def paste_text(self, event=None):
         textbox = event.widget
         with ignored(Tk.TclError):
@@ -385,7 +390,6 @@ class Editor(Tk.Frame, object):
                     tag = value
                 elif key == 'text':
                     textbox.insert(Tk.INSERT, value, tag)
-                    # textbox.mark_set(Tk.INSERT, f'{Tk.INSERT}+{len(value)}c')
                 elif key == 'tagoff':
                     tag = ''
         else:
@@ -501,44 +505,43 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def html_to_tkinter(self):
+        oldtime = datetime.now()
         count = Tk.IntVar()
         textbox = self.textbox
-        for (style, _) in self.text_styles:
-            while True:
-                try:
-                    if style.startswith('example'):
-                        letter = 'e' if style.endswith('lines') else 'f'
-                        start = textbox.search(
-                            f'\[[{letter}]\]',
-                            '1.0',
-                            regexp=True,
-                            count=count
-                        )
-                        end = f'{start}+3c'
-                        text = textbox.get(start, end)
-                        text = text[1] + ' '
-                        textbox.delete(start, end)
-                        textbox.insert(start, text)
-                        textbox.tag_add(
-                            style, start, f'{start}+{len(text)}c')
+        texts = re.split(r'(\[[ef] *\]|<.*?>)', get_text(textbox))
+        paras = dict(e='example-no-lines', f='example')
+        styles = {'em', 'strong', 'high-lulani', 'small-caps', 'link', 'bink',
+            'ipa'}
+        tag = None
+        ins = ''
+        textbox.delete(1.0, Tk.END)
+        for text in texts:
+            if re.match(r'\[[ef] *\]', text):
+                textbox.insert(Tk.INSERT, text[1], paras[text[1]])
+                continue
+            else:
+                new_tag = re.sub(r'</*(.*?)>', r'\1', text)
+                if text.startswith('</'):
+                    if new_tag in styles:
+                        tag = None
+                        ins = ''
                     else:
-                        start = textbox.search(
-                            '<{0}>.*?</{0}>'.format(style),
-                            '1.0',
-                            regexp=True,
-                            count=count
-                        )
-                        end = f'{start}+{count.get()}c'
-                        text = textbox.get(start, end)
-                        text = text[(len(style) + 2):(-3 - len(style))]
-                        textbox.delete(start, end)
-                        textbox.insert(start, text)
-                        textbox.tag_add(style, start, f'{start}+{len(text)}c')
-                except Tk.TclError:
-                    break
+                        ins = text
+                elif text.startswith('<'):
+                    if new_tag in styles:
+                        tag = new_tag
+                        ins = ''
+                    else:
+                        ins = text
+                else:
+                    ins = text
+            textbox.insert(Tk.INSERT, ins)
+        newtime = datetime.now()
+        print(('To Tkinter ' + str(newtime - oldtime)))
         self.reset_textbox()
 
     def tkinter_to_html(self, event=None):
+        oldtime = datetime.now()
         textbox = self.textbox
         for (style, _) in self.text_styles:
             for end, start in zip(*[reversed(textbox.tag_ranges(style))] * 2):
@@ -550,6 +553,8 @@ class Editor(Tk.Frame, object):
                     text = '<{1}>{0}</{1}>'.format(text, style)
                 textbox.delete(start, end)
                 textbox.insert(start, text)
+        newtime = datetime.now()
+        print(('To HTML: ' + str(newtime - oldtime)))
 
     def markdown_open(self, event=None):
         web.open_new_tab(self.marker.filename)
@@ -557,17 +562,14 @@ class Editor(Tk.Frame, object):
     def markdown_load(self, event=None):
         filename = fd.askopenfilename(
             filetypes=[('Sméagol Markdown File', '*.mkd')],
-            title='Load Markdown')
+            title='Load Markdown',
+            defaultextension='.mkd')
         if filename:
-            try:
-                self._markdown_load(filename)
-            except IndexError:
-                mb.showerror('Invalid File',
-                             'Please select a valid *.mkd file.')
+            self._markdown_load(filename)
 
     @tkinter()
     def _markdown_load(self, filename):
-        text = self.get_text(self.textbox)
+        text = get_text(self.textbox)
         text = self.markup(text)
         self.setup_markdown(filename)
         text = self.markdown(text)
@@ -583,7 +585,7 @@ class Editor(Tk.Frame, object):
 
     @tkinter()
     def _markdown_refresh(self, new_markdown):
-        text = self.get_text(self.textbox)
+        text = get_text(self.textbox)
         text = self.markup(text)
         self.marker.refresh(new_markdown)
         text = self.markdown(text)
@@ -591,7 +593,7 @@ class Editor(Tk.Frame, object):
 
     @tkinter()
     def markdown_clear(self, event=None):
-        text = self.get_text(self.textbox)
+        text = get_text(self.textbox)
         text = self.markup(text)
         self.replace(self.textbox, text)
 

@@ -248,7 +248,7 @@ l̰ | !!l | s<br>
         "owner": "files/search",
         "textbox": true,
         "browse": {
-          "text": "404 Page Not Found File Template",
+          "text": "Search Index",
           "action": "open",
           "extension": ".html"
         }

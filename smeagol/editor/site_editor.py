@@ -8,7 +8,7 @@ import tkinter.messagebox as mb
 import tkinter.simpledialog as sd
 from itertools import zip_longest
 from socket import error as socket_error
-from .editor import Editor
+from .editor import *
 from .properties import Properties
 from .properties_window import PropertiesWindow
 from smeagol.utils import *
@@ -327,13 +327,34 @@ class SiteEditor(Properties, Editor):
         return text
 
     def prepare_text(self, text):
-        text = re.sub(r'\n\n+', '\n', text)
+        text = ''.join(map(self.add_tags, text))
         text = self.markup(text)
         text = self.add_links(text, self.entry)
         try:
             self.entry.text = text
         except AttributeError:
             self.entry['text'] = text
+    
+    def add_tags(self, tag):
+        print(tag)
+        key, value, index = tag
+        if key == 'tagon':
+            if value.startswith('example'):
+                return '['
+            elif value in ('sel', ''):
+                return ''
+            else:
+                return f'<{value}>'
+        elif key == 'text':
+            return value
+        elif key == 'tagoff':
+            if value.startswith('example'):
+                return ']'
+            elif value in ('sel', ''):
+                return ''
+            else:
+                return f'</{value}>'
+        return ''
 
     def save_page(self, event=None):
         if self.is_new:
@@ -347,10 +368,9 @@ class SiteEditor(Properties, Editor):
         self.save_wholepage()
         self.save_search_pages()
         return 'break'
-
-    @tkinter()
+    
     def _save_page(self):
-        text = self.get_text(self.textbox)
+        text = get_formatted_text(self.textbox)
         with ignored(AttributeError): # entry could be a dict
             parent = self.entry.pop('parent')
             self.entry, new_parent = self.chain_append(self.entry, parent)
@@ -465,10 +485,6 @@ class SiteEditor(Properties, Editor):
         elif self.destination is None:
             return True
         return False
-
-    @staticmethod
-    def get_text(textbox):
-        return textbox.get(1.0, Tk.END + '-1c')
 
     def delete_page(self, event=None):
         message = f'Are you sure you wish to delete {self.entry.name}?'

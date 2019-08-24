@@ -63,7 +63,6 @@ class DictionaryEditor(SiteEditor):
             entry = dict(name=heading, parent=parent, position='1.0')
         return entry
 
-    @tkinter()
     def _save_page(self):
         # override super()._save_page
         self.entry = self.find_entry(self.heading_contents)
