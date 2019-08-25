@@ -166,7 +166,7 @@ class Properties:
     def open_site(self):
         filetypes = [('Sméagol File', '*.smg'), ('Source Data File', '*.src')]
         title = 'Open Site'
-        filename = fd.askopenfilename(filetypes=filetypes, title=title
+        filename = fd.askopenfilename(filetypes=filetypes, title=title,
             defaultextension='.smg')
         if filename:
             self.setup(filename, source=filename.endswith('.src'))

@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 import re
 import json
 import tkinter as Tk
@@ -11,13 +12,24 @@ from smeagol.translation import *
 from smeagol.utils import ignored, tkinter, is_key
 
 Tk.LINESTART = Tk.INSERT + ' linestart'
-Tk.LINEEND = Tk.INSERT + ' lineend'
+Tk.LINEEND = Tk.INSERT + ' lineend+1c'
 Tk.CURRLINE = (Tk.LINESTART, Tk.LINEEND)
 Tk.UPLINE = Tk.INSERT + ' -1 lines'
-Tk.PREVLINE = (Tk.UPLINE + ' linestart', Tk.UPLINE + ' lineend')
+Tk.PREV_LINE = Tk.INSERT + '-1l'
+Tk.NEXT_LINE = Tk.INSERT + '+1l'
+Tk.SELECTION = (Tk.SEL_FIRST, Tk.SEL_LAST)
+Tk.SEL_LINE = (Tk.SEL_FIRST + ' linestart', Tk.SEL_LAST + ' lineend + 1c')
+Tk.NO_SELECTION = (Tk.INSERT,) * 2
+Tk.USER_MARK = 'usermark'
+Tk.WHOLE_BOX = (1.0, Tk.END)
 
 BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
 
+def move_mark(textbox, mark, size):
+    sign = '+' if size >= 0 else '-'
+    size = abs(size)
+    textbox.mark_set(Tk.INSERT, mark)
+    textbox.mark_set(mark, f'{mark}{sign}{size}c')
 
 def get_text(textbox):
     return textbox.get(1.0, Tk.END + '-1c')
@@ -208,7 +220,7 @@ class Editor(Tk.Frame, object):
                 pattern, Tk.INSERT, regexp=True
             ) or Tk.INSERT + ' lineend'
         )
-        textbox.tag_add('sel', *borders)
+        textbox.tag_add(Tk.SEL, *borders)
         return textbox.get(*borders)
 
     def place_widgets(self):
@@ -252,14 +264,16 @@ class Editor(Tk.Frame, object):
             textbox.edit_modified(False)
         elif key and is_key(keysym) and event.num == '??':
             style = self.current_style.get()
-            with ignored(Tk.TclError):
-                textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
-            text = key + BRACKETS.get(key, '')
-            textbox.insert(Tk.INSERT, text)
-            bounds = f'{Tk.INSERT}-{len(text)}c'
-            textbox.tag_add(style, bounds, Tk.INSERT)
-            mark = f'{Tk.INSERT}-{len(text) - 1}c'
-            textbox.mark_set(Tk.INSERT, mark)
+            match = BRACKETS.get(key, '')
+            if match:
+                try:
+                    textbox.insert(Tk.SEL_FIRST, key)
+                    textbox.insert(Tk.SEL_LAST, match)
+                except Tk.TclError:
+                    textbox.insert(Tk.INSERT, key + match)
+                    move_mark(textbox, Tk.INSERT, -1)
+            else:
+                textbox.insert(Tk.INSERT, key, style)
             return 'break'
         elif keysym == 'Return':
             spaces = re.sub(r'( *).*', r'\1', textbox.get(*Tk.CURRLINE))
@@ -274,7 +288,7 @@ class Editor(Tk.Frame, object):
 
     @staticmethod
     def select_all(event):
-        event.widget.tag_add('sel', '1.0', 'end')
+        event.widget.tag_add(Tk.SEL, '1.0', Tk.END)
         return 'break'
 
     def backspace_word(self, event):
@@ -308,35 +322,6 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(event)
         return 'break'
 
-    @tkinter()
-    def move_line(self, event):
-        if event.keysym == 'Up':
-            direction = ' -1 lines'
-            correction = ' -1c linestart'
-        elif event.keysym == 'Down':
-            direction = ' +1 lines'
-            correction = ' lineend +1c'
-        else:
-            return 'break'
-        textbox = event.widget
-        position = textbox.index(Tk.INSERT)
-        try:
-            ends = (Tk.SEL_FIRST + ' linestart',
-                    Tk.SEL_LAST + ' lineend +1c')
-            text = textbox.get(*ends)
-            selected = list(map(textbox.index, (Tk.SEL_FIRST, Tk.SEL_LAST)))
-        except Tk.TclError:
-            ends = (Tk.INSERT + ' linestart',
-                    Tk.INSERT + ' lineend +1c')
-            text = textbox.get(*ends)
-            selected = None
-        textbox.delete(*ends)
-        textbox.insert(Tk.INSERT + correction, text)
-        if selected:
-            textbox.tag_add('sel', *[x + direction for x in selected])
-        textbox.mark_set(Tk.INSERT, position + direction)
-        return 'break'
-
     def delete_line(self, event=None):
         try:
             event.widget.delete(Tk.SEL_FIRST + ' linestart',
@@ -359,42 +344,94 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(widget=self.textbox)
         self.html_to_tkinter()
 
-    def copy_text(self, event=None):
-        self._copy(event)
+    def move_line(self, event):
+        if event.keysym == 'Up':
+            location = Tk.PREV_LINE
+        elif event.keysym == 'Down':
+            location = Tk.NEXT_LINE
+        else:
+            return 'break'
+        textbox = event.widget
+        try:
+            borders, text = self._cut(textbox, Tk.SEL_LINE, False)
+            self._paste(textbox, location, Tk.NO_SELECTION, text)
+        except Tk.TclError:
+            borders, text = self._cut(textbox, Tk.CURRLINE, False)
+            self._paste(textbox, location, Tk.NO_SELECTION, text)
+        textbox.mark_set(Tk.INSERT, Tk.USER_MARK)
         return 'break'
 
-    def _copy(self, event=None):
-        textbox = event.widget
+    def copy_text(self, event=None):
         with ignored(Tk.TclError):
-            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
+            self._copy(event.widget, Tk.SELECTION)
+        return 'break'
+
+    def _copy(self, textbox, borders=None, clip=True):
+        '''@error: raise Tk.TclError if no text is selected'''
+        borders = borders or Tk.SELECTION
+        text = '\u0008' + json.dumps(textbox.dump(*borders),
+            ensure_ascii=False).replace('],', '],\n')
+        if clip:
             self.clipboard_clear()
-            text = json.dumps(textbox.dump(*borders), ensure_ascii=False)
-            self.clipboard_append(f'\u0008{text}')
-        return borders
+            self.clipboard_append(text)
+        return borders, text
 
     def cut_text(self, event=None):
-        textbox = event.widget
-        textbox.delete(*self._copy(event))
+        with ignored(Tk.TclError):
+            self._cut(event.widget, Tk.SELECTION)
         return 'break'
-
+    
+    def _cut(self, textbox, borders=None, clip=True):
+        '''@error: raise Tk.TclError if no text is selected'''
+        borders, text = self._copy(textbox, borders, clip)
+        textbox.delete(*borders)
+        return borders, text
+    
     def paste_text(self, event=None):
         textbox = event.widget
-        with ignored(Tk.TclError):
-            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
-            textbox.delete(*borders)
-        text = self.clipboard_get()
+        try:
+            self._paste(event.widget, Tk.INSERT, Tk.SELECTION)
+        except Tk.TclError:
+            self._paste(event.widget, Tk.INSERT, Tk.NO_SELECTION)
+        textbox.tag_remove(Tk.SEL, *Tk.SELECTION)
+        return 'break'
+
+    def _paste(self, textbox, location=None, borders=None, text=None):
+        '''@error: raise Tk.TclError if no text is selected'''
+        location = location or Tk.INSERT
+        borders = borders or Tk.SELECTION
+        textbox.delete(*borders)
+        textbox.mark_set(Tk.INSERT, location)
+        if not text:
+            try:
+                text = self.clipboard_get()
+            except Tk.TclError:
+                return
         if text.startswith('\u0008'):
+            print(text)
+            tag = ''
+            sel = ''
             tags = json.loads(text[1:])
             for key, value, index in tags:
+                if key == 'mark' and value == Tk.INSERT:
+                    textbox.mark_set(Tk.USER_MARK, Tk.INSERT)
+                    textbox.mark_gravity(Tk.USER_MARK, Tk.LEFT)
                 if key == 'tagon':
-                    tag = value
+                    if value == Tk.SEL:
+                        sel = Tk.SEL
+                    else:
+                        tag = value
                 elif key == 'text':
-                    textbox.insert(Tk.INSERT, value, tag)
+                    # may have to turn Tk.SEL on and off. We'll check in a sec.
+                    textbox.insert(Tk.INSERT, value, (tag, sel))
                 elif key == 'tagoff':
-                    tag = ''
+                    if value == Tk.SEL:
+                        sel = ''
+                    else:
+                        tag = ''
         else:
             textbox.insert(Tk.INSERT, text)
-        return 'break'
+        textbox.tag_remove('', *Tk.WHOLE_BOX)
 
     def bold(self, event):
         self.change_style(event, 'strong')
@@ -428,7 +465,7 @@ class Editor(Tk.Frame, object):
     def change_style(self, event, style):
         textbox = event.widget
         for other in textbox.tag_names():
-            if other != 'sel':
+            if other != Tk.SEL:
                 with ignored(Tk.TclError):
                     textbox.tag_remove(other, Tk.SEL_FIRST, Tk.SEL_LAST)
         if style == self.current_style.get():
@@ -449,11 +486,11 @@ class Editor(Tk.Frame, object):
     def add_translation(self, event):
         textbox = event.widget
         try:
-            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
+            borders = Tk.SELECTION
             text = textbox.get(*borders)
         except Tk.TclError:
             text = self.select_word(event)
-            textbox.tag_remove('sel', '1.0', Tk.END)
+            textbox.tag_remove(Tk.SEL, '1.0', Tk.END)
         length = len(text)
         text = self.markup(text)
         example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
@@ -480,11 +517,11 @@ class Editor(Tk.Frame, object):
     def add_descendant(self, event):
         textbox = event.widget
         try:
-            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
+            borders = Tk.SELECTION
             text = textbox.get(*borders)
         except Tk.TclError:
             text = self.select_word(event)
-            textbox.tag_remove('sel', '1.0', Tk.END)
+            textbox.tag_remove(Tk.SEL, '1.0', Tk.END)
         length = len(text)
         text = self.markup(text)
         example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
@@ -505,7 +542,6 @@ class Editor(Tk.Frame, object):
         return 'break'
 
     def html_to_tkinter(self):
-        oldtime = datetime.now()
         count = Tk.IntVar()
         textbox = self.textbox
         texts = re.split(r'(\[[ef] *\]|<.*?>)', get_text(textbox))
@@ -517,7 +553,7 @@ class Editor(Tk.Frame, object):
         textbox.delete(1.0, Tk.END)
         for text in texts:
             if re.match(r'\[[ef] *\]', text):
-                textbox.insert(Tk.INSERT, text[1], paras[text[1]])
+                textbox.insert(Tk.INSERT, f'{text[1]} ', paras[text[1]])
                 continue
             else:
                 new_tag = re.sub(r'</*(.*?)>', r'\1', text)
@@ -535,13 +571,10 @@ class Editor(Tk.Frame, object):
                         ins = text
                 else:
                     ins = text
-            textbox.insert(Tk.INSERT, ins)
-        newtime = datetime.now()
-        print(('To Tkinter ' + str(newtime - oldtime)))
+            textbox.insert(Tk.INSERT, ins, tag)
         self.reset_textbox()
 
     def tkinter_to_html(self, event=None):
-        oldtime = datetime.now()
         textbox = self.textbox
         for (style, _) in self.text_styles:
             for end, start in zip(*[reversed(textbox.tag_ranges(style))] * 2):
@@ -553,8 +586,6 @@ class Editor(Tk.Frame, object):
                     text = '<{1}>{0}</{1}>'.format(text, style)
                 textbox.delete(start, end)
                 textbox.insert(start, text)
-        newtime = datetime.now()
-        print(('To HTML: ' + str(newtime - oldtime)))
 
     def markdown_open(self, event=None):
         web.open_new_tab(self.marker.filename)

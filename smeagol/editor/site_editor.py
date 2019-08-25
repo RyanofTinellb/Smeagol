@@ -336,12 +336,11 @@ class SiteEditor(Properties, Editor):
             self.entry['text'] = text
     
     def add_tags(self, tag):
-        print(tag)
         key, value, index = tag
         if key == 'tagon':
             if value.startswith('example'):
                 return '['
-            elif value in ('sel', ''):
+            elif value in (Tk.SEL, ''):
                 return ''
             else:
                 return f'<{value}>'
@@ -350,7 +349,7 @@ class SiteEditor(Properties, Editor):
         elif key == 'tagoff':
             if value.startswith('example'):
                 return ']'
-            elif value in ('sel', ''):
+            elif value in (Tk.SEL, ''):
                 return ''
             else:
                 return f'</{value}>'
@@ -524,8 +523,8 @@ class SiteEditor(Properties, Editor):
     @staticmethod
     def insert_characters(textbox, before, after=''):
         try:
-            text = textbox.get(Tk.SEL_FIRST, Tk.SEL_LAST)
-            textbox.delete(Tk.SEL_FIRST, Tk.SEL_LAST)
+            text = textbox.getTk.SELECTION
+            textbox.deleteTk.SELECTION
             textbox.insert(Tk.INSERT, before + text + after)
         except Tk.TclError:
             textbox.insert(Tk.INSERT, before + after)
@@ -557,7 +556,7 @@ class SiteEditor(Properties, Editor):
             textbox.delete(linestart, linestart + '+3c')
 
     def select_paragraph(self, event=None):
-        event.widget.tag_add('sel', Tk.INSERT + ' linestart',
+        event.widget.tag_add(Tk.SEL, Tk.INSERT + ' linestart',
                              Tk.INSERT + ' lineend +1c')
         return 'break'
 

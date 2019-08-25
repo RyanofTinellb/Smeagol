@@ -250,7 +250,7 @@ l̰ | !!l | s<br>
         "browse": {
           "text": "Search Index",
           "action": "open",
-          "extension": ".html"
+          "extension": ".json"
         }
       },
       {

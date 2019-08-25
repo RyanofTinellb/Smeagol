@@ -12,7 +12,7 @@ class DictionaryEditor(SiteEditor):
     def jump_to_entry(self, event):
         textbox = event.widget
         try:
-            borders = (Tk.SEL_FIRST, Tk.SEL_LAST)
+            borders = Tk.SELECTION
             entry = textbox.get(*borders)
         except Tk.TclError:
             entry = self.select_word(event)
