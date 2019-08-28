@@ -254,7 +254,7 @@ class SiteEditor(Properties, Editor):
     @asynca
     def site_publish(self, event=None):
         for page in self.site.all_pages:
-            page.text = self.add_links(self.remove_links(str(page)), page)
+            page.text = self.add_links(self.remove_links(str(page), page), page)
         self.site.publish()
         print('Site Published!')
 
@@ -322,12 +322,12 @@ class SiteEditor(Properties, Editor):
             text = self.initial_content(entry) # entry is a dict
         except AttributeError:
             text = str(entry)
-        for converter in (self.remove_links, self.markdown):
-            text = converter(text)
+        text = self.remove_links(text, entry)
+        text = self.markdown(text)
         return text
 
     def prepare_text(self, text):
-        text = ''.join(map(self.add_tags, text))
+        text = ''.join(map(self.add_tags, text))[:-1]
         text = self.markup(text)
         text = self.add_links(text, self.entry)
         try:

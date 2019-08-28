@@ -38,7 +38,7 @@ class DictionaryEditor(SiteEditor):
         return 'break'
 
     def update_titlebar(self):
-        #override super().update_titlebar()
+        # override super().update_titlebar()
         try:
             name = self.entry.url
         except AttributeError:
@@ -106,9 +106,10 @@ class DictionaryEditor(SiteEditor):
         pos = None
         for entry in self.site.all_pages:
             transliteration = entry.name
-            for line in self.remove_links(str(entry)).split('['):
+            for line in self.remove_links(str(entry), entry).split('['):
                 if line.startswith('1]'):
-                    language = re.sub('1](.*?)\n(?:.*)', r'\1', line, flags=re.S)
+                    language = re.sub('1](.*?)\n(?:.*)',
+                                      r'\1', line, flags=re.S)
                 elif line.startswith('2]'):
                     pos = self._pos(line)
                 elif line.startswith('d definition]'):
@@ -148,7 +149,7 @@ class DictionaryEditor(SiteEditor):
         ]
         if code == 'en':
             output.pop(1)
-            output.pop(2)
+            output.pop(1)
         return self.markup('\n'.join(output))
 
     @property

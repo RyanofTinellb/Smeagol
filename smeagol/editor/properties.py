@@ -31,11 +31,10 @@ class Properties:
             except (IOError, TypeError):
                 self.configuration = json.loads(default.config)
         self.setup_site()
-        self.linkadder = AddRemoveLinks(self.links, self.wordlist)
+        self.linkadder = AddRemoveLinks(self.links, self.wordlist, self.translator)
 
     def setup_linguistics(self):
         # override Editor.setup_linguistics()
-        self.translator = Translator(self.language)
         self.evolver = HighToDemoticLulani()
         self.randomwords = RandomWords(self.language, self.sample_texts)
         self.setup_markdown()
@@ -91,7 +90,7 @@ class Properties:
 
     def __getattr__(self, attr):
         if attr in {'name', 'destination',
-            'source', 'template_file', 'wordlist',
+            'source', 'template_file', 'template', 'wordlist',
             'wholepage', 'wholepage_file', 'wholepage_template',
             'search', 'search404',
             'search_index', 'search_template', 'search_page',
@@ -111,6 +110,8 @@ class Properties:
             return self.configuration.get('sample texts', '')
         elif attr == 'site_info':
             return self.configuration['site']
+        elif attr == 'translator':
+            return Translator(self.language)
         elif attr == 'history':
             return self.get_history()
         elif attr == 'page':

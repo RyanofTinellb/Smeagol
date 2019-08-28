@@ -1,33 +1,33 @@
 # -*- coding: utf-8 -*-
 import re
-from collections import OrderedDict
 
 
 class Translator:
     def __init__(self, language=None):
         language = language or 'en'
-        languages = OrderedDict()
-        languages['en'] = English
-        languages['hl'] = HighLulani
-        languages['dl'] = DemoticLulani
-        languages['ef'] = EarlyFezhle
-        languages['lf'] = LateFezhle
-        languages['kf'] = KoineFezhle
-        languages['op'] = OldPtokan
-        languages['mp'] = MiddlePtokan
-        languages['sp'] = StandardPtokan
-        languages['pb'] = PreBrequen
-        languages['ab'] = ArchaicBrequen
-        languages['cb'] = CommonBrequen
-        languages['pz'] = ProtoZhaladi
-        languages['cz'] = ContemporaryZhaladi
-        languages['rz'] = ReformedZhaladi
-        languages['ct'] = ClassicalTsarin
-        languages['mt'] = ModernTsarin
-        languages['as'] = AncientSolajin
-        languages['ms'] = MedievalSolajin
-        languages['ts'] = TraditionalSolajin
-        languages['ns'] = NewSolajin
+        languages = dict(
+            en=English,
+            hl=HighLulani,
+            dl=DemoticLulani,
+            ef=EarlyFezhle,
+            lf=LateFezhle,
+            kf=KoineFezhle,
+            op=OldPtokan,
+            mp=MiddlePtokan,
+            sp=StandardPtokan,
+            pb=PreBrequen,
+            ab=ArchaicBrequen,
+            cb=CommonBrequen,
+            pz=ProtoZhaladi,
+            cz=ContemporaryZhaladi,
+            rz=ReformedZhaladi,
+            ct=ClassicalTsarin,
+            mt=ModernTsarin)
+        languages.update({'as': AncientSolajin})
+        languages.update(dict(
+            ms=MedievalSolajin,
+            ts=TraditionalSolajin,
+            ns=NewSolajin))
         self.number = len(languages)
         self.languages = languages
         self.select(language)
@@ -64,14 +64,19 @@ class Translator:
         else:
             return 'unknown'
 
+    def convert(self, text, kind='text'):
+        convert = getattr(self.converter, f'convert_{kind}')
+        tag = getattr(self.converter, 'tag')
+        return '<{0}>{1}</{0}'.format(tag, convert(text))
+
     def convert_text(self, text):
-        return self.converter.convert_text(text)
+        return self.convert(text)
 
     def convert_word(self, text):
-        return self.converter.convert_word(text)
+        return self.convert(text, 'word')
 
     def convert_sentence(self, text):
-        return self.converter.convert_sentence(text)
+        return self.convert(text, 'sentence')
 
 
 class English:
@@ -94,12 +99,13 @@ class English:
 class HighLulani:
     def __init__(self):
         self.name = 'High Lulani'
+        self.tag = 'high-lulani'
 
     # Converts a transliterated text into High Lulani text
     # See grammar.tinellb.com/highlulani for details.
     @staticmethod
     def convert_text(text):
-        if text == '* **':
+        if text == '***':
             return text
 
         # removes full stops if before a parenthesis
@@ -111,21 +117,17 @@ class HighLulani:
         # removes angle brackets and information between them
         text = re.sub(r'<.*?>', '', text)
 
-        # replaces unicode
-        text = text.replace('&rsquo;', "'")
-        text = text.replace('&#x294;', "''")
-
         # replaces "upper case" glottal stop with "lower case" apostrophe
-        text = re.sub("(\"| |^)''", r"\1'", text)
+        text = re.sub('(“| |^)ʔ', r'\1’', text)
         text = text.lower()
-        output = ""
+        output = ''
         for last, this in zip(text, text[1:]):
             if this == last:
                 output += ";"
             elif last == "-":
                 if this in "aiu":
                     output += "/" + this
-            elif last == "'":
+            elif last == '’':
                 output += this
             elif this == "a":
                 output += last
@@ -133,7 +135,7 @@ class HighLulani:
                 output += last.upper()
             elif this == "u":
                 index = "pbtdcjkgmnqlrfsxh".find(last)
-                output += "oOeEyY><UIAWwvzZV"[index]
+                output += "oOeEyY$%UIAWwvzZV"[index]
             elif this == " ":
                 if last in ".!?":
                     output += " . "
@@ -141,19 +143,17 @@ class HighLulani:
                     output += " , "
                 else:
                     output += " / "
-        output = output.replace("<", "&lt;")
-        output = output.replace(">", "&gt;")
         output = output.replace("-", "")
         return output
 
     def convert_sentence(self, text):
-        if text == '* **':
-            return '<high-lulani>* **</high-lulani>'
-        output = f'<high-lulani>.{self.convert_text(text)}.</high-lulani>'
+        if text == '***':
+            return '***'
+        output = f'.{self.convert_text(text)}.'
         return output
 
     def convert_word(self, text):
-        output = f'<high-lulani>{self.convert_text(text)}</high-lulani>'
+        output = f'{self.convert_text(text)}'
         return output
 
 

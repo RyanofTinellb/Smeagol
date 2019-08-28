@@ -36,7 +36,7 @@ def get_text(textbox):
 
 
 def get_formatted_text(textbox):
-    return textbox.dump(1.0, Tk.END + '-1c')
+    return textbox.dump(1.0, Tk.END)
 
 class Editor(Tk.Frame, object):
     def __init__(self, master=None, parent=None):
@@ -144,7 +144,7 @@ class Editor(Tk.Frame, object):
 
     @property
     def text_styles(self):
-        (strong, em, underline, small_caps, highlulani,
+        (strong, em, underline, small_caps, tinellbian,
          example, ipa) = iter(
             [self.font.copy() for _ in range(7)])
         strong.configure(weight='bold')
@@ -152,9 +152,9 @@ class Editor(Tk.Frame, object):
         underline.configure(underline=True, family='Calibri')
         small_caps.configure(
             family='Alegreya SC')
-        highlulani.configure(
-            size=highlulani.actual(option='size') + 3,
-            family='Lulani')
+        tinellbian.configure(
+            size=tinellbian.actual(option='size') + 3,
+            family='Tinellbian')
         example.configure(size=-1)
         ipa.configure(
             family='lucida sans unicode')
@@ -167,7 +167,7 @@ class Editor(Tk.Frame, object):
             ('small-caps', {'font': small_caps}),
             ('link', {'foreground': 'blue', 'font': underline}),
             ('bink', {'foreground': 'red', 'font': underline}),
-            ('high-lulani', {'font': highlulani}),
+            ('high-lulani', {'font': tinellbian}),
             ('ipa', {'font': ipa})]
 
     def modify_fontsize(self, size):
@@ -273,11 +273,15 @@ class Editor(Tk.Frame, object):
                     textbox.insert(Tk.INSERT, key + match)
                     move_mark(textbox, Tk.INSERT, -1)
             else:
-                textbox.insert(Tk.INSERT, key, style)
+                try:
+                    textbox.delete(*Tk.SELECTION)
+                    textbox.insert(Tk.SEL, key, style)
+                except Tk.TclError:
+                    textbox.insert(Tk.INSERT, key, style)
             return 'break'
         elif keysym == 'Return':
             spaces = re.sub(r'( *).*', r'\1', textbox.get(*Tk.CURRLINE))
-            textbox.insert(Tk.INSERT, '\n' + spaces)
+            textbox.insert(Tk.INSERT, spaces)
             return 'break'
         elif keysym not in {'BackSpace', 'Shift_L', 'Shift_R'}:
             self.current_style.set('')
@@ -408,7 +412,6 @@ class Editor(Tk.Frame, object):
             except Tk.TclError:
                 return
         if text.startswith('\u0008'):
-            print(text)
             tag = ''
             sel = ''
             tags = json.loads(text[1:])

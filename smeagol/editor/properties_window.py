@@ -120,8 +120,8 @@ class PropertyFrame:
                 browser = fd.askopenfilename
             elif action == 'save':
                 browser = fd.asksaveasfilename
-            filename = browser(filetypes=[filetype], title='Select File')
-            extension = filetype[1]
+            filename = browser(filetypes=[filetype], title='Select File',
+                defaultextension = filetype[1])
             self.insert(filename, multiple=(action == 'open multiple'))
             if filename:
                 if action == 'save':

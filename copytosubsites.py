@@ -1,6 +1,6 @@
 import shutil
 
-src = 'C:/Users/Ryan/Documents/TinellbianLanguages/main/'
+src = 'C:/Users/Ryan/TinellbianLanguages/main/'
 
 
 def copy(paths, files, src):
@@ -10,19 +10,19 @@ def copy(paths, files, src):
 
 
 paths = [
-            'C:/Users/Ryan/Documents/TinellbianLanguages/coelacanth/',
-            'C:/Users/Ryan/Documents/TinellbianLanguages/writings/',
-			'C:/Users/Ryan/Documents/TinellbianLanguages/encyclopedia/',
-            'C:/Users/Ryan/Documents/TinellbianLanguages/grammar/',
+            'C:/Users/Ryan/TinellbianLanguages/coelacanth/',
+            'C:/Users/Ryan/TinellbianLanguages/writings/',
+			'C:/Users/Ryan/TinellbianLanguages/encyclopedia/',
+            'C:/Users/Ryan/TinellbianLanguages/grammar/',
         ]
 files =  ['404search.js', 'search.js']
 
 copy(paths, files, src)
 
 paths += [
-            'C:/Users/Ryan/Documents/TinellbianLanguages/dictionary/'
+            'C:/Users/Ryan/TinellbianLanguages/dictionary/'
          ]
 
-files = ['highlulani.ttf', 'favicon.png', 'searchterms.js', 'basic_style.css']
+files = ['tinellb.ttf', 'favicon.png', 'searchterms.js', 'basic_style.css']
 
 copy(paths, files, src)

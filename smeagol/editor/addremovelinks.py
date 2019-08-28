@@ -5,8 +5,9 @@ from smeagol import Translator
 from smeagol.utils import urlform, ignored, buyCaps, sellCaps, page_initial
 
 class AddRemoveLinks:
-    def __init__(self, link_adders, wordlist):
+    def __init__(self, link_adders, wordlist, translator):
         self.wordlist = wordlist
+        self.translator = translator or Translator()
         self += link_adders
 
     @property
@@ -17,7 +18,8 @@ class AddRemoveLinks:
 
     def __add__(self, adder):
         for adder, resource in adder.items():
-            self.link_adders[adder] = globals()[adder](resource, self.wordlist)
+            args = self.wordlist, self.translator
+            self.link_adders[adder] = globals()[adder](resource, *args)
         return self
 
     def __sub__(self, adder):
@@ -37,9 +39,9 @@ class AddRemoveLinks:
             text = link_adder.add_links(text, entry)
         return text
 
-    def remove_links(self, text):
+    def remove_links(self, text, entry):
         for link_adder in list(self.link_adders.values()):
-            text = link_adder.remove_links(text)
+            text = link_adder.remove_links(text, entry)
         return text
 
     def string(self, adder):
@@ -50,7 +52,7 @@ class AddRemoveLinks:
 
 
 class Glossary:
-    def __init__(self, filename, wordlist=None):
+    def __init__(self, filename, wordlist=None, translator=None):
         self.adder = {'Glossary': filename}
         try:
             with open(filename, encoding='utf-8') as glossary:
@@ -80,7 +82,7 @@ class Glossary:
                 self.tooltip.format(abbrev, full_form))
         return text
 
-    def remove_links(self, text):
+    def remove_links(self, text, entry):
         for abbrev, full_form in self.glossary.items():
             text = text.replace(self.tooltip.format(abbrev, full_form),
                 f'<small-caps>{abbrev}</small-caps>')
@@ -88,45 +90,54 @@ class Glossary:
 
 
 class ExternalDictionary:
-    def __init__(self, url, wordlist=None):
+    def __init__(self, url, wordlist=None, translator=None):
         self.url = url
         self.wordlist_file = wordlist
         self.language = ''
         self.adder = {'ExternalDictionary': url}
         self.wordlist_setup()
+        self.translator = translator or Translator()
 
     def add_links(self, text, entry):
         """
         text: 'foo<link>bar</link>baz' =>
             'foo<a href="url/b/bar.html#language">bar</a>baz'
         """
-        self.language = '#'
         with ignored(IndexError):
-            self.language += entry.matriarch.url
+            self.language = entry.matriarch.url
         return re.sub(r'<{0}>(.*?)</{0}>'.format('[bl]ink'), self._link, text)
 
     def _link(self, matchobj):
-        word = matchobj.group(1)
+        word = matchobj.group(1).split(':')
+        tr = self.translator
+        lang = urlform(self.language if len(word) == 1 else tr.select(word[0]))
+        word = word[-1]
         link = urlform(sellCaps(word))
         try:
             initial = page_initial(link)
         except IndexError:
             return word
-        return '<a href="{0}/{1}/{2}.html{3}">{4}</a>'.format(
-            self.url, initial, link, self.language, word)
+        return '<a href="{0}/{1}/{2}.html#{3}">{4}</a>'.format(
+            self.url, initial, link, lang, word)
 
-    def remove_links(self, text):
+    def remove_links(self, text, entry):
         """
         text: 'foo<a href="url/b/bar.html#language">bar</a>baz' =>
                     'foo<link>bar</link>baz'
 
         """
-        return re.sub(rf'<a href="{self.url}.*?>(.*?)</a>', self._remove, text)
+        with ignored(IndexError):
+            self.language = entry.matriarch.url
+        regex = fr'<a href="{self.url}.*?#(.*?)">(.*?)</a>'
+        return re.sub(regex, self._unlink, text)
 
-    def _remove(self, regex):
-        link = regex.group(1)
+    def _unlink(self, regex):
+        tr = self.translator
+        lang, link = [regex.group(x) for x in range(1,3)]
         tag = 'link' if not self.wordlist or link in self.wordlist else 'bink'
-        return '<{0}>{1}</{0}>'.format(tag, link)
+        if lang == urlform(self.language):
+            return '<{0}>{1}</{0}>'.format(tag, link)
+        return '<{0}>{1}:{2}</{0}>'.format(tag, tr.encode(lang), link)
 
     def wordlist_setup(self):
         if self.wordlist_file:
@@ -141,9 +152,9 @@ class ExternalDictionary:
 
 
 class InternalDictionary:
-    def __init__(self, resource=None, wordlist=None):
+    def __init__(self, resource=None, wordlist=None, translator=None):
         self.adder = {'InternalDictionary': resource}
-        self.translator = Translator()
+        self.translator = translator or Translator()
         self.wordlist_file = wordlist
         self.wordlist_setup()
 
@@ -171,7 +182,7 @@ class InternalDictionary:
         return '<a href="../{0}/{1}.html#{2}">{3}</a>'.format(
             initial, link, language, word[-1])
 
-    def remove_links(self, text):
+    def remove_links(self, text, entry):
         self.language = 'also'
         lang = '1]'  # language marker
         output = []
@@ -202,7 +213,7 @@ class InternalDictionary:
         self.wordlist_setup()
 
 class ExternalGrammar:
-    def __init__(self, filename, wordlist=None):
+    def __init__(self, filename, wordlist=None, translator=None):
         self.adder = {'ExternalGrammar': filename}
         with open(filename, encoding='utf-8') as replacements:
             self._file = replacements.read()
@@ -258,7 +269,7 @@ class ExternalGrammar:
             return show.format(pos)
         return pos
 
-    def remove_links(self, text):
+    def remove_links(self, text, entry):
         """
         text: 'foo<a href="url/b/bar.html#language">bar</a>baz' =>
                     'foo<link>bar</link>baz'
