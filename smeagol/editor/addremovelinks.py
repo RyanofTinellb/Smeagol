@@ -103,7 +103,7 @@ class ExternalDictionary:
         text: 'foo<link>bar</link>baz' =>
             'foo<a href="url/b/bar.html#language">bar</a>baz'
         """
-        with ignored(IndexError):
+        with ignored(IndexError, AttributeError):
             self.language = entry.matriarch.url
         return re.sub(r'<{0}>(.*?)</{0}>'.format('[bl]ink'), self._link, text)
 
@@ -126,7 +126,7 @@ class ExternalDictionary:
                     'foo<link>bar</link>baz'
 
         """
-        with ignored(IndexError):
+        with ignored(IndexError, AttributeError):
             self.language = entry.matriarch.url
         regex = fr'<a href="{self.url}.*?#(.*?)">(.*?)</a>'
         return re.sub(regex, self._unlink, text)

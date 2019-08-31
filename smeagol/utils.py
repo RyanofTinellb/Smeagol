@@ -91,10 +91,6 @@ def _sell(regex):
         return letter
 
 
-def is_key(text):
-    return not re.match('^[A-Z].+', text)
-
-
 def change_text(item, replacement, text):
     try:
         text[0] = re.sub(item, replacement, text[0])

@@ -9,7 +9,7 @@ import webbrowser as web
 from tkinter.ttk import Combobox
 
 from smeagol.translation import *
-from smeagol.utils import ignored, tkinter, is_key
+from smeagol.utils import ignored, tkinter
 
 Tk.LINESTART = Tk.INSERT + ' linestart'
 Tk.LINEEND = Tk.INSERT + ' lineend+1c'
@@ -259,10 +259,14 @@ class Editor(Tk.Frame, object):
         self.update_wordcount(event)
         key = event.char
         keysym = event.keysym
+        code = event.keycode
         textbox = event.widget
+        print(f'key {key}')
+        print(f'keysym {keysym}')
+        print(f'keycode {code}')
         if key.startswith('Control_'):
             textbox.edit_modified(False)
-        elif key and is_key(keysym) and event.num == '??':
+        elif key and key == keysym and event.num == '??':
             style = self.current_style.get()
             match = BRACKETS.get(key, '')
             if match:
@@ -395,9 +399,9 @@ class Editor(Tk.Frame, object):
         textbox = event.widget
         try:
             self._paste(event.widget, Tk.INSERT, Tk.SELECTION)
+            textbox.tag_remove(Tk.SEL, *Tk.SELECTION)
         except Tk.TclError:
             self._paste(event.widget, Tk.INSERT, Tk.NO_SELECTION)
-        textbox.tag_remove(Tk.SEL, *Tk.SELECTION)
         return 'break'
 
     def _paste(self, textbox, location=None, borders=None, text=None):
@@ -425,7 +429,6 @@ class Editor(Tk.Frame, object):
                     else:
                         tag = value
                 elif key == 'text':
-                    # may have to turn Tk.SEL on and off. We'll check in a sec.
                     textbox.insert(Tk.INSERT, value, (tag, sel))
                 elif key == 'tagoff':
                     if value == Tk.SEL:
@@ -699,6 +702,8 @@ class Editor(Tk.Frame, object):
             ('<Control-v>', self.paste_text),
             ('<Control-w>', self.select_word),
             ('<Control-x>', self.cut_text),
+            # ('<Control-y>', self.redo),
+            # ('<Control-z>', self.undo),
             ('<Control-BackSpace>', self.backspace_word),
             ('<Control-Delete>', self.delete_word),
             (('<Control-Up>', '<Control-Down>'), self.move_line)]

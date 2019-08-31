@@ -89,14 +89,7 @@ class Properties:
                 self.markdown_file = filename
 
     def __getattr__(self, attr):
-        if attr in {'name', 'destination',
-            'source', 'template_file', 'template', 'wordlist',
-            'wholepage', 'wholepage_file', 'wholepage_template',
-            'search', 'search404',
-            'search_index', 'search_template', 'search_page',
-            'search_template404', 'search_page404'}:
-                return getattr(self.site, attr)
-        elif attr in {'language', 'fontsize'}:
+        if attr in {'language', 'fontsize'}:
             return self.configuration['current'][attr]
         elif attr == 'markdown_file':
             return self.configuration['current']['markdown']
@@ -117,7 +110,10 @@ class Properties:
         elif attr == 'page':
             return self.get_page()
         else:
-            return getattr(super(Properties, self), attr)
+            try:
+                return getattr(self.site, attr)
+            except AttributeError:
+                return getattr(super(Properties, self), attr)
 
     def __setattr__(self, attr, value):
         if attr in {'language', 'fontsize'}:
