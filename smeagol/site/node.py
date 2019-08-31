@@ -2,9 +2,9 @@ from itertools import chain, zip_longest
 
 
 class Node:
-    def __init__(self, root, location):
-        self.tree = root
-        self.location = location
+    def __init__(self, root=None, location=None):
+        self.tree = root or {}
+        self.location = location or []
 
     def __repr__(self):
         return f'Node: location = {self.location}'

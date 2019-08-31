@@ -192,7 +192,6 @@ class Editor(Tk.Frame, object):
         self.setup_markdown()
         self.randomwords = RandomWords()
         self.translator = Translator(self.language)
-        self.evolver = HighToDemoticLulani()
 
     def setup_markdown(self, filename=None):
         self.marker = Markdown(filename)
@@ -261,9 +260,6 @@ class Editor(Tk.Frame, object):
         keysym = event.keysym
         code = event.keycode
         textbox = event.widget
-        print(f'key {key}')
-        print(f'keysym {keysym}')
-        print(f'keycode {code}')
         if key.startswith('Control_'):
             textbox.edit_modified(False)
         elif key and key == keysym and event.num == '??':
@@ -347,7 +343,7 @@ class Editor(Tk.Frame, object):
             str(text.count(' ') + text.count('\n') - text.count(' | ')))
 
     def display(self, text):
-        self.replace(self.textbox, text)
+        self.replace(self.textbox, str(text))
         self.textbox.focus_set()
         self.update_wordcount(widget=self.textbox)
         self.html_to_tkinter()

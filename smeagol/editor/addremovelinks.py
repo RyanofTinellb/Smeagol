@@ -5,10 +5,11 @@ from smeagol import Translator
 from smeagol.utils import urlform, ignored, buyCaps, sellCaps, page_initial
 
 class AddRemoveLinks:
-    def __init__(self, link_adders, wordlist, translator):
-        self.wordlist = wordlist
+    def __init__(self, link_adders=None, wordlist=None, translator=None):
+        self.wordlist = wordlist or ''
         self.translator = translator or Translator()
-        self += link_adders
+        if link_adders:
+            self += link_adders
 
     @property
     def adders(self):

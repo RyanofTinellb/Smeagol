@@ -30,13 +30,6 @@ class DictionaryEditor(SiteEditor):
     def caller(self):
         return 'dictionary'
 
-    def add_definition(self, event=None):
-        widget = event.widget
-        m = self.markdown.to_markdown
-        self.insert_characters(
-            widget, m('<div class="definition">'), m('</div>'))
-        return 'break'
-
     def update_titlebar(self):
         # override super().update_titlebar()
         try:
@@ -45,8 +38,8 @@ class DictionaryEditor(SiteEditor):
             name = urlform(self.entry.get('name', ''))
         self._titlebar(buyCaps(name).replace('&nbsp;', ' '))
 
-    def find_entry(self, headings, entry=None):
-        # override super().find_entry()
+    def load_entry(self, headings, entry=None):
+        # override super().load_entry()
         entry = self.site.root
         try:
             heading = un_url(headings[0])
@@ -65,7 +58,7 @@ class DictionaryEditor(SiteEditor):
 
     def _save_page(self):
         # override super()._save_page
-        self.entry = self.find_entry(self.heading_contents)
+        self.load_entry(self.heading_contents)
         super(DictionaryEditor, self)._save_page()
         self.make_wordlist()
 

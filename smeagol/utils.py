@@ -151,7 +151,7 @@ class ShortList(list):
             self += other
         return self
 
-    def __next__(self):
+    def next(self):
         try:
             page = self.pop(0)
         except IndexError:
@@ -165,3 +165,23 @@ class ShortList(list):
         except IndexError:
             return None
         return self[-1]
+
+class Text:
+    def __init__(self, master, text=''):
+        self.text = text
+        self.entry = master.entry
+        self.master = master
+    
+    def __getattr__(self, attr):
+        if attr.endswith('_links'):
+            self.text = getattr(self.master, attr)(self.text, self.entry)
+            return self
+        elif attr.startswith('mark'):
+            self.text = getattr(self.master, attr)(self.text)
+            return self
+        else:
+            return getattr(super(), attr)
+        
+    def __str__(self):
+        return self.text
+    

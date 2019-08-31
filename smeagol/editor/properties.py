@@ -113,7 +113,7 @@ class Properties:
             try:
                 return getattr(self.site, attr)
             except AttributeError:
-                return getattr(super(Properties, self), attr)
+                return getattr(super(), attr)
 
     def __setattr__(self, attr, value):
         if attr in {'language', 'fontsize'}:
@@ -133,7 +133,7 @@ class Properties:
         elif attr == 'page':
             self.history.replace(value)
         else:
-            super(Properties, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
 
     def set_markdown(self, attr, value):
         try:
@@ -146,7 +146,7 @@ class Properties:
         if isinstance(history, ShortList):
             return history
         else:
-            self.history = ShortList(history, 200)
+            self.history = ShortList(history, 20)
             return self.history
 
     def get_page(self):

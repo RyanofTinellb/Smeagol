@@ -1,18 +1,20 @@
+import http.server
 import os
 import random
 import socketserver
-import http.server
 import tkinter as Tk
-import webbrowser as web
 import tkinter.messagebox as mb
 import tkinter.simpledialog as sd
+import webbrowser as web
 from itertools import zip_longest
 from socket import error as socket_error
+
+from ..defaults import default
+from ..utils import *
+
 from .editor import *
 from .properties import Properties
 from .properties_window import PropertiesWindow
-from smeagol.utils import *
-from smeagol.defaults import default
 
 
 class SiteEditor(Properties, Editor):
@@ -27,6 +29,32 @@ class SiteEditor(Properties, Editor):
     @property
     def caller(self):
         return 'site'
+    
+    def Text(self, text):
+        return Text(self, text)
+
+    def __getattr__(self, attr):
+        if attr.startswith('entry_'):
+            obj, attr = attr.split('_', 1)
+            try:
+                return getattr(self.entry, attr)
+            except AttributeError: # entry is a dict
+                return self.entry.get(attr, '')
+        else:
+            return super().__getattr__(attr)
+
+    def __setattr__(self, attr, value):
+        if attr.startswith('entry_'):
+            obj, attr = attr.split('_')
+            try:
+                setattr(self.entry, attr, value)
+            except AttributeError:
+                if value:
+                    self.entry[attr] = value
+                else:
+                    self.entry.pop(attr, '')
+        else:
+            super().__setattr__(attr, value)
 
     def setup_linguistics(self):
         super(SiteEditor, self).setup_linguistics()
@@ -167,29 +195,29 @@ class SiteEditor(Properties, Editor):
         self.load()
 
     def load(self, event=None):
-        try:
-            self.entry.position = self.textbox.index(Tk.INSERT)
-        except AttributeError:
-            self.entry['position'] = self.textbox.index(Tk.INSERT)
-        self.entry = self.find_entry(list(self.page))
+        self.entry_position = self.textbox.index(Tk.INSERT)
+        self.load_entry(list(self.page))
         self.update_titlebar()
-        text = self.prepare_entry(self.entry)
-        self.display(text)
+        self.display(self.formatted_entry())
         self.reset_textbox()
         self.save_text.set('Save')
-        try:
-            self.go_to(self.entry.position)
-        except AttributeError:
-            self.go_to(self.entry['position'])
+        self.go_to(self.entry_position)
         return 'break'
 
+    def formatted_entry(self):
+        text = self.entry_text
+        if isinstance(text, list):
+            text = '['.join(text)
+        print(type(self.Text(text).remove_links))
+        return self.Text(text).remove_links.markdown
+    
     def earlier_entry(self, event=None):
         self.history.previous()
         self.fill_and_load()
         return 'break'
 
     def later_entry(self, event=None):
-        next(self.history)
+        self.history.next()
         self.fill_and_load()
         return 'break'
 
@@ -241,10 +269,6 @@ class SiteEditor(Properties, Editor):
         self.reset()
         return 'break'
 
-    def site_save(self):
-        self.fontsize = self.font.actual(option='size')
-        self.save_site()
-
     def site_properties(self, event=None):
         properties_window = PropertiesWindow(self)
         self.wait_window(properties_window)
@@ -289,26 +313,24 @@ class SiteEditor(Properties, Editor):
         self.fill_and_load()
 
     def update_titlebar(self):
-        try:
-            self._titlebar(self.entry.name)
-        except AttributeError:
-            self._titlebar(self.entry.get('name', ''))
+        self._titlebar(self.entry_name)
 
     def _titlebar(self, name):
         self.master.title('Editing ' + name)
 
-    def find_entry(self, headings, entry=None):
+    def load_entry(self, headings, entry=None):
         if entry is None:
             entry = self.site.root
-        try:
+        if headings:
             heading = headings.pop(0)
-        except IndexError:
-            return entry
-        if not isinstance(entry, dict):
-            with ignored(KeyError):
-                return self.find_entry(headings, entry[heading])
-        child = dict(name=heading, parent=entry, position='1.0')
-        return self.find_entry(headings, child)
+            if isinstance(entry, dict):
+                child = dict(name=heading, parent=entry, position='1.0')
+                self.load_entry(headings, child)
+            else:
+                with ignored(KeyError):
+                    self.load_entry(headings, entry[heading])
+        else:
+            self.entry = entry
 
     def list_pages(self, event=None):
         def text_thing(page):
@@ -317,23 +339,53 @@ class SiteEditor(Properties, Editor):
         text = self.markdown(text)
         self.show_file(text)
 
-    def prepare_entry(self, entry):
+    @property
+    def _entry(self):
         try:
-            text = self.initial_content(entry) # entry is a dict
+            return self.initial_content(self.entry) # entry is a dict
         except AttributeError:
-            text = str(entry)
-        text = self.remove_links(text, entry)
-        text = self.markdown(text)
-        return text
+            return str(self.entry)
 
+    def save_page(self, event=None):
+        if self.is_new:
+            self.site_properties()
+        self.clear_style()
+        self._save_page()
+        self._save_site()
+        return 'break'
+    
+    def clear_style(self):
+        self.textbox.tag_remove(self.current_style.get(), Tk.INSERT)
+        self.current_style.set('')
+
+    def _save_page(self):
+        text = get_formatted_text(self.textbox)
+        with ignored(AttributeError): # entry could be a dict
+            parent = self.entry.pop('parent')
+            self.entry, new_parent = self.chain_append(self.entry, parent)
+            self.update_tocs(new_parent)
+        self.prepare_text(text)
+        self.publish(self.entry, self.site)
+        self.save_text.set('Save')
+        self.information.set('Saved!')
+
+    def chain_append(self, child, parent, new_parent=False):
+        try:
+            return parent.append(child), new_parent
+        except AttributeError: # parent is also a dict
+            parent['children'] = [child]
+            grandparent = parent.pop('parent')
+            return self.chain_append(parent, grandparent, True)
+
+    @asynca
+    def update_tocs(self, new=None):
+        # don't publish the whole site again if you're a dictionary,
+        # unless the parent was also new.
+        self.publish(site=self.site, allpages=True)
+    
     def prepare_text(self, text):
         text = ''.join(map(self.add_tags, text))[:-1]
-        text = self.markup(text)
-        text = self.add_links(text, self.entry)
-        try:
-            self.entry.text = text
-        except AttributeError:
-            self.entry['text'] = text
+        self.entry_text = str(self.Text(text).markup.add_links)
     
     def add_tags(self, tag):
         key, value, index = tag
@@ -355,41 +407,11 @@ class SiteEditor(Properties, Editor):
                 return f'</{value}>'
         return ''
 
-    def save_page(self, event=None):
-        if self.is_new:
-            self.site_properties()
-        self.textbox.tag_remove(self.current_style.get(), Tk.INSERT)
-        self.current_style.set('')
-        self._save_page()
-        self.save_text.set('Save')
-        self.information.set('Saved!')
+    def _save_site(self):
+        self.fontsize = self.font.actual(option='size')
         self.save_site()
         self.save_wholepage()
         self.save_search_pages()
-        return 'break'
-    
-    def _save_page(self):
-        text = get_formatted_text(self.textbox)
-        with ignored(AttributeError): # entry could be a dict
-            parent = self.entry.pop('parent')
-            self.entry, new_parent = self.chain_append(self.entry, parent)
-            self.update_tocs(new_parent)
-        self.prepare_text(text)
-        self.publish(self.entry, self.site)
-
-    def chain_append(self, child, parent, new_parent=False):
-        try:
-            return parent.append(child), new_parent
-        except AttributeError: # parent is also a dict
-            parent['children'] = [child]
-            grandparent = parent.pop('parent')
-            return self.chain_append(parent, grandparent, True)
-
-    @asynca
-    def update_tocs(self, new=None):
-        # don't publish the whole site again if you're a dictionary,
-        # unless the parent was also new.
-        self.publish(site=self.site, allpages=True)
 
     @asynca
     def save_wholepage(self):
@@ -530,14 +552,6 @@ class SiteEditor(Properties, Editor):
             textbox.insert(Tk.INSERT, before + after)
             textbox.mark_set(Tk.INSERT, Tk.INSERT + f'-{len(after)}c')
 
-    def insert_formatting(self, event, tag):
-        converter = self.marker.find_formatting
-        self.insert_characters(event.widget, *converter(tag))
-
-    def insert_markdown(self, event, tag):
-        converter = self.marker.find
-        self.insert_characters(event.widget, converter(tag))
-
     def format_paragraph(self, style, code, textbox):
         linestart = Tk.INSERT + ' linestart'
         text = textbox.get(linestart, linestart + '+2c')
@@ -556,29 +570,19 @@ class SiteEditor(Properties, Editor):
             textbox.delete(linestart, linestart + '+3c')
 
     def select_paragraph(self, event=None):
-        event.widget.tag_add(Tk.SEL, Tk.INSERT + ' linestart',
-                             Tk.INSERT + ' lineend +1c')
+        event.widget.tag_add(Tk.SEL, *Tk.CURRLINE)
         return 'break'
 
     def edit_script(self, event=None):
         default = 'Enter new JavaScript here'
-        try:
-            text = self.entry.script or default
-        except AttributeError:
-            text = self.entry.get('script', default)
+        text = self.entry_script or default
         self.edit_file(text, self._edit_script)
 
     def _edit_script(self, script=None):
-        try:
-            if script:
-                self.entry.script = script
-            else:
-                self.entry.remove_script()
-        except AttributeError:
-            if script:
-                self.entry['script'] = script
-            else:
-                self.entry.pop('script', None)
+        '''
+        Called once the script edit screen is closed
+        '''
+        self.entry_script = script
         self.save_page()
 
     def edit_template(self, event=None):

@@ -164,7 +164,7 @@ class Site:
 
     def remove_flatnames(self):
         for page in self.all_pages:
-            page.remove_flatname()
+            page.flatname = ''
 
     def publish(self):
         pages = 0

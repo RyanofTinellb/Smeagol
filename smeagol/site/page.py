@@ -13,7 +13,7 @@ markdown = Markdown()
 
 
 class Page(Node):
-    def __init__(self, tree, location):
+    def __init__(self, tree=None, location=None):
         super(Page, self).__init__(tree, location)
 
     def __hash__(self):
@@ -47,8 +47,11 @@ class Page(Node):
             with ignored(AttributeError):
                 value = [_f for _f in value.split('[') if _f]
             self.find()['text'] = value
-        elif attr in {'name', 'position', 'script'}:
-            self.find()[attr] = value
+        elif attr in {'name', 'position', 'script', 'flatname'}:
+            if value:
+                self.find()[attr] = value
+            else:
+                self.find().pop(attr, None)
         else:
             super(Page, self).__setattr__(attr, value)
 
