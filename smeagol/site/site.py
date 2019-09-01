@@ -1,8 +1,8 @@
 import json
 import os
 
-from smeagol.translation import Markdown, Translator
-from smeagol.utils import *
+from ..translation import Markdown, Translator
+from ..utils import *
 
 from .page import Page
 
@@ -57,6 +57,14 @@ class Site:
                 with open(self.template_file, 'w', encoding='utf-8') as template:
                     template.write(new_template)
         self.template = new_template
+    
+    def refresh_wholepage(self, new_template):
+        wholepage = self.wholepage_template
+        if new_template and wholepage:
+            with ignored(IOError):
+                with open(wholepage, 'w', encoding='utf-8') as template:
+                    template.write(new_template)
+        self.wholepage = new_template
 
     def load_site(self):
         tree = dict(name=self.name)
@@ -104,10 +112,13 @@ class Site:
             attr, sub = attr.split('_')
             self.files[attr][sub] = value
         elif attr == 'destination':
-            super(Site, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
             self.change_destination()
         else:
-            super(Site, self).__setattr__(attr, value)
+            try:
+                super().__setattr__(attr, value)
+            except AttributeError:
+                raise AttributeError(f'Super object cannot set {attr}')
 
     def change_destination(self):
         if self.destination:
@@ -195,6 +206,20 @@ class Site:
 
     def update_searchindex(self):
         dump(self.analysis, self.search_index)
+    
+    @asynca
+    def save_wholepage(self):
+        contents = map(lambda x: x.wholepage, self.all_pages)
+        contents = '\n'.join(filter(None, contents))
+        
+        root = self.root
+        root.update_date()
+        
+        page = root.html(self.wholepage)
+        page = page.replace('{whole-contents}', contents)
+        page = re.sub(r'<li class="normal">(.*?)</li>',
+                        r'<li><a href="index.html">\1</a></li>', page)
+        dumps(page, self.wholepage_file)
 
     @property
     def analysis(self):

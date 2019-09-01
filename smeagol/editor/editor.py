@@ -1,42 +1,15 @@
-from datetime import datetime
-import time
-import re
 import json
+import re
+import time
 import tkinter as Tk
-from tkinter.font import Font
 import tkinter.filedialog as fd
 import webbrowser as web
+from tkinter.font import Font
 from tkinter.ttk import Combobox
 
-from smeagol.translation import *
-from smeagol.utils import ignored, tkinter
+from ..translation import *
+from ..utils import *
 
-Tk.LINESTART = Tk.INSERT + ' linestart'
-Tk.LINEEND = Tk.INSERT + ' lineend+1c'
-Tk.CURRLINE = (Tk.LINESTART, Tk.LINEEND)
-Tk.UPLINE = Tk.INSERT + ' -1 lines'
-Tk.PREV_LINE = Tk.INSERT + '-1l'
-Tk.NEXT_LINE = Tk.INSERT + '+1l'
-Tk.SELECTION = (Tk.SEL_FIRST, Tk.SEL_LAST)
-Tk.SEL_LINE = (Tk.SEL_FIRST + ' linestart', Tk.SEL_LAST + ' lineend + 1c')
-Tk.NO_SELECTION = (Tk.INSERT,) * 2
-Tk.USER_MARK = 'usermark'
-Tk.WHOLE_BOX = (1.0, Tk.END)
-
-BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
-
-def move_mark(textbox, mark, size):
-    sign = '+' if size >= 0 else '-'
-    size = abs(size)
-    textbox.mark_set(Tk.INSERT, mark)
-    textbox.mark_set(mark, f'{mark}{sign}{size}c')
-
-def get_text(textbox):
-    return textbox.get(1.0, Tk.END + '-1c')
-
-
-def get_formatted_text(textbox):
-    return textbox.dump(1.0, Tk.END)
 
 class Editor(Tk.Frame, object):
     def __init__(self, master=None, parent=None):

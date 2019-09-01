@@ -23,10 +23,10 @@ def pattern_indices(word, pattern):
             return
 
 
-def html(text=None):
+def html(text=None, level=0):
     mode = [None]
     divs = [None]
-    return '\n'.join([convert(line, mode, divs) for line in text])
+    return '\n'.join([convert(line, mode, divs, level) for line in text])
 
 
 section_mark = {'n': '<ol>',
@@ -41,7 +41,7 @@ section_mark = {'n': '<ol>',
 delimiters = {'n': 'li', 'l': 'li'}
 
 
-def convert(line, mode, divs):
+def convert(line, mode, divs, level):
     delimiter = 'p'
     marks = True
     try:
@@ -49,7 +49,7 @@ def convert(line, mode, divs):
     except ValueError:
         category, rest = line, ''
     if re.match(r'\d\]', line):
-        category = heading(category)
+        category = heading(category, level)
     elif re.match(r'\/*d', line):
         category = div(category, divs)
     elif line.startswith('t'):
@@ -111,20 +111,20 @@ def div(div_, divs):
                     '<input class="version" type="radio" '
                     'name="version" id="Transliteration">'
                     'Transliteration')
-        return '<div class="{0}">'.format(div_)
+        return f'<div class="{div_}">'
 
 
-def heading(text):
+def heading(text, orig_level=0):
     try:
         level, name = text.split(']')
-        level = int(level) + 1
     except ValueError:
-        raise AttributeError(text)
+        level, name = 0, text
+    level = int(level) + 1 + orig_level
     url_id = urlform(re.sub(r'\(.*?\)| ', '', name))
-    if url_id:
-        return '<h{0} id="{1}">{2}</h{0}>\n'.format(level, url_id, name)
-    else:
-        return '<h{0}>{1}</h{0}>\n'.format(level, name)
+    url_id = f' id="{url_id}"' if url_id else ''
+    url_class = f' class="h{level}"' if level > 6 else ''
+    level = min(level, 6)
+    return '<h{0}{1}{2}>{3}</h{0}>\n'.format(level, url_class, url_id, name)
 
 
 def table(text):

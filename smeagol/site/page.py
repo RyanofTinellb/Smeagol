@@ -1,11 +1,10 @@
 import os
 import shutil
-from datetime import datetime
 
 from page_utils import *
-from smeagol.defaults import default
-from smeagol.translation import *
-from smeagol.utils import *
+from ..defaults import default
+from ..translation import *
+from ..utils import *
 
 from .node import Node
 
@@ -29,9 +28,9 @@ class Page(Node):
         elif attr is 'date':
             try:
                 date = self.find()['date']
-                return datetime.strptime(date, '%Y-%m-%d')
+                return dt.strptime(date, '%Y-%m-%d')
             except (ValueError, KeyError):
-                return datetime.now()
+                return dt.now()
         elif attr in ('flatname', 'score'):
             try:
                 key = 'name' if attr == 'flatname' else 'score'
@@ -59,7 +58,7 @@ class Page(Node):
         return '['.join(self.text) # some pages are meant to start without a [
 
     def update_date(self):
-        self.find()['date'] = datetime.strftime(datetime.today(), '%Y-%m-%d')
+        self.find()['date'] = dt.strftime(dt.today(), '%Y-%m-%d')
 
     def refresh_flatname(self):
         self.find()['flatname'] = self._flatname
@@ -243,7 +242,15 @@ class Page(Node):
 
     @property
     def title_heading(self):
-        return f'<h1>{buyCaps(self.name)}</h1>'
+        return heading(buyCaps(self.name))
+    
+    @property
+    def wholepage_heading(self):
+        return heading(buyCaps(self.name), self.level)
+
+    @property
+    def wholepage(self):
+        return f'{self.wholepage_heading} {self.wholepage_contents}<p></p>'
 
     @property
     def category_title(self):
@@ -258,18 +265,22 @@ class Page(Node):
             else:
                 return self.matriarch.title + ' ' + self.title
 
-    @property
-    def story_title(self):
-        if self.level == 0:
-            return ''
-        elif self.level == 1:
-            return self.title
+    def story_title(self, story_name):
+        if not self.level:
+            title = [story_name]
+        elif self == self.matriarch:
+            title = [self.title, story_name]
         else:
-            return self.title + ' &lt; ' + self.matriarch.title
-
+            title = [self.title, self.matriarch.title, story_name]
+        return ' &lt; '.join(title)
+        
     @property
     def main_contents(self):
         return f'<div class="main-contents">{html(self.text)}</div>'
+    
+    @property
+    def wholepage_contents(self):
+        return f'<div class="main-contents">{html(self.text, self.level)}</div>'
 
     def stylesheets(self, sheets):
         links = sheets.split(' ')
@@ -375,21 +386,14 @@ class Page(Node):
         return f'<div class="nav-footer">{links}</div>'
 
     def copyright(self, template):
-        strftime = datetime.strftime
+        datestring = dt.strftime
         date = self.date
         if 4 <= date.day <= 20 or 24 <= date.day <= 30:
             suffix = 'th'
         else:
             suffix = ('th', 'st', 'nd', 'rd')[date.day % 10]
         template = template.replace('%t', suffix)
-        return strftime(date, template)
-
-    def section_replace(self, regex):
-        regex = [regex.group(i+1) for i in range(2)]
-        if regex[0] in {'copyright', 'stylesheets', 'icon'}:
-            return getattr(self, regex[0])(regex[1])
-        else:
-            return getattr(self, '{1}_{0}'.format(*regex))
+        return datestring(date, template)
 
     @property
     def scripts(self):
@@ -419,6 +423,17 @@ class Page(Node):
         except TypeError:
             raise TypeError(section, function)
         return page
+
+    def section_replace(self, regex):
+        main, sub = [regex.group(i+1) for i in range(2)]
+        try:
+            func, arg = sub.split(': ', 1)
+            return getattr(self, f'{func}_{main}')(arg)
+        except (AttributeError, TypeError, ValueError):
+            try:
+                return getattr(self, f'{sub}_{main}')
+            except (AttributeError, TypeError):
+                return getattr(self, main)(sub)
 
     def delete_html(self):
         with ignored(WindowsError):

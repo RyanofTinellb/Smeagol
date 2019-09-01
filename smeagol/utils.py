@@ -4,11 +4,12 @@ import json
 import os
 import re
 import sys
+import tkinter as Tk
 import urllib.error
 import urllib.parse
 import urllib.request
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime as dt
 from threading import Thread
 
 from .errors import *
@@ -21,7 +22,6 @@ def ignored(*exceptions):
         yield
     except exceptions:
         pass
-
 
 def tkinter():
     def decorator(function):
@@ -38,9 +38,9 @@ def tkinter():
 def timeit(function):
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
-        oldtime = datetime.now()
+        oldtime = dt.now()
         value = function(*args, **kwargs)
-        newtime = datetime.now()
+        newtime = dt.now()
         print(('Done: ' + str(newtime - oldtime)))
         return value
     return wrapper
@@ -98,13 +98,38 @@ def change_text(item, replacement, text):
         print(item)
     return text
 
+Tk.LINESTART = Tk.INSERT + ' linestart'
+Tk.LINEEND = Tk.INSERT + ' lineend+1c'
+Tk.CURRLINE = (Tk.LINESTART, Tk.LINEEND)
+Tk.UPLINE = Tk.INSERT + ' -1 lines'
+Tk.PREV_LINE = Tk.INSERT + '-1l'
+Tk.NEXT_LINE = Tk.INSERT + '+1l'
+Tk.SELECTION = (Tk.SEL_FIRST, Tk.SEL_LAST)
+Tk.SEL_LINE = (Tk.SEL_FIRST + ' linestart', Tk.SEL_LAST + ' lineend + 1c')
+Tk.NO_SELECTION = (Tk.INSERT,) * 2
+Tk.USER_MARK = 'usermark'
+Tk.WHOLE_BOX = (1.0, Tk.END)
+
+BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
+
+def move_mark(textbox, mark, size):
+    sign = '+' if size >= 0 else '-'
+    size = abs(size)
+    textbox.mark_set(Tk.INSERT, mark)
+    textbox.mark_set(mark, f'{mark}{sign}{size}c')
+
+
 
 def remove_text(item, text):
     return change_text(item, '', text)
 
+def get_text(textbox):
+    return textbox.get(1.0, Tk.END + '-1c')
+
+def get_formatted_text(textbox):
+    return textbox.dump(1.0, Tk.END)
 
 own_markdown = Markdown()
-
 
 def un_url(text, markdown=None):
     try:
@@ -168,10 +193,12 @@ class ShortList(list):
 
 class Text:
     def __init__(self, master, text=''):
+        with ignored(AttributeError):
+            text = ''.join(map(self.add_tags, get_formatted_text(text)))[:-1]
         self.text = text
         self.entry = master.entry
         self.master = master
-    
+
     def __getattr__(self, attr):
         if attr.endswith('_links'):
             self.text = getattr(self.master, attr)(self.text, self.entry)
@@ -185,3 +212,22 @@ class Text:
     def __str__(self):
         return self.text
     
+    def add_tags(self, tag):
+        key, value, index = tag
+        if key == 'tagon':
+            if value.startswith('example'):
+                return '['
+            elif value in (Tk.SEL, ''):
+                return ''
+            else:
+                return f'<{value}>'
+        elif key == 'text':
+            return value
+        elif key == 'tagoff':
+            if value.startswith('example'):
+                return ']'
+            elif value in (Tk.SEL, ''):
+                return ''
+            else:
+                return f'</{value}>'
+        return ''

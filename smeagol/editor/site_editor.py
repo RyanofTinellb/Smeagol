@@ -1,16 +1,13 @@
-import http.server
+from http.server import SimpleHTTPRequestHandler as HTTPHandler
 import os
-import random
+import socket
 import socketserver
-import tkinter as Tk
 import tkinter.messagebox as mb
 import tkinter.simpledialog as sd
 import webbrowser as web
 from itertools import zip_longest
-from socket import error as socket_error
 
 from ..defaults import default
-from ..utils import *
 
 from .editor import *
 from .properties import Properties
@@ -93,7 +90,7 @@ class SiteEditor(Properties, Editor):
         self.save_text.set('Save')
         self.load_button = Tk.Button(master, text='Load',
                             command=self.load_from_headings, width=10)
-        self.save_button = Tk.Button(master, command=self.save_page,
+        self.save_button = Tk.Button(master, command=self.save,
                             textvariable=self.save_text, width=10)
         self.buttons = [self.load_button, self.save_button]
 
@@ -208,7 +205,6 @@ class SiteEditor(Properties, Editor):
         text = self.entry_text
         if isinstance(text, list):
             text = '['.join(text)
-        print(type(self.Text(text).remove_links))
         return self.Text(text).remove_links.markdown
     
     def earlier_entry(self, event=None):
@@ -285,10 +281,9 @@ class SiteEditor(Properties, Editor):
     @asynca
     def start_server(self, port):
         self.PORT = port
-        handler = http.server.SimpleHTTPRequestHandler
         while True:
             try:
-                self.server = socketserver.TCPServer(("", self.PORT), handler)
+                self.server = socketserver.TCPServer(("", self.PORT), HTTPHandler)
                 name = self.site.name
                 page404 = default.page404.format(
                     self.site[0].elder_links).replace(
@@ -296,9 +291,9 @@ class SiteEditor(Properties, Editor):
                         f'<li><a href="/index.html">{name}</a></li>'
                 )
                 page404 = re.sub(r'href="/*', 'href="/', page404)
-                handler.error_message_format = page404
+                HTTPHandler.error_message_format = page404
                 break
-            except socket_error:
+            except socket.error:
                 self.PORT += 1
         self.server.serve_forever()
 
@@ -346,10 +341,11 @@ class SiteEditor(Properties, Editor):
         except AttributeError:
             return str(self.entry)
 
-    def save_page(self, event=None):
+    def save(self, event=None):
         if self.is_new:
             self.site_properties()
         self.clear_style()
+        self.save_text.set('Save')
         self._save_page()
         self._save_site()
         return 'break'
@@ -359,15 +355,12 @@ class SiteEditor(Properties, Editor):
         self.current_style.set('')
 
     def _save_page(self):
-        text = get_formatted_text(self.textbox)
         with ignored(AttributeError): # entry could be a dict
             parent = self.entry.pop('parent')
             self.entry, new_parent = self.chain_append(self.entry, parent)
             self.update_tocs(new_parent)
-        self.prepare_text(text)
+        self.entry_text = str(self.Text(self.textbox).markup.add_links)
         self.publish(self.entry, self.site)
-        self.save_text.set('Save')
-        self.information.set('Saved!')
 
     def chain_append(self, child, parent, new_parent=False):
         try:
@@ -382,84 +375,12 @@ class SiteEditor(Properties, Editor):
         # don't publish the whole site again if you're a dictionary,
         # unless the parent was also new.
         self.publish(site=self.site, allpages=True)
-    
-    def prepare_text(self, text):
-        text = ''.join(map(self.add_tags, text))[:-1]
-        self.entry_text = str(self.Text(text).markup.add_links)
-    
-    def add_tags(self, tag):
-        key, value, index = tag
-        if key == 'tagon':
-            if value.startswith('example'):
-                return '['
-            elif value in (Tk.SEL, ''):
-                return ''
-            else:
-                return f'<{value}>'
-        elif key == 'text':
-            return value
-        elif key == 'tagoff':
-            if value.startswith('example'):
-                return ']'
-            elif value in (Tk.SEL, ''):
-                return ''
-            else:
-                return f'</{value}>'
-        return ''
 
     def _save_site(self):
         self.fontsize = self.font.actual(option='size')
         self.save_site()
         self.save_wholepage()
         self.save_search_pages()
-
-    @asynca
-    def save_wholepage(self):
-        site = self.site
-        root = site.root
-        self.errors = 0
-        self.errorstring = ''
-        contents = '\n'.join(map(self._save_wholepage, site.all_pages))
-        page = self.wholepage.replace(
-                '{toc}', root.family_links).replace(
-                '{main-contents}', contents).replace(
-                '{copyright}', self.copyright)
-        page = re.sub('{(.*?): (.*?)}', root.section_replace, page)
-        page = re.sub(
-            r'<li class="normal">(.*?)</li>',
-            r'<li><a href="index.html">\1</a></li>',
-            page
-            )
-        information = '{3}{0} error{2}\n{1}'.format(
-                self.errors,
-                '-' * 10,
-                '' if self.errors == 1 else 's',
-                self.errorstring
-            )
-        self.information.set(information)
-        dumps(page, self.wholepage_file)
-        return self.errors
-
-    def _save_wholepage(self, page):
-        try:
-            content = page.title_heading + page.main_contents + '<p></p>'
-            return self.increment_headings(content, page.level)
-        except Exception as err:
-            self.errorstring += f'{err} Error in {page.folder}/{page.name}\n'
-            self.errors += 1
-            return self.errorstring
-
-    def increment_headings(self, content, level):
-        return re.sub(r'(</*h)(\d)', lambda x: self._heading(x, level), content)
-
-    def _heading(self, match, level):
-        level += int(match.group(2))
-        if level > 6:
-            class_level = f' class="h{level}"'
-            level = 6
-        else:
-            class_level = ''
-        return f'{match.group(1)}{level}{class_level}'
 
     @asynca
     def save_search_pages(self):
@@ -479,23 +400,6 @@ class SiteEditor(Properties, Editor):
         if filename is self.search_page404:
             page = re.sub(r'(href|src)="/*', r'\1="/', page)
         dumps(page, filename)
-
-    @property
-    def copyright(self):
-        format_date = datetime.strftime
-        date = datetime.today()
-        if 4 <= date.day <= 20 or 24 <= date.day <= 30:
-            suffix = 'th'
-        else:
-            suffix = ['st', 'nd', 'rd'][date.day % 10 - 1]
-        span = '<span class="no-breaks">{0}</span>'
-        templates = (('&copy;%Y '
-                      '<a href="http://www.tinellb.com/about.html">'
-                      'Ryan Eakins</a>.'),
-                'Last updated: %A, %B %#d' + suffix + ', %Y.')
-        spans = '\n'.join([span.format(format_date(date, template))
-                            for template in templates])
-        return f'<div class="copyright">{spans}</div>'
 
     @property
     def is_new(self):
@@ -583,7 +487,7 @@ class SiteEditor(Properties, Editor):
         Called once the script edit screen is closed
         '''
         self.entry_script = script
-        self.save_page()
+        self.save()
 
     def edit_template(self, event=None):
         text = self.edit_file(text=self.template)
@@ -591,6 +495,14 @@ class SiteEditor(Properties, Editor):
         message = 'Do you wish to apply this template to all pages?'
         if mb.askyesno('Delete', message):
             self.site_publish()
+        self.textbox.focus_set()
+    
+    def edit_wholepage(self, event=None):
+        text = self.edit_file(text=self.wholepage)
+        self.refresh_wholepage(new_template=text)
+        while not self.wholepage_file:
+            self.ask_wholepage()
+        self.save_wholepage()
         self.textbox.focus_set()
 
     def edit_linkadder(self, adder):
@@ -625,7 +537,7 @@ class SiteEditor(Properties, Editor):
         self.edit_linkadder('Glossary')
 
     def edit_text_changed(self, event):
-        value = super(SiteEditor, self).edit_text_changed(event)
+        value = super().edit_text_changed(event)
         if event.widget.edit_modified():
             self.save_text.set('*Save')
         return value
@@ -653,7 +565,7 @@ class SiteEditor(Properties, Editor):
             ('<Alt-d>', self.go_to_heading),
             ('<Control-l>', self.load_from_headings),
             ('<Control-o>', self.site_open),
-            ('<Control-s>', self.save_page)]
+            ('<Control-s>', self.save)]
 
     @property
     def heading_commands(self):
@@ -679,7 +591,8 @@ class SiteEditor(Properties, Editor):
                 ('Edit _Glossary', self.edit_glossary),
                 ('Refresh Broken Links', self.refresh_broken_links)]),
                 ('Edit', [('Script', self.edit_script),
-                ('Template', self.edit_template)])
+                ('Template', self.edit_template),
+                ('Wholepage', self.edit_wholepage)])
             ] + super(SiteEditor, self).menu_commands
 
 

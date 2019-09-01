@@ -40,11 +40,11 @@ class DictionaryEditor(SiteEditor):
 
     def load_entry(self, headings, entry=None):
         # override super().load_entry()
-        entry = self.site.root
+        entry = entry or self.site.root
         try:
             heading = un_url(headings[0])
         except IndexError:
-            return entry
+            self.entry entry
         initial = page_initial(headings[0]).capitalize()
         try:
             return entry[initial][heading]

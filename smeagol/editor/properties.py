@@ -3,10 +3,10 @@ import os
 import json
 import re
 from .addremovelinks import AddRemoveLinks
-from smeagol.site.site import Site
-from smeagol.translation import *
-from smeagol.utils import *
-from smeagol.defaults import default
+from ..site.site import Site
+from ..translation import *
+from ..utils import *
+from ..defaults import default
 import tkinter.filedialog as fd
 import tkinter.simpledialog as sd
 
@@ -32,6 +32,7 @@ class Properties:
                 self.configuration = json.loads(default.config)
         self.setup_site()
         self.linkadder = AddRemoveLinks(self.links, self.wordlist, self.translator)
+        self.marker = Markdown(self.markdown_file)
 
     def setup_linguistics(self):
         # override Editor.setup_linguistics()
@@ -91,6 +92,8 @@ class Properties:
     def __getattr__(self, attr):
         if attr in {'language', 'fontsize'}:
             return self.configuration['current'][attr]
+        elif attr == 'site':
+            return None
         elif attr == 'markdown_file':
             return self.configuration['current']['markdown']
         elif attr in {'markdown', 'markup'}:
@@ -133,7 +136,10 @@ class Properties:
         elif attr == 'page':
             self.history.replace(value)
         else:
-            super().__setattr__(attr, value)
+            try:
+                setattr(self.site, attr, value)
+            except AttributeError:
+                super().__setattr__(attr, value)
 
     def set_markdown(self, attr, value):
         try:
@@ -176,7 +182,7 @@ class Properties:
                 with open(self.config_filename, 'w', encoding='utf-8') as config:
                     json.dump(self.configuration, config, indent=2)
                 folder = os.getenv('LOCALAPPDATA')
-                inifolder = os.path.join(folder, 'smeagol')
+                inifolder = os.path.join(folder, '.')
                 inifile = os.path.join(inifolder, self.caller + '.ini')
                 with ignored(os.error): # folder already exists
                     os.makedirs(inifolder)
@@ -205,6 +211,13 @@ class Properties:
         if filename:
             self.config_filename = filename
             self.save_site()
+
+    def ask_wholepage(self):
+        filetypes = [('Wholepage', '*.html')]
+        title = 'Save Wholepage'
+        filename = fd.asksaveasfilename(filetypes=filetypes, title=title,
+            defaultextension=filetypes[0][1][1:])
+        self.wholepage_file = filename
 
     def update(self, properties):
         try:
