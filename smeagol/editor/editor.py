@@ -368,7 +368,6 @@ class Editor(Tk.Frame, object):
         textbox = event.widget
         try:
             self._paste(event.widget, Tk.INSERT, Tk.SELECTION)
-            textbox.tag_remove(Tk.SEL, *Tk.SELECTION)
         except Tk.TclError:
             self._paste(event.widget, Tk.INSERT, Tk.NO_SELECTION)
         return 'break'
