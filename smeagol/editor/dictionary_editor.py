@@ -44,17 +44,20 @@ class DictionaryEditor(SiteEditor):
         try:
             heading = un_url(headings[0])
         except IndexError:
-            self.entry entry
-        initial = page_initial(headings[0]).capitalize()
+            self.entry = entry
+            return
+        initial = page_initial(heading).capitalize()
         try:
-            return entry[initial][heading]
+            self.entry = entry[initial][heading]
+            return
         except KeyError:
             try:
                 parent = entry[initial]
             except KeyError:
                 parent = dict(name=initial, parent=entry, position='1.0')
             entry = dict(name=heading, parent=parent, position='1.0')
-        return entry
+        self.entry = entry
+        return
 
     def _save_page(self):
         # override super()._save_page

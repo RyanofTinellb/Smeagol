@@ -202,7 +202,7 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def formatted_entry(self):
-        text = self.entry_text
+        text = self._entry
         if isinstance(text, list):
             text = '['.join(text)
         return self.Text(text).remove_links.markdown
@@ -322,8 +322,11 @@ class SiteEditor(Properties, Editor):
                 child = dict(name=heading, parent=entry, position='1.0')
                 self.load_entry(headings, child)
             else:
-                with ignored(KeyError):
+                try:
                     self.load_entry(headings, entry[heading])
+                except KeyError:
+                    child = dict(name=heading, parent=entry, position='1.0')
+                    self.load_entry(headings, child)
         else:
             self.entry = entry
 
