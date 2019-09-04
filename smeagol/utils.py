@@ -98,17 +98,25 @@ def change_text(item, replacement, text):
         print(item)
     return text
 
+Tk.START = '1.0'
+Tk.FINAL = Tk.END
+Tk.END = Tk.END + '-1c'
 Tk.LINESTART = Tk.INSERT + ' linestart'
 Tk.LINEEND = Tk.INSERT + ' lineend+1c'
 Tk.CURRLINE = (Tk.LINESTART, Tk.LINEEND)
-Tk.UPLINE = Tk.INSERT + ' -1 lines'
-Tk.PREV_LINE = Tk.INSERT + '-1l'
-Tk.NEXT_LINE = Tk.INSERT + '+1l'
+Tk.PREV_LINE = Tk.INSERT + ' linestart -1l'
+Tk.NEXT_LINE = Tk.INSERT + ' linestart +1l'
 Tk.SELECTION = (Tk.SEL_FIRST, Tk.SEL_LAST)
-Tk.SEL_LINE = (Tk.SEL_FIRST + ' linestart', Tk.SEL_LAST + ' lineend + 1c')
+Tk.SEL_LINE = (Tk.SEL_FIRST + ' linestart', Tk.SEL_LAST + ' lineend+1c')
 Tk.NO_SELECTION = (Tk.INSERT,) * 2
 Tk.USER_MARK = 'usermark'
-Tk.WHOLE_BOX = (1.0, Tk.END)
+Tk.WHOLE_BOX = (Tk.START, Tk.END)
+
+def Tk_compare(tb, first, op, second):
+    try:
+        return tb.compare(first, op, second)
+    except Tk.TclError:
+        return tb.compare(Tk.INSERT, op, second)
 
 BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
 
@@ -117,8 +125,6 @@ def move_mark(textbox, mark, size):
     size = abs(size)
     textbox.mark_set(Tk.INSERT, mark)
     textbox.mark_set(mark, f'{mark}{sign}{size}c')
-
-
 
 def remove_text(item, text):
     return change_text(item, '', text)

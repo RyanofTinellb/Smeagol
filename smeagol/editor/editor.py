@@ -1,7 +1,6 @@
 import json
 import re
 import time
-import tkinter as Tk
 import tkinter.filedialog as fd
 import webbrowser as web
 from tkinter.font import Font
@@ -11,9 +10,9 @@ from ..translation import *
 from ..utils import *
 
 
-class Editor(Tk.Frame, object):
-    def __init__(self, master=None, parent=None):
-        super(Editor, self).__init__(master)
+class Editor(Tk.Frame):
+    def __init__(self, master=None, parent=None, tests=None):
+        super().__init__(master)
         self.master.withdraw()
         self.parent = parent
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
@@ -23,6 +22,8 @@ class Editor(Tk.Frame, object):
         self.setup_linguistics()
         self.ready()
         self.place_widgets()
+        if tests:
+            tests(self)
 
     def set_frames(self):
         self.sidebar = Tk.Frame(self.master)
@@ -214,13 +215,12 @@ class Editor(Tk.Frame, object):
     def replace(self, widget, text):
         try:  # textbox
             position = widget.index(Tk.INSERT)
-            widget.delete(1.0, Tk.END)
-            widget.insert(1.0, text)
+            widget.delete(*Tk.WHOLE_BOX)
+            widget.insert(Tk.START, text)
             widget.mark_set(Tk.INSERT, position)
-            widget.mark_set(Tk.CURRENT, position)
             widget.see(Tk.INSERT)
         except Tk.TclError:  # heading
-            widget.delete(0, Tk.END)
+            widget.delete(0, Tk.FINAL)
             widget.insert(0, text)
 
     def clear_interface(self):
@@ -322,20 +322,19 @@ class Editor(Tk.Frame, object):
         self.html_to_tkinter()
 
     def move_line(self, event):
-        if event.keysym == 'Up':
-            location = Tk.PREV_LINE
-        elif event.keysym == 'Down':
-            location = Tk.NEXT_LINE
-        else:
-            return 'break'
-        textbox = event.widget
+        tb = event.widget # textbox
+        tb.insert(Tk.END, '\n') # ensures last line can be moved normally
+        if tb.compare(Tk.END, '==', Tk.INSERT): # ensures last line can be
+            tb.mark_set(Tk.INSERT, f'{Tk.END}-1c') #  moved from the last char.
+        location = Tk.PREV_LINE if event.keysym == 'Up' else Tk.NEXT_LINE
         try:
-            borders, text = self._cut(textbox, Tk.SEL_LINE, False)
-            self._paste(textbox, location, Tk.NO_SELECTION, text)
+            borders, text = self._cut(tb, Tk.SEL_LINE, False)
+            self._paste(tb, location, Tk.NO_SELECTION, text)
         except Tk.TclError:
-            borders, text = self._cut(textbox, Tk.CURRLINE, False)
-            self._paste(textbox, location, Tk.NO_SELECTION, text)
-        textbox.mark_set(Tk.INSERT, Tk.USER_MARK)
+            borders, text = self._cut(tb, Tk.CURRLINE, False)
+            self._paste(tb, location, Tk.NO_SELECTION, text)
+        tb.mark_set(Tk.INSERT, Tk.USER_MARK)
+        tb.delete(f'{Tk.END}-1c') # removes helper newline
         return 'break'
 
     def copy_text(self, event=None):
@@ -346,7 +345,7 @@ class Editor(Tk.Frame, object):
     def _copy(self, textbox, borders=None, clip=True):
         '''@error: raise Tk.TclError if no text is selected'''
         borders = borders or Tk.SELECTION
-        text = '\u0008' + json.dumps(textbox.dump(*borders),
+        text = '\x08' + json.dumps(textbox.dump(*borders),
             ensure_ascii=False).replace('],', '],\n')
         if clip:
             self.clipboard_clear()
@@ -370,6 +369,8 @@ class Editor(Tk.Frame, object):
             self._paste(event.widget, Tk.INSERT, Tk.SELECTION)
         except Tk.TclError:
             self._paste(event.widget, Tk.INSERT, Tk.NO_SELECTION)
+        with ignored(Tk.TclError):
+            textbox.tag_remove(Tk.SEL, *Tk.WHOLE_BOX)
         return 'break'
 
     def _paste(self, textbox, location=None, borders=None, text=None):
@@ -383,7 +384,7 @@ class Editor(Tk.Frame, object):
                 text = self.clipboard_get()
             except Tk.TclError:
                 return
-        if text.startswith('\u0008'):
+        if text.startswith('\x08'):
             tag = ''
             sel = ''
             tags = json.loads(text[1:])
@@ -679,13 +680,10 @@ class Editor(Tk.Frame, object):
     def quit(self):
         # with ignored(AttributeError):
         self.tkinter_to_html()
-        self.parent.show_window()
         text = self.textbox.get('1.0', Tk.END + '-1c')
         with ignored(AttributeError):
             self.exit_command(text)
-        self.parent._return = text
+        if self.parent:
+            self.parent.show_window()
+            self.parent._return = text
         self.master.destroy()
-
-
-if __name__ == '__main__':
-    Editor().mainloop()
