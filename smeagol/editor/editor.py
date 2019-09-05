@@ -11,10 +11,11 @@ from ..utils import *
 
 
 class Editor(Tk.Frame):
-    def __init__(self, master=None, parent=None, tests=None):
+    def __init__(self, master=None, parent=None, text='', tests=None):
         super().__init__(master)
-        self.master.withdraw()
         self.parent = parent
+        self.initial_text = text
+        self.master.withdraw()
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.set_frames()
         self.row = 0
@@ -89,6 +90,7 @@ class Editor(Tk.Frame):
         self.ready_scrollbar()
         for (name, style) in self.text_styles:
             self.textbox.tag_config(name, **style)
+        self.textbox.insert(Tk.START, self.initial_text)
 
     def reset_textbox(self):
         self.textbox.edit_modified(False)
@@ -220,11 +222,13 @@ class Editor(Tk.Frame):
             widget.mark_set(Tk.INSERT, position)
             widget.see(Tk.INSERT)
         except Tk.TclError:  # heading
-            widget.delete(0, Tk.FINAL)
-            widget.insert(0, text)
+            widget.delete(*Tk.WHOLE_ENTRY)
+            widget.insert(Tk.FIRST, text)
 
-    def clear_interface(self):
-        self.textbox.delete(1.0, Tk.END)
+    def clear_interface(self, event=None):
+        position = self.textbox.index(Tk.INSERT)
+        self.display(self.initial_text)
+        self.textbox.mark_set(Tk.INSERT, position)
         self.information.set('')
 
     def edit_text_changed(self, event):
@@ -614,8 +618,7 @@ class Editor(Tk.Frame):
 
     def show_file(self, text='', command=None):
         top = Tk.Toplevel()
-        editor = Editor(master=top, parent=self)
-        editor.textbox.insert(Tk.INSERT, text)
+        editor = Editor(master=top, parent=self, text=text)
         if command:
             editor.exit_command = command
         self.master.withdraw()
@@ -623,7 +626,7 @@ class Editor(Tk.Frame):
 
     def _command(self, event=None):
         self.tkinter_to_html()
-        text = self.textbox.get('1.0', Tk.END)[:-1]
+        text = self.textbox.get('1.0', Tk.END)
         with ignored(AttributeError):
             self.exit_command(text)
             self.information.set('Saved!')
@@ -650,6 +653,7 @@ class Editor(Tk.Frame):
             ('<MouseWheel>', self.scroll_textbox),
             ('<Control-MouseWheel>', self.change_fontsize),
             (('<KeyPress>', '<Button-1>'), self.edit_text_changed),
+            ('<Escape>', self.clear_interface),
             ('<Tab>', self.insert_tabs),
             ('<Shift-Tab>', self.remove_tabs),
             ('<Control-0>', self.reset_fontsize),

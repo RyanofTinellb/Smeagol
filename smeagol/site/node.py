@@ -249,7 +249,10 @@ class Node:
         if self.has_children:
             return self.new(self.location + [0])
         else:
-            return getattr(super(Node, self), 'eldest_daughter')
+            try:
+                return getattr(super(Node, self), 'eldest_daughter')
+            except AttributeError:
+                raise IndexError
 
     @property
     def youngest_daughter(self):

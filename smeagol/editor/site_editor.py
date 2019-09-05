@@ -16,9 +16,9 @@ from .properties_window import PropertiesWindow
 
 class SiteEditor(Properties, Editor):
     def __init__(self, master=None, config_file=None):
-        super(SiteEditor, self).__init__(master=master,
-                                         config=config_file,
-                                         caller=self.caller)
+        super().__init__(master=master,
+                        config=config_file,
+                        caller=self.caller)
         self.entry = dict(position='1.0')
         self.start_server(port=41809)
         self.fill_and_load()
@@ -104,11 +104,9 @@ class SiteEditor(Properties, Editor):
         for i, button in enumerate(self.buttons):
             button.grid(row=0, column=i)
 
-    def clear_interface(self):
-        super(SiteEditor, self).clear_interface()
-        for heading in self.headings:
-            heading.delete(0, Tk.END)
-        self.go_to_heading()
+    def clear_interface(self, event=None):
+        super().clear_interface()
+        self.save_text.set('Save')
 
     @property
     def heading_contents(self):
@@ -119,7 +117,7 @@ class SiteEditor(Properties, Editor):
         with ignored(IndexError):
             heading = self.headings[0]
             heading.focus_set()
-            heading.select_range(0, Tk.END)
+            heading.select_range(*Tk.WHOLE_ENTRY)
         return 'break'
 
     def fill_and_load(self):
@@ -165,7 +163,7 @@ class SiteEditor(Properties, Editor):
                 child = False
                 break
         for heading_ in self.headings[level - root.level - 1:]:
-            heading_.delete(0, Tk.END)
+            heading_.delete(*Tk.WHOLE_ENTRY)
         while len(self.headings) > actual_level:
             self.remove_heading()
         while child and len(self.headings) < min(actual_level, 10):
@@ -194,13 +192,15 @@ class SiteEditor(Properties, Editor):
     def load(self, event=None):
         self.entry_position = self.textbox.index(Tk.INSERT)
         self.load_entry(list(self.page))
+        self.initial_text = self.formatted_entry
         self.update_titlebar()
-        self.display(self.formatted_entry())
+        self.display(self.initial_text)
         self.reset_textbox()
         self.save_text.set('Save')
         self.go_to(self.entry_position)
         return 'break'
 
+    @property
     def formatted_entry(self):
         text = self._entry
         if isinstance(text, list):

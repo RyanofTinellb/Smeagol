@@ -254,25 +254,22 @@ class Page(Node):
 
     @property
     def category_title(self):
+        titles = [self.title, self.matriarch.title]
         if self.level < 2:
             return self.title
+        elif self.ancestor(2).name == 'Sample Texts':
+            return '{0} - Sample Text in {1}'.format(*titles)
         else:
-            if self.matriarch.name == 'Introduction':
-                return self.title
-            elif self.ancestor(2).name == 'Sample Texts':
-                titles = [self.title, self.matriarch.title]
-                return '{0} - Sample Text in {1}'.format(*titles)
-            else:
-                return self.matriarch.title + ' ' + self.title
+            return '{1} {0}'.format(*titles)
 
     def story_title(self, story_name):
         if not self.level:
-            title = [story_name]
-        elif self == self.matriarch:
-            title = [self.title, story_name]
+            titles = [story_name]
+        elif self.level == 1:
+            titles = [self.title, story_name]
         else:
-            title = [self.title, self.matriarch.title, story_name]
-        return ' &lt; '.join(title)
+            titles = [self.title, self.matriarch.title, story_name]
+        return ' &lt; '.join(titles)
         
     @property
     def main_contents(self):

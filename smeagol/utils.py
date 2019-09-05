@@ -99,6 +99,7 @@ def change_text(item, replacement, text):
     return text
 
 Tk.START = '1.0'
+Tk.FIRST = 0
 Tk.FINAL = Tk.END
 Tk.END = Tk.END + '-1c'
 Tk.LINESTART = Tk.INSERT + ' linestart'
@@ -111,6 +112,7 @@ Tk.SEL_LINE = (Tk.SEL_FIRST + ' linestart', Tk.SEL_LAST + ' lineend+1c')
 Tk.NO_SELECTION = (Tk.INSERT,) * 2
 Tk.USER_MARK = 'usermark'
 Tk.WHOLE_BOX = (Tk.START, Tk.END)
+Tk.WHOLE_ENTRY = (Tk.FIRST, Tk.FINAL)
 
 def Tk_compare(tb, first, op, second):
     try:
@@ -130,10 +132,10 @@ def remove_text(item, text):
     return change_text(item, '', text)
 
 def get_text(textbox):
-    return textbox.get(1.0, Tk.END + '-1c')
+    return textbox.get(*Tk.WHOLE_BOX)
 
 def get_formatted_text(textbox):
-    return textbox.dump(1.0, Tk.END)
+    return textbox.dump(*Tk.WHOLE_BOX)
 
 own_markdown = Markdown()
 
@@ -200,7 +202,7 @@ class ShortList(list):
 class Text:
     def __init__(self, master, text=''):
         with ignored(AttributeError):
-            text = ''.join(map(self.add_tags, get_formatted_text(text)))[:-1]
+            text = ''.join(map(self.add_tags, get_formatted_text(text)))
         self.text = text
         self.entry = master.entry
         self.master = master
