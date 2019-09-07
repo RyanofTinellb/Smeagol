@@ -58,6 +58,9 @@ l̰ | !!l | s<br>
         "page": "",
         "template404": "",
         "page404": ""
+      },
+      "templates": {
+
       }
     }
   },

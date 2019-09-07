@@ -4,15 +4,15 @@ from .properties import Properties
 from smeagol.utils import *
 from smeagol.defaults import default
 
-class PropertiesWindow(Tk.Toplevel, object):
+class PropertiesWindow(Tk.Toplevel):
     def __init__(self, properties=None, master=None):
-        super(PropertiesWindow, self).__init__(master)
+        super().__init__(master)
         self.properties = properties or Properties()
         properties = json.loads(default.properties)
         self.property_frames = []
-        for row, property in enumerate(properties):
-            self.prepare(property, row)
-            frame = PropertyFrame(property, master=self)
+        for row, prop in enumerate(properties):
+            self.prepare(prop, row)
+            frame = PropertyFrame(prop, master=self)
             self.property_frames.append(frame)
         self.configure_buttons(row+1)
         self.property_frames[0].entry.focus_set()
@@ -23,12 +23,12 @@ class PropertiesWindow(Tk.Toplevel, object):
     def prepare(self, properties, row):
         properties['row'] = row
         owner = properties.get('owner', None)
-        property = properties.get('property', None)
+        prop = properties.get('property', None)
         if owner == 'links':
-            properties['value'] = self.links.get(property, '')
-            properties['checked'] = property in self.links
+            properties['value'] = self.links.get(prop, '')
+            properties['checked'] = prop in self.links
         elif owner is not None:
-            properties['value'] = getattr(self, property)
+            properties['value'] = getattr(self, prop)
 
     def configure_buttons(self, row):
         done = Tk.Button(self, text='OK', command=self.done)
@@ -46,8 +46,8 @@ class PropertiesWindow(Tk.Toplevel, object):
         self.destroy()
 
 class PropertyFrame:
-    def __init__(self, property, master):
-        self.property = property
+    def __init__(self, prop, master):
+        self.property = prop
         self.master = master
         self.ready_label()
         if self.check:

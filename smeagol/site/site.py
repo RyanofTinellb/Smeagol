@@ -22,14 +22,15 @@ class Site:
             source='', template_file='', wordlist='',
             wholepage=dict(file='', template=''),
             search=dict(index='', template='', page='',
-                        template404='', page404='')
+                        template404='', page404=''),
+            templates={}
         )
         self.setup_templates()
         self.destination = destination
         self.change_destination()
         self.load_site()
 
-    def setup_templates(self):
+    def setup_templates(self, new_templates=None):
         templates = (
             (self.template_file, 'template', TemplateFileNotFoundError),
             (self.wholepage_template, 'wholepage',
@@ -50,21 +51,6 @@ class Site:
             except FileNotFoundError:
                 raise Error
         setattr(self, attr, template)
-
-    def refresh_template(self, new_template):
-        if new_template and self.template_file:
-            with ignored(IOError):
-                with open(self.template_file, 'w', encoding='utf-8') as template:
-                    template.write(new_template)
-        self.template = new_template
-    
-    def refresh_wholepage(self, new_template):
-        wholepage = self.wholepage_template
-        if new_template and wholepage:
-            with ignored(IOError):
-                with open(wholepage, 'w', encoding='utf-8') as template:
-                    template.write(new_template)
-        self.wholepage = new_template
 
     def load_site(self):
         tree = dict(name=self.name)
@@ -90,6 +76,12 @@ class Site:
             except KeyError:
                 self.files[attr] = ''
                 return ''
+        elif attr in {'templates'}:
+            while True:
+                try:
+                    return self.files[attr]
+                except KeyError:
+                    self.files[attr] = {}
         elif attr.startswith('wholepage_') or attr.startswith('search_'):
             attr, sub = attr.split('_')
             while True:

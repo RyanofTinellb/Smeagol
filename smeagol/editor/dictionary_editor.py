@@ -81,13 +81,13 @@ class DictionaryEditor(SiteEditor):
             site.update_searchindex()
 
     def update_tocs(self, new=False):
-        # override super().update_tocs()
+        # override SiteEditor
         if new:
             self.entry.root.sort()
             super(DictionaryEditor, self).update_tocs()
 
     def list_out(self, entry):
-        # overrides super().list_out()
+        # overrides SiteEditor
         lst = entry.list
         if len(lst) == 2:
             return lst[-1:]

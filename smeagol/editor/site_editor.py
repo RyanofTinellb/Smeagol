@@ -12,21 +12,24 @@ from ..defaults import default
 from .editor import *
 from .properties import Properties
 from .properties_window import PropertiesWindow
+from .templates_window import TemplatesWindow
 
 
 class SiteEditor(Properties, Editor):
-    def __init__(self, master=None, config_file=None):
+    def __init__(self, master=None, config_file=None, tests=None):
         super().__init__(master=master,
-                        config=config_file,
-                        caller=self.caller)
+                         config=config_file,
+                         caller=self.caller)
         self.entry = dict(position='1.0')
         self.start_server(port=41809)
         self.fill_and_load()
+        if tests:
+            tests(self)
 
     @property
     def caller(self):
         return 'site'
-    
+
     def Text(self, text):
         return Text(self, text)
 
@@ -35,7 +38,7 @@ class SiteEditor(Properties, Editor):
             obj, attr = attr.split('_', 1)
             try:
                 return getattr(self.entry, attr)
-            except AttributeError: # entry is a dict
+            except AttributeError:  # entry is a dict
                 return self.entry.get(attr, '')
         else:
             return super().__getattr__(attr)
@@ -89,9 +92,9 @@ class SiteEditor(Properties, Editor):
         self.save_text = Tk.StringVar()
         self.save_text.set('Save')
         self.load_button = Tk.Button(master, text='Load',
-                            command=self.load_from_headings, width=10)
+                                     command=self.load_from_headings, width=10)
         self.save_button = Tk.Button(master, command=self.save,
-                            textvariable=self.save_text, width=10)
+                                     textvariable=self.save_text, width=10)
         self.buttons = [self.load_button, self.save_button]
 
     def place_widgets(self):
@@ -108,9 +111,13 @@ class SiteEditor(Properties, Editor):
         super().clear_interface()
         self.save_text.set('Save')
 
+    def escape(self, event=None):
+        '''@override Editor'''
+        self.clear_interface()
+
     @property
     def heading_contents(self):
-        get = lambda x: x.get()
+        def get(x): return x.get()
         return [_f for _f in map(get, self.headings) if _f]
 
     def go_to_heading(self, event=None):
@@ -206,7 +213,7 @@ class SiteEditor(Properties, Editor):
         if isinstance(text, list):
             text = '['.join(text)
         return self.Text(text).remove_links.markdown
-    
+
     def earlier_entry(self, event=None):
         self.history.previous()
         self.fill_and_load()
@@ -274,7 +281,8 @@ class SiteEditor(Properties, Editor):
     @asynca
     def site_publish(self, event=None):
         for page in self.site.all_pages:
-            page.text = self.add_links(self.remove_links(str(page), page), page)
+            page.text = self.add_links(
+                self.remove_links(str(page), page), page)
         self.site.publish()
         print('Site Published!')
 
@@ -283,7 +291,8 @@ class SiteEditor(Properties, Editor):
         self.PORT = port
         while True:
             try:
-                self.server = socketserver.TCPServer(("", self.PORT), HTTPHandler)
+                self.server = socketserver.TCPServer(
+                    ("", self.PORT), HTTPHandler)
                 name = self.site.name
                 page404 = default.page404.format(
                     self.site[0].elder_links).replace(
@@ -340,7 +349,7 @@ class SiteEditor(Properties, Editor):
     @property
     def _entry(self):
         try:
-            return self.initial_content(self.entry) # entry is a dict
+            return self.initial_content(self.entry)  # entry is a dict
         except AttributeError:
             return str(self.entry)
 
@@ -352,13 +361,13 @@ class SiteEditor(Properties, Editor):
         self._save_page()
         self._save_site()
         return 'break'
-    
+
     def clear_style(self):
         self.textbox.tag_remove(self.current_style.get(), Tk.INSERT)
         self.current_style.set('')
 
     def _save_page(self):
-        with ignored(AttributeError): # entry could be a dict
+        with ignored(AttributeError):  # entry could be a dict
             parent = self.entry.pop('parent')
             self.entry, new_parent = self.chain_append(self.entry, parent)
             self.update_tocs(new_parent)
@@ -368,7 +377,7 @@ class SiteEditor(Properties, Editor):
     def chain_append(self, child, parent, new_parent=False):
         try:
             return parent.append(child), new_parent
-        except AttributeError: # parent is also a dict
+        except AttributeError:  # parent is also a dict
             parent['children'] = [child]
             grandparent = parent.pop('parent')
             return self.chain_append(parent, grandparent, True)
@@ -424,7 +433,7 @@ class SiteEditor(Properties, Editor):
 
     def rename_page(self):
         new_name = sd.askstring('Rename', 'What is the new name?',
-                                 initialvalue=self.entry.name)
+                                initialvalue=self.entry.name)
         if new_name:
             try:
                 self.entry.delete_html()
@@ -492,14 +501,34 @@ class SiteEditor(Properties, Editor):
         self.entry_script = script
         self.save()
 
-    def edit_template(self, event=None):
-        text = self.edit_file(text=self.template)
-        self.refresh_template(new_template=text)
-        message = 'Do you wish to apply this template to all pages?'
-        if mb.askyesno('Delete', message):
-            self.site_publish()
-        self.textbox.focus_set()
-    
+    @property
+    def all_templates(self):
+        templates = [
+            dict(use_name='Main', filename=self.template_file),
+            dict(use_name='Wholepage', filename=self.wholepage_template),
+            dict(use_name='Search', filename=self.search_template),
+            dict(use_name='404', filename=self.search_template404)]
+        for template in templates:
+            template['enabled'] = False
+        for use_name, filename in self.templates.items():
+            templates += [dict(use_name=use_name, filename=filename,
+                               enabled=True)]
+        return templates
+
+    def edit_templates(self, event=None):
+        window = TemplatesWindow(self.all_templates, self.edit_file)
+        self.wait_window(window)
+        for template in window.get():
+            if template['enabled']:
+                self.templates[template['use_name']] = template['filename']
+
+        # self.setup_templates
+        # self.refresh_template(new_template=text)
+        # message = 'Do you wish to apply these templates to all pages?'
+        # if mb.askyesno('Publish All', message):
+        #     self.site_publish()
+        # self.textbox.focus_set()
+
     def edit_wholepage(self, event=None):
         text = self.edit_file(text=self.wholepage)
         self.refresh_wholepage(new_template=text)
@@ -581,22 +610,22 @@ class SiteEditor(Properties, Editor):
     @property
     def menu_commands(self):
         return [('Site', [('Open', self.site_open),
-                ('Save', self.save_site),
-                ('Save _As', self.save_site_as),
-                ('P_roperties', self.site_properties),
-                ('S_ee All', self.list_pages),
-                ('Publish _WholePage', self.save_wholepage),
-                ('Publish All', self.site_publish)]),
+                          ('Save', self.save_site),
+                          ('Save _As', self.save_site_as),
+                          ('P_roperties', self.site_properties),
+                          ('S_ee All', self.list_pages),
+                          ('Publish _WholePage', self.save_wholepage),
+                          ('Publish All', self.site_publish)]),
                 ('Page', [('Rename', self.rename_page),
-                ('Delete', self.delete_page),
-                ('Open in _Browser', self.open_in_browser)]),
+                          ('Delete', self.delete_page),
+                          ('Open in _Browser', self.open_in_browser)]),
                 ('Links', [('Edit _External Grammar Links', self.edit_external_grammar),
-                ('Edit _Glossary', self.edit_glossary),
-                ('Refresh Broken Links', self.refresh_broken_links)]),
+                           ('Edit _Glossary', self.edit_glossary),
+                           ('Refresh Broken Links', self.refresh_broken_links)]),
                 ('Edit', [('Script', self.edit_script),
-                ('Template', self.edit_template),
-                ('Wholepage', self.edit_wholepage)])
-            ] + super(SiteEditor, self).menu_commands
+                          ('Templates', self.edit_templates),
+                          ('Wholepage', self.edit_wholepage)])
+                ] + super(SiteEditor, self).menu_commands
 
 
 if __name__ == '__main__':

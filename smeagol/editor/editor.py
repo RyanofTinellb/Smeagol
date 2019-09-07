@@ -230,6 +230,10 @@ class Editor(Tk.Frame):
         self.display(self.initial_text)
         self.textbox.mark_set(Tk.INSERT, position)
         self.information.set('')
+    
+    def escape(self, event=None):
+        self.clear_interface()
+        self.quit()
 
     def edit_text_changed(self, event):
         self.update_wordcount(event)
@@ -653,7 +657,7 @@ class Editor(Tk.Frame):
             ('<MouseWheel>', self.scroll_textbox),
             ('<Control-MouseWheel>', self.change_fontsize),
             (('<KeyPress>', '<Button-1>'), self.edit_text_changed),
-            ('<Escape>', self.clear_interface),
+            ('<Escape>', self.escape),
             ('<Tab>', self.insert_tabs),
             ('<Shift-Tab>', self.remove_tabs),
             ('<Control-0>', self.reset_fontsize),

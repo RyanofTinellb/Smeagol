@@ -5,6 +5,9 @@ import os
 import re
 import sys
 import tkinter as Tk
+import tkinter.messagebox as mb
+import tkinter.simpledialog as sd
+import tkinter.filedialog as fd
 import urllib.error
 import urllib.parse
 import urllib.request
