@@ -688,7 +688,7 @@ class Editor(Tk.Frame):
     def quit(self):
         # with ignored(AttributeError):
         self.tkinter_to_html()
-        text = self.textbox.get('1.0', Tk.END + '-1c')
+        text = self.textbox.get(*Tk.WHOLE_BOX)
         with ignored(AttributeError):
             self.exit_command(text)
         if self.parent:

@@ -500,7 +500,6 @@ class SiteEditor(Properties, Editor):
         '''
         self.entry_script = script
         self.save()
-
     @property
     def all_templates(self):
         templates = [
@@ -510,7 +509,7 @@ class SiteEditor(Properties, Editor):
             dict(use_name='404', filename=self.search_template404)]
         for template in templates:
             template['enabled'] = False
-        for use_name, filename in self.templates.items():
+        for use_name, filename in self.sections.items():
             templates += [dict(use_name=use_name, filename=filename,
                                enabled=True)]
         return templates
@@ -520,14 +519,12 @@ class SiteEditor(Properties, Editor):
         self.wait_window(window)
         for template in window.get():
             if template['enabled']:
-                self.templates[template['use_name']] = template['filename']
-
-        # self.setup_templates
-        # self.refresh_template(new_template=text)
-        # message = 'Do you wish to apply these templates to all pages?'
-        # if mb.askyesno('Publish All', message):
-        #     self.site_publish()
-        # self.textbox.focus_set()
+                self.sections[template['use_name']] = template['filename']
+        self.setup_templates()
+        message = 'Do you wish to apply these templates to all pages?'
+        if mb.askyesno('Publish All', message):
+            self.site_publish()
+        self.textbox.focus_set()
 
     def edit_wholepage(self, event=None):
         text = self.edit_file(text=self.wholepage)

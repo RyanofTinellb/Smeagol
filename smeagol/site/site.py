@@ -2,6 +2,7 @@ import json
 import os
 
 from ..translation import Markdown, Translator
+from .templates import Templates
 from ..utils import *
 
 from .page import Page
@@ -23,34 +24,25 @@ class Site:
             wholepage=dict(file='', template=''),
             search=dict(index='', template='', page='',
                         template404='', page404=''),
-            templates={}
+            sections={}
         )
-        self.setup_templates()
+
+        self.setup_templates
         self.destination = destination
         self.change_destination()
         self.load_site()
-
-    def setup_templates(self, new_templates=None):
+    
+    def setup_templates(self):
         templates = (
             (self.template_file, 'template', TemplateFileNotFoundError),
             (self.wholepage_template, 'wholepage',
-             WholepageTemplateFileNotFoundError),
+                WholepageTemplateFileNotFoundError),
             (self.search_template, 'search', SearchTemplateFileNotFoundError),
             (self.search_template404, 'search404',
-             Search404TemplateFileNotFoundError)
+                Search404TemplateFileNotFoundError)
         )
-        for template in templates:
-            self._template(*template)
-
-    def _template(self, filename, attr, Error):
-        template = ''
-        if filename:
-            try:
-                with open(filename, encoding='utf-8') as template:
-                    template = template.read()
-            except FileNotFoundError:
-                raise Error
-        setattr(self, attr, template)
+        for name, text in Templates(templates, self.sections).items():
+            setattr(self, name, text)
 
     def load_site(self):
         tree = dict(name=self.name)
@@ -76,7 +68,7 @@ class Site:
             except KeyError:
                 self.files[attr] = ''
                 return ''
-        elif attr in {'templates'}:
+        elif attr in {'sections'}:
             while True:
                 try:
                     return self.files[attr]
