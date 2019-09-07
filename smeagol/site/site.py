@@ -26,11 +26,10 @@ class Site:
                         template404='', page404=''),
             sections={}
         )
-
-        self.setup_templates
         self.destination = destination
         self.change_destination()
         self.load_site()
+        self.setup_templates()
     
     def setup_templates(self):
         templates = (

@@ -103,8 +103,6 @@ class TemplateFrame():
         state = Tk.NORMAL if self.enabled else Tk.DISABLED
 
         buttons = (('0', 'Rename', self.change_name),
-                   ('3', 'Open', self.open),
-                   ('4', 'Save', self.save),
                    ('6', 'Remove', self.remove))
         for button in buttons:
             new = Tk.Button(self.master,
@@ -114,7 +112,9 @@ class TemplateFrame():
             new.grid(row=self.row, column=button[0])
             self.widgets += [new]
 
-        buttons = (('5', 'Edit', self.edit),)
+        buttons = (('5', 'Edit', self.edit),
+                   ('3', 'Open', self.open),
+                   ('4', 'New', self.save))
         for button in buttons:
             new = Tk.Button(self.master,
                             text=button[1],

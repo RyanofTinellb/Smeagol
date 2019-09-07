@@ -12,7 +12,6 @@ from ..defaults import default
 from .editor import *
 from .properties import Properties
 from .properties_window import PropertiesWindow
-from .templates_window import TemplatesWindow
 
 
 class SiteEditor(Properties, Editor):
@@ -272,12 +271,6 @@ class SiteEditor(Properties, Editor):
         self.reset()
         return 'break'
 
-    def site_properties(self, event=None):
-        properties_window = PropertiesWindow(self)
-        self.wait_window(properties_window)
-        self.site.root.name = self.site.name
-        self.save_site()
-
     @asynca
     def site_publish(self, event=None):
         for page in self.site.all_pages:
@@ -500,37 +493,6 @@ class SiteEditor(Properties, Editor):
         '''
         self.entry_script = script
         self.save()
-    @property
-    def all_templates(self):
-        templates = [
-            dict(use_name='Main', filename=self.template_file),
-            dict(use_name='Wholepage', filename=self.wholepage_template),
-            dict(use_name='Search', filename=self.search_template),
-            dict(use_name='404', filename=self.search_template404)]
-        for template in templates:
-            template['enabled'] = False
-        for use_name, filename in self.sections.items():
-            templates += [dict(use_name=use_name, filename=filename,
-                               enabled=True)]
-        return templates
-
-    def edit_templates(self, event=None):
-        while True:
-            window = TemplatesWindow(self.all_templates, self.edit_file)
-            self.wait_window(window)
-            for template in window.get():
-                if template['enabled']:
-                    self.sections[template['use_name']] = template['filename']
-            try:
-                self.setup_templates()
-                message = 'Do you wish to apply these templates to all pages?'
-                if mb.askyesno('Publish All', message):
-                    self.site_publish()
-                self.textbox.focus_set()
-                break
-            except KeyError as err:
-                name = str(err)[1:-1]
-                self.sections[name] = ''
 
     def edit_linkadder(self, adder):
         linkadder = self.linkadder

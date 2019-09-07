@@ -3,6 +3,8 @@ import os
 import json
 import re
 from .addremovelinks import AddRemoveLinks
+from .templates_window import TemplatesWindow
+from .properties_window import PropertiesWindow
 from ..site.site import Site
 from ..translation import *
 from ..utils import *
@@ -142,6 +144,7 @@ class Properties:
         else:
             try:
                 setattr(self.site, attr, value)
+                self.configuration['files'] = self.site.files
             except AttributeError:
                 super().__setattr__(attr, value)
 
@@ -235,3 +238,50 @@ class Properties:
                 self.randomwords.select()
         else:
             setattr(self.site, property, value)
+
+    @property
+    def all_templates(self):
+        templates = [
+            dict(use_name='Main', filename=self.template_file),
+            dict(use_name='Wholepage', filename=self.wholepage_template),
+            dict(use_name='Search', filename=self.search_template),
+            dict(use_name='404', filename=self.search_template404)]
+        for template in templates:
+            template['enabled'] = False
+        for use_name, filename in self.sections.items():
+            templates += [dict(use_name=use_name, filename=filename,
+                               enabled=True)]
+        return templates
+
+    def edit_templates(self, event=None):
+        while True:
+            window = TemplatesWindow(self.all_templates, self.edit_file)
+            self.wait_window(window)
+            templates = {
+                'Main': 'template_file',
+                'Wholepage': 'wholepage_template',
+                'Search': 'search_template',
+                '404': 'search_template404'}
+            for template in window.get():
+                if template['enabled']:
+                    self.sections[template['use_name']] = template['filename']
+                else:
+                    attr = templates[template['use_name']]
+                    value = template['filename']
+                    setattr(self, attr, value)
+            try:
+                self.setup_templates()
+                message = 'Do you wish to apply these templates to all pages?'
+                if mb.askyesno('Publish All', message):
+                    self.site_publish()
+                self.textbox.focus_set()
+                break
+            except KeyError as err:
+                name = str(err)[1:-1]
+                self.sections[name] = ''
+
+    def site_properties(self, event=None):
+        properties_window = PropertiesWindow(self)
+        self.wait_window(properties_window)
+        self.site.root.name = self.site.name
+        self.save_site()

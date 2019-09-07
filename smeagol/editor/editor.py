@@ -241,7 +241,8 @@ class Editor(Tk.Frame):
         keysym = event.keysym
         code = event.keycode
         textbox = event.widget
-        if key.startswith('Control_'):
+        print(key, keysym, code)
+        if key.startswith('Control_') or key == '??':
             textbox.edit_modified(False)
         elif key and key == keysym and event.num == '??':
             style = self.current_style.get()

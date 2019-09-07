@@ -1,13 +1,12 @@
 import tkinter as Tk
 import tkinter.filedialog as fd
-from .properties import Properties
 from smeagol.utils import *
 from smeagol.defaults import default
 
 class PropertiesWindow(Tk.Toplevel):
-    def __init__(self, properties=None, master=None):
+    def __init__(self, properties, master=None):
         super().__init__(master)
-        self.properties = properties or Properties()
+        self.properties = properties
         properties = json.loads(default.properties)
         self.property_frames = []
         for row, prop in enumerate(properties):
