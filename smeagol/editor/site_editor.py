@@ -515,24 +515,22 @@ class SiteEditor(Properties, Editor):
         return templates
 
     def edit_templates(self, event=None):
-        window = TemplatesWindow(self.all_templates, self.edit_file)
-        self.wait_window(window)
-        for template in window.get():
-            if template['enabled']:
-                self.sections[template['use_name']] = template['filename']
-        self.setup_templates()
-        message = 'Do you wish to apply these templates to all pages?'
-        if mb.askyesno('Publish All', message):
-            self.site_publish()
-        self.textbox.focus_set()
-
-    def edit_wholepage(self, event=None):
-        text = self.edit_file(text=self.wholepage)
-        self.refresh_wholepage(new_template=text)
-        while not self.wholepage_file:
-            self.ask_wholepage()
-        self.save_wholepage()
-        self.textbox.focus_set()
+        while True:
+            window = TemplatesWindow(self.all_templates, self.edit_file)
+            self.wait_window(window)
+            for template in window.get():
+                if template['enabled']:
+                    self.sections[template['use_name']] = template['filename']
+            try:
+                self.setup_templates()
+                message = 'Do you wish to apply these templates to all pages?'
+                if mb.askyesno('Publish All', message):
+                    self.site_publish()
+                self.textbox.focus_set()
+                break
+            except KeyError as err:
+                name = str(err)[1:-1]
+                self.sections[name] = ''
 
     def edit_linkadder(self, adder):
         linkadder = self.linkadder
@@ -620,8 +618,7 @@ class SiteEditor(Properties, Editor):
                            ('Edit _Glossary', self.edit_glossary),
                            ('Refresh Broken Links', self.refresh_broken_links)]),
                 ('Edit', [('Script', self.edit_script),
-                          ('Templates', self.edit_templates),
-                          ('Wholepage', self.edit_wholepage)])
+                          ('Templates', self.edit_templates)])
                 ] + super(SiteEditor, self).menu_commands
 
 

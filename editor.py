@@ -9,6 +9,7 @@ from smeagol.editor.site_editor import SiteEditor
 
 class Smeagol(Tk.Frame, object):
     def __init__(self):
+        os.system('cls')
         super(Smeagol, self).__init__(master=None)
         editors = [self.open_site, self.open_dictionary]
         texts = ['Site', 'Dictionary']

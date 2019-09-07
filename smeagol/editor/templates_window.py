@@ -25,10 +25,12 @@ class TemplatesWindow(Tk.Toplevel):
     def done(self, event=None):
         self.templates = [frame.get() for frame in self.frames]
         self.destroy()
+        return 'break'
 
     def cancel(self, event=None):
         self.templates = []
         self.destroy()
+        return 'break'
     
     def get(self):
         return self.templates
@@ -99,9 +101,11 @@ class TemplateFrame():
 
     def ready_buttons(self):
         state = Tk.NORMAL if self.enabled else Tk.DISABLED
+
         buttons = (('0', 'Rename', self.change_name),
                    ('3', 'Open', self.open),
-                   ('5', 'Remove', self.remove))
+                   ('4', 'Save', self.save),
+                   ('6', 'Remove', self.remove))
         for button in buttons:
             new = Tk.Button(self.master,
                             text=button[1],
@@ -109,7 +113,8 @@ class TemplateFrame():
                             state=state)
             new.grid(row=self.row, column=button[0])
             self.widgets += [new]
-        buttons = (('4', 'Edit', self.edit),)
+
+        buttons = (('5', 'Edit', self.edit),)
         for button in buttons:
             new = Tk.Button(self.master,
                             text=button[1],
@@ -128,6 +133,7 @@ class TemplateFrame():
         if text:
             with open(self.filename, 'w', encoding='utf-8') as file:
                 file.write(text)
+        self.entry.focus_set()
 
     def remove(self):
         for widget in self.widgets:

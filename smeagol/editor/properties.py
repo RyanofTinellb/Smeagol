@@ -112,6 +112,10 @@ class Properties:
             return self.get_history()
         elif attr == 'page':
             return self.get_page()
+        elif attr == 'sections':
+            sections = getattr(self.site, attr)
+            self.configuration['sections'] = sections
+            return sections
         else:
             try:
                 return getattr(self.site, attr)
@@ -211,13 +215,6 @@ class Properties:
         if filename:
             self.config_filename = filename
             self.save_site()
-
-    def ask_wholepage(self):
-        filetypes = [('Wholepage', '*.html')]
-        title = 'Save Wholepage'
-        filename = fd.asksaveasfilename(filetypes=filetypes, title=title,
-            defaultextension=filetypes[0][1][1:])
-        self.wholepage_file = filename
 
     def update(self, properties):
         try:
