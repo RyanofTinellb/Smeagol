@@ -16,6 +16,7 @@ class DictionaryEditor(SiteEditor):
             entry = textbox.get(*borders)
         except Tk.TclError:
             entry = self.select_word(event)
+        self.add_tab()
         self.page = [entry]
         self.fill_and_load()
         return 'break'
@@ -23,6 +24,8 @@ class DictionaryEditor(SiteEditor):
     def set_jump_to_entry(self, event):
         textbox = event.widget
         textbox.mark_set(Tk.INSERT, Tk.CURRENT)
+        with ignored(Tk.TclError):
+            textbox.tag_remove(Tk.SEL, *Tk.WHOLE_BOX)
         self.jump_to_entry(event)
         return 'break'
 
@@ -31,12 +34,14 @@ class DictionaryEditor(SiteEditor):
         return 'dictionary'
 
     def update_titlebar(self):
-        # override super().update_titlebar()
+        # override SiteEditor
         try:
             name = self.entry.url
         except AttributeError:
             name = urlform(self.entry.get('name', ''))
-        self._titlebar(buyCaps(name).replace('&nbsp;', ' '))
+        name = buyCaps(name).replace('&nbsp;', ' ')
+        self._titlebar(name)
+        self.tab_heading(name)
 
     def load_entry(self, headings, entry=None):
         # override super().load_entry()
@@ -151,7 +156,6 @@ class DictionaryEditor(SiteEditor):
     @property
     def textbox_commands(self):
         return super(DictionaryEditor, self).textbox_commands + [
-            ('<Control-=>', self.add_definition),
             ('<Button-2>', self.set_jump_to_entry),
             ('<Control-Return>', self.jump_to_entry)
         ]

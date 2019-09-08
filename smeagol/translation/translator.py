@@ -67,7 +67,7 @@ class Translator:
     def convert(self, text, kind='text'):
         convert = getattr(self.converter, f'convert_{kind}')
         tag = getattr(self.converter, 'tag')
-        return '<{0}>{1}</{0}'.format(tag, convert(text))
+        return '<{0}>{1}</{0}>'.format(tag, convert(text))
 
     def convert_text(self, text):
         return self.convert(text)

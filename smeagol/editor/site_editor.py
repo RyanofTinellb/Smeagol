@@ -76,10 +76,10 @@ class SiteEditor(Properties, Editor):
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
 
     def ready(self):
+        super(SiteEditor, self).ready()
         objs = ['headings', 'buttons']
         for obj in objs:
             getattr(self, 'ready_' + obj)()
-        super(SiteEditor, self).ready()
 
     def ready_headings(self):
         master = self.headingframe
@@ -95,6 +95,64 @@ class SiteEditor(Properties, Editor):
         self.save_button = Tk.Button(master, command=self.save,
                                      textvariable=self.save_text, width=10)
         self.buttons = [self.load_button, self.save_button]
+    
+    def ready_textbox(self):
+        self.ready_notebook()
+    
+    def ready_notebook(self):
+        self.closed_tabs = []
+        self.notebook = ttk.Notebook(self.textframe)
+        self.notebook.bind('<<NotebookTabChanged>>', self.change_textbox)
+        self.notebook.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
+        self.add_tab()
+    
+    def add_tab(self, event=None):
+        font = self.font
+        frame = Tk.Frame(self.notebook)
+        self.notebook.add(frame)
+        frame.textbox = Tk.Text(frame, height=1, width=1, wrap=Tk.WORD,
+                                undo=True, font=font)
+        self.add_commands(frame.textbox, self.textbox_commands)
+        for (name, style) in self.text_styles:
+            frame.textbox.tag_config(name, **style)
+        frame.textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
+        self.textbox = frame.textbox
+        self.current_tab = frame
+        self.notebook.select(frame)
+        with ignored(AttributeError):
+            self.go_to_heading()
+        return 'break'
+
+    def close_tab(self, event=None):
+        self.closed_tabs += [self.current_tab]
+        self.notebook.hide(self.current_tab)
+        return 'break'
+    
+    def reopen_tab(self, event=None):
+        with ignored(IndexError):
+            tab = self.closed_tabs.pop()
+            self.notebook.add(tab)
+            self.notebook.select(tab)
+        return 'break'
+    
+    def change_textbox(self, event=None):
+        frame = self.notebook.nametowidget(self.notebook.select())
+        self.textbox = frame.textbox
+        self.current_tab = frame
+        with ignored(AttributeError):
+            self.entry = frame.entry
+            self.fill_headings(frame.page)
+            self.update_titlebar()
+
+    def tab_heading(self, text):
+        self.notebook.tab(self.current_tab, text=text)
+
+    def ready_scrollbar(self, frame):
+        textbox = frame.textbox
+        scrollbar = Tk.Scrollbar(frame)
+        scrollbar.pack(side=Tk.RIGHT, fill=Tk.Y)
+        scrollbar.config(command=textbox.yview)
+        textbox.config(yscrollcommand=scrollbar.set)
 
     def place_widgets(self):
         super(SiteEditor, self).place_widgets()
@@ -130,8 +188,8 @@ class SiteEditor(Properties, Editor):
         self.fill_headings()
         self.load()
 
-    def fill_headings(self):
-        entries = self.page
+    def fill_headings(self, entries=None):
+        entries = entries or self.page
         if len(entries):
             while len(self.headings) < len(entries) < 10:
                 self.add_heading()
@@ -198,6 +256,8 @@ class SiteEditor(Properties, Editor):
     def load(self, event=None):
         self.entry_position = self.textbox.index(Tk.INSERT)
         self.load_entry(list(self.page))
+        self.current_tab.page = list(self.page)
+        self.current_tab.entry = self.entry
         self.initial_text = self.formatted_entry
         self.update_titlebar()
         self.display(self.initial_text)
@@ -311,6 +371,7 @@ class SiteEditor(Properties, Editor):
 
     def update_titlebar(self):
         self._titlebar(self.entry_name)
+        self.tab_heading(self.entry_name)
 
     def _titlebar(self, name):
         self.master.title('Editing ' + name)
@@ -554,7 +615,10 @@ class SiteEditor(Properties, Editor):
             ('<Alt-d>', self.go_to_heading),
             ('<Control-l>', self.load_from_headings),
             ('<Control-o>', self.site_open),
-            ('<Control-s>', self.save)]
+            ('<Control-s>', self.save),
+            ('<Control-t>', self.add_tab),
+            ('<Control-T>', self.reopen_tab),
+            ('<Control-w>', self.close_tab)]
 
     @property
     def heading_commands(self):

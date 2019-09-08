@@ -57,6 +57,12 @@ def asynca(function):
         return thread
     return async_function
 
+def display_attrs(obj):
+    for attr in dir(obj):
+        value = getattr(obj, attr)
+        print(attr, type(value), value)
+        print()
+
 
 def dump(dictionary, filename):
     if filename:

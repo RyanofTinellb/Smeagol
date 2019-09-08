@@ -2,6 +2,7 @@ import json
 import re
 import time
 import tkinter.filedialog as fd
+import tkinter.ttk as ttk
 import webbrowser as web
 from tkinter.font import Font
 from tkinter.ttk import Combobox
@@ -18,14 +19,14 @@ class Editor(Tk.Frame):
         self.master.withdraw()
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.set_frames()
-        self.row = 0
+        self.row = 1
         self.font = Font(family='Calibri', size=18)
         self.setup_linguistics()
         self.ready()
         self.place_widgets()
         if tests:
             tests(self)
-
+ 
     def set_frames(self):
         self.sidebar = Tk.Frame(self.master)
         self.textframe = Tk.Frame(self.master)
@@ -186,7 +187,7 @@ class Editor(Tk.Frame):
 
     def select_word(self, event):
         textbox = event.widget
-        pattern = r'\n|[^a-zA-Z0-9_\'-]'
+        pattern = r'\n|[^a-zA-Z0-9_\'’-]'
         borders = (
             textbox.search(
                 pattern, Tk.INSERT, backwards=True, regexp=True
@@ -241,7 +242,6 @@ class Editor(Tk.Frame):
         keysym = event.keysym
         code = event.keycode
         textbox = event.widget
-        print(key, keysym, code)
         if key.startswith('Control_') or key == '??':
             textbox.edit_modified(False)
         elif key and key == keysym and event.num == '??':
@@ -676,9 +676,8 @@ class Editor(Tk.Frame):
             ('<Control-n>', self.add_link),
             ('<Control-r>', self.refresh_random),
             ('<Control-s>', self._command),
-            ('<Control-t>', self.add_translation),
+            # ('<Control-t>', self.add_translation),
             ('<Control-v>', self.paste_text),
-            ('<Control-w>', self.select_word),
             ('<Control-x>', self.cut_text),
             # ('<Control-y>', self.redo),
             # ('<Control-z>', self.undo),
