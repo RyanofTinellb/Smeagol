@@ -211,38 +211,55 @@ class SiteEditor(Properties, Editor):
             self.replace(self.headings[0], '')
 
     def scroll_headings(self, event):
-        root = self.site.root
+        if not event.char and event.keysym not in ('Prior', 'Next'):
+            return
+        if event.keysym in ('Return',):
+            return
         heading = event.widget
         actual_level = self.headings.index(heading) + 2
-        level = actual_level + root.level - 1
-        direction = 1 if event.keysym == 'Next' else -1
+        level = actual_level - 1
+        direction = dict(Next=1, Prior=-1).get(event.keysym, 0)
+        if isinstance(self.h_entry, dict): return
+        self.h_entry = self.h_entry or self.entry.new()
         child = True
+        print(self.heading_contents)
         # ascend hierarchy until correct level
-        while self.entry.level > level:
+        while self.h_entry.level > level:
             try:
-                self.entry = self.entry.parent
+                self.h_entry = self.h_entry.parent
             except AttributeError:
                 break
         # traverse hierarchy sideways
-        if self.entry.level == level:
-            with ignored(IndexError):
-                self.entry = self.entry.sister(direction)
+        if self.h_entry.level == level:
+            if direction:
+                with ignored(IndexError):
+                    self.h_entry = self.h_entry.sister(direction)
+            else:
+                text = heading.get()[:heading.index(Tk.INSERT)].lower()
+                if text:
+                    sisters = [s for s in self.h_entry.sisters
+                                if s.name.lower().startswith(text)]
+                    self.h_entry = sisters[0] if sisters else None
         # descend hierarchy until correct level
-        while self.entry.level < level:
+        while self.h_entry and self.h_entry.level < level:
             try:
-                self.entry = self.entry.eldest_daughter
+                self.h_entry = self.h_entry.eldest_daughter
             except IndexError:
                 child = False
                 break
-        for heading_ in self.headings[level - root.level - 1:]:
-            heading_.delete(*Tk.WHOLE_ENTRY)
+        for heading_ in self.headings[level - 1:]:
+            if self.h_entry:
+                heading_.delete(*Tk.WHOLE_ENTRY)
         while len(self.headings) > actual_level:
             self.remove_heading()
         while child and len(self.headings) < min(actual_level, 10):
             self.add_heading()
-        if child:
-            heading.insert(Tk.INSERT, self.entry.name)
-        return 'break'
+        if child and self.h_entry:
+            heading.insert(Tk.INSERT, self.h_entry.name)
+        return
+    
+    def clear_h_entry(self, event=None):
+        self.h_entry = self.load_entry(self.heading_contents)
 
     def enter_headings(self, event):
         headings = self.headings
@@ -263,7 +280,7 @@ class SiteEditor(Properties, Editor):
 
     def load(self, event=None):
         self.entry_position = self.textbox.index(Tk.INSERT)
-        self.load_entry(list(self.page))
+        self.entry = self.load_entry(list(self.page))
         self.current_tab.page = list(self.page)
         self.current_tab.entry = self.entry
         self.initial_text = self.formatted_entry
@@ -391,15 +408,15 @@ class SiteEditor(Properties, Editor):
             heading = headings.pop(0)
             if isinstance(entry, dict):
                 child = dict(name=heading, parent=entry, position='1.0')
-                self.load_entry(headings, child)
+                return self.load_entry(headings, child)
             else:
                 try:
-                    self.load_entry(headings, entry[heading])
+                    return self.load_entry(headings, entry[heading])
                 except KeyError:
                     child = dict(name=heading, parent=entry, position='1.0')
-                    self.load_entry(headings, child)
+                    return self.load_entry(headings, child)
         else:
-            self.entry = entry
+            return entry
 
     def list_pages(self, event=None):
         def text_thing(page):
@@ -631,7 +648,8 @@ class SiteEditor(Properties, Editor):
     @property
     def heading_commands(self):
         return [
-            (('<Prior>', '<Next>'), self.scroll_headings),
+            ('<KeyRelease>', self.scroll_headings),
+            ('<FocusIn>', self.clear_h_entry),
             ('<Return>', self.enter_headings),
             ('<Control-M>', self.add_heading),
             ('<Control-N>', self.remove_heading),
