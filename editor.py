@@ -18,6 +18,8 @@ class Smeagol(Tk.Frame, object):
             button.grid(column=i, row=0)
         editors = self.sites  # returns a dict: {"name": "filename"}
         for i, (name, filename) in enumerate(editors.items()):
+            self.open_site(filename=filename)
+            return
             def handler(event=None, filename=filename):
                 return self.open_site(event, filename=filename)
             button = Tk.Button(command=handler, text=name, height=2, width=14)

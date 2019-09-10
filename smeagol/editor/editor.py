@@ -26,12 +26,19 @@ class Editor(Tk.Frame):
         self.place_widgets()
         if tests:
             tests(self)
- 
+
     def set_frames(self):
         self.sidebar = Tk.Frame(self.master)
         self.textframe = Tk.Frame(self.master)
         self.top = self.winfo_toplevel()
-        self.top.state('zoomed')
+        self.set_window_size(self.top)
+
+    def set_window_size(self, top):
+        top.state('normal')
+        w = w_pos = int(top.winfo_screenwidth() / 2)
+        h = top.winfo_screenheight()
+        h_pos = 0
+        top.geometry(f'{w}x{h}+{w_pos}+{h_pos}')
 
     def ready(self):
         objs = ['menus', 'labels', 'option_menu', 'textbox']
@@ -231,42 +238,64 @@ class Editor(Tk.Frame):
         self.display(self.initial_text)
         self.textbox.mark_set(Tk.INSERT, position)
         self.information.set('')
-    
+
     def escape(self, event=None):
         self.clear_interface()
         self.quit()
 
-    def edit_text_changed(self, event):
+    def mouse_pressed(self, event):
+        pass
+
+    def key_pressed(self, event):
+        textbox = event.widget
+        key = event.char
+        if key in BRACKETS:
+            try:
+                textbox.insert(Tk.SEL_FIRST, key)
+                textbox.insert(Tk.SEL_LAST, BRACKETS[key])
+            except Tk.TclError:
+                textbox.insert(Tk.INSERT, key + BRACKETS[key])
+                move_mark(textbox, Tk.INSERT, -1)
+            return 'break'
+
+    def indent(self, event):
+        textbox = event.widget
+        spaces = re.match(r'^ *', textbox.get(*Tk.CURRLINE)).group(0)
+        textbox.insert(Tk.INSERT, '\n' + spaces)
+        return 'break'
+
+    def key_released(self, event):
         self.update_wordcount(event)
+        textbox = event.widget
         key = event.char
         keysym = event.keysym
         code = event.keycode
-        textbox = event.widget
-        if key.startswith('Control_') or key == '??':
-            textbox.edit_modified(False)
-        elif key and key == keysym and event.num == '??':
-            style = self.current_style.get()
-            match = BRACKETS.get(key, '')
-            if match:
-                try:
-                    textbox.insert(Tk.SEL_FIRST, key)
-                    textbox.insert(Tk.SEL_LAST, match)
-                except Tk.TclError:
-                    textbox.insert(Tk.INSERT, key + match)
-                    move_mark(textbox, Tk.INSERT, -1)
-            else:
-                try:
-                    textbox.delete(*Tk.SELECTION)
-                    textbox.insert(Tk.SEL, key, style)
-                except Tk.TclError:
-                    textbox.insert(Tk.INSERT, key, style)
-            return 'break'
-        elif keysym == 'Return':
-            spaces = re.sub(r'( *).*', r'\1', textbox.get(*Tk.CURRLINE))
-            textbox.insert(Tk.INSERT, spaces)
-            return 'break'
-        elif keysym not in {'BackSpace', 'Shift_L', 'Shift_R'}:
+        state = event.state
+        if not self._tagged(textbox) and 33 <= code <= 40:
             self.current_style.set('')
+
+    def _tagged(self, textbox):
+        return self.current_style.get() in textbox.tag_names(Tk.INSERT)
+
+    def edit_text_changed(self, event):
+        pass
+        # if key.startswith('Control_') or key == '??' or key.startswith('Alt_'):
+        #     textbox.edit_modified(False)
+        # elif key:
+        #     style = self.current_style.get()
+        #     match = BRACKETS.get(key, '')
+        #     if match:
+        #         try:
+        #             textbox.insert(Tk.SEL_LAST, match)
+        #         except Tk.TclError:
+        #             textbox.insert(Tk.INSERT, match)
+
+        # elif keysym == 'Return':
+        #     spaces = re.match(r'^ *', textbox.get(*Tk.PREVLINE)).group(0)
+        #     print(f'*{spaces}*')
+        #     textbox.insert(Tk.INSERT, spaces)
+        # elif keysym not in {'BackSpace', 'Shift_L', 'Shift_R'}:
+        #     self.current_style.set('')
 
     def scroll_textbox(self, event=None):
         self.textbox.yview_scroll(int(-1 * (event.delta / 20)), Tk.UNITS)
@@ -274,7 +303,7 @@ class Editor(Tk.Frame):
 
     @staticmethod
     def select_all(event):
-        event.widget.tag_add(Tk.SEL, '1.0', Tk.END)
+        event.widget.tag_add(Tk.SEL, *Tk.WHOLE_BOX)
         return 'break'
 
     def backspace_word(self, event):
@@ -331,10 +360,10 @@ class Editor(Tk.Frame):
         self.html_to_tkinter()
 
     def move_line(self, event):
-        tb = event.widget # textbox
-        tb.insert(Tk.END, '\n') # ensures last line can be moved normally
-        if tb.compare(Tk.END, '==', Tk.INSERT): # ensures last line can be
-            tb.mark_set(Tk.INSERT, f'{Tk.END}-1c') #  moved from the last char.
+        tb = event.widget  # textbox
+        tb.insert(Tk.END, '\n')  # ensures last line can be moved normally
+        if tb.compare(Tk.END, '==', Tk.INSERT):  # ensures last line can be
+            tb.mark_set(Tk.INSERT, f'{Tk.END}-1c')  # moved from the last char.
         location = Tk.PREV_LINE if event.keysym == 'Up' else Tk.NEXT_LINE
         try:
             borders, text = self._cut(tb, Tk.SEL_LINE, False)
@@ -343,7 +372,7 @@ class Editor(Tk.Frame):
             borders, text = self._cut(tb, Tk.CURRLINE, False)
             self._paste(tb, location, Tk.NO_SELECTION, text)
         tb.mark_set(Tk.INSERT, Tk.USER_MARK)
-        tb.delete(f'{Tk.END}-1c') # removes helper newline
+        tb.delete(f'{Tk.END}-1c')  # removes helper newline
         return 'break'
 
     def copy_text(self, event=None):
@@ -355,7 +384,7 @@ class Editor(Tk.Frame):
         '''@error: raise Tk.TclError if no text is selected'''
         borders = borders or Tk.SELECTION
         text = '\x08' + json.dumps(textbox.dump(*borders),
-            ensure_ascii=False).replace('],', '],\n')
+                                   ensure_ascii=False).replace('],', '],\n')
         if clip:
             self.clipboard_clear()
             self.clipboard_append(text)
@@ -365,13 +394,13 @@ class Editor(Tk.Frame):
         with ignored(Tk.TclError):
             self._cut(event.widget, Tk.SELECTION)
         return 'break'
-    
+
     def _cut(self, textbox, borders=None, clip=True):
         '''@error: raise Tk.TclError if no text is selected'''
         borders, text = self._copy(textbox, borders, clip)
         textbox.delete(*borders)
         return borders, text
-    
+
     def paste_text(self, event=None):
         textbox = event.widget
         try:
@@ -531,7 +560,7 @@ class Editor(Tk.Frame):
         texts = re.split(r'(\[[ef] *\]|<.*?>)', get_text(textbox))
         paras = dict(e='example-no-lines', f='example')
         styles = {'em', 'strong', 'high-lulani', 'small-caps', 'link', 'bink',
-            'ipa'}
+                  'ipa'}
         tag = None
         ins = ''
         textbox.delete(1.0, Tk.END)
@@ -637,7 +666,7 @@ class Editor(Tk.Frame):
             self.information.set('Saved!')
 
     def show_window(self):
-        self.top.state('zoomed')
+        self.set_window_size(self.top)
         self.master.update()
         self.master.deiconify()
 
@@ -657,7 +686,10 @@ class Editor(Tk.Frame):
         return [
             ('<MouseWheel>', self.scroll_textbox),
             ('<Control-MouseWheel>', self.change_fontsize),
-            (('<KeyPress>', '<Button-1>'), self.edit_text_changed),
+            ('<Return>', self.indent),
+            ('<KeyPress>', self.key_pressed),
+            ('<Button-1>', self.mouse_pressed),
+            ('<KeyRelease>', self.key_released),
             ('<Escape>', self.escape),
             ('<Tab>', self.insert_tabs),
             ('<Shift-Tab>', self.remove_tabs),

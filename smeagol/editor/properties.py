@@ -34,7 +34,18 @@ class Properties:
                 self.configuration = json.loads(default.config)
         self.setup_site()
         self.linkadder = AddRemoveLinks(self.links, self.wordlist, self.translator)
-        self.marker = Markdown(self.markdown_file)
+        self.setup_markdown()
+
+    def setup_markdown(self):
+        try:
+            self.marker = Markdown(self.markdown_file)
+        except MarkdownFileNotFoundError:
+            filetypes = [('Sméagol Markdown', '*.mkd')]
+            title = 'Open Markdown File'
+            filename = fd.askopenfilename(filetypes=filetypes, title=title,
+                defaultextension=filetypes[0][1][1:])
+            self.markdown_file = filename
+            self.setup_markdown()
 
     def setup_linguistics(self):
         # override Editor.setup_linguistics()

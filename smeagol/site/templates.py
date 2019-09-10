@@ -33,6 +33,8 @@ class Templates:
                     return template.read()
             except FileNotFoundError:
                 raise error
+        else:
+            return ''
 
     def items(self):
         for name, text in self.templates.items():

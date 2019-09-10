@@ -103,9 +103,10 @@ class SiteEditor(Properties, Editor):
         self.closed_tabs = []
         self.notebook = ttk.Notebook(self.textframe)
         self.notebook.bind('<<NotebookTabChanged>>', self.change_textbox)
+        self.notebook.bind('<Button-2>', self.close_tab)
         self.notebook.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
         self.add_tab()
-    
+
     def add_tab(self, event=None):
         font = self.font
         frame = Tk.Frame(self.notebook)
@@ -124,8 +125,10 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def close_tab(self, event=None):
-        self.closed_tabs += [self.current_tab]
-        self.notebook.hide(self.current_tab)
+        if self.notebook.index('end') > 1:
+            tab = f'@{event.x},{event.y}'
+            self.closed_tabs += [tab]
+            self.notebook.hide(tab)
         return 'break'
     
     def reopen_tab(self, event=None):
@@ -586,8 +589,8 @@ class SiteEditor(Properties, Editor):
     def edit_glossary(self):
         self.edit_linkadder('Glossary')
 
-    def edit_text_changed(self, event):
-        value = super().edit_text_changed(event)
+    def key_released(self, event):
+        value = super().key_pressed(event)
         if event.widget.edit_modified():
             self.save_text.set('*Save')
         return value

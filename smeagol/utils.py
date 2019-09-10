@@ -115,6 +115,7 @@ Tk.LINESTART = Tk.INSERT + ' linestart'
 Tk.LINEEND = Tk.INSERT + ' lineend+1c'
 Tk.CURRLINE = (Tk.LINESTART, Tk.LINEEND)
 Tk.PREV_LINE = Tk.INSERT + ' linestart -1l'
+Tk.PREVLINE = (Tk.PREV_LINE, f'{Tk.PREV_LINE} lineend')
 Tk.NEXT_LINE = Tk.INSERT + ' linestart +1l'
 Tk.SELECTION = (Tk.SEL_FIRST, Tk.SEL_LAST)
 Tk.SEL_LINE = (Tk.SEL_FIRST + ' linestart', Tk.SEL_LAST + ' lineend+1c')
