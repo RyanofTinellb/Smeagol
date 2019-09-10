@@ -125,10 +125,15 @@ class SiteEditor(Properties, Editor):
         return 'break'
 
     def close_tab(self, event=None):
-        if self.notebook.index('end') > 1:
+        if self.notebook.index('end') - len(self.closed_tabs) > 1:
             tab = f'@{event.x},{event.y}'
-            self.closed_tabs += [tab]
-            self.notebook.hide(tab)
+            while True:
+                try:
+                    self.notebook.hide(tab)
+                    self.closed_tabs += [tab]
+                    break
+                except Tk.TclError:
+                    tab = self.notebook.select()
         return 'break'
     
     def reopen_tab(self, event=None):
@@ -629,7 +634,10 @@ class SiteEditor(Properties, Editor):
             (('<Prior>', '<Next>'), self.scroll_headings),
             ('<Return>', self.enter_headings),
             ('<Control-M>', self.add_heading),
-            ('<Control-N>', self.remove_heading)]
+            ('<Control-N>', self.remove_heading),
+            ('<Control-t>', self.add_tab),
+            ('<Control-T>', self.reopen_tab),
+            ('<Control-w>', self.close_tab)]
 
     @property
     def menu_commands(self):
