@@ -1,11 +1,12 @@
 import os
 import shutil
+from uuid import uuid4 as uuid
 
 from page_utils import *
+
 from ..defaults import default
 from ..translation import *
 from ..utils import *
-
 from .node import Node
 
 markdown = Markdown()
@@ -19,13 +20,13 @@ class Page(Node):
         return hash(tuple(self.location))
 
     def __getattr__(self, attr):
-        if attr in {'name', 'script'}:
+        if attr in {'name', 'script', 'id'}:
             return self.find().get(attr, '')
         elif attr in {'text'}:
             return self.find().get(attr, [])
         elif attr in {'position'}:
             return self.find().get(attr, '1.0')
-        elif attr is 'date':
+        elif attr == 'date':
             try:
                 date = self.find()['date']
                 return dt.strptime(date, '%Y-%m-%d')
@@ -46,7 +47,7 @@ class Page(Node):
             with ignored(AttributeError):
                 value = [_f for _f in value.split('[') if _f]
             self.find()['text'] = value
-        elif attr in {'name', 'position', 'script', 'flatname'}:
+        elif attr in {'name', 'position', 'script', 'flatname', 'id'}:
             if value:
                 self.find()[attr] = value
             else:
@@ -137,7 +138,7 @@ class Page(Node):
         except AttributeError:
             raise KeyError('{self.name} has no children')
         try:
-            while page.name != entry != count:
+            while entry not in (page.name, page.id) and entry != count:
                 page = page.next()
                 count += 1
         except (IndexError, StopIteration):
@@ -177,8 +178,13 @@ class Page(Node):
     def __le__(self, other):
         return self == other or self < other
 
-    def sort(self):
+    def sort(self, entry=None):
+        if entry:
+            ID = entry.id = str(uuid())
         self.children = [child.find() for child in sorted(self.daughters)]
+        entry = self.root[ID]
+        entry.id = ''
+        return entry
 
     @asynca
     def publish(self, template=None):

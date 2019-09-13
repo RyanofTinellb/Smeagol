@@ -29,9 +29,6 @@ class SiteEditor(Properties, Editor):
     def caller(self):
         return 'site'
 
-    def Text(self, text):
-        return Text(self, text)
-
     def __getattr__(self, attr):
         if attr.startswith('entry_'):
             obj, attr = attr.split('_', 1)
@@ -108,21 +105,23 @@ class SiteEditor(Properties, Editor):
         self.add_tab()
 
     def add_tab(self, event=None):
-        font = self.font
         frame = Tk.Frame(self.notebook)
+        textbox = self.new_textbox(frame)
+        textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
+        # self.notebook.select(frame)
+        self.add_commands(textbox, self.textbox_commands)
+        self.textbox = frame.textbox = textbox
         self.notebook.add(frame)
-        frame.textbox = Tk.Text(frame, height=1, width=1, wrap=Tk.WORD,
-                                undo=True, font=font)
-        self.add_commands(frame.textbox, self.textbox_commands)
-        for (name, style) in self.text_styles:
-            frame.textbox.tag_config(name, **style)
-        frame.textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
-        self.textbox = frame.textbox
-        self.current_tab = frame
-        self.notebook.select(frame)
         with ignored(AttributeError):
             self.go_to_heading()
         return 'break'
+    
+    def new_textbox(self, master):
+        return Textbox(master)
+
+    @property
+    def current_tab(self):
+        return self.notebook.nametowidget(self.notebook.select())
 
     def close_tab(self, event=None):
         if self.notebook.index('end') - len(self.closed_tabs) > 1:
@@ -189,7 +188,7 @@ class SiteEditor(Properties, Editor):
         with ignored(IndexError):
             heading = self.headings[0]
             heading.focus_set()
-            heading.select_range(*Tk.WHOLE_ENTRY)
+            heading.select_range(*Tk.ALL)
         return 'break'
 
     def fill_and_load(self):
@@ -211,18 +210,16 @@ class SiteEditor(Properties, Editor):
             self.replace(self.headings[0], '')
 
     def scroll_headings(self, event):
-        if not event.char and event.keysym not in ('Prior', 'Next'):
-            return
-        if event.keysym in ('Return',):
+        if (event.char == '' and event.keysym not in ('Prior', 'Next')
+                or event.keysym in ('Return',)
+                or isinstance(self.h_entry, dict)):
             return
         heading = event.widget
         actual_level = self.headings.index(heading) + 2
         level = actual_level - 1
         direction = dict(Next=1, Prior=-1).get(event.keysym, 0)
-        if isinstance(self.h_entry, dict): return
         self.h_entry = self.h_entry or self.entry.new()
         child = True
-        print(self.heading_contents)
         # ascend hierarchy until correct level
         while self.h_entry.level > level:
             try:
@@ -249,14 +246,13 @@ class SiteEditor(Properties, Editor):
                 break
         for heading_ in self.headings[level - 1:]:
             if self.h_entry:
-                heading_.delete(*Tk.WHOLE_ENTRY)
+                heading_.delete(*Tk.ALL)
         while len(self.headings) > actual_level:
             self.remove_heading()
         while child and len(self.headings) < min(actual_level, 10):
             self.add_heading()
         if child and self.h_entry:
             heading.insert(Tk.INSERT, self.h_entry.name)
-        return
     
     def clear_h_entry(self, event=None):
         self.h_entry = self.load_entry(self.heading_contents)
@@ -286,7 +282,7 @@ class SiteEditor(Properties, Editor):
         self.initial_text = self.formatted_entry
         self.update_titlebar()
         self.display(self.initial_text)
-        self.reset_textbox()
+        self.textbox.reset()
         self.save_text.set('Save')
         self.go_to(self.entry_position)
         return 'break'
@@ -438,6 +434,7 @@ class SiteEditor(Properties, Editor):
         self.clear_style()
         self.save_text.set('Save')
         self._save_page()
+        self.publish(self.entry, self.site)
         self._save_site()
         return 'break'
 
@@ -451,7 +448,6 @@ class SiteEditor(Properties, Editor):
             self.entry, new_parent = self.chain_append(self.entry, parent)
             self.update_tocs(new_parent)
         self.entry_text = str(self.Text(self.textbox).markup.add_links)
-        self.publish(self.entry, self.site)
 
     def chain_append(self, child, parent, new_parent=False):
         try:
@@ -612,10 +608,10 @@ class SiteEditor(Properties, Editor):
         self.edit_linkadder('Glossary')
 
     def key_released(self, event):
-        value = super().key_pressed(event)
+        # overrides Editor
+        super().key_released(event)
         if event.widget.edit_modified():
             self.save_text.set('*Save')
-        return value
 
     def quit(self):
         self.master.destroy()

@@ -8,6 +8,7 @@ class Markdown:
         self.filename = filename
         self.string = self.load()
         self.setup()
+        self.state = None
 
     def load(self):
         if self.filename:
@@ -42,10 +43,16 @@ class Markdown:
             pass
 
     def to_markup(self, text):
+        if self.state == 'markup':
+            return text
+        self.state = 'markup'
         self.source, self.destination = self.markdown[::-1], self.markup[::-1]
         return self.convert(text)
 
     def to_markdown(self, text):
+        if self.state == 'markdown':
+            return text
+        self.state = 'markdown'
         self.source, self.destination = self.markup, self.markdown
         return self.convert(text)
 
@@ -76,9 +83,10 @@ class Markdown:
         except ValueError:
             return ''
 
-    def refresh(self, new_markdown=''):
-        if new_markdown and self.filename:
-            with open(self.filename, 'w', encoding='utf-8') as markdown:
-                markdown.write(new_markdown)
-        self.string = new_markdown
-        self.setup()
+    def refresh(self, new_markdown=None):
+        if new_markdown is not None:
+            if self.filename:
+                with open(self.filename, 'w', encoding='utf-8') as markdown:
+                    markdown.write(new_markdown)
+            self.string = new_markdown
+            self.setup()

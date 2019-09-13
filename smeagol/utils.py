@@ -30,9 +30,9 @@ def tkinter():
     def decorator(function):
         @functools.wraps(function)
         def wrapper(self, *args, **kwargs):
-            self.tkinter_to_html()
+            self._to_html()
             value = function(self, *args, **kwargs)
-            self.html_to_tkinter()
+            self._to_tkinter()
             return value
         return wrapper
     return decorator
@@ -107,22 +107,9 @@ def change_text(item, replacement, text):
         print(item)
     return text
 
-Tk.START = '1.0'
 Tk.FIRST = 0
-Tk.FINAL = Tk.END
-Tk.END = Tk.END + '-1c'
-Tk.LINESTART = Tk.INSERT + ' linestart'
-Tk.LINEEND = Tk.INSERT + ' lineend+1c'
-Tk.CURRLINE = (Tk.LINESTART, Tk.LINEEND)
-Tk.PREV_LINE = Tk.INSERT + ' linestart -1l'
-Tk.PREVLINE = (Tk.PREV_LINE, f'{Tk.PREV_LINE} lineend')
-Tk.NEXT_LINE = Tk.INSERT + ' linestart +1l'
-Tk.SELECTION = (Tk.SEL_FIRST, Tk.SEL_LAST)
-Tk.SEL_LINE = (Tk.SEL_FIRST + ' linestart', Tk.SEL_LAST + ' lineend+1c')
-Tk.NO_SELECTION = (Tk.INSERT,) * 2
-Tk.USER_MARK = 'usermark'
-Tk.WHOLE_BOX = (Tk.START, Tk.END)
-Tk.WHOLE_ENTRY = (Tk.FIRST, Tk.FINAL)
+Tk.LAST = Tk.END
+Tk.ALL = (Tk.FIRST, Tk.LAST)
 
 def Tk_compare(tb, first, op, second):
     try:
@@ -130,22 +117,11 @@ def Tk_compare(tb, first, op, second):
     except Tk.TclError:
         return tb.compare(Tk.INSERT, op, second)
 
-BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
-
-def move_mark(textbox, mark, size):
-    sign = '+' if size >= 0 else '-'
-    size = abs(size)
-    textbox.mark_set(Tk.INSERT, mark)
-    textbox.mark_set(mark, f'{mark}{sign}{size}c')
-
 def remove_text(item, text):
     return change_text(item, '', text)
 
 def get_text(textbox):
     return textbox.get(*Tk.WHOLE_BOX)
-
-def get_formatted_text(textbox):
-    return textbox.dump(*Tk.WHOLE_BOX)
 
 own_markdown = Markdown()
 
@@ -212,7 +188,7 @@ class ShortList(list):
 class Text:
     def __init__(self, master, text=''):
         with ignored(AttributeError):
-            text = ''.join(map(self.add_tags, get_formatted_text(text)))
+            text = ''.join(map(self.add_tags, text.formtted_text))
         self.text = text
         self.entry = master.entry
         self.master = master

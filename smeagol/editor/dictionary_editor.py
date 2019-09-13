@@ -1,13 +1,13 @@
 from .site_editor import SiteEditor, Tk
 from smeagol.site.page import Page
 from smeagol.utils import *
+from ..widgets import Textbox
 
 
 class DictionaryEditor(SiteEditor):
     def __init__(self, master=None, config_file=None):
         super(DictionaryEditor, self).__init__(master, config_file)
         self.heading = self.headings[0]
-        self.font.config(family='Courier New')
 
     def jump_to_entry(self, event):
         textbox = event.widget
@@ -44,31 +44,32 @@ class DictionaryEditor(SiteEditor):
         self.tab_heading(name)
 
     def load_entry(self, headings, entry=None):
-        # override super().load_entry()
+        # override SiteEditor
         entry = entry or self.site.root
         try:
             heading = un_url(headings[0])
         except IndexError:
-            self.entry = entry
-            return
+            return entry
         initial = page_initial(heading).capitalize()
         try:
-            self.entry = entry[initial][heading]
-            return
+            return entry[initial][heading]
         except KeyError:
             try:
                 parent = entry[initial]
             except KeyError:
                 parent = dict(name=initial, parent=entry, position='1.0')
             entry = dict(name=heading, parent=parent, position='1.0')
-        self.entry = entry
-        return
+        return entry
 
     def _save_page(self):
-        # override super()._save_page
-        self.load_entry(self.heading_contents)
         super(DictionaryEditor, self)._save_page()
+        if not self.entry.is_root:
+            self.entry = self.entry.parent.sort(self.entry)
         self.make_wordlist()
+    
+    def scroll_headings(self, event):
+        # override SiteEditor
+        return
 
     @staticmethod
     @asynca
@@ -78,17 +79,20 @@ class DictionaryEditor(SiteEditor):
         elif entry is not None:
             entry.update_date()
             entry.publish(site.template)
-            entry.parent.sort()
             entry.parent.update_date()
             entry.parent.publish(site.template)
         if site is not None:
             site.update_source()
             site.update_searchindex()
+    
+    def new_textbox(self, master):
+        # override SiteEditor
+        return Textbox(master, 'Courier New')
 
     def update_tocs(self, new=False):
         # override SiteEditor
         if new:
-            self.entry.root.sort()
+            self.entry = self.entry.root.sort(self.entry)
             super(DictionaryEditor, self).update_tocs()
 
     def list_out(self, entry):
