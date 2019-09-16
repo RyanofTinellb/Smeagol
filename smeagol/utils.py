@@ -191,7 +191,7 @@ class ShortList(list):
 class Text:
     def __init__(self, master, text=''):
         with ignored(AttributeError):
-            text = ''.join(map(self.add_tags, text.formtted_text))
+            text = ''.join(map(self.add_tags, text.formatted_text))
         self.text = text
         self.entry = master.entry
         self.master = master

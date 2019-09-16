@@ -94,8 +94,8 @@ class TemplateFrame():
         entry.bind('<Return>', self.window.done)
         entry.bind('<Escape>', self.window.cancel)
         entry.grid(row=self.row, column=2)
-        entry.xview(Tk.FINAL)
-        entry.icursor(Tk.FINAL)
+        entry.xview(Tk.LAST)
+        entry.icursor(Tk.LAST)
         self.entry = entry
         self.widgets += [entry]
 

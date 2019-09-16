@@ -33,7 +33,6 @@ class Site:
             setattr(self, name, text)
 
     def load_site(self):
-        tree = dict(name=self.name)
         if self.source:
             try:
                 with open(self.source, encoding='utf-8') as source:
@@ -46,21 +45,16 @@ class Site:
         if attr == 'files':
             return
         try:
-            getattr(self.files, attr)
+            return getattr(self.files, attr)
         except AttributeError:
             return getattr(super(), attr)
-
+    
     def __setattr__(self, attr, value):
         if attr == 'destination':
             setattr(Site, attr, value)
             self.change_destination()
-        elif attr == 'files':
-            setattr(Site, attr, value)
         else:
-            try:
-                setattr(self.files, attr, value)
-            except AttributeError:
-                setattr(Site, attr, value)
+            setattr(Site, attr, value)
 
     def change_destination(self):
         if self.destination:
@@ -148,6 +142,25 @@ class Site:
         page = re.sub(r'<li class="normal">(.*?)</li>',
                         r'<li><a href="index.html">\1</a></li>', page)
         dumps(page, self.wholepage_file)
+
+    @asynca
+    def save_search_pages(self):
+        for template in (
+                (self.search, self.search_page),
+                (self.search404, self.search_page404)):
+            self._search(*template)
+
+    def _search(self, template, filename):
+        root = self.site.root
+        page = re.sub('{(.*?): (.*?)}', root.section_replace, template)
+        page = re.sub(
+            r'<li class="normal">(.*?)</li>',
+            r'<li><a href="index.html">\1</a></li>',
+            page
+        )
+        if filename is self.search_page404:
+            page = re.sub(r'(href|src)="/*', r'\1="/', page)
+        dumps(page, filename)
 
     @property
     def analysis(self):

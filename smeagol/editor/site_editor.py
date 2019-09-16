@@ -28,6 +28,8 @@ class SiteEditor(Interface, Editor):
     def __getattr__(self, attr):
         if attr in {'textbox', 'entry'}:
             return getattr(self.current_tab, attr)
+        elif attr in {'font'}:
+            return getattr(self.textbox, attr)
         elif attr.startswith('entry_'):
             obj, attr = attr.split('_', 1)
             try:
@@ -47,6 +49,8 @@ class SiteEditor(Interface, Editor):
                     self.entry[attr] = value
                 else:
                     self.entry.pop(attr, '')
+        elif attr in {'textbox', 'entry'}:
+            setattr(self.current_tab, attr, value)
         else:
             super().__setattr__(attr, value)
 
@@ -126,6 +130,7 @@ class SiteEditor(Interface, Editor):
         frame.textbox = textbox
         self.notebook.add(frame)
         self.notebook.select(frame)
+        self.entry = dict(position='1.0')
         with ignored(AttributeError):
             self.go_to_heading()
         return 'break'
@@ -274,6 +279,13 @@ class SiteEditor(Interface, Editor):
             text = '['.join(text)
         return self.Text(text).remove_links.markdown
 
+    @property
+    def _entry(self):
+        try:
+            return self.initial_content  # entry is a dict
+        except AttributeError:
+            return str(self.entry)
+
     def earlier_entry(self, event=None):
         self.history.previous()
         self.fill_and_load()
@@ -396,15 +408,8 @@ class SiteEditor(Interface, Editor):
         text = self.markdown(text)
         self.show_file(text)
 
-    @property
-    def _entry(self):
-        try:
-            return self.initial_content  # entry is a dict
-        except AttributeError:
-            return str(self.entry)
-
     def save(self, event=None):
-        if self.is_new:
+        if self.is_new():
             self.site_properties()
         self.clear_style()
         self.save_text.set('Save')
@@ -444,26 +449,7 @@ class SiteEditor(Interface, Editor):
         self.save_wholepage()
         self.save_search_pages()
 
-    @asynca
-    def save_search_pages(self):
-        for template in (
-                (self.search, self.search_page),
-                (self.search404, self.search_page404)):
-            self._search(*template)
-
-    def _search(self, template, filename):
-        root = self.site.root
-        page = re.sub('{(.*?): (.*?)}', root.section_replace, template)
-        page = re.sub(
-            r'<li class="normal">(.*?)</li>',
-            r'<li><a href="index.html">\1</a></li>',
-            page
-        )
-        if filename is self.search_page404:
-            page = re.sub(r'(href|src)="/*', r'\1="/', page)
-        dumps(page, filename)
-
-    @property
+    # @property
     def is_new(self):
         if self.site is None:
             return True
@@ -609,11 +595,10 @@ class SiteEditor(Interface, Editor):
             self.server.shutdown()
         self.master.quit()
 
-    def initial_content(self, entry=None):
+    @property
+    def initial_content(self):
         # blank for sites, filled for dictionary entries
-        if entry is None:
-            entry = self.entry
-        name = entry.get('name', '')
+        name = self.entry.get('name', '')
         return f'Describe {name} here!\n'
     
     @property

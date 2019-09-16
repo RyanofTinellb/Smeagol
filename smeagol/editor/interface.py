@@ -66,6 +66,8 @@ class Interface:
             return self.translator
         elif attr == 'site':
             return None
+        elif attr in {'name', 'destination'}:
+            return self.configuration['site'][attr]
         elif attr == 'files':
             self.files = Files()
             return self.files
@@ -73,7 +75,10 @@ class Interface:
             try:
                 return getattr(self.files, attr)
             except AttributeError:
-                return getattr(super(), attr)
+                try:
+                    return getattr(self.site, attr)
+                except AttributeError:
+                    return getattr(super(), attr)
 
     def __setattr__(self, attr, value):
         if attr in {'language', 'fontsize'}:
@@ -93,7 +98,7 @@ class Interface:
         else:
             try:
                 setattr(self.files, attr, value)
-                self.configuration['site']['files'] = dir(self.site.files)
+                self.configuration['site']['files'] = self.files.files
             except AttributeError:
                 setattr(Interface, attr, value)
 

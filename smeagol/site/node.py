@@ -246,10 +246,6 @@ class Node:
 
     @property
     def eldest_daughter(self):
-        print(self.name)
-        print(self.has_children)
-        print(self.find()['children'])
-        quit()
         if self.has_children:
             return self.new(self.location + [0])
         else:
