@@ -63,6 +63,9 @@ def display_attrs(obj):
         print(attr, type(value), value)
         print()
 
+def increment(lst, by):
+    lst = [x + by for x in lst]
+    return lst
 
 def dump(dictionary, filename):
     if filename:
@@ -154,7 +157,7 @@ class ShortList(list):
     def __init__(self, arr, max_length):
         if len(arr) > max_length:
             arr = arr[:max_length]
-        super(ShortList, self).__init__(arr)
+        super().__init__(arr)
         self.max_length = max_length
 
     def __iadd__(self, other):

@@ -6,17 +6,16 @@ from ..widgets import Textbox
 
 class DictionaryEditor(SiteEditor):
     def __init__(self, master=None, config_file=None):
-        super(DictionaryEditor, self).__init__(master, config_file)
+        super().__init__(master, config_file)
         self.heading = self.headings[0]
 
     def jump_to_entry(self, event):
         textbox = event.widget
         try:
-            borders = Tk.SELECTION
-            entry = textbox.get(*borders)
+            entry = textbox.get(textbox.SELECTION)
         except Tk.TclError:
             entry = self.select_word(event)
-        self.add_tab()
+        self.open_tab()
         self.page = [entry]
         self.fill_and_load()
         return 'break'
@@ -41,7 +40,7 @@ class DictionaryEditor(SiteEditor):
             name = urlform(self.entry.get('name', ''))
         name = buyCaps(name).replace('&nbsp;', ' ')
         self._titlebar(name)
-        self.tab_heading(name)
+        self.rename_tab(name)
 
     def load_entry(self, headings, entry=None):
         # override SiteEditor
@@ -62,7 +61,7 @@ class DictionaryEditor(SiteEditor):
         return entry
 
     def _save_page(self):
-        super(DictionaryEditor, self)._save_page()
+        super()._save_page()
         if not self.entry.is_root:
             self.entry = self.entry.parent.sort(self.entry)
         self.make_wordlist()
@@ -87,13 +86,15 @@ class DictionaryEditor(SiteEditor):
     
     def new_textbox(self, master):
         # override SiteEditor
-        return Textbox(master, 'Courier New')
+        textbox = Textbox(master, 'Courier New')
+        self.add_commands(textbox, self.textbox_commands)
+        return textbox
 
     def update_tocs(self, new=False):
         # override SiteEditor
         if new:
             self.entry = self.entry.root.sort(self.entry)
-            super(DictionaryEditor, self).update_tocs()
+            super().update_tocs()
 
     def list_out(self, entry):
         # overrides SiteEditor
@@ -109,7 +110,7 @@ class DictionaryEditor(SiteEditor):
         transliteration = None
         language = None
         pos = None
-        for entry in self.site.all_pages:
+        for entry in self.site:
             transliteration = entry.name
             for line in self.remove_links(str(entry), entry).split('['):
                 if line.startswith('1]'):
@@ -137,10 +138,9 @@ class DictionaryEditor(SiteEditor):
         definition = meaning.split(' ')
         return meaning, definition
 
-    def initial_content(self, entry=None):
-        if entry is None:
-            entry = self.entry
-        name = entry.get('name', '')
+    @property
+    def initial_content(self):
+        name = self.entry.get('name', '')
         tr = self.translator
         code = tr.code[:2]
         output = [
@@ -159,7 +159,7 @@ class DictionaryEditor(SiteEditor):
 
     @property
     def textbox_commands(self):
-        return super(DictionaryEditor, self).textbox_commands + [
+        return super().textbox_commands + [
             ('<Button-2>', self.set_jump_to_entry),
             ('<Control-Return>', self.jump_to_entry)
         ]

@@ -5,21 +5,97 @@ import re
 from .addremovelinks import AddRemoveLinks
 from .templates_window import TemplatesWindow
 from .properties_window import PropertiesWindow
+from ..site.files import Files
 from ..site.site import Site
 from ..translation import *
 from ..utils import *
+from ..errors import *
 from ..defaults import default
 import tkinter.filedialog as fd
 import tkinter.simpledialog as sd
 
 
-class Properties:
+class Interface:
+    '''Interfaces with rest of Sméagol package:
+
+            SiteEditor, and any derived classes thence.
+
+                Configuration file (*.smg)
+                PropertiesWindow
+                TemplatesWindow
+                Files
+
+                    AddRemoveLinks
+                    Markdown
+                    Translator
+                    Evolver
+                    RandomWords
+
+                        Site
+                                '''
     def __init__(self, config=None, caller=None, master=None):
         self.setup(config)
         try:
             super().__init__(master)
-        except TypeError: # Properties being used without a master
+        except TypeError: # Interface being used without a master
             super().__init__()
+
+    def __getattr__(self, attr):
+        if attr in {'language', 'fontsize'}:
+            return self.configuration['current'][attr]
+        elif attr == 'history':
+            return self.get_history()
+        elif attr == 'page':
+            return self.get_page()
+        elif attr == 'sections':
+            return self.configuration['site']['files'][attr]
+        elif attr == 'links':
+            return self.configuration[attr]
+        elif attr in {'remove_links', 'add_links'}:
+            return getattr(self.linkadder, attr)
+        elif attr == 'markdown_file':
+            return self.configuration['current']['markdown']
+        elif attr in {'markdown', 'markup'}:
+            return getattr(self.marker, f'to_{attr}')
+        elif attr == 'sample_texts':
+            return self.configuration.get('sample texts', '')
+        elif attr == 'site_info':
+            return self.configuration['site']
+        elif attr == 'translator':
+            self.translator = Translator(self.language)
+            return self.translator
+        elif attr == 'site':
+            return None
+        elif attr == 'files':
+            self.files = Files()
+            return self.files
+        else:
+            try:
+                return getattr(self.files, attr)
+            except AttributeError:
+                return getattr(super(), attr)
+
+    def __setattr__(self, attr, value):
+        if attr in {'language', 'fontsize'}:
+            self.configuration['current'][attr] = value
+        elif attr == 'page':
+            self.history.replace(value)
+        elif attr in {'history', 'links', 'sample_texts'}:
+            self.configuration[attr] = value
+        elif attr == 'markdown_file':
+            self.configuration['current']['markdown'] = value
+        elif attr == 'marker':
+            self.set_markdown(attr, value)
+        elif attr in {'files'}:
+            setattr(Interface, attr, value)
+        elif attr in {'name', 'destination'}:
+            self.configuration['site'][attr] = value
+        else:
+            try:
+                setattr(self.files, attr, value)
+                self.configuration['site']['files'] = dir(self.site.files)
+            except AttributeError:
+                setattr(Interface, attr, value)
 
     def setup(self, filename, source=False):
         if source: # filename refers to a .src file
@@ -32,32 +108,31 @@ class Properties:
                     self.configuration = json.load(config)
             except (IOError, TypeError):
                 self.configuration = json.loads(default.config)
-        self.setup_site()
+        self.site = self.setup_site()
         self.linkadder = AddRemoveLinks(self.links, self.wordlist, self.translator)
-        self.setup_markdown()
+        self.marker = self.setup_markdown()
+        self.randomwords = RandomWords(self.language, self.sample_texts)
 
     def setup_markdown(self):
-        try:
-            self.marker = Markdown(self.markdown_file)
-        except MarkdownFileNotFoundError:
-            filetypes = [('Sméagol Markdown', '*.mkd')]
-            title = 'Open Markdown File'
-            filename = fd.askopenfilename(filetypes=filetypes, title=title,
-                defaultextension=filetypes[0][1][1:])
-            self.markdown_file = filename
-            self.setup_markdown()
-
+        while True:
+            try:
+                return Markdown(self.markdown_file)
+            except MarkdownFileNotFoundError:
+                filetypes = [('Sméagol Markdown', '*.mkd')]
+                title = 'Open Markdown File'
+                filename = fd.askopenfilename(filetypes=filetypes, title=title,
+                    defaultextension=filetypes[0][1][1:])
+                self.markdown_file = filename
+    
     def setup_linguistics(self):
         # override Editor.setup_linguistics()
-        self.evolver = HighToDemoticLulani()
         self.randomwords = RandomWords(self.language, self.sample_texts)
         self.setup_markdown()
 
     def setup_site(self):
         while True:
             try:
-                self.site = Site(**self.site_info)
-                break
+                return Site(**self.site_info)
             except SourceFileNotFoundError:
                 filetypes = [('Source Data File', '*.src')]
                 title = 'Open Source'
@@ -66,13 +141,13 @@ class Properties:
                 self.source = filename
             except TemplateFileNotFoundError:
                 filetypes = [('HTML Template', '*.html')]
-                title = 'Open Template'
+                title = 'Open Page Template'
                 filename = fd.askopenfilename(filetypes=filetypes, title=title,
                     defaultextension=filetypes[0][1][1:])
                 self.template_file = filename
             except WholepageTemplateFileNotFoundError:
                 filetypes = [('Wholepage Template', '*.html')]
-                title = 'Open Template'
+                title = 'Open Template for Wholepage'
                 filename = fd.askopenfilename(filetypes=filetypes, title=title,
                     defaultextension=filetypes[0][1][1:])
                 self.wholepage_template = filename
@@ -88,82 +163,19 @@ class Properties:
                 filename = fd.askopenfilename(filetypes=filetypes, title=title,
                     defaultextension=filetypes[0][1][1:])
                 self.search_template404 = filename
-
-    def setup_markdown(self, filename=None):
-        self.markdown_file = filename or self.markdown_file
-        while True:
-            try:
-                self.marker = Markdown(self.markdown_file)
-                break
-            except MarkdownFileNotFoundError:
-                filetypes = [('Markdown File', '*.mkd')]
-                title = 'Open Markdown file'
+            except SectionFileNotFoundError as err:
+                name = str(err)
+                filetypes = [('Template', '*.html')]
+                title = f'Open {name.title()} Template'
                 filename = fd.askopenfilename(filetypes=filetypes, title=title,
                     defaultextension=filetypes[0][1][1:])
-                self.markdown_file = filename
-
-    def __getattr__(self, attr):
-        if attr in {'language', 'fontsize'}:
-            return self.configuration['current'][attr]
-        elif attr == 'site':
-            return None
-        elif attr == 'markdown_file':
-            return self.configuration['current']['markdown']
-        elif attr in {'markdown', 'markup'}:
-            return getattr(self.marker, f'to_{attr}')
-        elif attr in {'remove_links', 'add_links'}:
-            return getattr(self.linkadder, attr)
-        elif attr == 'links':
-            return self.configuration[attr]
-        elif attr == 'sample_texts':
-            return self.configuration.get('sample texts', '')
-        elif attr == 'site_info':
-            return self.configuration['site']
-        elif attr == 'translator':
-            return Translator(self.language)
-        elif attr == 'history':
-            return self.get_history()
-        elif attr == 'page':
-            return self.get_page()
-        elif attr == 'sections':
-            sections = getattr(self.site, attr)
-            self.configuration['sections'] = sections
-            return sections
-        else:
-            try:
-                return getattr(self.site, attr)
-            except AttributeError:
-                return getattr(super(), attr)
-
-    def __setattr__(self, attr, value):
-        if attr in {'language', 'fontsize'}:
-            self.configuration['current'][attr] = value
-        elif attr == 'markdown_file':
-            self.configuration['current']['markdown'] = value
-        elif attr == 'marker':
-            self.set_markdown(attr, value)
-        elif attr in {'name', 'destination'}:
-            self.configuration['site'][attr] = value
-        elif attr in {'source', 'template_file'}:
-            self.configuration['site']['files'][attr] = value
-        elif attr in {'links', 'history'}:
-            self.configuration[attr] = value
-        elif attr == 'sample_texts':
-            self.configuration['randomwords']
-        elif attr == 'page':
-            self.history.replace(value)
-        else:
-            try:
-                setattr(self.site, attr, value)
-                self.configuration['files'] = self.site.files
-            except AttributeError:
-                super().__setattr__(attr, value)
+                self.sections[name] = filename
 
     def set_markdown(self, attr, value):
         try:
-            super(Properties, self).__setattr__(attr, Markdown(value))
+            super().__setattr__(attr, Markdown(value))
         except TypeError: # value is already a Markdown instance
-            super(Properties, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
 
     def get_history(self):
         history = self.configuration.get('history', [])

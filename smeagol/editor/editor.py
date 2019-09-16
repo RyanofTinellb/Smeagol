@@ -18,7 +18,6 @@ class Editor(Tk.Frame):
         self.initial_text = text
         self.master.withdraw()
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
-        self.set_frames()
         self.setup_linguistics()
         self.ready()
         self.place_widgets()
@@ -28,12 +27,6 @@ class Editor(Tk.Frame):
     def Text(self, text):
         return Text(self, text)
 
-    def set_frames(self):
-        self.sidebar = Tk.Frame(self.master)
-        self.textframe = Tk.Frame(self.master)
-        self.top = self.winfo_toplevel()
-        self.set_window_size(self.top)
-
     def set_window_size(self, top):
         top.state('normal')
         w = w_pos = int(top.winfo_screenwidth() / 2)
@@ -42,9 +35,14 @@ class Editor(Tk.Frame):
         top.geometry(f'{w}x{h}+{w_pos}+{h_pos}')
 
     def ready(self):
-        objs = ['menus', 'labels', 'option_menu', 'textbox']
-        for obj in objs:
-            getattr(self, 'ready_' + obj)()
+        for widget in self.widgets:
+            getattr(self, 'ready_' + widget)()
+        
+    def ready_frames(self):
+        self.sidebar = Tk.Frame(self.master)
+        self.textframe = Tk.Frame(self.master)
+        self.top = self.winfo_toplevel()
+        self.set_window_size(self.top)
 
     def ready_menus(self):
         self.menu = Tk.Menu(self.top)
@@ -165,12 +163,10 @@ class Editor(Tk.Frame):
         heading.insert(Tk.FIRST, text)
 
     def clear_interface(self, event=None):
-        position = self.textbox.index(Tk.INSERT)
         self.display(self.initial_text)
-        self.textbox.mark_set(Tk.INSERT, position)
         self.information.set('')
 
-    def escape(self, event=None):
+    def cancel_changes(self, event=None):
         self.clear_interface()
         self.quit()
 
@@ -273,7 +269,8 @@ class Editor(Tk.Frame):
     @tkinter()
     def _markdown_load(self, filename):
         text = self.Text(self.textbox.text).markup
-        self.setup_markdown(filename)
+        self.markdown_file = filename
+        self.setup_markdown()
         self.textbox.replace(text.markdown)
 
     def markdown_refresh(self, event=None, new_markdown=None):
@@ -348,12 +345,16 @@ class Editor(Tk.Frame):
     @property
     def textbox_commands(self):
         return [('<KeyRelease>', self.key_released),
-                ('<Escape>', self.escape),
+                ('<Escape>', self.cancel_changes),
                 ('<Control-d>', self.add_descendant),
                 ('<Control-m>', self.markdown_refresh),
                 ('<Control-r>', self.refresh_random),
                 ('<Control-R>', self.add_translation),
                 ('<Control-s>', self._command)]
+    
+    @property
+    def widgets(self):
+        return ['frames', 'menus', 'labels', 'option_menu', 'textbox']
 
     def quit(self):
         # with ignored(AttributeError):

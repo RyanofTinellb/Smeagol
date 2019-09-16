@@ -16,6 +16,10 @@ class TemplateFileNotFoundError(SiteFileError):
     '''Raised when Site cannot find .html file'''
 
 
+class SectionFileNotFoundError(SiteFileError):
+    '''Raised when Site cannot find .html file'''
+
+
 class WholepageTemplateFileNotFoundError(SiteFileError):
     '''Raised when Site cannot find .html file'''
 

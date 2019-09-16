@@ -94,13 +94,13 @@ class Node:
         if attr == 'children':
             return self.find().get('children', [])
         else:
-            return getattr(super(Node, self), attr)
+            return getattr(super(), attr)
 
     def __setattr__(self, attr, value):
         if attr == 'children':
             self.find()['children'] = value
         else:
-            super(Node, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
 
     @property
     def num_children(self):
@@ -246,11 +246,15 @@ class Node:
 
     @property
     def eldest_daughter(self):
+        print(self.name)
+        print(self.has_children)
+        print(self.find()['children'])
+        quit()
         if self.has_children:
             return self.new(self.location + [0])
         else:
             try:
-                return getattr(super(Node, self), 'eldest_daughter')
+                return getattr(super(), 'eldest_daughter')
             except AttributeError:
                 raise IndexError
 
@@ -259,7 +263,7 @@ class Node:
         if self.has_children:
             return self.new(self.location + [self.num_children - 1])
         else:
-            return getattr(super(Node, self), 'youngest_daughter')
+            return getattr(super(), 'youngest_daughter')
 
     @property
     def descendants(self):
