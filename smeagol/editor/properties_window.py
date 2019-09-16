@@ -62,13 +62,13 @@ class PropertyFrame:
                         'value', 'checked', 'row'}:
             return self.property.get(attr, None)
         else:
-            return getattr(super(PropertyFrame, self), attr)
+            return getattr(super(), attr)
 
     def __setattr__(self, attr, value):
         if attr in {'value', 'checked'}:
             self.property[attr] = value
         else:
-            super(PropertyFrame, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
 
     @property
     def check(self):

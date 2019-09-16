@@ -10,11 +10,11 @@ from itertools import zip_longest
 from ..defaults import default
 
 from .editor import *
-from .properties import Properties
+from .interface import Interface
 from .properties_window import PropertiesWindow
 
 
-class SiteEditor(Properties, Editor):
+class SiteEditor(Interface, Editor):
     def __init__(self, master=None, config_file=None, tests=None):
         super().__init__(master=master,
                          config=config_file,
@@ -25,12 +25,10 @@ class SiteEditor(Properties, Editor):
         if tests:
             tests(self)
 
-    @property
-    def caller(self):
-        return 'site'
-
     def __getattr__(self, attr):
-        if attr.startswith('entry_'):
+        if attr in {'textbox', 'entry'}:
+            return getattr(self.current_tab, attr)
+        elif attr.startswith('entry_'):
             obj, attr = attr.split('_', 1)
             try:
                 return getattr(self.entry, attr)
@@ -52,8 +50,16 @@ class SiteEditor(Properties, Editor):
         else:
             super().__setattr__(attr, value)
 
+    @property
+    def caller(self):
+        return 'site'
+
+    @property
+    def current_tab(self):
+        return self.notebook.nametowidget(self.notebook.select())
+
     def setup_linguistics(self):
-        super(SiteEditor, self).setup_linguistics()
+        super().setup_linguistics()
         self.languagevar = Tk.StringVar()
         self.languagevar.set(self.translator.fullname)
 
@@ -64,19 +70,13 @@ class SiteEditor(Properties, Editor):
             obj.select(self.language[:2])
         return 'break'
 
-    def set_frames(self):
-        super(SiteEditor, self).set_frames()
+    def ready_frames(self):
+        super().ready_frames()
         self.siteframe = Tk.Frame(self.sidebar)
         self.headingframe = Tk.Frame(self.siteframe)
         self.buttonframe = Tk.Frame(self.siteframe)
         self.master.title('Site Editor')
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
-
-    def ready(self):
-        super(SiteEditor, self).ready()
-        objs = ['headings', 'buttons']
-        for obj in objs:
-            getattr(self, 'ready_' + obj)()
 
     def ready_headings(self):
         master = self.headingframe
@@ -92,36 +92,50 @@ class SiteEditor(Properties, Editor):
         self.save_button = Tk.Button(master, command=self.save,
                                      textvariable=self.save_text, width=10)
         self.buttons = [self.load_button, self.save_button]
-    
+
     def ready_textbox(self):
         self.ready_notebook()
-    
+
+    def new_textbox(self, master):
+        textbox = Textbox(master)
+        self.add_commands(textbox, self.textbox_commands)
+        return textbox
+
     def ready_notebook(self):
         self.closed_tabs = []
         self.notebook = ttk.Notebook(self.textframe)
-        self.notebook.bind('<<NotebookTabChanged>>', self.change_textbox)
+        self.notebook.bind('<<NotebookTabChanged>>', self.change_tab)
         self.notebook.bind('<Button-2>', self.close_tab)
         self.notebook.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
-        self.add_tab()
+        self.open_tab()
 
-    def add_tab(self, event=None):
+    def place_widgets(self):
+        super().place_widgets()
+        self.siteframe.grid(row=0, column=0)
+        self.headingframe.grid()
+        self.buttonframe.grid()
+        for i, heading in enumerate(self.headings):
+            heading.grid(row=i, column=0)
+        for i, button in enumerate(self.buttons):
+            button.grid(row=0, column=i)
+
+    def open_tab(self, event=None):
         frame = Tk.Frame(self.notebook)
         textbox = self.new_textbox(frame)
         textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
-        # self.notebook.select(frame)
-        self.add_commands(textbox, self.textbox_commands)
-        self.textbox = frame.textbox = textbox
+        frame.textbox = textbox
         self.notebook.add(frame)
+        self.notebook.select(frame)
         with ignored(AttributeError):
             self.go_to_heading()
         return 'break'
-    
-    def new_textbox(self, master):
-        return Textbox(master)
 
-    @property
-    def current_tab(self):
-        return self.notebook.nametowidget(self.notebook.select())
+    def change_tab(self, event=None):
+        frame = self.current_tab
+        with ignored(AttributeError):
+            self.entry = frame.entry
+            self.fill_headings(frame.page)
+            self.update_titlebar()
 
     def close_tab(self, event=None):
         if self.notebook.index('end') - len(self.closed_tabs) > 1:
@@ -134,50 +148,16 @@ class SiteEditor(Properties, Editor):
                 except Tk.TclError:
                     tab = self.notebook.select()
         return 'break'
-    
+
     def reopen_tab(self, event=None):
         with ignored(IndexError):
             tab = self.closed_tabs.pop()
             self.notebook.add(tab)
             self.notebook.select(tab)
         return 'break'
-    
-    def change_textbox(self, event=None):
-        frame = self.notebook.nametowidget(self.notebook.select())
-        self.textbox = frame.textbox
-        self.current_tab = frame
-        with ignored(AttributeError):
-            self.entry = frame.entry
-            self.fill_headings(frame.page)
-            self.update_titlebar()
 
-    def tab_heading(self, text):
+    def rename_tab(self, text):
         self.notebook.tab(self.current_tab, text=text)
-
-    def ready_scrollbar(self, frame):
-        textbox = frame.textbox
-        scrollbar = Tk.Scrollbar(frame)
-        scrollbar.pack(side=Tk.RIGHT, fill=Tk.Y)
-        scrollbar.config(command=textbox.yview)
-        textbox.config(yscrollcommand=scrollbar.set)
-
-    def place_widgets(self):
-        super(SiteEditor, self).place_widgets()
-        self.siteframe.grid(row=0, column=0)
-        self.headingframe.grid()
-        self.buttonframe.grid()
-        for i, heading in enumerate(self.headings):
-            heading.grid(row=i, column=0)
-        for i, button in enumerate(self.buttons):
-            button.grid(row=0, column=i)
-
-    def clear_interface(self, event=None):
-        super().clear_interface()
-        self.save_text.set('Save')
-
-    def escape(self, event=None):
-        '''@override Editor'''
-        self.clear_interface()
 
     @property
     def heading_contents(self):
@@ -235,7 +215,7 @@ class SiteEditor(Properties, Editor):
                 text = heading.get()[:heading.index(Tk.INSERT)].lower()
                 if text:
                     sisters = [s for s in self.h_entry.sisters
-                                if s.name.lower().startswith(text)]
+                               if s.name.lower().startswith(text)]
                     self.h_entry = sisters[0] if sisters else None
         # descend hierarchy until correct level
         while self.h_entry and self.h_entry.level < level:
@@ -253,7 +233,7 @@ class SiteEditor(Properties, Editor):
             self.add_heading()
         if child and self.h_entry:
             heading.insert(Tk.INSERT, self.h_entry.name)
-    
+
     def clear_h_entry(self, event=None):
         self.h_entry = self.load_entry(self.heading_contents)
 
@@ -354,7 +334,7 @@ class SiteEditor(Properties, Editor):
 
     @asynca
     def site_publish(self, event=None):
-        for page in self.site.all_pages:
+        for page in self.site:
             page.text = self.add_links(
                 self.remove_links(str(page), page), page)
         self.site.publish()
@@ -385,14 +365,9 @@ class SiteEditor(Properties, Editor):
                                       str(self.PORT), self.entry.link))
         return 'break'
 
-    def reset(self, event=None):
-        self.entry = self.site.root
-        self.clear_interface()
-        self.fill_and_load()
-
     def update_titlebar(self):
         self._titlebar(self.entry_name)
-        self.tab_heading(self.entry_name)
+        self.rename_tab(self.entry_name)
 
     def _titlebar(self, name):
         self.master.title('Editing ' + name)
@@ -417,14 +392,14 @@ class SiteEditor(Properties, Editor):
     def list_pages(self, event=None):
         def text_thing(page):
             return ' ' * 10 * page.level + page.name
-        text = '\n'.join(map(text_thing, self.site.all_pages))
+        text = '\n'.join(map(text_thing, self.site))
         text = self.markdown(text)
         self.show_file(text)
 
     @property
     def _entry(self):
         try:
-            return self.initial_content(self.entry)  # entry is a dict
+            return self.initial_content  # entry is a dict
         except AttributeError:
             return str(self.entry)
 
@@ -587,7 +562,7 @@ class SiteEditor(Properties, Editor):
 
     @asynca
     def update_pages(self):
-        for entry in self.site.all_pages:
+        for entry in self.site:
             old = str(entry)
             text = self.linkadder.remove_links(old)
             text = self.linkadder.add_links(text, entry)
@@ -612,6 +587,21 @@ class SiteEditor(Properties, Editor):
         super().key_released(event)
         if event.widget.edit_modified():
             self.save_text.set('*Save')
+    
+    def reset(self, event=None):
+        self.entry = self.site.root
+        self.clear_interface()
+        self.fill_and_load()
+
+    def clear_interface(self, event=None):
+        super().clear_interface()
+        # self.display(self.initial_text)
+        # self.information.set('')
+        self.save_text.set('Save')
+
+    def cancel_changes(self, event=None):
+        # override Editor
+        self.clear_interface()
 
     def quit(self):
         self.master.destroy()
@@ -625,10 +615,14 @@ class SiteEditor(Properties, Editor):
             entry = self.entry
         name = entry.get('name', '')
         return f'Describe {name} here!\n'
+    
+    @property
+    def widgets(self):
+        return super().widgets + ['headings', 'buttons']
 
     @property
     def textbox_commands(self):
-        return super(SiteEditor, self).textbox_commands + [
+        return super().textbox_commands + [
             ('<Control-Prior>', self.previous_entry),
             ('<Control-Next>', self.next_entry),
             ('<Control-Shift-Prior>', self.earlier_entry),
@@ -637,7 +631,7 @@ class SiteEditor(Properties, Editor):
             ('<Control-l>', self.load_from_headings),
             ('<Control-o>', self.site_open),
             ('<Control-s>', self.save),
-            ('<Control-t>', self.add_tab),
+            ('<Control-t>', self.open_tab),
             ('<Control-T>', self.reopen_tab),
             ('<Control-w>', self.close_tab)]
 
@@ -649,7 +643,7 @@ class SiteEditor(Properties, Editor):
             ('<Return>', self.enter_headings),
             ('<Control-M>', self.add_heading),
             ('<Control-N>', self.remove_heading),
-            ('<Control-t>', self.add_tab),
+            ('<Control-t>', self.open_tab),
             ('<Control-T>', self.reopen_tab),
             ('<Control-w>', self.close_tab)]
 
@@ -670,7 +664,7 @@ class SiteEditor(Properties, Editor):
                            ('Refresh Broken Links', self.refresh_broken_links)]),
                 ('Edit', [('Script', self.edit_script),
                           ('Templates', self.edit_templates)])
-                ] + super(SiteEditor, self).menu_commands
+                ] + super().menu_commands
 
 
 if __name__ == '__main__':

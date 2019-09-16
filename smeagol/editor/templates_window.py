@@ -69,13 +69,13 @@ class TemplateFrame():
         if attr in {'use_name', 'filename', 'enabled'}:
             return self.template.get(attr, None)
         else:
-            return getattr(super(TemplateFrame, self), attr)
+            return getattr(super(), attr)
 
     def __setattr__(self, attr, value):
         if attr in {'use_name', 'filename'}:
             self.template[attr] = value
         else:
-            super(TemplateFrame, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
 
     def ready_label(self):
         self.labelvar = Tk.StringVar()

@@ -1,4 +1,5 @@
 from ..utils import *
+from ..errors import SectionFileNotFoundError
 
 import re
 
@@ -22,7 +23,10 @@ class Templates:
         try:
             text = self.sections[name]
         except KeyError:
-            text = self.open(self.files[name])
+            try:
+                text = self.open(self.files[name])
+            except FileNotFoundError:
+                raise SectionFileNotFoundError(name)
             self.sections[name] = text
         return text
     

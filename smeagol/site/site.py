@@ -3,31 +3,20 @@ import os
 
 from ..translation import Markdown, Translator
 from .templates import Templates
+from .files import Files
 from ..utils import *
 
 from .page import Page
 
-
-def increment(lst, by):
-    lst = [x + by for x in lst]
-    return lst
-
-
 markdown = Markdown()
-
 
 class Site:
     def __init__(self, destination=None, name=None, files=None):
-        self.name = name
-        self.files = files or dict(
-            source='', template_file='', wordlist='',
-            wholepage=dict(file='', template=''),
-            search=dict(index='', template='', page='',
-                        template404='', page404=''),
-            sections={}
-        )
         self.destination = destination
-        self.change_destination()
+        self.name = name
+        self.files = files or Files()
+        if isinstance(self.files, dict):
+            self.files = Files(self.files)
         self.load_site()
         self.setup_templates()
     
@@ -53,55 +42,25 @@ class Site:
                 raise SourceFileNotFoundError
         self.tree = tree
 
-    def __repr__(self):
-        return (f'Site(destination="{self.destination}", '
-                f'name="{self.name}", '
-                f'source="{self.source}", '
-                f'template="{self.template_file}", '
-                f'searchindex="{self.searchindex})"')
-
     def __getattr__(self, attr):
-        if attr in {'source', 'template_file', 'wordlist'}:
-            try:
-                return self.files[attr]
-            except KeyError:
-                self.files[attr] = ''
-                return ''
-        elif attr in {'sections'}:
-            while True:
-                try:
-                    return self.files[attr]
-                except KeyError:
-                    self.files[attr] = {}
-        elif attr.startswith('wholepage_') or attr.startswith('search_'):
-            attr, sub = attr.split('_')
-            while True:
-                try:
-                    return self.files[attr][sub]
-                except KeyError:
-                    try:
-                        self.files[attr][sub] = ''
-                    except KeyError:
-                        self.files[attr] = {sub: ''}
-                else:
-                    break
-        else:
-            return getattr(super(Site, self), attr)
+        if attr == 'files':
+            return
+        try:
+            getattr(self.files, attr)
+        except AttributeError:
+            return getattr(super(), attr)
 
     def __setattr__(self, attr, value):
-        if attr in {'source', 'template_file', 'wordlist'}:
-            self.files[attr] = value
-        elif attr.startswith('wholepage_') or attr.startswith('search_'):
-            attr, sub = attr.split('_')
-            self.files[attr][sub] = value
-        elif attr == 'destination':
-            super().__setattr__(attr, value)
+        if attr == 'destination':
+            setattr(Site, attr, value)
             self.change_destination()
+        elif attr == 'files':
+            setattr(Site, attr, value)
         else:
             try:
-                super().__setattr__(attr, value)
+                setattr(self.files, attr, value)
             except AttributeError:
-                raise AttributeError(f'Super object cannot set {attr}')
+                setattr(Site, attr, value)
 
     def change_destination(self):
         if self.destination:
@@ -111,24 +70,10 @@ class Site:
             os.chdir(self.destination)
 
     def __iter__(self):
-        self.current = None
-        return self
-
-    def __next__(self):
-        # changed this behaviour because it's better with Page objects
-        # may need to change back if something needs the node object
-            # itself.
-        try:
-            self.current = self.current.next()
-        except AttributeError:
-            self.current = Page(self.tree, [])
-        except IndexError:
-            self.__iter__()
-            raise StopIteration
-        return self.current
+        return self.iterator
 
     @property
-    def all_pages(self):
+    def iterator(self):
         node = self.root
         while True:
             yield node
@@ -153,18 +98,18 @@ class Site:
         return self[0]
 
     def refresh_flatnames(self):
-        for page in self.all_pages:
+        for page in self:
             page.refresh_flatname()
 
     def remove_flatnames(self):
-        for page in self.all_pages:
+        for page in self:
             page.flatname = ''
 
     def publish(self):
         pages = 0
         errors = 0
         errorstring = ''
-        for page in self.all_pages:
+        for page in self:
             try:
                 page.publish(template=self.template)
             except Exception as err:
@@ -192,7 +137,7 @@ class Site:
     
     @asynca
     def save_wholepage(self):
-        contents = map(lambda x: x.wholepage, self.all_pages)
+        contents = map(lambda x: x.wholepage, self)
         contents = '\n'.join(filter(None, contents))
         
         root = self.root
@@ -210,7 +155,7 @@ class Site:
         sentences = []
         urls = []
         names = []
-        for page_number, entry in enumerate(self.all_pages):
+        for page_number, entry in enumerate(self):
             base = len(sentences)
             analysis = entry.analysis
             new_words = analysis['words']

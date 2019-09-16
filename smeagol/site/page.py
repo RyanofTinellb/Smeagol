@@ -14,7 +14,7 @@ markdown = Markdown()
 
 class Page(Node):
     def __init__(self, tree=None, location=None):
-        super(Page, self).__init__(tree, location)
+        super().__init__(tree, location)
 
     def __hash__(self):
         return hash(tuple(self.location))
@@ -40,7 +40,7 @@ class Page(Node):
                 self.refresh_flatname()
                 return getattr(self, attr)
         else:
-            return super(Page, self).__getattr__(attr)
+            return super().__getattr__(attr)
 
     def __setattr__(self, attr, value):
         if attr == 'text':
@@ -53,7 +53,7 @@ class Page(Node):
             else:
                 self.find().pop(attr, None)
         else:
-            super(Page, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
 
     def __str__(self):
         return '['.join(self.text) # some pages are meant to start without a [
@@ -447,4 +447,4 @@ class Page(Node):
 
     def delete(self):
         self.delete_html()
-        super(Page, self).delete()
+        super().delete()
