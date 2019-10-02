@@ -3,9 +3,9 @@ import json
 
 '''
 properties:
-    name => name
-    key => key
-    tags => tags
+    name (str) => name
+    key (str) => key
+    tags (str()) => tags
     size (int): absolute size => font.size
          (str): relative size (include +/- sign)
     font (str) => font.family
@@ -16,10 +16,10 @@ properties:
     offset (str): superscript / subscript / baseline => paragraph.offset
     colour (str) => paragraph.foreground
     background (str) => paragraph.background
-    border (str) => pargraph.relief
+    border (str) => paragraph.relief
     justification (str) => paragraph.justify
-    left, right, indent (int[]) => paragraph.{lmargin1, lmargin2, rmargin}
-    top, bottom, line_spacing (int[]) => paragraph.{spacing1, spacing2, spacing3}
+    left, right, indent (int) => paragraph.{lmargin1, lmargin2, rmargin}
+    top, bottom, line_spacing (int) => paragraph.{spacing1, spacing2, spacing3}
 
 default:
 
@@ -30,11 +30,22 @@ defaults = dict(name='default', key=None, tags=('', ''), group='default', size=1
                 colour='black', background='white', border=True, justification='left',
                 unit='cm', left=0, right=0, top=0, bottom=0, indent=0, line_spacing=0)
 
+def _int_part(_dict, key):
+    value = _dict.get(key, 0)
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return int(re.sub(r'\D', '', value))
+        except ValueError:
+            return 0
+
 
 class Style:
     def __init__(self, **style):
         if style.get('group', None) == 'default':
             for attr, value in style.items():
+                setattr(self, attr, value)
                 try:
                     defaults[attr] = value
                 except KeyError:
@@ -55,9 +66,13 @@ class Style:
         if attr in {'_font', 'paragraph'}:
             super().__setattr__(attr, {})
             return getattr(self, attr)
+        elif attr == 'config':
+            return self.paragraph if self.group != 'default' else self.textbox_configuration
+        elif attr == 'strikethough':
+            return self.strikeout
         else:
             return defaults[attr]
-
+    
     def __setattr__(self, attr, value):
         if attr == 'font':
             self._font['family'] = value
@@ -69,12 +84,15 @@ class Style:
             self._font['slant'] = 'italic' if value else 'roman'
         elif attr == 'underline':
             self._font['underline'] = value
-        elif attr == 'strikethrough':
+        elif attr == 'strikethrough' or attr == 'strikeout':
             self._font['overstrike'] = value
         elif attr == 'background':
             self.paragraph['background'] = value
         elif attr == 'colour':
             self.paragraph['foreground'] = value
+        elif attr == 'border':
+            self.paragraph['relief'] = 'ridge' if value else 'flat'
+            self.paragraph['borderwidth'] = 2 if value else 0
         elif attr == 'justification':
             self.paragraph['justify'] = value
         elif attr == 'offset':
@@ -102,7 +120,7 @@ class Style:
             self.tags = start, f'{end}{para}'
         elif attr == 'unit':
             self._change_units(value)
-        elif attr not in {'name', 'tags', '_font', 'paragraph'}:
+        elif attr not in {'name', 'key', 'tags', '_font', 'paragraph'}:
             raise AttributeError(
                 f'{type(self).__name__} object has no attribute "{attr}"')
 
@@ -142,3 +160,20 @@ class Style:
         left1 = self.add_unit(value + self.indent)
         left2 = self.add_unit(value)
         return left1, left2
+
+    @property
+    def textbox_configuration(self):
+        values = self.paragraph
+        keys = ('background', 'borderwidth', 'foreground', 'relief',
+            'spacing1', 'spacing2', 'spacing3')
+        output = {}
+        for key in keys:
+            if key in values:
+                output[key] = values[key]
+        if 'lmargin1' in values or 'rmargin' in values:
+            margins = 'lmargin1', 'rmargin'
+            output['padx'] = self.add_unit(sum([_int_part(values, x) for x in margins]) // 2)
+        if 'spacing1' in values or 'spacing3' in values:
+            margins = 'spacing1', 'spacing3'
+            output['pady'] = self.add_unit(sum([_int_part(values, x) for x in margins]) // 2)
+        return output
