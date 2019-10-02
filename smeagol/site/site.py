@@ -151,8 +151,7 @@ class Site:
             self._search(*template)
 
     def _search(self, template, filename):
-        root = self.site.root
-        page = re.sub('{(.*?): (.*?)}', root.section_replace, template)
+        page = re.sub('{(.*?): (.*?)}', self.root.section_replace, template)
         page = re.sub(
             r'<li class="normal">(.*?)</li>',
             r'<li><a href="index.html">\1</a></li>',

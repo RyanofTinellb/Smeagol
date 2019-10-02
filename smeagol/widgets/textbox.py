@@ -4,6 +4,7 @@ import tkinter as Tk
 from tkinter.scrolledtext import ScrolledText
 from tkinter.font import Font
 from ..utils import ignored
+from .style import Style
 
 START = '1.0'
 END = 'end-1c'
@@ -29,27 +30,54 @@ class Textbox(Tk.Text):
         super().__init__(master, height=1, width=1, wrap=Tk.WORD,
                          undo=True, font=self.font)
         self.ready()
-    
+
     def __getattr__(self, attr):
         if attr == 'text':
             return self.get()
+        elif attr == 'current_styles':
+            return self.style.get().split()
         else:
             return getattr(super(), attr)
-    
+
     def __setattr__(self, attr, value):
         if attr == 'text':
             self.replace(value)
         else:
             super().__setattr__(attr, value)
 
+    def _add_style(self, name):
+        styles = set(self.current_styles)
+        styles.add(name)
+        self.style.set(' '.join(styles))
+
+    def _remove_style(self, name):
+        styles = set(self.current_styles)
+        styles.discard(name)
+        self.style.set(' '.join(styles))
+
     def ready(self):
         self.add_commands()
-        self.style = ''
-        for (name, key, style) in self.styles:
-            self.tag_config(name, **style)
+        self.style = Tk.StringVar()
+        self.set_styles()
+
+    def set_styles(self):
+        self.style.set('')
+        for styleset in zip(self.styles(), ('default', 'font', 'paragraph')):
+            self._set_styles(*styleset)
+
+    def _set_styles(self, styles, group='default'):
+        for style in styles:
+            style.group = group
+            name = style.name
+            key = style.key
+            font = style.Font
+            self.tag_config(name, font=font, **style.paragraph)
             if key:
-                self.bind(f'<Control-{key}>',
-                          lambda event: self.change_style(name))
+                def command(event, name=name, style=style):
+                    print(style)
+                    self.change_style(name)
+                    return 'break'
+                self.bind(f'<Control-{key}>', command)
 
     def add_commands(self):
         for keys, command in self.commands:
@@ -59,51 +87,49 @@ class Textbox(Tk.Text):
                 for key in keys:
                     self.bind(key, command)
 
-    def change_style(self, style):
-        for other in self.tag_names():
-            if other != Tk.SEL:
-                with ignored(Tk.TclError):
-                    self.tag_remove(other, *SELECTION)
-        if style == self.style:
-            self.style = ''
-        else:
-            self.style = style
+    def change_style(self, name):
+        if name in self.current_styles:
+            self._remove_style(name)
             with ignored(Tk.TclError):
-                self.tag_add(style, *SELECTION)
+                self.tag_remove(name, *SELECTION)
+        else:
+            self._add_style(name)
+            with ignored(Tk.TclError):
+                self.tag_add(name, *SELECTION)
+        return 'break'
 
     @property
     def wordcount(self):
         text = self.text
         return text.count(' ') + text.count('\n') - text.count('|')
-    
+
     @property
     def formatted_text(self):
         return self.formatted_get()
 
     def get(self, start=START, end=END):
         return super().get(start, end)
-    
+
     def get_char(self, position=INSERT):
         return super().get(position)
-    
+
     def formatted_get(self, start=START, end=END):
         return super().dump(start, end)
 
     def reset(self):
         self.edit_modified(False)
         self.config(font=self.font)
-        for (name, key, style) in self.styles:
-            self.tag_config(name, **style)
+        self.set_styles()
 
     def replace(self, text, start=START, end=END):
         self.delete(start, end)
         self.insert(text, start)
 
-    def insert(self, text='', position=INSERT, tag=None):
+    def insert(self, text='', position=INSERT, tags=None):
         try:
-            super().insert(position, text, tag)
+            super().insert(position, text, tags)
         except Tk.TclError:
-            super().insert(text, position, tag)
+            super().insert(text, position, tags)
 
     def delete(self, start=START, end=END):
         super().delete(start, end)
@@ -112,9 +138,9 @@ class Textbox(Tk.Text):
         self.delete()
 
     def shift_style(self):
-        if self.style not in self.tag_names(INSERT):
-            self.style = ''
-    
+        if self.style.get() not in self.tag_names(INSERT):
+            self.style.set('')
+
     def _to_tkinter(self):
         texts = re.split(r'(\[[ef] *\]|<.*?>)', self.text)
         paras = dict(e='example-no-lines', f='example')
@@ -125,7 +151,7 @@ class Textbox(Tk.Text):
         self.clear()
         for text in texts:
             if re.match(r'\[[ef] *\]', text):
-                self.insert(f'{text[1]} ', tag=paras[text[1]])
+                self.insert(f'{text[1]} ', tags=paras[text[1]])
                 continue
             else:
                 new_tag = re.sub(r'</*(.*?)>', r'\1', text)
@@ -143,7 +169,7 @@ class Textbox(Tk.Text):
                         txt = text
                 else:
                     txt = text
-            self.insert(txt, tag=tag)
+            self.insert(txt, tags=tag)
         self.reset()
 
     def _to_html(self, event=None):
@@ -157,12 +183,12 @@ class Textbox(Tk.Text):
                     text = '<{1}>{0}</{1}>'.format(text, style)
                 self.delete(start, end)
                 self.insert(text, start)
-    
+
     def modify_fontsize(self, size):
         self.font.config(size=size)
         self.config(font=self.font)
         for (name, key, style) in self.styles:
-            self.textbox.tag_config(name, **style)
+            self.tag_config(name, **style)
 
     def change_fontsize(self, event):
         sign = 1 if event.delta > 0 else -1
@@ -178,28 +204,51 @@ class Textbox(Tk.Text):
         spaces = re.match(r'^ *', self.get(*CURRLINE)).group(0)
         self.insert('\n' + spaces)
         return 'break'
-    
+
     def move_mark(self, mark, size):
         sign = '+' if size >= 0 else '-'
         size = abs(size)
         self.mark_set(INSERT, mark)
         self.mark_set(mark, f'{mark}{sign}{size}c')
-    
-    def match_brackets(self, event):
+
+    def insert_characters(self, event):
         key = event.char
+        keysym = event.keysym
+        code = event.keycode
+        styles = self.style.get()
+        if key.startswith('Control_'):
+            self.edit_modified(False)
+        elif key and key == keysym and event.num == '??':
+            if not self.match_brackets(key):
+                try:
+                    self.delete(*SELECTION)
+                    self.insert(key, Tk.SEL, tags=self.style.get())
+                except Tk.TclError:
+                    self.insert(key, tags=self.style.get())
+            return 'break'
+        elif keysym == 'Return':
+            spaces = re.sub(r'( *).*', r'\1', self.get(*CURRLINE))
+            self.insert(spaces, INSERT)
+            return 'break'
+        elif keysym not in {'BackSpace', 'Shift_L', 'Shift_R'}:
+            self.style.set('')
+
+    def match_brackets(self, key):
         if key in BRACKETS:
             try:
-                self.insert(key, Tk.SEL_FIRST)
-                self.insert(BRACKETS[key], Tk.SEL_LAST)
+                self.insert(key, Tk.SEL_FIRST, tags=self.current_styles)
+                self.insert(BRACKETS[key], Tk.SEL_LAST,
+                            tags=self.current_styles)
             except Tk.TclError:
-                self.insert(key + BRACKETS[key])
+                self.insert(key + BRACKETS[key], tags=self.current_styles)
                 self.move_mark(INSERT, -1)
-            return 'break'
-        
+            return True
+        return False
+
     def insert_tabs(self, event=None):
         self.insert(LINESTART, ' ' * 4)
         return 'break'
-    
+
     def remove_tabs(self, event=None):
         if self.get(*CURRLINE).startswith(' ' * 4):
             self.delete(LINESTART, LINESTART + '+4c')
@@ -208,18 +257,18 @@ class Textbox(Tk.Text):
     def select_all(self, event=None):
         self.select()
         return 'break'
-    
+
     def select(self, start, end):
         self.tag_add(Tk.SEL, start, end)
 
     def deselect_all(self, event=None):
         self.deselect()
         return 'break'
-    
-    def deselect(self, start, end):
+
+    def deselect(self, start=START, end=END):
         with ignored(Tk.TclError):
             self.tag_remove(Tk.SEL, start, end)
-    
+
     def copy_text(self, event=None):
         with ignored(Tk.TclError):
             self._copy(SELECTION)
@@ -284,14 +333,14 @@ class Textbox(Tk.Text):
         else:
             self.insert(text)
         self.tag_remove('', *ALL)
-    
+
     def delete_line(self, event=None):
         try:
             self.delete(*SEL_LINE)
         except Tk.TclError:
             self.delete(*CURRLINE)
         return 'break'
-    
+
     def backspace_word(self, event):
         if self.get_char(INSERT + '-1c') in '.,;:?! ':
             correction = '-2c wordstart'
@@ -301,7 +350,7 @@ class Textbox(Tk.Text):
             correction = '-1c wordstart'
         self.delete(INSERT + correction, INSERT)
         return 'break'
-    
+
     def delete_word(self, event):
         if (
             self.get_char(INSERT + '-1c') in ' .,;:?!\n' or
@@ -316,7 +365,7 @@ class Textbox(Tk.Text):
             correction = ' wordend'
         self.delete(INSERT, INSERT + correction)
         return 'break'
-    
+
     def move_line(self, event):
         self.insert('\n', END)  # ensures last line can be moved normally
         if self.compare(END, '==', INSERT):  # ensures last line can be...
@@ -336,7 +385,7 @@ class Textbox(Tk.Text):
     def commands(self):
         return [('<Control-MouseWheel>', self.change_fontsize),
                 ('<Return>', self.indent),
-                ('<KeyPress>', self.match_brackets),
+                ('<KeyPress>', self.insert_characters),
                 (('<Tab>', '<Control-]>'), self.insert_tabs),
                 (('<Shift-Tab>', '<Control-[>'), self.remove_tabs),
                 ('<Control-0>', self.reset_fontsize),
@@ -349,31 +398,26 @@ class Textbox(Tk.Text):
                 ('<Control-Delete>', self.delete_word),
                 (('<Control-Up>', '<Control-Down>'), self.move_line)]
 
-    @property
+    # @property
     def styles(self):
-        (strong, em, underline, small_caps, tinellbian,
-         example, ipa) = iter([self.font.copy() for _ in range(7)])
-        strong.configure(weight='bold')
-        em.configure(slant='italic')
-        underline.configure(underline=True, family='Calibri')
-        small_caps.configure(
-            family='Alegreya SC')
-        tinellbian.configure(
-            size=tinellbian.actual(option='size') + 3,
-            family='Tinellbian')
-        example.configure(size=-1)
-        ipa.configure(
-            family='lucida sans unicode')
-        return [
-            ('example', 'F',
-                dict(lmargin1='2c', spacing1='5m', foreground='white',
-                     font=example)),
-            ('example-no-lines', 'E', dict(lmargin1='2c', foreground='white',
-                                       font=example)),
-            ('strong', 'b', dict(font=strong)),
-            ('em', 'i', dict(font=em)),
-            ('small-caps', 'k', dict(font=small_caps)),
-            ('link', 'n', dict(foreground='blue', font=underline)),
-            ('bink', None, dict(foreground='red', font=underline)),
-            ('high-lulani', None, dict(font=tinellbian)),
-            ('ipa', 'I', dict(font=ipa))]
+        return (
+            [Style(fontface='Calibri', size=18, group='default'),
+             Style(name='example', key='F', tags=(
+                 '[f]', ''), lmargin1='2c', spacing1='5m', group='paragraph'),
+             Style(name='example-no-lines', key='e',
+                   tags=('[e]', ''), lmargin1='2c', group='paragraph'),
+             Style(name='bold', key='b', tags=(
+                 '<strong>', '</strong>'), bold=True),
+             Style(name='italics', key='i', tags=(
+                 '<em>', '</em>'), italics=True),
+             Style(name='small-caps', key='k', tags=('<small-caps>', '</small-caps>'),
+                        fontface='Alegreya SC'),
+             Style(name='links', key='n', tags=('<link>', '</link>'), underline=True,
+                        colour='blue'),
+             Style(name='broken-links', tags=('<bink>', '</bink>'), underline=True,
+                        colour='red'),
+             Style(name='tinellbian', tags=('<high-lulani>', '</high-lulani>'),
+                        fontface='Tinellbian'),
+             Style(name='ipa', key='I', tags=('<ipa>', '</ipa>'),
+                        fontface='Lucida Sans Unicode')
+             ])

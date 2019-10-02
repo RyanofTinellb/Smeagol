@@ -6,7 +6,7 @@ import tkinter.ttk as ttk
 import webbrowser as web
 from tkinter.ttk import Combobox
 
-from ..widgets import Textbox
+from ..widgets import Textbox, StylesWindow
 from ..translation import *
 from ..utils import *
 
@@ -66,11 +66,9 @@ class Editor(Tk.Frame):
         self.info_label = Tk.Label(
             master=master, textvariable=self.information,
             font=('Arial', 14), width=20)
-        self.current_style = Tk.StringVar()
-        self.current_style.set('')
         self.style_label = Tk.Label(
             master=master, font=('Arial', 12),
-            textvariable=self.current_style)
+            textvariable=self.textbox.style)
         self.blank_label = Tk.Label(master=master, height=1000)
 
     def ready_option_menu(self):
@@ -311,6 +309,12 @@ class Editor(Tk.Frame):
             editor.callback = callback
         self.master.withdraw()
         self.wait_window(top)
+
+    def edit_styles(self, event=None):
+        styles = self.textbox.styles
+        window = StylesWindow(styles)
+        self.wait_window(window)
+        self.textbox.styles = window.get()
     
     def _to_html(self):
         self.textbox._to_html()
@@ -332,14 +336,16 @@ class Editor(Tk.Frame):
 
     @property
     def menu_commands(self):
-        return [('Markdown', [
+        return [('Styles', [
+                 ('Edit', self.edit_styles),
+                 ('Apply', self._to_tkinter),
+                 ('Show as Ht_ml', self._to_html)]),
+                ('Markdown', [
                  ('Edit', self.markdown_edit),
                  ('Clear', self.markdown_clear),
                  ('Reset', self.markdown_reset),
                  ('Load', self.markdown_load),
                  ('Refresh', self.markdown_refresh),
-                 ('Change to _Tkinter', self._to_tkinter),
-                 ('Change to Ht_ml', self._to_html),
                  ('Open as _Html', self.markdown_open)])]
 
     @property
@@ -354,7 +360,7 @@ class Editor(Tk.Frame):
     
     @property
     def widgets(self):
-        return ['frames', 'menus', 'labels', 'option_menu', 'textbox']
+        return ['frames', 'menus', 'textbox', 'labels', 'option_menu']
 
     def quit(self):
         # with ignored(AttributeError):

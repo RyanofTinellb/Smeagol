@@ -3,8 +3,7 @@ import os
 import json
 import re
 from .addremovelinks import AddRemoveLinks
-from .templates_window import TemplatesWindow
-from .properties_window import PropertiesWindow
+from ..widgets import TemplatesWindow, PropertiesWindow
 from ..site.files import Files
 from ..site.site import Site
 from ..translation import *

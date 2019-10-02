@@ -11,7 +11,6 @@ from ..defaults import default
 
 from .editor import *
 from .interface import Interface
-from .properties_window import PropertiesWindow
 
 
 class SiteEditor(Interface, Editor):
