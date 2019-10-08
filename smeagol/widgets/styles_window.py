@@ -1,145 +1,210 @@
-from collections import namedtuple
-from copy import deepcopy
-from tkinter.colorchooser import askcolor as askcolour
-from tkinter.font import families as font_families
-from tkinter.font import Font
 import tkinter as Tk
-from tkinter.ttk import Notebook, Combobox
-Tk.Notebook = Notebook
-Tk.Combobox = Combobox
+import tkinter.ttk as ttk
+import tkinter.colorchooser as ColourChooser
+from tkinter.font import Font
+from tkinter.font import families as font_families
 
-Widget = namedtuple('Widget', 'widget command text')
 
-class StylesWindow(Tk.Toplevel):
-    def __init__(self, styles=None, master=None):
+class StylesWindow(Tk.Frame):
+    def __init__(self, styles, master=None):
         super().__init__(master)
-        self.styles = styles or []
-        self.notebook = Tk.Notebook(self)
-        font_frame = Tk.Frame(self.notebook)
-        paragraph_frame = Tk.Frame(self.notebook)
-        self.notebook.add(font_frame)
-        self.notebook.add(paragraph_frame)
-        for frame in (font_frame, paragraph_frame):
-            for column, label in enumerate(('Start Tag', 'End Tag', 'Name')):
-                label = Tk.Label(frame, text=label, width=15)
-                label.grid(row=0, column=column, sticky='we')
-        font_frame.row = para_frame.row = 0
-        for style in self.styles:
-            frame = font_frame if style.font else paragraph_frame
-            for column, box in enumerate(self.input_row(style)):
-                box.widget.grid(row=frame.row, column=column, sticky='ns')
-                frame.row += 1
+        self.styles = [s.copy() for s in styles]
+        notebook = ttk.Notebook(self)
+        notebook.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
+        frame = StyleFrame(notebook, self.style_group('default')[0])
+        notebook.add(frame, text='default')
 
-    def edit(self, style):
-        self.open_format_window(style)
-
-    def new(self):
-        style = blank_style
-        self.open_format_window(style)
-
-    def open_format_window(self, style):
-        window = FormatWindow(style)
-        self.master.withdraw()
-        self.wait_window(window)
-
-    def input_row(self, style):
-        tags = style.get('tags', ('', ''))
-        tags = [self.tag_box(tag) for tag in tags]
-        name_box = self.name_box(style)
-        edit_button = self.edit_button(style)
-        name_box.widget.bind('<Double-Button-1>', edit_button['command'])
-        return tags + [name_box, edit_button]
-
-    def edit_button(self, style):
-        def handler(event=None, style=style):
-            self.edit(style)
-            return 'break'
-        btn = Tk.Button(self, text='Edit', command=handler)
-        return Widget(widget=btn, command=handler)
-
-    def tag_box(self, tag):
-        text = Tk.StringVar()
-        text.set(tag.replace('\n', '\\n'))
-        entry = Tk.Entry(self, width=15, textvariable=text)
-        return Widget(widget=entry, text=text)
-
-    def name_box(self, style):
-        font = Font(**style.get('font', {}))
-        box = Tk.Text(self, width=50, height=2)
-        box.tag_config('x', font=font, **style.get('paragraph', {}))
-        box.insert(1.0, style.get('name', ''), ('x'))
-        return Widget(widget=box)
+    def style_group(self, name):
+        return [s for s in self.styles if s.group == name]
 
 
-class FormatWindow(Tk.Toplevel):
-    def __init__(self, style, master=None):
-        super().__init__(master)
-        self.notebook = Tk.Notebook(self)
-        self.notebook.pack()
-        self.notebook.add(FontMenu(self.notebook, style), text='Font')
-        self.notebook.add(ParagraphMenu(
-            self.notebook, style), text='Paragraph')
-
-
-class FontMenu(Tk.Frame):
+class StyleFrame(Tk.Frame):
     def __init__(self, master=None, style=None):
         super().__init__(master)
-        self.style = deepcopy(style)
-        for elt in 'frames', 'labels', 'buttons', 'colours', 'fonts', 'checks', 'radios':
-            try:
-                getattr(self, f'ready_{elt}')(style)
-            except TypeError:
-                getattr(self, f'ready_{elt}')()
+        self.style = style.copy()
+        self.is_disabled = 'disabled' if self.style.group == 'font' else 'readonly'
+        self.spinners = []
+        self.units = 'points', 'millimetres', 'centimetres', 'inches'
+        types = {str: Tk.StringVar, bool: Tk.BooleanVar,
+                 float: Tk.DoubleVar, int: Tk.IntVar}
+        for attr, value in self.style.items():
+            setattr(self, attr, types[type(value)]())
+        for attr, value in self.style.items():
+            if attr == 'unit':
+                value = [v for v in self.units if v.startswith(value[0])][0]
+            getattr(self, attr).set(value)
+        self.font_frame(self).grid(row=0, column=0, rowspan=2, sticky='w')
+        self.para_frame(self).grid(row=0, column=1, sticky='nw')
+        self.colour_frame(self).grid(row=1, column=1, sticky='nw')
+        self.sample_frame(self).grid(row=2, column=0, columnspan=2)
 
-    def ready_frames(self):
-        self.variant = Tk.LabelFrame(self)
-        self.variant.grid(row=2, column=0)
-        self.script = Tk.LabelFrame(self)
-        self.script.grid(row=2, column=1)
-    
-    def ready_buttons(self):
-        pass
+    def colour_frame(self, master=None):
+        frame = ttk.LabelFrame(master, text='colour')
+        selectors = ('text', 'colour'), ('background', 'background')
+        for col, (name, attr) in enumerate(selectors):
+            var = getattr(self, attr)
+            ttk.Label(frame, text=name, padding=(
+                15, 0, 5, 0)).grid(row=0, column=2*col)
+            btn = Tk.Button(frame, background=var.get(),
+                            width=2)
 
-    def ready_fonts(self):
-        fonts = sorted(
-            list(filter(lambda x: not x.startswith('@'), font_families())))
-        font_entry = Tk.Combobox(self, values=fonts)
-        font_entry.grid(row=1, column=0)
+            def handler(name=name, attr=attr, var=var, frame=frame, btn=btn):
+                rgb, colour = ColourChooser.askcolor(
+                    initialcolor=var.get(), parent=frame, title=name)
+                if colour:
+                    var.set(colour)
+                    self.update_config(attr, var)
+                    btn.config(background=colour)
+            btn.grid(row=0, column=2*col+1)
+            btn.config(command=handler)
+        return frame
 
-    def ready_colours(self, style):
-        foreground = dict(name='colour', attr='foreground')
-        background = dict(name='background', attr='background')
-        for column, elt in enumerate((foreground, background), start=2):
-            elt['colour'] = style['paragraph'][elt['attr']]
-            button = Tk.Button(self, background=elt['colour'])
+    def font_frame(self, master=None):
+        frame = ttk.LabelFrame(master, text='font')
+        self.family_box(frame).grid(row=0, column=0)
+        self.size_box(frame).grid(row=0, column=1)
+        self.styling_frame(frame).grid(row=1, column=0, sticky='w')
+        self.offset_frame(frame).grid(row=1, column=1)
+        return frame
 
-            def command(elt=elt, button=button):
-                default, title, attr = [elt[attr]
-                                        for attr in ('colour', 'name', 'attr')]
-                colour = askcolour(default, title=title)
-                button.configure(background=colour)
-                style['paragraph'][attr] = colour
-            button.configure(command=command)
-            button.grid(row=1, column=column)
+    def family_box(self, master=None):
+        families = sorted(
+            [f for f in font_families() if not f.startswith('@')])
 
-    def ready_labels(self):
-        attrs = ('name', 'master', 'row', 'column')
-        Label = namedtuple('Label', attrs)
-        for label in (Label('font', self, 0, 0), Label('size', self, 0, 1),
-                      Label('colour', self, 0, 2),
-                      Label('background', self, 0, 3),
-                      Label('bold', self.variant, 0, 1),
-                      Label('italics', self.variant, 1, 1),
-                      Label('underline', self.variant, 2, 1),
-                      Label('strikethrough', self.variant, 3, 1),
-                      Label('superscript', self.script, 0, 1),
-                      Label('baseline', self.script, 1, 1),
-                      Label('subscript', self.script, 2, 1)):
-            name, master, row, column = [getattr(label, attr) for attr in attrs]
-            label = Tk.Label(master, text=name)
-            label.grid(row=row, column=column)
+        def handler(*args):
+            self.update_config('font', self.font)
+        box = ttk.Combobox(master, width=20, values=families,
+                           textvariable=self.font)
+        box.bind('<<ComboboxSelected>>', handler)
+        return box
 
+    def size_box(self, master=None):
+        def handler(*args):
+            self.update_config('size', self.size)
+        box = ttk.Spinbox(master, width=5, from_=1, to=72,
+                          textvariable=self.size, command=handler)
+        return box
 
-class ParagraphMenu(Tk.Frame):
-    def __init__(self, master=None, style=None):
-        super().__init__(master)
+    def styling_frame(self, master=None):
+        frame = Tk.Frame(master)
+        attrs = 'bold', 'italics', 'underline', 'strikethrough', 'border'
+        for row, attr in enumerate(attrs, start=1):
+            var = getattr(self, attr)
+
+            def handler(attr=attr, var=var):
+                self.update_config(attr, var)
+            btn = Tk.Checkbutton(frame, text=attr, var=var, command=handler)
+            btn.grid(row=row, column=0, sticky='w')
+        return frame
+
+    def offset_frame(self, master=None):
+        frame = ttk.LabelFrame(master, text='offset')
+        attrs = 'superscript', 'baseline', 'subscript'
+
+        def handler(*args):
+            self.update_config('offset', self.offset)
+        for row, attr in enumerate(attrs):
+            Tk.Radiobutton(frame, text=attr, variable=self.offset,
+                           value=attr, command=handler).grid(row=row, column=0, sticky='w')
+        return frame
+
+    def para_frame(self, master=None):
+        frame = Tk.LabelFrame(master, text='paragraph')
+        self.direction_frame(frame).grid(row=0, column=1)
+        self.leftovers_frame(frame).grid(row=0, column=0)
+        self.units_frame(frame).grid(row=1, column=0, columnspan=2)
+        return frame
+
+    def direction_frame(self, master=None):
+        frame = ttk.LabelFrame(
+            master, text='margins and padding', padding=10)
+        spinners = (('left', 1, 0), ('top', 0, 1),
+                    ('right', 1, 2), ('bottom', 2, 1))
+        self.spinners += [self.spinner(frame, *s) for s in spinners]
+        return frame
+
+    def spinner(self, master, name, row, column):
+        decimals = self.unit.get()[0] in 'ci'
+        rounding = float if decimals else int
+        var = getattr(self, name)
+
+        def handler(name=name, var=var):
+            self.update_config(name, var)
+        spinner = ttk.Spinbox(master, width=5, from_=0, to=40,
+                              increment=0.1 if decimals else 1,
+                              textvariable=var, command=handler, state=self.is_disabled)
+        spinner.grid(row=row, column=column)
+        return spinner
+
+    def leftovers_frame(self, master=None):
+        frame = Tk.Frame(master, padx=10)
+        spinners = (('indent', 0, 1), ('line_spacing', 1, 1))
+        self.spinners += [self.spinner(frame, *s) for s in spinners]
+        labels = 'indent', 'line spacing', 'justification'
+        for row, name in enumerate(labels):
+            ttk.Label(frame, text=name, padding=(5, 0)).grid(
+                row=row, column=0, sticky='e')
+        self.justify(frame).grid(row=2, column=1)
+        return frame
+
+    def justify(self, master=None):
+        def handler(*args):
+            self.update_config('justification', self.justification)
+        box = ttk.Combobox(master, width=6, values=('left', 'centre', 'right'),
+                           textvariable=self.justification, state=self.is_disabled)
+        box.bind('<<ComboboxSelected>>', handler)
+        return box
+
+    def sample_frame(self, master=None):
+        frame = Tk.LabelFrame(master, text='sample')
+        self.sample = self.sample_box(frame)
+        self.sample.pack()
+        return frame
+
+    def sample_box(self, master=None):
+        box = Tk.Text(master, height=5, width=30)
+        self.font_ = Font(box, **self.style._font)
+        font = Font(box, **self.style._font)
+        box.tag_configure('default', font=self.font_, **
+                          self.style.paragraph)
+        box.config(font=font, wrap='word', **self.style.config)
+        lorem = ('Lorem ipsum dolor sit amet, consectetur adipiscing elit, '
+                 'sed do eiusmod tempor incididunt ut labore et dolore '
+                 'magna aliqua. Ut enim ad minim veniam, quis nostrud '
+                 'exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.')
+        box.insert(1.0, lorem, 'default')
+        return box
+
+    def units_frame(self, master=None):
+        frame = Tk.Frame(master)
+        ttk.Label(frame, text='units').grid(row=0, column=0)
+
+        def handler(*args):
+            self.update_config('unit', self.unit)
+        selector = ttk.Combobox(frame, state='readonly',
+                                textvariable=self.unit, values=self.units)
+        selector.bind('<<ComboboxSelected>>', handler)
+        selector.grid(row=0, column=1)
+        return frame
+
+    def update_config(self, name, variable):
+        box = self.sample
+        setattr(self.style, name, variable.get())
+        self.font_.config(**self.style._font)
+        box.tag_configure('default', font=self.font_,
+                          **self.style.paragraph)
+        if name == 'unit':
+            self.settle_spinners()
+
+    def settle_spinners(self):
+        decimals = self.unit.get()[0] in 'ci'
+        rounding = float if decimals else int
+        for spinner in self.spinners:
+            spinner.config(format='%.1f' if decimals else '',
+                           increment=0.1 if decimals else 1,
+                           from_=rounding(0),
+                           to=rounding(40))
+        attrs = 'line_spacing', 'indent', 'top', 'left', 'bottom', 'right'
+        for attr in attrs:
+            var = getattr(self, attr)
+            var.set(rounding(var.get()))

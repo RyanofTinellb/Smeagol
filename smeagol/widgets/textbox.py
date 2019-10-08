@@ -400,24 +400,23 @@ class Textbox(Tk.Text):
 
     # @property
     def styles(self):
-        return (
-            [Style(fontface='Calibri', size=18, group='default'),
-             Style(name='example', key='F', tags=(
-                 '[f]', ''), lmargin1='2c', spacing1='5m', group='paragraph'),
-             Style(name='example-no-lines', key='e',
-                   tags=('[e]', ''), lmargin1='2c', group='paragraph'),
-             Style(name='bold', key='b', tags=(
+        return [
+            Style(font='Calibri', size=18, group='default'),
+            Style(name='example', key='F', tags=(
+                '[f]', ''), lmargin1='2c', spacing1='5m', group='paragraph'),
+            Style(name='example-no-lines', key='e',
+                  tags=('[e]', ''), lmargin1='2c', group='paragraph'),
+            Style(name='bold', key='b', tags=(
                  '<strong>', '</strong>'), bold=True),
-             Style(name='italics', key='i', tags=(
+            Style(name='italics', key='i', tags=(
                  '<em>', '</em>'), italics=True),
-             Style(name='small-caps', key='k', tags=('<small-caps>', '</small-caps>'),
-                        fontface='Alegreya SC'),
-             Style(name='links', key='n', tags=('<link>', '</link>'), underline=True,
+            Style(name='small-caps', key='k', tags=('<small-caps>', '</small-caps>'),
+                        font='Alegreya SC'),
+            Style(name='links', key='n', tags=('<link>', '</link>'), underline=True,
                         colour='blue'),
-             Style(name='broken-links', tags=('<bink>', '</bink>'), underline=True,
+            Style(name='broken-links', tags=('<bink>', '</bink>'), underline=True,
                         colour='red'),
-             Style(name='tinellbian', tags=('<high-lulani>', '</high-lulani>'),
-                        fontface='Tinellbian'),
-             Style(name='ipa', key='I', tags=('<ipa>', '</ipa>'),
-                        fontface='Lucida Sans Unicode')
-             ])
+            Style(name='tinellbian', tags=('<high-lulani>', '</high-lulani>'),
+                        font='Tinellbian'),
+            Style(name='ipa', key='I', tags=('<ipa>', '</ipa>'),
+                        font='Lucida Sans Unicode')]
