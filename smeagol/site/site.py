@@ -39,6 +39,8 @@ class Site:
                     tree = json.load(source)
             except FileNotFoundError:
                 raise SourceFileNotFoundError
+        else:
+            raise SourceFileNotFoundError
         self.tree = tree
 
     def __getattr__(self, attr):

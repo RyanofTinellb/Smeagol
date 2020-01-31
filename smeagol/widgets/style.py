@@ -1,5 +1,7 @@
 import re
 import json
+from contextlib import contextmanager
+from tkinter.font import Font
 
 '''
 properties:
@@ -22,11 +24,23 @@ properties:
     top, bottom, line_spacing (int) => paragraph.{spacing1, spacing2, spacing3}
 '''
 
-defaults = dict(name='default', key=None, tags=('', ''), group='default', font='Calibri', size=18,
+defaults = dict(name='default', key='', tags=['', ''], group='font', font='Calibri', size=12,
                 bold=False, italics=False, underline=False, strikethrough=False,
                 offset='baseline', colour='black', background='white', border=False,
                 justification='left', unit='cm', indent=0.0, line_spacing=0.0,
-                left=0.0, right=0.0, top=0.0, bottom=0.0)
+                left=0.0, right=0.0, top=0.0, bottom=0.0, language=False, hyperlink=False)
+
+attrs = ('group', 'key', 'font', 'size', 'bold', 'italics', 'underline', 'strikethrough', 'offset',
+         'colour', 'background', 'border', 'justification', 'unit', 'left', 'right',
+         'top', 'bottom', 'indent', 'line_spacing', 'language', 'hyperlink')
+
+
+@contextmanager
+def ignored(*exceptions):
+    try:
+        yield
+    except exceptions:
+        pass
 
 
 def _int_part(_dict, key):
@@ -42,7 +56,6 @@ def _int_part(_dict, key):
 
 class Style:
     def __init__(self, **style):
-        self.style = style
         if style.get('group', None) == 'default':
             for attr, value in style.items():
                 if attr == 'size':
@@ -50,32 +63,28 @@ class Style:
                 setattr(self, attr, value)
                 defaults[attr] = value
         else:
-            self.validate(style)
             for attr, value in style.items():
                 setattr(self, attr, value)
-
-    def validate(self, style):
-        for attr in ['name', 'tags']:
-            if style.get(attr, None) is None:
-                raise TypeError(
-                    f'{type(self).__name__} object must have attribute "{attr}"')
 
     def __getattr__(self, attr):
         if attr in {'_font', 'paragraph'}:
             super().__setattr__(attr, {})
             return getattr(self, attr)
-        elif attr == 'config':
-            return self.paragraph if self.group != 'default' else self.textbox_configuration
         elif attr == 'rounding':
             return int if self.unit[0] in 'mp' else float
+        elif attr == 'group':
+            return 'font'
+        elif attr == 'defaults':
+            return defaults
+        elif attr == 'Font':
+            return Font(**self._font)
         else:
             return defaults[attr]
 
     def __setattr__(self, attr, value):
         if attr in ('left', 'right', 'top', 'bottom', 'line_spacing', 'indent'):
-            super().__setattr__(attr, self.rounding(value))
-        else:
-            super().__setattr__(attr, value)
+            value = self.rounding(value)
+        super().__setattr__(attr, value)
         if attr == 'font':
             self._font['family'] = value
         elif attr == 'size':
@@ -117,7 +126,8 @@ class Style:
             self.paragraph['spacing2'] = self.add_unit(value)
         elif attr == 'tags':
             start, end = value
-            para = '' if end.endswith('\n') else '\n'
+            para = '' if end.endswith(
+                '\n') or self.group != 'paragraph' else '\n'
             super().__setattr__(attr, (start, f'{end}{para}'))
         elif attr == 'group':
             start, end = self.tags
@@ -125,9 +135,6 @@ class Style:
             self.tags = start, f'{end}{para}'
         elif attr == 'unit':
             self._change_units(value)
-        elif attr not in {'name', 'key', 'tags', '_font', 'paragraph', 'style'}:
-            raise AttributeError(
-                f'{type(self).__name__} object has no attribute "{attr}"')
 
     def add_unit(self, value):
         return f'{value}{self.unit[0]}'
@@ -166,31 +173,40 @@ class Style:
         left2 = self.add_unit(value)
         return left1, left2
 
-    @property
-    def textbox_configuration(self):
-        values = self.paragraph
-        keys = ('background', 'borderwidth', 'foreground', 'relief',
-                'spacing1', 'spacing2', 'spacing3')
-        output = {}
-        for key in keys:
-            if key in values:
-                output[key] = values[key]
-        if 'lmargin1' in values or 'rmargin' in values:
-            margins = 'lmargin1', 'rmargin'
-            output['padx'] = self.add_unit(
-                sum([_int_part(values, x) for x in margins]) // 2)
-        if 'spacing1' in values or 'spacing3' in values:
-            margins = 'spacing1', 'spacing3'
-            output['pady'] = self.add_unit(
-                sum([_int_part(values, x) for x in margins]) // 2)
-        return output
-
     def copy(self):
         return Style(**self.style.copy())
 
-    def items(self):
-        attrs = ('font', 'size', 'bold', 'italics', 'underline', 'strikethrough', 'offset',
-                 'colour', 'background', 'border', 'justification', 'unit', 'left', 'right',
-                 'top', 'bottom', 'indent', 'line_spacing')
+    def items(self, attrs=attrs):
         for attr in attrs:
             yield attr, getattr(self, attr)
+
+    def unique_items(self, attrs=attrs, defaults=defaults):
+        for attr in ('name', 'tags') + attrs:
+            value = getattr(self, attr)
+            if value != defaults[attr] or attr == 'group' or self.group == 'default':
+                yield attr, value
+
+    @property
+    def style(self, defaults=defaults):
+        return dict(self.unique_items(defaults=defaults))
+
+
+class Styles:
+    def __init__(self, styles=None):
+        styles = styles or {}
+        with ignored(TypeError):
+            styles = json.loads(styles)
+        self.styles = {'default': Style(name='default')}
+        self.styles.update({n: Style(name=n, **s) for n, s in styles.items()})
+    
+    def __iter__(self):
+        return iter(self.styles.values())
+    
+    def __getitem__(self, name):
+        return self.styles[name]
+
+    def dict_copy(self):
+        return {n: s.copy() for n, s in self.styles.items()}
+    
+    def update(self, styles):
+        self.styles = styles

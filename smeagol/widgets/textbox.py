@@ -1,10 +1,12 @@
 import re
 import json
 import tkinter as Tk
+from itertools import cycle
 from tkinter.scrolledtext import ScrolledText
 from tkinter.font import Font
 from ..utils import ignored
 from .style import Style
+from ..translation import Translator
 
 START = '1.0'
 END = 'end-1c'
@@ -25,19 +27,39 @@ BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
 
 
 class Textbox(Tk.Text):
-    def __init__(self, master, font='Calibri'):
-        self.font = Font(family=font, size=18)
+    def __init__(self, master=None, styles=None):
         super().__init__(master, height=1, width=1, wrap=Tk.WORD,
-                         undo=True, font=self.font)
+                         undo=True)
+        self.translator = Translator()
+        if styles:
+            self.styles = styles
+            self.font = styles['default'].Font
+        else:
+            self.styles = {}
+            self.font = Font(family='Calibri', size=18)
         self.ready()
+
+    def ready(self):
+        self.info = dict(wordcount=Tk.StringVar(), randomwords=Tk.StringVar(),
+                         style=Tk.StringVar(), language=Tk.StringVar())
+        self.languages = self.translator.languages
+        self.language.set(self.translator.fullname)
+        self.add_commands()
+        self.config(font=self.font)
 
     def __getattr__(self, attr):
         if attr == 'text':
             return self.get()
-        elif attr == 'current_styles':
+        elif attr == 'current_style':
             return self.style.get().split()
+        elif attr == 'language_code':
+            if language := self.language.get():
+                return language[:2]
         else:
-            return getattr(super(), attr)
+            try:
+                return self.info[attr]
+            except KeyError:
+                return getattr(super(), attr)
 
     def __setattr__(self, attr, value):
         if attr == 'text':
@@ -45,50 +67,40 @@ class Textbox(Tk.Text):
         else:
             super().__setattr__(attr, value)
 
-    def _add_style(self, name):
-        styles = set(self.current_styles)
-        styles.add(name)
-        self.style.set(' '.join(styles))
+    def clear_style(self, styles):
+        self.tag_remove(styles, Tk.INSERT)
 
-    def _remove_style(self, name):
-        styles = set(self.current_styles)
-        styles.discard(name)
-        self.style.set(' '.join(styles))
-
-    def ready(self):
-        self.add_commands()
-        self.style = Tk.StringVar()
-        self.set_styles()
+    def clear_styles(self):
+        self.style.set('')
 
     def set_styles(self):
         self.style.set('')
-        for styleset in zip(self.styles(), ('default', 'font', 'paragraph')):
-            self._set_styles(*styleset)
+        for style in self.styles:
+            self._set_style(style)
 
-    def _set_styles(self, styles, group='default'):
-        for style in styles:
-            style.group = group
-            name = style.name
-            key = style.key
-            font = style.Font
-            self.tag_config(name, font=font, **style.paragraph)
-            if key:
-                def command(event, name=name, style=style):
-                    print(style)
-                    self.change_style(name)
-                    return 'break'
-                self.bind(f'<Control-{key}>', command)
+    def _set_style(self, style):
+        name = style.name
+        key = style.key
+        font = style.Font
+        self.tag_config(name, font=font, **style.paragraph)
+        if style.language:
+            for language in self.languages:
+                language = language[:2]
+                self.tag_config(f'{name}-{language}',
+                                font=font, **style.paragraph)
+        if key:
+            def command(event, name=name, style=style):
+                self.change_style(name, style.language)
+                return 'break'
+            self.bind(f'<Control-{key}>', command)
 
-    def add_commands(self):
-        for keys, command in self.commands:
-            if isinstance(keys, str):
-                self.bind(keys, command)
-            else:
-                for key in keys:
-                    self.bind(key, command)
+    def change_style(self, name, language=False):
+        if language and (code := self.language_code):
+            name += f'-{code}'
+        self._change_style(name)
 
-    def change_style(self, name):
-        if name in self.current_styles:
+    def _change_style(self, name):
+        if name in self.current_style:
             self._remove_style(name)
             with ignored(Tk.TclError):
                 self.tag_remove(name, *SELECTION)
@@ -96,7 +108,30 @@ class Textbox(Tk.Text):
             self._add_style(name)
             with ignored(Tk.TclError):
                 self.tag_add(name, *SELECTION)
-        return 'break'
+
+    def _add_style(self, name):
+        try:
+            if self.is_html:
+                self._from_html()
+        except AttributeError:
+            self._from_html()
+        styles = set(self.current_style)
+        styles.add(name)
+        self.style.set(' '.join(styles))
+
+    def _remove_style(self, name):
+        styles = set(self.current_style)
+        styles.discard(name)
+        self.style.set(' '.join(styles))
+
+    def add_commands(self):
+        self.set_styles()
+        for keys, command in self.commands:
+            if isinstance(keys, str):
+                self.bind(keys, command)
+            else:
+                for key in keys:
+                    self.bind(key, command)
 
     @property
     def wordcount(self):
@@ -141,48 +176,51 @@ class Textbox(Tk.Text):
         if self.style.get() not in self.tag_names(INSERT):
             self.style.set('')
 
-    def _to_tkinter(self):
-        texts = re.split(r'(\[[ef] *\]|<.*?>)', self.text)
-        paras = dict(e='example-no-lines', f='example')
-        styles = {'em', 'strong', 'high-lulani', 'small-caps', 'link', 'bink',
-                  'ipa'}
-        tag = None
-        txt = ''
-        self.clear()
-        for text in texts:
-            if re.match(r'\[[ef] *\]', text):
-                self.insert(f'{text[1]} ', tags=paras[text[1]])
-                continue
+    def _from_html(self):
+        with ignored(AttributeError):
+            if not self.is_html:
+                return
+        self.is_html = False
+
+        def _tag(text):
+            if text.startswith('/'):
+                return 'tagoff', text[1:], None
             else:
-                new_tag = re.sub(r'</*(.*?)>', r'\1', text)
-                if text.startswith('</'):
-                    if new_tag in styles:
-                        tag = None
-                        txt = ''
-                    else:
-                        txt = text
-                elif text.startswith('<'):
-                    if new_tag in styles:
-                        tag = new_tag
-                        txt = ''
-                    else:
-                        txt = text
-                else:
-                    txt = text
-            self.insert(txt, tags=tag)
+                return 'tagon', text, None
+
+        def _text(text):
+            return 'text', text, None
+
+        text = re.split('[<>]', self.text)
+        text = [f(x) for f, x in zip(cycle([_text, _tag]), text)]
+        text = f'\x08{json.dumps(text, indent=2)}'
+        self._paste(borders=ALL, text=text)
         self.reset()
 
     def _to_html(self, event=None):
-        for style, _, _ in self.styles:
-            for start, end in zip(*[iter(self.tag_ranges(style))] * 2):
-                if style.startswith('example'):
-                    text = self.get(start, end)[0]
-                    text = f'[{text}]'
-                else:
-                    text = self.get(start, end)
-                    text = '<{1}>{0}</{1}>'.format(text, style)
-                self.delete(start, end)
-                self.insert(text, start)
+        with ignored(AttributeError):
+            if self.is_html:
+                return
+        self.is_html = True
+        self.clear_styles()
+        tags = []
+        text = self.formatted_text
+        self.delete(*ALL)
+        for key, value, index in text:
+            if key == 'mark' and value == INSERT:
+                self.mark_set(USER_MARK, INSERT)
+                self.mark_gravity(USER_MARK, Tk.LEFT)
+            elif key == 'tagon':
+                tags.append(value)
+                self.insert(f'<{value}>')
+            elif key == 'text':
+                self.insert(value)
+            elif key == 'tagoff':
+                value = tags.pop()
+                self.insert(f'</{value}>')
+        tags.reverse()
+        for tag in tags:
+            self.insert(f'</{tag}>')
 
     def modify_fontsize(self, size):
         self.font.config(size=size)
@@ -205,26 +243,26 @@ class Textbox(Tk.Text):
         self.insert('\n' + spaces)
         return 'break'
 
-    def move_mark(self, mark, size):
-        sign = '+' if size >= 0 else '-'
-        size = abs(size)
+    def move_mark(self, mark, dist):
+        sign = '+' if dist >= 0 else '-'
+        dist = abs(dist)
         self.mark_set(INSERT, mark)
-        self.mark_set(mark, f'{mark}{sign}{size}c')
+        self.mark_set(mark, f'{mark}{sign}{dist}c')
 
     def insert_characters(self, event):
         key = event.char
         keysym = event.keysym
         code = event.keycode
-        styles = self.style.get()
-        if key.startswith('Control_'):
+        styles = self.current_style
+        if keysym.startswith('Control_'):
             self.edit_modified(False)
-        elif key and key == keysym and event.num == '??':
+        elif key and keysym in (key, 'space') and event.num == '??':
             if not self.match_brackets(key):
                 try:
                     self.delete(*SELECTION)
-                    self.insert(key, Tk.SEL, tags=self.style.get())
+                    self.insert(key, Tk.SEL, tags=styles)
                 except Tk.TclError:
-                    self.insert(key, tags=self.style.get())
+                    self.insert(key, tags=styles)
             return 'break'
         elif keysym == 'Return':
             spaces = re.sub(r'( *).*', r'\1', self.get(*CURRLINE))
@@ -232,15 +270,15 @@ class Textbox(Tk.Text):
             return 'break'
         elif keysym not in {'BackSpace', 'Shift_L', 'Shift_R'}:
             self.style.set('')
-
+        
     def match_brackets(self, key):
         if key in BRACKETS:
             try:
-                self.insert(key, Tk.SEL_FIRST, tags=self.current_styles)
+                self.insert(key, Tk.SEL_FIRST, tags=self.current_style)
                 self.insert(BRACKETS[key], Tk.SEL_LAST,
-                            tags=self.current_styles)
+                            tags=self.current_style)
             except Tk.TclError:
-                self.insert(key + BRACKETS[key], tags=self.current_styles)
+                self.insert(key + BRACKETS[key], tags=self.current_style)
                 self.move_mark(INSERT, -1)
             return True
         return False
@@ -311,28 +349,20 @@ class Textbox(Tk.Text):
         except Tk.TclError:
             return
         if text.startswith('\x08'):
-            tag = ''
-            sel = ''
+            styles = []
             tags = json.loads(text[1:])
             for key, value, index in tags:
                 if key == 'mark' and value == INSERT:
                     self.mark_set(USER_MARK, INSERT)
                     self.mark_gravity(USER_MARK, Tk.LEFT)
-                if key == 'tagon':
-                    if value == Tk.SEL:
-                        sel = Tk.SEL
-                    else:
-                        tag = value
+                elif key == 'tagon':
+                    styles.append(value)
                 elif key == 'text':
-                    self.insert(value, (tag, sel))
+                    self.insert(value, tags=styles)
                 elif key == 'tagoff':
-                    if value == Tk.SEL:
-                        sel = ''
-                    else:
-                        tag = ''
+                    styles.remove(value)
         else:
             self.insert(text)
-        self.tag_remove('', *ALL)
 
     def delete_line(self, event=None):
         try:
@@ -397,26 +427,3 @@ class Textbox(Tk.Text):
                 ('<Control-BackSpace>', self.backspace_word),
                 ('<Control-Delete>', self.delete_word),
                 (('<Control-Up>', '<Control-Down>'), self.move_line)]
-
-    # @property
-    def styles(self):
-        return [
-            Style(font='Calibri', size=18, group='default'),
-            Style(name='example', key='F', tags=(
-                '[f]', ''), lmargin1='2c', spacing1='5m', group='paragraph'),
-            Style(name='example-no-lines', key='e',
-                  tags=('[e]', ''), lmargin1='2c', group='paragraph'),
-            Style(name='bold', key='b', tags=(
-                 '<strong>', '</strong>'), bold=True),
-            Style(name='italics', key='i', tags=(
-                 '<em>', '</em>'), italics=True),
-            Style(name='small-caps', key='k', tags=('<small-caps>', '</small-caps>'),
-                        font='Alegreya SC'),
-            Style(name='links', key='n', tags=('<link>', '</link>'), underline=True,
-                        colour='blue'),
-            Style(name='broken-links', tags=('<bink>', '</bink>'), underline=True,
-                        colour='red'),
-            Style(name='tinellbian', tags=('<high-lulani>', '</high-lulani>'),
-                        font='Tinellbian'),
-            Style(name='ipa', key='I', tags=('<ipa>', '</ipa>'),
-                        font='Lucida Sans Unicode')]

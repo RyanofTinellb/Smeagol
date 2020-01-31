@@ -16,7 +16,7 @@ from .interface import Interface
 class SiteEditor(Interface, Editor):
     def __init__(self, master=None, config_file=None, tests=None):
         super().__init__(master=master,
-                         config=config_file,
+                         file_=config_file,
                          caller=self.caller)
         self.entry = dict(position='1.0')
         self.start_server(port=41809)
@@ -26,7 +26,7 @@ class SiteEditor(Interface, Editor):
 
     def __getattr__(self, attr):
         if attr in {'textbox', 'entry'}:
-            return getattr(self.current_tab, attr)
+            return getattr(self.tab, attr)
         elif attr in {'font'}:
             return getattr(self.textbox, attr)
         elif attr.startswith('entry_'):
@@ -49,7 +49,7 @@ class SiteEditor(Interface, Editor):
                 else:
                     self.entry.pop(attr, '')
         elif attr in {'textbox', 'entry'}:
-            setattr(self.current_tab, attr, value)
+            setattr(self.tab, attr, value)
         else:
             super().__setattr__(attr, value)
 
@@ -57,17 +57,12 @@ class SiteEditor(Interface, Editor):
     def caller(self):
         return 'site'
 
-    @property
-    def current_tab(self):
-        return self.notebook.nametowidget(self.notebook.select())
-
     def setup_linguistics(self):
         super().setup_linguistics()
-        self.languagevar = Tk.StringVar()
-        self.languagevar.set(self.translator.fullname)
+        self.info['language'].set(self.translator.fullname)
 
     def change_language(self, event=None):
-        self.language = self.languagevar.get()
+        self.language = self.info['language'].get()
         self.randomwords.sample_texts = self.sample_texts
         for obj in (self.translator, self.randomwords):
             obj.select(self.language[:2])
@@ -96,22 +91,6 @@ class SiteEditor(Interface, Editor):
                                      textvariable=self.save_text, width=10)
         self.buttons = [self.load_button, self.save_button]
 
-    def ready_textbox(self):
-        self.ready_notebook()
-
-    def new_textbox(self, master):
-        textbox = Textbox(master)
-        self.add_commands(textbox, self.textbox_commands)
-        return textbox
-
-    def ready_notebook(self):
-        self.closed_tabs = []
-        self.notebook = ttk.Notebook(self.textframe)
-        self.notebook.bind('<<NotebookTabChanged>>', self.change_tab)
-        self.notebook.bind('<Button-2>', self.close_tab)
-        self.notebook.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
-        self.open_tab()
-
     def place_widgets(self):
         super().place_widgets()
         self.siteframe.grid(row=0, column=0)
@@ -121,47 +100,6 @@ class SiteEditor(Interface, Editor):
             heading.grid(row=i, column=0)
         for i, button in enumerate(self.buttons):
             button.grid(row=0, column=i)
-
-    def open_tab(self, event=None):
-        frame = Tk.Frame(self.notebook)
-        textbox = self.new_textbox(frame)
-        textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
-        frame.textbox = textbox
-        self.notebook.add(frame)
-        self.notebook.select(frame)
-        self.entry = dict(position='1.0')
-        with ignored(AttributeError):
-            self.go_to_heading()
-        return 'break'
-
-    def change_tab(self, event=None):
-        frame = self.current_tab
-        with ignored(AttributeError):
-            self.entry = frame.entry
-            self.fill_headings(frame.page)
-            self.update_titlebar()
-
-    def close_tab(self, event=None):
-        if self.notebook.index('end') - len(self.closed_tabs) > 1:
-            tab = f'@{event.x},{event.y}'
-            while True:
-                try:
-                    self.notebook.hide(tab)
-                    self.closed_tabs += [tab]
-                    break
-                except Tk.TclError:
-                    tab = self.notebook.select()
-        return 'break'
-
-    def reopen_tab(self, event=None):
-        with ignored(IndexError):
-            tab = self.closed_tabs.pop()
-            self.notebook.add(tab)
-            self.notebook.select(tab)
-        return 'break'
-
-    def rename_tab(self, text):
-        self.notebook.tab(self.current_tab, text=text)
 
     @property
     def heading_contents(self):
@@ -178,6 +116,20 @@ class SiteEditor(Interface, Editor):
     def fill_and_load(self):
         self.fill_headings()
         self.load()
+    
+    def change_tab(self, event=None):
+        '''Override Editor method'''
+        super().change_tab()
+        self.entry = getattr(self.tab, 'entry', '')
+        self.update_titlebar()
+        self.fill_headings(self.tab.page)
+    
+    def open_tab(self, event=None):
+        '''Override Editor method'''
+        super().open_tab()
+        self.entry = dict(position='1.0')
+        with ignored(AttributeError):
+            self.go_to_heading()
 
     def fill_headings(self, entries=None):
         entries = entries or self.page
@@ -261,8 +213,8 @@ class SiteEditor(Interface, Editor):
     def load(self, event=None):
         self.entry_position = self.textbox.index(Tk.INSERT)
         self.entry = self.load_entry(list(self.page))
-        self.current_tab.page = list(self.page)
-        self.current_tab.entry = self.entry
+        self.tab.page = list(self.page)
+        self.tab.entry = self.entry
         self.initial_text = self.formatted_entry
         self.update_titlebar()
         self.display(self.initial_text)
@@ -418,8 +370,8 @@ class SiteEditor(Interface, Editor):
         return 'break'
 
     def clear_style(self):
-        self.textbox.tag_remove(self.current_style.get(), Tk.INSERT)
-        self.current_style.set('')
+        self.textbox.clear_style(self.style.get())
+        self.style.set('')
 
     def _save_page(self):
         with ignored(AttributeError):  # entry could be a dict
@@ -614,10 +566,7 @@ class SiteEditor(Interface, Editor):
             ('<Alt-d>', self.go_to_heading),
             ('<Control-l>', self.load_from_headings),
             ('<Control-o>', self.site_open),
-            ('<Control-s>', self.save),
-            ('<Control-t>', self.open_tab),
-            ('<Control-T>', self.reopen_tab),
-            ('<Control-w>', self.close_tab)]
+            ('<Control-s>', self.save)]
 
     @property
     def heading_commands(self):

@@ -6,50 +6,63 @@ import tkinter.ttk as ttk
 import webbrowser as web
 from tkinter.ttk import Combobox
 
-from ..widgets import Textbox, StylesWindow
+from ..widgets import Textbox, StylesWindow, Style, Styles
 from ..translation import *
 from ..utils import *
 
 
 class Editor(Tk.Frame):
-    def __init__(self, master=None, parent=None, text='', tests=None):
+    def __init__(self, master=None, parent=None, text='', styles=None, tests=None):
         super().__init__(master)
         self.parent = parent
         self.initial_text = text
         self.master.withdraw()
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
-        self.setup_linguistics()
-        self.ready()
-        self.place_widgets()
+        self.styles = Styles(styles)
+        self.closed_tabs = []
+        self.create_layout(self.master)
+        self.setup_markdown()
+        self.open_tab()
         if tests:
             tests(self)
-        
+
     def Text(self, text):
         return Text(self, text)
+
+    def __getattr__(self, attr):
+        if attr == 'tab':
+            return self.notebook.nametowidget(self.notebook.select())
+        if attr == 'textbox':
+            return self.tab.textbox
+        else:
+            return getattr(super(), attr)
+
+    @property
+    def info(self):
+        '''override Tk.Frame.info'''
+        return self.textbox.info
+
+    def create_layout(self, master):
+        top = self.winfo_toplevel()
+        self.set_window_size(top)
+        top['menu'] = self.menu(top, self.menu_commands)
+        self.textframe(master).pack(side=Tk.RIGHT, expand=True, fill=Tk.BOTH)
+        self.sidebar(master).pack(side=Tk.LEFT)
 
     def set_window_size(self, top):
         top.state('normal')
         w = w_pos = int(top.winfo_screenwidth() / 2)
-        h = top.winfo_screenheight()
+        h = top.winfo_screenheight() - 50
         h_pos = 0
         top.geometry(f'{w}x{h}+{w_pos}+{h_pos}')
 
-    def ready(self):
-        for widget in self.widgets:
-            getattr(self, 'ready_' + widget)()
-        
-    def ready_frames(self):
-        self.sidebar = Tk.Frame(self.master)
-        self.textframe = Tk.Frame(self.master)
-        self.top = self.winfo_toplevel()
-        self.set_window_size(self.top)
-
-    def ready_menus(self):
-        self.menu = Tk.Menu(self.top)
-        for menu in self.menu_commands:
-            submenu = Tk.Menu(self.menu, tearoff=0)
+    @staticmethod
+    def menu(master, commands):
+        menubar = Tk.Menu(master)
+        for menu in commands:
+            submenu = Tk.Menu(menubar, tearoff=0)
             label, options = menu
-            self.menu.add_cascade(label=label, menu=submenu)
+            menubar.add_cascade(label=label, menu=submenu)
             for option in options:
                 label, command = option
                 underline = label.find('_')
@@ -59,37 +72,61 @@ class Editor(Tk.Frame):
                 submenu.add_command(label=label, command=command,
                                     underline=underline)
                 submenu.bind(f'<KeyPress-{keypress}>', command)
+        return menubar
+    
+    def textframe(self, master):
+        frame = Tk.Frame(master)
+        self.notebook = self.new_notebook(frame)
+        self.notebook.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
+        return frame
+    
+    def new_notebook(self, master):
+        notebook = ttk.Notebook(master)
+        notebook.bind('<<NotebookTabChanged>>', self.change_tab)
+        notebook.bind('<Button-2>', self.close_tab)
+        return notebook
 
-    def ready_labels(self):
-        master = self.sidebar
-        self.information = Tk.StringVar()
-        self.info_label = Tk.Label(
-            master=master, textvariable=self.information,
-            font=('Arial', 14), width=20)
-        self.style_label = Tk.Label(
-            master=master, font=('Arial', 12),
-            textvariable=self.textbox.style)
-        self.blank_label = Tk.Label(master=master, height=1000)
+    def new_textbox(self, master):
+        textbox = Textbox(master, self.styles)
+        textbox.text = self.initial_text
+        self.add_commands(textbox, self.textbox_commands)
+        return textbox
+        
+    def sidebar(self, master):
+        frame = Tk.Frame(master)
+        self.displays = dict(
+            wordcount=Tk.Label(master=frame, font=('Arial', 14), width=20),
+            style=Tk.Label(master=frame, font=('Arial', 12)),
+            language=self.language_display(frame),
+            randomwords=self.random_words_display(frame),
+            blank=Tk.Label(master=frame, height=1000))
+        for row, display in enumerate(self.displays.values(), start=1):
+            display.grid(row=row, column=0)
+        return frame
 
-    def ready_option_menu(self):
-        self.languagevar.set(self.language)
-        translator = self.translator
+    def update_displays(self):
+        for name, display in self.displays.items():
+            if name != 'blank':
+                display.config(textvariable=self.info[name])
+
+    def random_words_display(self, master=None):
+        label = Tk.Label(master=master, font=('Arial', 14))
+        label.bind('<Button-1>', self.refresh_random)
+        label.bind('<Button-3>', self.clear_random)
+        return label
+
+    def language_display(self, master):
+        translator = Translator()
         languages = [f'{code}: {lang().name}'
-                     for code, lang in list(translator.languages.items())]
-        self.language_menu = Combobox(self.sidebar,
-                                      textvariable=self.languagevar,
-                                      values=languages,
-                                      height=2000,
-                                      width=25,
-                                      justify=Tk.CENTER)
-        self.language_menu.state(['readonly'])
-        self.language_menu.bind('<<ComboboxSelected>>',
-                                self.change_language)
-
-    def ready_textbox(self):
-        self.textbox = Textbox(self.textframe)
-        self.add_commands(self.textbox, self.textbox_commands)
-        self.textbox.text = self.initial_text
+                     for code, lang in translator.languages.items()]
+        menu = Combobox(master,
+                        values=languages,
+                        height=2000,
+                        width=25,
+                        justify=Tk.CENTER)
+        menu.state(['readonly'])
+        menu.bind('<<ComboboxSelected>>', self.change_language)
+        return menu
 
     def add_commands(self, tkobj, commands):
         for (keys, command) in commands:
@@ -105,55 +142,64 @@ class Editor(Tk.Frame):
                     except AttributeError:
                         self.bind_class(tkobj, key, command)
 
-    def setup_linguistics(self):
-        self.languagevar = Tk.StringVar()
-        self.language = 'en: English'
-        self.setup_markdown()
-        self.randomwords = RandomWords()
-        self.translator = Translator(self.language)
-
     def setup_markdown(self, filename=None):
         self.marker = Markdown(filename)
         self.markup = self.marker.to_markup
         self.markdown = self.marker.to_markdown
 
     def change_language(self, event=None):
-        self.language = self.languagevar.get()[:2]
-        self.translator = Translator(self.language)
-        self.randomwords = RandomWords(self.language)
+        language = self.info['language'].get()[:2]
+        self.translator = Translator(language)
+        self.randomwords = RandomWords(language)
         return 'break'
 
     def go_to(self, position):
         self.textbox.mark_set(Tk.INSERT, position)
         self.textbox.see(Tk.INSERT)
+    
+    def open_tab(self, event=None):
+        notebook = self.notebook
+        frame = Tk.Frame(notebook)
+        textbox = self.new_textbox(frame)
+        textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
+        frame.textbox = textbox
+        notebook.add(frame)
+        notebook.select(frame)
+        return 'break'
 
-    def select_word(self, event):
-        textbox = event.widget
-        pattern = r'\n|[^a-zA-Z0-9_\'’-]'
-        borders = (
-            textbox.search(
-                pattern, Tk.INSERT, backwards=True, regexp=True
-            ) + '+1c' or Tk.INSERT + ' linestart',
-            textbox.search(
-                pattern, Tk.INSERT, regexp=True
-            ) or Tk.INSERT + ' lineend'
-        )
-        textbox.tag_add(Tk.SEL, *borders)
-        return textbox.get(*borders)
+    def change_tab(self, event=None):
+        self.update_displays()
+        self.change_language()
 
-    def place_widgets(self):
-        self.top['menu'] = self.menu
-        self.pack(expand=True, fill=Tk.BOTH)
-        self.sidebar.pack(side=Tk.LEFT)
-        self.textframe.pack(side=Tk.RIGHT, expand=True, fill=Tk.BOTH)
-        widgets = 'style_label', 'language_menu', 'info_label', 'blank_label'
-        for row, widget in enumerate(widgets, start=1):
-            getattr(self, widget).grid(row=row, column=0)
-        self.textbox.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
+    def close_tab(self, event=None):
+        if self.notebook.index('end') - len(self.closed_tabs) > 1:
+            tab = f'@{event.x},{event.y}'
+            while True:
+                try:
+                    self.notebook.hide(tab)
+                    self.closed_tabs += [tab]
+                    break
+                except Tk.TclError:
+                    tab = self.notebook.select()
+        return 'break'
+
+    def reopen_tab(self, event=None):
+        with ignored(IndexError):
+            tab = self.closed_tabs.pop()
+            self.notebook.add(tab)
+            self.notebook.select(tab)
+        return 'break'
+    
+    def rename_tab(self, text):
+        self.notebook.tab(self.tab, text=text)
 
     def refresh_random(self, event=None):
         if self.randomwords:
-            self.information.set('\n'.join(self.randomwords.words))
+            self.info['randomwords'].set('\n'.join(self.randomwords.words))
+        return 'break'
+
+    def clear_random(self, event=None):
+        self.info['randomwords'].set('')
         return 'break'
 
     def replace(self, heading, text):
@@ -179,21 +225,27 @@ class Editor(Tk.Frame):
                 textbox = event.widget
         except AttributeError:
             textbox = event
-        self.information.set(textbox.wordcount)
+        self.info['wordcount'].set(textbox.wordcount)
 
     def display(self, text):
         self.textbox.replace(str(text))
         self.textbox.focus_set()
         self.update_wordcount(self.textbox)
-        self._to_tkinter()
+        self._from_html()
 
-    def example_no_lines(self, event):
-        self.format_paragraph('example-no-lines', 'e ', event.widget)
-        return 'break'
-
-    def example(self, event):
-        self.format_paragraph('example', 'f ', event.widget)
-        return 'break'
+    def select_word(self, event):
+        textbox = event.widget
+        pattern = r'\n|[^a-zA-Z0-9_\'’-]'
+        borders = (
+            textbox.search(
+                pattern, Tk.INSERT, backwards=True, regexp=True
+            ) + '+1c' or Tk.INSERT + ' linestart',
+            textbox.search(
+                pattern, Tk.INSERT, regexp=True
+            ) or Tk.INSERT + ' lineend'
+        )
+        textbox.tag_add(Tk.SEL, *borders)
+        return textbox.get(*borders)
 
     def add_translation(self, event):
         textbox = event.widget
@@ -223,7 +275,7 @@ class Editor(Tk.Frame):
             text += ' '
             textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
             textbox.insert(Tk.INSERT + '+1c', text)
-        self._to_tkinter()
+        self._from_html()
         return 'break'
 
     def add_descendant(self, event):
@@ -250,7 +302,7 @@ class Editor(Tk.Frame):
             text += ' '
             textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
             textbox.insert(Tk.INSERT + '+1c', text)
-        self._to_tkinter()
+        self._from_html()
         return 'break'
 
     def markdown_open(self, event=None):
@@ -288,7 +340,7 @@ class Editor(Tk.Frame):
     @tkinter()
     def markdown_clear(self, event=None):
         self.textbox.replace(self.Text(self.textbox.text).markup)
-    
+
     @tkinter()
     def markdown_reset(self, event=None):
         self.textbox.replace(self.Text(self.textbox.text).markdown)
@@ -311,16 +363,17 @@ class Editor(Tk.Frame):
         self.wait_window(top)
 
     def edit_styles(self, event=None):
+        top = Tk.Toplevel()
         styles = self.textbox.styles
-        window = StylesWindow(styles)
-        self.wait_window(window)
-        self.textbox.styles = window.get()
-    
+        window = StylesWindow(styles, master=top)
+        self.wait_window(top)
+        self.textbox.add_commands()
+
     def _to_html(self):
         self.textbox._to_html()
-    
-    def _to_tkinter(self):
-        self.textbox._to_tkinter()
+
+    def _from_html(self):
+        self.textbox._from_html()
 
     def _command(self, event=None):
         self._to_html()
@@ -338,7 +391,7 @@ class Editor(Tk.Frame):
     def menu_commands(self):
         return [('Styles', [
                  ('Edit', self.edit_styles),
-                 ('Apply', self._to_tkinter),
+                 ('Apply', self._from_html),
                  ('Show as Ht_ml', self._to_html)]),
                 ('Markdown', [
                  ('Edit', self.markdown_edit),
@@ -356,16 +409,15 @@ class Editor(Tk.Frame):
                 ('<Control-m>', self.markdown_refresh),
                 ('<Control-r>', self.refresh_random),
                 ('<Control-R>', self.add_translation),
-                ('<Control-s>', self._command)]
-    
-    @property
-    def widgets(self):
-        return ['frames', 'menus', 'textbox', 'labels', 'option_menu']
+                ('<Control-s>', self._command),
+                ('<Control-t>', self.open_tab),
+                ('<Control-T>', self.reopen_tab),
+                ('<Control-w>', self.close_tab)]
 
     def quit(self):
         # with ignored(AttributeError):
         self._to_html()
-        text = self.textbox.get(*Tk.WHOLE_BOX)
+        text = self.textbox.get()
         with ignored(AttributeError):
             self.callback(text)
         if self.parent:

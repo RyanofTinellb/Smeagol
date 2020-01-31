@@ -1,42 +1,199 @@
+import re
+import json
+
 import tkinter as Tk
 import tkinter.ttk as ttk
 import tkinter.colorchooser as ColourChooser
+import tkinter.messagebox as mb
+import tkinter.simpledialog as sd
 from tkinter.font import Font
 from tkinter.font import families as font_families
+from .style import Style
 
 
 class StylesWindow(Tk.Frame):
     def __init__(self, styles, master=None):
         super().__init__(master)
-        self.styles = [s.copy() for s in styles]
-        notebook = ttk.Notebook(self)
-        notebook.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
-        frame = StyleFrame(notebook, self.style_group('default')[0])
-        notebook.add(frame, text='default')
+        self.grid()
+        self.master.protocol('WM_DELETE_WINDOW', self.cancel)
+        self.original = styles
+        self.styles = styles.dict_copy()
+        self.styles_box(self).grid(
+            row=0, column=0, columnspan=3, sticky='s', padx=10, pady=5)
+        self.style_buttons(self).grid(row=1, column=0, padx=10)
+        self.sample_box(self).grid(row=0, column=4, rowspan=3, columnspan=2, padx=10, pady=5)
+        self.window_buttons(self).grid(row=4, column=5, padx=10, sticky='e')
+        self.select_style()
 
-    def style_group(self, name):
-        return [s for s in self.styles if s.group == name]
+    def style_buttons(self, master=None):
+        frame = Tk.Frame(master)
+        Tk.Button(frame, text='Edit', command=self.edit).grid(row=0, column=0)
+        self.rename_btn = Tk.Button(frame, text='Rename', command=self.rename)
+        self.rename_btn.grid(row=0, column=1)
+        self.delete_btn = Tk.Button(frame, text='Delete', command=self.delete)
+        self.delete_btn.grid(row=0, column=2, sticky='w')
+        Tk.Button(frame, text='New', command=self.add).grid(row=0, column=3)
+        return frame
+
+    def styles_box(self, master=None):
+        box = ttk.Combobox(master, values=list(self.styles))
+        box.bind('<<ComboboxSelected>>', self.select_style)
+        box.set('transliteration')
+        self.current = box
+        return box
+
+    def select_style(self, event=None):
+        style = self.styles[self.current.get()]
+        state = 'disabled' if style.name == 'default' else 'normal'
+        self.delete_btn.config(state=state)
+        self.rename_btn.config(state=state)
+        font = style.Font
+        box = self._sample
+        box.tag_delete('sample')
+        box.tag_add('sample', 1.0, 'end')
+        box.tag_config('sample', font=font, **style.paragraph)
+
+    def window_buttons(self, master=None):
+        frame = Tk.Frame(master)
+        button = Tk.Button(frame, text='Cancel', command=self.cancel)
+        button.grid(row=0, column=0)
+        button = Tk.Button(frame, text='OK', command=self.ok)
+        button.grid(row=0, column=1)
+        return frame
+
+    def sample_box(self, master=None):
+        box = Tk.Text(master, height=3, width=20)
+        box.insert(Tk.INSERT, 'Sample', 'sample')
+        box.config(state='disabled')
+        self._sample = box
+        return box
+
+    def rename(self, event=None):
+        style = self.current.get()
+        name = sd.askstring(
+            'Style Name', f'What is the new name of "{style}"?')
+        if name and name not in self.styles:
+            self.styles[style].name = name
+            self.styles[name] = self.styles[style]
+            self.styles.pop(style, None)
+            self.current.config(values=list(self.styles))
+            self.current.set(name)
+            self.select_style()
+
+    def edit(self, event=None):
+        top = Tk.Toplevel()
+        editor = StyleEditor(
+            master=top, style=self.styles[self.current.get()])
+        editor.grid()
+        self.master.withdraw()
+        self.wait_window(top)
+        self.styles[self.current.get()] = editor.style
+        self.select_style()
+        self.master.deiconify()
+
+    def add(self, event=None):
+        name = sd.askstring('Style Name', 'What is the name of the new style?')
+        if name and name not in self.styles:
+            self.styles[name] = Style(name=name)
+            self.current.config(values=list(self.styles))
+            self.current.set(name)
+            self.select_style()
+            self.edit()
+
+    def delete(self, event=None):
+        style = self.current.get()
+        message = f'Are you sure you wish to delete the style "{style}"?'
+        if mb.askyesno('Delete', message):
+            self.styles.pop(style, None)
+            self.current.config(values=list(self.styles))
+            self.current.set('default')
+            self.select_style()
+
+    def cancel(self):
+        self.master.destroy()
+
+    def ok(self):
+        self.original.update(self.styles)
+        self.cancel()
 
 
-class StyleFrame(Tk.Frame):
+class StyleEditor(Tk.Frame):
     def __init__(self, master=None, style=None):
         super().__init__(master)
+        self.backup = style
         self.style = style.copy()
-        self.is_disabled = 'disabled' if self.style.group == 'font' else 'readonly'
+        self.disabled = 'disabled' if self.style.group == 'font' else ''
         self.spinners = []
+        self.non_spinners = []
         self.units = 'points', 'millimetres', 'centimetres', 'inches'
         types = {str: Tk.StringVar, bool: Tk.BooleanVar,
                  float: Tk.DoubleVar, int: Tk.IntVar}
         for attr, value in self.style.items():
-            setattr(self, attr, types[type(value)]())
-        for attr, value in self.style.items():
             if attr == 'unit':
                 value = [v for v in self.units if v.startswith(value[0])][0]
-            getattr(self, attr).set(value)
-        self.font_frame(self).grid(row=0, column=0, rowspan=2, sticky='w')
+            setattr(self, attr, types[type(value)](value=value))
+        self.font_frame(self).grid(row=0, column=0, rowspan=2, sticky='nw')
         self.para_frame(self).grid(row=0, column=1, sticky='nw')
+        self.options_frame(self).grid(row=0, column=2, sticky='nw')
         self.colour_frame(self).grid(row=1, column=1, sticky='nw')
-        self.sample_frame(self).grid(row=2, column=0, columnspan=2)
+        self.sample_frame(self).grid(row=2, column=0, columnspan=2, padx=60)
+        self.buttons_frame(self).grid(row=2, column=2, sticky='se')
+
+    def options_frame(self, master=None):
+        frame = ttk.LabelFrame(master, text='options')
+        self.group_frame(frame).grid(row=0, column=0, sticky='w')
+        self.key_frame(frame).grid(row=1, column=0, sticky='w')
+        self.tags_frame(frame).grid(row=2, column=0, sticky='w')
+        attrs = 'language', 'hyperlink'
+        for row, attr in enumerate(attrs, start=3):
+            var = getattr(self, attr)
+
+            def handler(attr=attr):
+                self.update_config(attr)
+            btn = Tk.Checkbutton(frame, text=attr, var=var, command=handler)
+            btn.grid(row=row, column=0, sticky='w')
+        return frame
+
+    def key_frame(self, master=None):
+        frame = Tk.Frame(master)
+        Tk.Label(frame, text='key', justify='right').grid(row=0, column=0, sticky='e')
+        box = Tk.Entry(frame, width=2, justify='center', textvariable=self.key)
+        def handler(event=None):
+            if event.keysym == 'Return':
+                return 'break'
+            if re.match(r'[a-zA-Z]', key := event.char):
+                self.key.set(key)
+            else:
+                self.key.set('')
+            self.update_config('key')
+            return 'break'
+        box.bind('<KeyPress>', handler)
+        box.grid(row=0, column=1, padx=10)
+        return frame
+
+    def buttons_frame(self, master=None):
+        frame = Tk.Frame(master)
+        Tk.Button(frame, text='Cancel', command=self.cancel).grid(
+            row=0, column=0)
+        Tk.Button(frame, text='OK', command=self.ok).grid(
+            row=0, column=1)
+        return frame
+
+    def tags_frame(self, master=None):
+        frame = ttk.Labelframe(master, text='tags')
+        self.tag_boxes = [Tk.Entry(frame, width=30) for _ in range(2)]
+        for row, (entry, tag) in enumerate(zip(self.tag_boxes, self.style.tags)):
+            entry.grid(row=row, column=0)
+            entry.insert(0, tag)
+        return frame
+
+    def cancel(self):
+        self.style = self.backup
+        self.ok()
+
+    def ok(self):
+        self.style.tags = [b.get() for b in self.tag_boxes]
+        self.master.destroy()
 
     def colour_frame(self, master=None):
         frame = ttk.LabelFrame(master, text='colour')
@@ -53,7 +210,7 @@ class StyleFrame(Tk.Frame):
                     initialcolor=var.get(), parent=frame, title=name)
                 if colour:
                     var.set(colour)
-                    self.update_config(attr, var)
+                    self.update_config(attr)
                     btn.config(background=colour)
             btn.grid(row=0, column=2*col+1)
             btn.config(command=handler)
@@ -72,7 +229,7 @@ class StyleFrame(Tk.Frame):
             [f for f in font_families() if not f.startswith('@')])
 
         def handler(*args):
-            self.update_config('font', self.font)
+            self.update_config('font')
         box = ttk.Combobox(master, width=20, values=families,
                            textvariable=self.font)
         box.bind('<<ComboboxSelected>>', handler)
@@ -80,7 +237,7 @@ class StyleFrame(Tk.Frame):
 
     def size_box(self, master=None):
         def handler(*args):
-            self.update_config('size', self.size)
+            self.update_config('size')
         box = ttk.Spinbox(master, width=5, from_=1, to=72,
                           textvariable=self.size, command=handler)
         return box
@@ -91,8 +248,8 @@ class StyleFrame(Tk.Frame):
         for row, attr in enumerate(attrs, start=1):
             var = getattr(self, attr)
 
-            def handler(attr=attr, var=var):
-                self.update_config(attr, var)
+            def handler(attr=attr):
+                self.update_config(attr)
             btn = Tk.Checkbutton(frame, text=attr, var=var, command=handler)
             btn.grid(row=row, column=0, sticky='w')
         return frame
@@ -102,7 +259,7 @@ class StyleFrame(Tk.Frame):
         attrs = 'superscript', 'baseline', 'subscript'
 
         def handler(*args):
-            self.update_config('offset', self.offset)
+            self.update_config('offset')
         for row, attr in enumerate(attrs):
             Tk.Radiobutton(frame, text=attr, variable=self.offset,
                            value=attr, command=handler).grid(row=row, column=0, sticky='w')
@@ -110,36 +267,70 @@ class StyleFrame(Tk.Frame):
 
     def para_frame(self, master=None):
         frame = Tk.LabelFrame(master, text='paragraph')
-        self.direction_frame(frame).grid(row=0, column=1)
         self.leftovers_frame(frame).grid(row=0, column=0)
+        self.direction_frame(frame).grid(row=0, column=1)
         self.units_frame(frame).grid(row=1, column=0, columnspan=2)
         return frame
+
+    def group_frame(self, master=None):
+        frame = Tk.Frame(master)
+        Tk.Label(frame, text='group').grid(row=0, column=0)
+
+        def handler(*args):
+            self.update_config('group')
+            self.set_para_element_state()
+        box = ttk.Combobox(frame, width=10, values=('font', 'paragraph'),
+                           textvariable=self.group, state='readonly')
+        box.bind('<<ComboboxSelected>>', handler)
+        box.grid(row=0, column=1)
+        return frame
+
+    def enable_para_elements(self):
+        for _, elt in self.spinners:
+            elt.config(state='normal')
+        for _, elt in self.non_spinners:
+            elt.config(state='readonly')
+
+    def disable_para_elements(self):
+        for _, elt in self.spinners + self.non_spinners:
+            elt.config(state='disabled')
+
+    def set_para_element_state(self):
+        if self.group.get() == 'font':
+            self.disable_para_elements()
+        else:
+            self.enable_para_elements()
 
     def direction_frame(self, master=None):
         frame = ttk.LabelFrame(
             master, text='margins and padding', padding=10)
         spinners = (('left', 1, 0), ('top', 0, 1),
                     ('right', 1, 2), ('bottom', 2, 1))
-        self.spinners += [self.spinner(frame, *s) for s in spinners]
+        for name, row, column in spinners:
+            spinner = self.spinner(frame, name)
+            spinner.grid(row=row, column=column)
+            self.spinners.append((name, spinner))
         return frame
 
-    def spinner(self, master, name, row, column):
+    def spinner(self, master, name):
         decimals = self.unit.get()[0] in 'ci'
         rounding = float if decimals else int
         var = getattr(self, name)
 
-        def handler(name=name, var=var):
-            self.update_config(name, var)
+        def handler(name=name):
+            self.update_config(name)
         spinner = ttk.Spinbox(master, width=5, from_=0, to=40,
                               increment=0.1 if decimals else 1,
-                              textvariable=var, command=handler, state=self.is_disabled)
-        spinner.grid(row=row, column=column)
+                              textvariable=var, command=handler, state=self.disabled or 'normal')
         return spinner
 
     def leftovers_frame(self, master=None):
         frame = Tk.Frame(master, padx=10)
         spinners = (('indent', 0, 1), ('line_spacing', 1, 1))
-        self.spinners += [self.spinner(frame, *s) for s in spinners]
+        for name, row, column in spinners:
+            spinner = self.spinner(frame, name)
+            spinner.grid(row=row, column=column)
+            self.spinners.append((name, spinner))
         labels = 'indent', 'line spacing', 'justification'
         for row, name in enumerate(labels):
             ttk.Label(frame, text=name, padding=(5, 0)).grid(
@@ -149,10 +340,11 @@ class StyleFrame(Tk.Frame):
 
     def justify(self, master=None):
         def handler(*args):
-            self.update_config('justification', self.justification)
+            self.update_config('justification')
         box = ttk.Combobox(master, width=6, values=('left', 'centre', 'right'),
-                           textvariable=self.justification, state=self.is_disabled)
+                           textvariable=self.justification, state=self.disabled or 'readonly')
         box.bind('<<ComboboxSelected>>', handler)
+        self.non_spinners.append(('justify', box))
         return box
 
     def sample_frame(self, master=None):
@@ -167,7 +359,7 @@ class StyleFrame(Tk.Frame):
         font = Font(box, **self.style._font)
         box.tag_configure('default', font=self.font_, **
                           self.style.paragraph)
-        box.config(font=font, wrap='word', **self.style.config)
+        box.config(font='Calibri 18', wrap='word')
         lorem = ('Lorem ipsum dolor sit amet, consectetur adipiscing elit, '
                  'sed do eiusmod tempor incididunt ut labore et dolore '
                  'magna aliqua. Ut enim ad minim veniam, quis nostrud '
@@ -180,31 +372,33 @@ class StyleFrame(Tk.Frame):
         ttk.Label(frame, text='units').grid(row=0, column=0)
 
         def handler(*args):
-            self.update_config('unit', self.unit)
-        selector = ttk.Combobox(frame, state='readonly',
+            self.update_config('unit')
+        selector = ttk.Combobox(frame, state=self.disabled or 'readonly',
                                 textvariable=self.unit, values=self.units)
         selector.bind('<<ComboboxSelected>>', handler)
         selector.grid(row=0, column=1)
+        self.non_spinners.append(('unit', selector))
         return frame
 
-    def update_config(self, name, variable):
+    def update_config(self, attr):
+        variable = getattr(self, attr)
         box = self.sample
-        setattr(self.style, name, variable.get())
+        setattr(self.style, attr, variable.get())
         self.font_.config(**self.style._font)
         box.tag_configure('default', font=self.font_,
                           **self.style.paragraph)
-        if name == 'unit':
+        if attr == 'unit':
             self.settle_spinners()
 
     def settle_spinners(self):
         decimals = self.unit.get()[0] in 'ci'
         rounding = float if decimals else int
-        for spinner in self.spinners:
+        var_type = Tk.DoubleVar if decimals else Tk.IntVar
+        for attr, spinner in self.spinners:
+            var = var_type()
+            var.set(rounding(getattr(self, attr).get()))
+            setattr(self, attr, var)
             spinner.config(format='%.1f' if decimals else '',
                            increment=0.1 if decimals else 1,
-                           from_=rounding(0),
-                           to=rounding(40))
-        attrs = 'line_spacing', 'indent', 'top', 'left', 'bottom', 'right'
-        for attr in attrs:
-            var = getattr(self, attr)
-            var.set(rounding(var.get()))
+                           from_=rounding(0), to=rounding(40),
+                           textvariable=var)

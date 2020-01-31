@@ -1,13 +1,13 @@
 import os
 import json
 from datetime import datetime
-from smeagol.editor.properties import Properties
+from smeagol.editor.interface import Interface
 
 
 class Site:
     def __init__(self, filename):
         config = f'c:/users/ryan/tinellbianlanguages/{filename}/{filename}.smg'
-        self.props = Properties(config)
+        self.props = Interface(config)
         self.site = self.props.site
 
 
@@ -53,8 +53,8 @@ sites.update(get_list('dictionary'))
 if __name__ == '__main__':
     oldtime = datetime.now()
     for name, filename in sites.items():
-        props = Properties(filename)
         print(f'{name}:')
+        props = Interface(filename)
         print(props.site.publish())
         newtime = datetime.now()
         print(('Done: ' + str(newtime - oldtime)))

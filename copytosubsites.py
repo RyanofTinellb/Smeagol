@@ -1,6 +1,6 @@
 import shutil
 
-src = 'C:/Users/Ryan/TinellbianLanguages/main/'
+src = 'C:/Users/Ryan/TinellbianLanguages/toplevel/'
 
 
 def copy(paths, files, src):

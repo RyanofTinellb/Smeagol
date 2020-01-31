@@ -32,7 +32,7 @@ def tkinter():
         def wrapper(self, *args, **kwargs):
             self._to_html()
             value = function(self, *args, **kwargs)
-            self._to_tkinter()
+            self._from_html()
             return value
         return wrapper
     return decorator

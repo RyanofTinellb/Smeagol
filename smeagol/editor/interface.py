@@ -3,7 +3,7 @@ import os
 import json
 import re
 from .addremovelinks import AddRemoveLinks
-from ..widgets import TemplatesWindow, PropertiesWindow
+from ..widgets import TemplatesWindow, PropertiesWindow, Style
 from ..site.files import Files
 from ..site.site import Site
 from ..translation import *
@@ -23,6 +23,7 @@ class Interface:
                 PropertiesWindow
                 TemplatesWindow
                 Files
+                Styles
 
                     AddRemoveLinks
                     Markdown
@@ -32,15 +33,15 @@ class Interface:
 
                         Site
                                 '''
-    def __init__(self, config=None, caller=None, master=None):
-        self.setup(config)
+    def __init__(self, file_=None, caller=None, master=None):
+        self.setup(file_)
         try:
             super().__init__(master)
         except TypeError: # Interface being used without a master
             super().__init__()
 
     def __getattr__(self, attr):
-        if attr in {'language', 'fontsize'}:
+        if attr == 'language':
             return self.configuration['current'][attr]
         elif attr == 'history':
             return self.get_history()
@@ -80,7 +81,7 @@ class Interface:
                     return getattr(super(), attr)
 
     def __setattr__(self, attr, value):
-        if attr in {'language', 'fontsize'}:
+        if attr == 'language':
             self.configuration['current'][attr] = value
         elif attr == 'page':
             self.history.replace(value)
@@ -101,21 +102,28 @@ class Interface:
             except AttributeError:
                 setattr(Interface, attr, value)
 
-    def setup(self, filename, source=False):
-        if source: # filename refers to a .src file
-            self.configuration = json.loads(default.config)
-            self.source = filename
-        else: # filename refers to a .smg file
-            self.config_filename = filename
-            try:
-                with open(self.config_filename, encoding='utf-8') as config:
-                    self.configuration = json.load(config)
-            except (IOError, TypeError):
-                self.configuration = json.loads(default.config)
+    def setup(self, file_):
+        self.configuration = self.setup_configuration(file_)
+        styles = self.configuration.get('styles', {})
+        self.styles = {n: Style(name=n, **s) for n, s in styles.items()}
         self.site = self.setup_site()
         self.linkadder = AddRemoveLinks(self.links, self.wordlist, self.translator)
         self.marker = self.setup_markdown()
         self.randomwords = RandomWords(self.language, self.sample_texts)
+    
+    def setup_configuration(self, file_):
+        name, ext = os.path.splitext(file_)
+        if ext == '.src':
+            configuration = json.loads(default.config)
+            self.source = name
+        elif ext == '.smg':
+            self.config_filename = file_
+            try:
+                with open(self.config_filename, encoding='utf-8') as config:
+                    configuration = json.load(config)
+            except (IOError, TypeError):
+                configuration = json.loads(default.config)
+        return configuration
 
     def setup_markdown(self):
         while True:

@@ -31,7 +31,10 @@ class Translator:
         self.number = len(languages)
         self.languages = languages
         self.select(language)
-
+        
+    def _iter_(self):
+        return iter(self.languages)
+        
     def select(self, language):
         language = language.lower()[:2]
         try:

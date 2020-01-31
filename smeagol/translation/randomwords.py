@@ -7,7 +7,7 @@ import re
 
 class RandomWords:
     def __init__(self, language=None, sample_texts=''):
-        self.maximum = 20
+        self.maximum = 15
         self.sample_texts = sample_texts
         languages = OrderedDict()
         languages['en'] = English
