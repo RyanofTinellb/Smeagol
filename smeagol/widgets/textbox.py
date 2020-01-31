@@ -64,6 +64,10 @@ class Textbox(Tk.Text):
     def __setattr__(self, attr, value):
         if attr == 'text':
             self.replace(value)
+        elif attr == 'current_style':
+            with ignored(AttributeError):
+                value = ' '.join(value)
+            self.style.set(value)
         else:
             super().__setattr__(attr, value)
 
@@ -71,10 +75,10 @@ class Textbox(Tk.Text):
         self.tag_remove(styles, Tk.INSERT)
 
     def clear_styles(self):
-        self.style.set('')
+        self.current_style = ''
 
     def set_styles(self):
-        self.style.set('')
+        self.current_style = ''
         for style in self.styles:
             self._set_style(style)
 
@@ -117,12 +121,12 @@ class Textbox(Tk.Text):
             self._from_html()
         styles = set(self.current_style)
         styles.add(name)
-        self.style.set(' '.join(styles))
+        self.current_style = styles
 
     def _remove_style(self, name):
         styles = set(self.current_style)
         styles.discard(name)
-        self.style.set(' '.join(styles))
+        self.current_style = styles
 
     def add_commands(self):
         self.set_styles()
@@ -132,11 +136,6 @@ class Textbox(Tk.Text):
             else:
                 for key in keys:
                     self.bind(key, command)
-
-    @property
-    def wordcount(self):
-        text = self.text
-        return text.count(' ') + text.count('\n') - text.count('|')
 
     @property
     def formatted_text(self):
@@ -172,9 +171,15 @@ class Textbox(Tk.Text):
     def clear(self):
         self.delete()
 
-    def shift_style(self):
-        if self.style.get() not in self.tag_names(INSERT):
-            self.style.set('')
+    def key_released(self, event):
+        self.update_wordcount()
+        if event.keycode == '??' or 33 <= event.keycode <= 40:
+            self.current_style = self.tag_names(Tk.INSERT)
+    
+    def update_wordcount(self):
+        text = self.text
+        wordcount = text.count(' ') + text.count('\n') - text.count('|')
+        self.info['wordcount'].set(wordcount)
 
     def _from_html(self):
         with ignored(AttributeError):
@@ -268,8 +273,6 @@ class Textbox(Tk.Text):
             spaces = re.sub(r'( *).*', r'\1', self.get(*CURRLINE))
             self.insert(spaces, INSERT)
             return 'break'
-        elif keysym not in {'BackSpace', 'Shift_L', 'Shift_R'}:
-            self.style.set('')
         
     def match_brackets(self, key):
         if key in BRACKETS:
@@ -296,7 +299,7 @@ class Textbox(Tk.Text):
         self.select()
         return 'break'
 
-    def select(self, start, end):
+    def select(self, start='1.0', end='end'):
         self.tag_add(Tk.SEL, start, end)
 
     def deselect_all(self, event=None):
@@ -416,6 +419,7 @@ class Textbox(Tk.Text):
         return [('<Control-MouseWheel>', self.change_fontsize),
                 ('<Return>', self.indent),
                 ('<KeyPress>', self.insert_characters),
+                (('<KeyRelease>', '<ButtonRelease>'), self.key_released),
                 (('<Tab>', '<Control-]>'), self.insert_tabs),
                 (('<Shift-Tab>', '<Control-[>'), self.remove_tabs),
                 ('<Control-0>', self.reset_fontsize),

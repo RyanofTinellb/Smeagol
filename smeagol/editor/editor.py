@@ -12,10 +12,9 @@ from ..utils import *
 
 
 class Editor(Tk.Frame):
-    def __init__(self, master=None, parent=None, text='', styles=None, tests=None):
+    def __init__(self, master=None, parent=None, styles=None, tests=None):
         super().__init__(master)
         self.parent = parent
-        self.initial_text = text
         self.master.withdraw()
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.styles = Styles(styles)
@@ -88,7 +87,6 @@ class Editor(Tk.Frame):
 
     def new_textbox(self, master):
         textbox = Textbox(master, self.styles)
-        textbox.text = self.initial_text
         self.add_commands(textbox, self.textbox_commands)
         return textbox
         
@@ -206,26 +204,10 @@ class Editor(Tk.Frame):
         heading.delete(*Tk.ALL)
         heading.insert(Tk.FIRST, text)
 
-    def clear_interface(self, event=None):
-        self.display(self.initial_text)
-        self.information.set('')
-
     def cancel_changes(self, event=None):
+        self.information.set('')
         self.clear_interface()
         self.quit()
-
-    def key_released(self, event):
-        self.update_wordcount(event)
-        if 33 <= event.keycode <= 40:
-            event.widget.shift_style()
-
-    def update_wordcount(self, event=None):
-        try:
-            if event is not None:
-                textbox = event.widget
-        except AttributeError:
-            textbox = event
-        self.info['wordcount'].set(textbox.wordcount)
 
     def display(self, text):
         self.textbox.replace(str(text))
@@ -403,8 +385,7 @@ class Editor(Tk.Frame):
 
     @property
     def textbox_commands(self):
-        return [('<KeyRelease>', self.key_released),
-                ('<Escape>', self.cancel_changes),
+        return [('<Escape>', self.cancel_changes),
                 ('<Control-d>', self.add_descendant),
                 ('<Control-m>', self.markdown_refresh),
                 ('<Control-r>', self.refresh_random),
