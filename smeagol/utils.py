@@ -1,22 +1,13 @@
 import functools
-import inspect
 import json
 import os
 import re
-import sys
 import tkinter as Tk
-import tkinter.messagebox as mb
-import tkinter.simpledialog as sd
-import tkinter.filedialog as fd
-import urllib.error
-import urllib.parse
-import urllib.request
 from contextlib import contextmanager
 from datetime import datetime as dt
 from threading import Thread
 
 from .errors import *
-from .translation.markdown import Markdown
 
 
 @contextmanager
@@ -25,6 +16,7 @@ def ignored(*exceptions):
         yield
     except exceptions:
         pass
+
 
 def tkinter():
     def decorator(function):
@@ -57,30 +49,49 @@ def asynca(function):
         return thread
     return async_function
 
+
 def display_attrs(obj):
     for attr in dir(obj):
         value = getattr(obj, attr)
         print(attr, type(value), value)
         print()
 
+
+def clear_screen():
+    os.system('cls')
+
+
 def increment(lst, by):
     lst = [x + by for x in lst]
     return lst
 
-def dump(dictionary, filename):
+
+def save(dictionary, filename):
     if filename:
         with ignored(os.error):
             os.makedirs(os.path.dirname(filename))
         with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(dictionary, f, ensure_ascii=False, indent=4)
+            json.dump(dictionary, f, ensure_ascii=False, indent=2)
 
 
-def dumps(string, filename):
+def saves(string, filename):
     if filename:
         with ignored(os.error):
             os.makedirs(os.path.dirname(filename))
         with open(filename, 'w', encoding='utf-8') as f:
             f.write(string)
+
+
+def load(filename):
+    if filename:
+        with open(filename, encoding='utf-8') as f:
+            return json.load(f)
+
+
+def loads(filename):
+    if filename:
+        with open(filename, encoding='utf-8') as f:
+            return f.read()
 
 
 def buyCaps(word):
@@ -110,9 +121,11 @@ def change_text(item, replacement, text):
         print(item)
     return text
 
+
 Tk.FIRST = 0
 Tk.LAST = Tk.END
 Tk.ALL = (Tk.FIRST, Tk.LAST)
+
 
 def Tk_compare(tb, first, op, second):
     try:
@@ -120,21 +133,20 @@ def Tk_compare(tb, first, op, second):
     except Tk.TclError:
         return tb.compare(Tk.INSERT, op, second)
 
+
 def remove_text(item, text):
     return change_text(item, '', text)
+
 
 def get_text(textbox):
     return textbox.get(*Tk.WHOLE_BOX)
 
-own_markdown = Markdown()
 
 def un_url(text, markdown=None):
-    try:
-        markup = markdown.to_markup
-    except AttributeError:
-        markup = own_markdown.to_markup
     text = text.replace(' ', '.')
-    return sellCaps(markup(text))
+    if markdown:
+        text = markdown.to_markup(text)
+    return sellCaps(text)
 
 
 def urlform(text):
@@ -144,12 +156,12 @@ def urlform(text):
     return name
 
 
-def page_initial(text):
+def page_initial(name, markdown=None):
     '''Returns the first letter of a word, i.e.: the folder of the Dictionary
         in which that word would appear
         @error: IndexError if the text only contains punctuation'''
-    name = own_markdown.to_markdown(text)
-    name = re.sub("'", '', name)
+    if markdown:
+        name = markdown.to_markdown(name)
     return re.findall(r'\w', name)[0]
 
 
@@ -188,6 +200,7 @@ class ShortList(list):
             return None
         return self[-1]
 
+
 class Text:
     def __init__(self, master, text=''):
         with ignored(AttributeError):
@@ -205,10 +218,10 @@ class Text:
             return self
         else:
             return getattr(super(), attr)
-        
+
     def __str__(self):
         return self.text
-    
+
     def add_tags(self, tag):
         key, value, index = tag
         if key == 'tagon':

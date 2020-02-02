@@ -1,4 +1,4 @@
-from ..utils import *
+from smeagol import utils
 from ..errors import SectionFileNotFoundError
 
 import re

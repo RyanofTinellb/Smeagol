@@ -2,4 +2,4 @@ from .textbox import Textbox
 from .properties_window import PropertiesWindow
 from .templates_window import TemplatesWindow
 from .styles_window import StylesWindow
-from .style import Style, Styles
+from .style import Style

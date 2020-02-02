@@ -4,7 +4,7 @@ from itertools import chain
 from smeagol import Translator
 from ..utils import urlform, ignored, buyCaps, sellCaps, page_initial
 
-class AddRemoveLinks:
+class Linker:
     def __init__(self, link_adders=None, wordlist=None, translator=None):
         self.wordlist = wordlist or ''
         self.translator = translator or Translator()
@@ -33,7 +33,7 @@ class AddRemoveLinks:
             self.link_adders = {}
             return self.link_adders
         else:
-            raise AttributeError(f'AddRemoveLinks has no attribute {attr}')
+            raise AttributeError(f'Linker has no attribute {attr}')
 
     def add_links(self, text, entry):
         for link_adder in list(self.link_adders.values()):

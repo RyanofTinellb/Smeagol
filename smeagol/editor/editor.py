@@ -1,27 +1,26 @@
 import json
 import re
 import time
+import tkinter as Tk
 import tkinter.filedialog as fd
 import tkinter.ttk as ttk
 import webbrowser as web
 from tkinter.ttk import Combobox
 
-from ..widgets import Textbox, StylesWindow, Style, Styles
-from ..translation import *
-from ..utils import *
+from ..widgets import Textbox, StylesWindow
+from ..conversion import *
+from smeagol import utils
+from ..utils import tkinter
 
 
 class Editor(Tk.Frame):
-    def __init__(self, master=None, parent=None, styles=None, tests=None):
+    def __init__(self, master=None, converters=None, tests=None):
         super().__init__(master)
-        self.parent = parent
         self.master.withdraw()
-        self.master.protocol('WM_DELETE_WINDOW', self.quit)
-        self.styles = Styles(styles)
         self.closed_tabs = []
         self.create_layout(self.master)
+        self.new_tab(converters=converters)
         self.setup_markdown()
-        self.open_tab()
         if tests:
             tests(self)
 
@@ -85,8 +84,8 @@ class Editor(Tk.Frame):
         notebook.bind('<Button-2>', self.close_tab)
         return notebook
 
-    def new_textbox(self, master):
-        textbox = Textbox(master, self.styles)
+    def new_textbox(self, master, styles=None):
+        textbox = Textbox(master, styles)
         self.add_commands(textbox, self.textbox_commands)
         return textbox
         
@@ -155,15 +154,19 @@ class Editor(Tk.Frame):
         self.textbox.mark_set(Tk.INSERT, position)
         self.textbox.see(Tk.INSERT)
     
-    def open_tab(self, event=None):
+    def new_tab(self, name='', text='', converters=None):
         notebook = self.notebook
         frame = Tk.Frame(notebook)
-        textbox = self.new_textbox(frame)
+        textbox = self.new_textbox(frame, converters)
         textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
+        textbox.insert(text)
         frame.textbox = textbox
         notebook.add(frame)
         notebook.select(frame)
-        return 'break'
+        self.rename_tab(name)
+    
+    def open_new_tab(self, event=None):
+        self.new_tab(converters=self.textbox.converters)
 
     def change_tab(self, event=None):
         self.update_displays()
@@ -203,11 +206,6 @@ class Editor(Tk.Frame):
     def replace(self, heading, text):
         heading.delete(*Tk.ALL)
         heading.insert(Tk.FIRST, text)
-
-    def cancel_changes(self, event=None):
-        self.information.set('')
-        self.clear_interface()
-        self.quit()
 
     def display(self, text):
         self.textbox.replace(str(text))
@@ -328,26 +326,15 @@ class Editor(Tk.Frame):
         self.textbox.replace(self.Text(self.textbox.text).markdown)
 
     def markdown_edit(self, event=None):
-        text = self.edit_file(text=str(self.marker))
-        self.markdown_refresh(new_markdown=text)
-
-    def edit_file(self, text='', callback=None):
-        # editor returns a value in self._return
-        self.show_file(text, callback)
-        return self._return
-
-    def show_file(self, text='', callback=None):
-        top = Tk.Toplevel()
-        editor = Editor(master=top, parent=self, text=text)
-        if callback:
-            editor.callback = callback
-        self.master.withdraw()
-        self.wait_window(top)
+        name = self.marker.filename
+        with open(name) as filename:
+            text = filename.read()
+        self.new_tab(name=os.path.split(name)[1], text=text)
 
     def edit_styles(self, event=None):
         top = Tk.Toplevel()
-        styles = self.textbox.styles
-        window = StylesWindow(styles, master=top)
+        tagger = self.textbox.tagger
+        window = StylesWindow(tagger, master=top)
         self.wait_window(top)
         self.textbox.add_commands()
 
@@ -356,13 +343,6 @@ class Editor(Tk.Frame):
 
     def _from_html(self):
         self.textbox._from_html()
-
-    def _command(self, event=None):
-        self._to_html()
-        text = self.textbox.get('1.0', Tk.END)
-        with ignored(AttributeError):
-            self.callback(text)
-            self.information.set('Saved!')
 
     def show_window(self):
         self.set_window_size(self.top)
@@ -385,23 +365,10 @@ class Editor(Tk.Frame):
 
     @property
     def textbox_commands(self):
-        return [('<Escape>', self.cancel_changes),
-                ('<Control-d>', self.add_descendant),
+        return [('<Control-d>', self.add_descendant),
                 ('<Control-m>', self.markdown_refresh),
                 ('<Control-r>', self.refresh_random),
                 ('<Control-R>', self.add_translation),
-                ('<Control-s>', self._command),
-                ('<Control-t>', self.open_tab),
+                ('<Control-t>', self.open_new_tab),
                 ('<Control-T>', self.reopen_tab),
                 ('<Control-w>', self.close_tab)]
-
-    def quit(self):
-        # with ignored(AttributeError):
-        self._to_html()
-        text = self.textbox.get()
-        with ignored(AttributeError):
-            self.callback(text)
-        if self.parent:
-            self.parent.show_window()
-            self.parent._return = text
-        self.master.destroy()

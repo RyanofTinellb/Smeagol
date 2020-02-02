@@ -189,24 +189,3 @@ class Style:
     @property
     def style(self, defaults=defaults):
         return dict(self.unique_items(defaults=defaults))
-
-
-class Styles:
-    def __init__(self, styles=None):
-        styles = styles or {}
-        with ignored(TypeError):
-            styles = json.loads(styles)
-        self.styles = {'default': Style(name='default')}
-        self.styles.update({n: Style(name=n, **s) for n, s in styles.items()})
-    
-    def __iter__(self):
-        return iter(self.styles.values())
-    
-    def __getitem__(self, name):
-        return self.styles[name]
-
-    def dict_copy(self):
-        return {n: s.copy() for n, s in self.styles.items()}
-    
-    def update(self, styles):
-        self.styles = styles

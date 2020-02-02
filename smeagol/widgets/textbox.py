@@ -1,12 +1,10 @@
 import re
 import json
 import tkinter as Tk
-from itertools import cycle
 from tkinter.scrolledtext import ScrolledText
 from tkinter.font import Font
 from ..utils import ignored
-from .style import Style
-from ..translation import Translator
+from itertools import cycle
 
 START = '1.0'
 END = 'end-1c'
@@ -27,25 +25,28 @@ BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
 
 
 class Textbox(Tk.Text):
-    def __init__(self, master=None, styles=None):
+    def __init__(self, master=None, converters=None):
         super().__init__(master, height=1, width=1, wrap=Tk.WORD,
                          undo=True)
-        self.translator = Translator()
-        if styles:
-            self.styles = styles
-            self.font = styles['default'].Font
-        else:
-            self.styles = {}
-            self.font = Font(family='Calibri', size=18)
+        self.converters = converters or {}
+        try:
+            self.tagger = self.converters['tagger']
+        except KeyError:
+            from ..conversion import Tagger
+            self.tagger = Tagger()
         self.ready()
 
     def ready(self):
         self.info = dict(wordcount=Tk.StringVar(), randomwords=Tk.StringVar(),
                          style=Tk.StringVar(), language=Tk.StringVar())
+        try:
+            self.translator = self.converters['translator']
+        except KeyError:
+            from ..conversion import Translator
+            self.translator = Translator()
         self.languages = self.translator.languages
         self.language.set(self.translator.fullname)
         self.add_commands()
-        self.config(font=self.font)
 
     def __getattr__(self, attr):
         if attr == 'text':
@@ -55,6 +56,8 @@ class Textbox(Tk.Text):
         elif attr == 'language_code':
             if language := self.language.get():
                 return language[:2]
+        elif attr == 'font':
+            return self.tagger['default'].Font
         else:
             try:
                 return self.info[attr]
@@ -74,12 +77,11 @@ class Textbox(Tk.Text):
     def clear_style(self, styles):
         self.tag_remove(styles, Tk.INSERT)
 
-    def clear_styles(self):
-        self.current_style = ''
-
     def set_styles(self):
         self.current_style = ''
-        for style in self.styles:
+        default = self.tagger['default']
+        self.config(font=self.font, foreground=default.colour, background=default.background)
+        for style in self.tagger:
             self._set_style(style)
 
     def _set_style(self, style):
@@ -152,8 +154,7 @@ class Textbox(Tk.Text):
 
     def reset(self):
         self.edit_modified(False)
-        self.config(font=self.font)
-        self.set_styles()
+        self.current_style = ''
 
     def replace(self, text, start=START, end=END):
         self.delete(start, end)
@@ -207,7 +208,7 @@ class Textbox(Tk.Text):
             if self.is_html:
                 return
         self.is_html = True
-        self.clear_styles()
+        self.current_style = ''
         tags = []
         text = self.formatted_text
         self.delete(*ALL)
@@ -230,7 +231,7 @@ class Textbox(Tk.Text):
     def modify_fontsize(self, size):
         self.font.config(size=size)
         self.config(font=self.font)
-        for (name, key, style) in self.styles:
+        for (name, key, style) in self.tagger:
             self.tag_config(name, **style)
 
     def change_fontsize(self, event):
@@ -261,7 +262,7 @@ class Textbox(Tk.Text):
         styles = self.current_style
         if keysym.startswith('Control_'):
             self.edit_modified(False)
-        elif key and keysym in (key, 'space') and event.num == '??':
+        elif key and event.num == '??':
             if not self.match_brackets(key):
                 try:
                     self.delete(*SELECTION)

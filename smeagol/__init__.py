@@ -1,4 +1,4 @@
 from . import utils
-from .translation import Translator, Markdown
-from .editor import SiteEditor, DictionaryEditor
+from .conversion import Translator, Markdown
+from .editor import Editor, SiteEditor, DictionaryEditor
 from .site import Site

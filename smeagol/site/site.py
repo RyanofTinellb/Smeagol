@@ -1,10 +1,11 @@
 import json
 import os
 
-from ..translation import Markdown, Translator
+from ..conversion import Markdown, Translator
 from .templates import Templates
 from .files import Files
-from ..utils import *
+from smeagol import utils
+from ..utils import asynca
 
 from .page import Page
 

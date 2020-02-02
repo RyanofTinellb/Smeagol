@@ -5,8 +5,8 @@ from uuid import uuid4 as uuid
 from page_utils import *
 
 from ..defaults import default
-from ..translation import *
-from ..utils import *
+from ..conversion import *
+from smeagol import utils
 from .node import Node
 
 markdown = Markdown()
@@ -130,7 +130,7 @@ class Page(Node):
         return dict(name=name, score=score)
 
     def __getitem__(self, entry):
-        if entry is '':
+        if entry == '':
             return self
         count = 0
         try:
@@ -301,7 +301,7 @@ class Page(Node):
         return ('    <script type="text/javascript">\n'
                 'let href = window.location.href;\n'
                 'if (href.indexOf("?") != -1 && href.indexOf("?highlight=") == -1) {\n'
-                '    let term = href.replace(/(.*?\?)(.*?)(#.*|$)/, "$2");\n'
+                '    let term = href.replace(/(.*?\\?)(.*?)(#.*|$)/, "$2");\n'
                 f'    window.location.href = `{hyperlink}?${{term}}&andOr=and`;\n'
                 '}\n'
                 '</script>\n')

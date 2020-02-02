@@ -9,6 +9,7 @@ import tkinter.simpledialog as sd
 from tkinter.font import Font
 from tkinter.font import families as font_families
 from .style import Style
+from ..utils import ignored
 
 
 class StylesWindow(Tk.Frame):
@@ -17,7 +18,7 @@ class StylesWindow(Tk.Frame):
         self.grid()
         self.master.protocol('WM_DELETE_WINDOW', self.cancel)
         self.original = styles
-        self.styles = styles.dict_copy()
+        self.styles = styles.copy()
         self.styles_box(self).grid(
             row=0, column=0, columnspan=3, sticky='s', padx=10, pady=5)
         self.style_buttons(self).grid(row=1, column=0, padx=10)
@@ -36,9 +37,9 @@ class StylesWindow(Tk.Frame):
         return frame
 
     def styles_box(self, master=None):
-        box = ttk.Combobox(master, values=list(self.styles))
+        box = ttk.Combobox(master, values=self.styles.names)
         box.bind('<<ComboboxSelected>>', self.select_style)
-        box.set('transliteration')
+        box.set('default')
         self.current = box
         return box
 
@@ -75,8 +76,8 @@ class StylesWindow(Tk.Frame):
         if name and name not in self.styles:
             self.styles[style].name = name
             self.styles[name] = self.styles[style]
-            self.styles.pop(style, None)
-            self.current.config(values=list(self.styles))
+            self.styles.remove(style)
+            self.current.config(values=self.styles.names)
             self.current.set(name)
             self.select_style()
 
@@ -94,8 +95,8 @@ class StylesWindow(Tk.Frame):
     def add(self, event=None):
         name = sd.askstring('Style Name', 'What is the name of the new style?')
         if name and name not in self.styles:
-            self.styles[name] = Style(name=name)
-            self.current.config(values=list(self.styles))
+            self.styles.add(name)
+            self.current.config(values=self.styles.name)
             self.current.set(name)
             self.select_style()
             self.edit()
@@ -104,8 +105,8 @@ class StylesWindow(Tk.Frame):
         style = self.current.get()
         message = f'Are you sure you wish to delete the style "{style}"?'
         if mb.askyesno('Delete', message):
-            self.styles.pop(style, None)
-            self.current.config(values=list(self.styles))
+            self.styles.remove(style)
+            self.current.config(values=self.styles.name)
             self.current.set('default')
             self.select_style()
 
@@ -132,12 +133,18 @@ class StyleEditor(Tk.Frame):
             if attr == 'unit':
                 value = [v for v in self.units if v.startswith(value[0])][0]
             setattr(self, attr, types[type(value)](value=value))
-        self.font_frame(self).grid(row=0, column=0, rowspan=2, sticky='nw')
-        self.para_frame(self).grid(row=0, column=1, sticky='nw')
-        self.options_frame(self).grid(row=0, column=2, sticky='nw')
-        self.colour_frame(self).grid(row=1, column=1, sticky='nw')
-        self.sample_frame(self).grid(row=2, column=0, columnspan=2, padx=60)
-        self.buttons_frame(self).grid(row=2, column=2, sticky='se')
+        if self.style.name != 'default':
+            self.font_frame(self).grid(row=0, column=0, rowspan=2, sticky='nw')
+            self.sample_frame(self).grid(row=2, column=0, columnspan=2, padx=60)
+            self.buttons_frame(self).grid(row=2, column=2, sticky='se')
+            self.para_frame(self).grid(row=0, column=1, sticky='nw')
+            self.options_frame(self).grid(row=0, column=2, sticky='nw')
+            self.colour_frame(self).grid(row=1, column=1, sticky='nw')
+        else:
+            self.font_frame(self).grid(row=0, column=0)
+            self.colour_frame(self).grid(row=1, column=0)
+            self.sample_frame(self).grid(row=2, column=0, padx=20)
+            self.buttons_frame(self).grid(row=2, column=1, sticky='s')
 
     def options_frame(self, master=None):
         frame = ttk.LabelFrame(master, text='options')
@@ -192,7 +199,8 @@ class StyleEditor(Tk.Frame):
         self.ok()
 
     def ok(self):
-        self.style.tags = [b.get() for b in self.tag_boxes]
+        with ignored(AttributeError):
+            self.style.tags = [b.get() for b in self.tag_boxes]
         self.master.destroy()
 
     def colour_frame(self, master=None):

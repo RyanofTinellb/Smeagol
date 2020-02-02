@@ -2,12 +2,11 @@ import sys
 import os
 import json
 import re
-from .addremovelinks import AddRemoveLinks
 from ..widgets import TemplatesWindow, PropertiesWindow, Style
 from ..site.files import Files
 from ..site.site import Site
-from ..translation import *
-from ..utils import *
+from ..conversion import *
+from smeagol import utils
 from ..errors import *
 from ..defaults import default
 import tkinter.filedialog as fd
@@ -25,7 +24,7 @@ class Interface:
                 Files
                 Styles
 
-                    AddRemoveLinks
+                    Linker
                     Markdown
                     Translator
                     Evolver
@@ -107,7 +106,7 @@ class Interface:
         styles = self.configuration.get('styles', {})
         self.styles = {n: Style(name=n, **s) for n, s in styles.items()}
         self.site = self.setup_site()
-        self.linkadder = AddRemoveLinks(self.links, self.wordlist, self.translator)
+        self.linkadder = Linker(self.links, self.wordlist, self.translator)
         self.marker = self.setup_markdown()
         self.randomwords = RandomWords(self.language, self.sample_texts)
     

@@ -1,5 +1,6 @@
 import os.path
-from ..utils import *
+from smeagol import utils
+import tkinter as Tk
 
 class TemplatesWindow(Tk.Toplevel):
     def __init__(self, templates=None, editor=None, master=None):

@@ -1,6 +1,7 @@
-from .site_editor import SiteEditor, Tk
+from .site_editor import SiteEditor
+import tkinter as Tk
 from smeagol.site.page import Page
-from smeagol.utils import *
+from ..utils import asynca
 from ..widgets import Textbox
 
 

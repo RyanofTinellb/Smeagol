@@ -9,7 +9,8 @@ from itertools import zip_longest
 
 from ..defaults import default
 
-from .editor import *
+from .editor import Editor
+from ..utils import asynca
 from .interface import Interface
 
 
