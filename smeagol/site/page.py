@@ -9,7 +9,6 @@ from ..conversion import *
 from smeagol import utils
 from .node import Node
 
-markdown = Markdown()
 
 
 class Page(Node):

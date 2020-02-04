@@ -8,11 +8,26 @@ from smeagol import utils
 class Markdown:
     def __init__(self, markdown=None):
         '''@param markdown: filename (str) || markdown (dict[])'''
+        markdown = markdown or []
         try:
             self.replacements = self.load(markdown)
             self.filename = markdown
         except TypeError:
             self.replacements = markdown
+            self.filename = ''
+        
+    def __getitem__(self, index):
+        return self.replacements[index]
+    
+    def __iadd__(self, item):
+        self.replacements.append(item)
+        return self
+    
+    def copy(self):
+        if self.filename:
+            return __class__(self.filename)
+        else:
+            return __class__(self.replacements)
 
     def load(self, filename):
         try:

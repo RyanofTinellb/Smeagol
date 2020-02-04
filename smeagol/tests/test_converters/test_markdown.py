@@ -42,3 +42,8 @@ def test_markdowns(markdowns):
         for string in strings.values():
             assert markdown.to_markdown(string) == strings['Display']
             assert markdown.to_markup(string) == strings['HTML_text']
+
+def test_iadd(markdown):
+    markdown += dict(markup='alpha', markdown='beta', display_markdown=False)
+    assert len(markdown.replacements) == 3
+    assert markdown[-1] == dict(markup='alpha', markdown='beta', display_markdown=False)

@@ -9,8 +9,6 @@ from ..utils import asynca
 
 from .page import Page
 
-markdown = Markdown()
-
 class Site:
     def __init__(self, destination=None, name=None, files=None):
         self.destination = destination
