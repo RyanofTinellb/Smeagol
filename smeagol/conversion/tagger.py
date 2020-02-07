@@ -54,7 +54,8 @@ class Tagger:
     
     def show_tags(self, text):
         '''text is formatted'''
-        text = json.loads(text[1:])
+        with ignored(TypeError):
+            text = json.loads(text[1:])
         self.tags = []
         text = ''.join([self._retag(*elt) for elt in text])
         self.tags.reverse()

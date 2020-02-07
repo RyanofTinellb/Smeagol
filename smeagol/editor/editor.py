@@ -7,7 +7,7 @@ import tkinter.ttk as ttk
 import webbrowser as web
 from tkinter.ttk import Combobox
 
-from ..widgets import Textbox, StylesWindow
+from ..widgets import Textbox, StylesWindow, MarkdownWindow
 from ..conversion import *
 from smeagol import utils
 from ..utils import tkinter
@@ -140,7 +140,7 @@ class Editor(Tk.Frame):
                         self.bind_class(tkobj, key, command)
 
     def setup_markdown(self, filename=None):
-        self.marker = Markdown(filename)
+        self.marker = self.converters.get('markdown', None) or Markdown()
         self.markup = self.marker.to_markup
         self.markdown = self.marker.to_markdown
 
@@ -211,7 +211,7 @@ class Editor(Tk.Frame):
         self.textbox.replace(str(text))
         self.textbox.focus_set()
         self.update_wordcount(self.textbox)
-        self._from_html()
+        self.hide_tags()
 
     def select_word(self, event):
         textbox = event.widget
@@ -255,7 +255,7 @@ class Editor(Tk.Frame):
             text += ' '
             textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
             textbox.insert(Tk.INSERT + '+1c', text)
-        self._from_html()
+        self.hide_tags()
         return 'break'
 
     def add_descendant(self, event):
@@ -282,7 +282,7 @@ class Editor(Tk.Frame):
             text += ' '
             textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
             textbox.insert(Tk.INSERT + '+1c', text)
-        self._from_html()
+        self.hide_tags()
         return 'break'
 
     def markdown_open(self, event=None):
@@ -326,10 +326,10 @@ class Editor(Tk.Frame):
         self.textbox.replace(self.Text(self.textbox.text).markdown)
 
     def markdown_edit(self, event=None):
-        name = self.marker.filename
-        with open(name) as filename:
-            text = filename.read()
-        self.new_tab(name=os.path.split(name)[1], text=text)
+        top = Tk.Toplevel(self)
+        editor = MarkdownWindow(top, self.marker)
+        self.wait_window(top)
+        self.marker = editor.markdown
 
     def edit_styles(self, event=None):
         top = Tk.Toplevel()
@@ -338,11 +338,11 @@ class Editor(Tk.Frame):
         self.wait_window(top)
         self.textbox.add_commands()
 
-    def _to_html(self):
-        self.textbox._to_html()
+    def show_tags(self):
+        self.textbox.show_tags()
 
-    def _from_html(self):
-        self.textbox._from_html()
+    def hide_tags(self):
+        self.textbox.hide_tags()
 
     def show_window(self):
         self.set_window_size(self.top)
@@ -353,8 +353,8 @@ class Editor(Tk.Frame):
     def menu_commands(self):
         return [('Styles', [
                  ('Edit', self.edit_styles),
-                 ('Apply', self._from_html),
-                 ('Show as Ht_ml', self._to_html)]),
+                 ('Apply', self.hide_tags),
+                 ('Show as Ht_ml', self.show_tags)]),
                 ('Markdown', [
                  ('Edit', self.markdown_edit),
                  ('Clear', self.markdown_clear),

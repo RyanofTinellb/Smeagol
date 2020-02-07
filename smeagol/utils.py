@@ -67,33 +67,27 @@ def increment(lst, by):
 
 
 def save(dictionary, filename):
-    if filename:
-        with ignored(os.error):
-            os.makedirs(os.path.dirname(filename))
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(dictionary, f, ensure_ascii=False, indent=2)
+    with ignored(os.error):
+        os.makedirs(os.path.dirname(filename))
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(dictionary, f, ensure_ascii=False, indent=2)
 
 
 def saves(string, filename):
-    if filename:
-        with ignored(os.error):
-            os.makedirs(os.path.dirname(filename))
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write(string)
+    with ignored(os.error):
+        os.makedirs(os.path.dirname(filename))
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(string)
 
 
 def load(filename):
-    if filename:
-        with open(filename, encoding='utf-8') as f:
-            return json.load(f)
-    else:
-        raise TypeError
+    with open(filename, encoding='utf-8') as f:
+        return json.load(f)
 
 
 def loads(filename):
-    if filename:
-        with open(filename, encoding='utf-8') as f:
-            return f.read()
+    with open(filename, encoding='utf-8') as f:
+        return f.read()
 
 
 def buyCaps(word):

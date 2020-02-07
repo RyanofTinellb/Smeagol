@@ -118,9 +118,9 @@ class Textbox(Tk.Text):
     def _add_style(self, name):
         try:
             if self.is_html:
-                self._from_html()
+                self.hide_tags()
         except AttributeError:
-            self._from_html()
+            self.hide_tags()
         styles = set(self.current_style)
         styles.add(name)
         self.current_style = styles
@@ -182,52 +182,26 @@ class Textbox(Tk.Text):
         wordcount = text.count(' ') + text.count('\n') - text.count('|')
         self.info['wordcount'].set(wordcount)
 
-    def _from_html(self):
+    def hide_tags(self):
         with ignored(AttributeError):
             if not self.is_html:
                 return
         self.is_html = False
-
-        def _tag(text):
-            if text.startswith('/'):
-                return 'tagoff', text[1:], None
-            else:
-                return 'tagon', text, None
-
-        def _text(text):
-            return 'text', text, None
-
-        text = re.split('[<>]', self.text)
-        text = [f(x) for f, x in zip(cycle([_text, _tag]), text)]
-        text = f'\x08{json.dumps(text, indent=2)}'
+        self.current_style = ''
+        text = self.text
+        text = self.tagger.hide_tags(text)
         self._paste(borders=ALL, text=text)
-        self.reset()
 
-    def _to_html(self, event=None):
+    def show_tags(self, event=None):
         with ignored(AttributeError):
             if self.is_html:
                 return
         self.is_html = True
         self.current_style = ''
-        tags = []
         text = self.formatted_text
-        self.delete(*ALL)
-        for key, value, index in text:
-            if key == 'mark' and value == INSERT:
-                self.mark_set(USER_MARK, INSERT)
-                self.mark_gravity(USER_MARK, Tk.LEFT)
-            elif key == 'tagon':
-                tags.append(value)
-                self.insert(f'<{value}>')
-            elif key == 'text':
-                self.insert(value)
-            elif key == 'tagoff':
-                value = tags.pop()
-                self.insert(f'</{value}>')
-        tags.reverse()
-        for tag in tags:
-            self.insert(f'</{tag}>')
-
+        text = self.tagger.show_tags(text)
+        self._paste(borders=ALL, text=text)
+    
     def modify_fontsize(self, size):
         self.font.config(size=size)
         self.config(font=self.font)

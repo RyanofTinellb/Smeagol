@@ -30,8 +30,8 @@ def blank_window(top):
 def window_with_markdown(top, markdown):
     return MarkdownWindow(top, markdown)
 
-def test_window(blank_window):
-    blank_window.mainloop()
+# def test_window(blank_window):
+#     blank_window.mainloop()
 
-def test_markdown_window(window_with_markdown):
-    window_with_markdown.mainloop()
+# def test_markdown_window(window_with_markdown):
+#     window_with_markdown.mainloop()
