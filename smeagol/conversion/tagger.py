@@ -88,6 +88,16 @@ class Tagger:
 
     def _text(self, text):
         return 'text', text, None
-
-if __name__ == '__main__':
-    Tagger()
+    
+    def expand_tags(self, text):
+        for style in self:
+            start, end = style.tags
+            if style.language:
+                def _lang(regex, tag=start):
+                    return tag.replace('>', f' lang="x-tlb-{regex.group(1)}">')
+                text = re.sub(fr'<{style.name}-(.*?)>', _lang, text)
+                text = re.sub(fr'</{style.name}-(.*?)>', end, text)
+            else:
+                text = text.replace(f'<{style.name}>', start)
+                text = text.replace(f'</{style.name}>', end)
+        return text

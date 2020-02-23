@@ -96,7 +96,7 @@ class StylesWindow(Tk.Frame):
         name = sd.askstring('Style Name', 'What is the name of the new style?')
         if name and name not in self.styles:
             self.styles.add(name)
-            self.current.config(values=self.styles.name)
+            self.current.config(values=self.styles.names)
             self.current.set(name)
             self.select_style()
             self.edit()

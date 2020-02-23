@@ -20,7 +20,6 @@ class Editor(Tk.Frame):
         self.closed_tabs = []
         self.create_layout(self.master)
         self.new_tab(converters=converters)
-        self.setup_markdown()
         if tests:
             tests(self)
 
@@ -138,11 +137,6 @@ class Editor(Tk.Frame):
                         tkobj.bind(key, command)
                     except AttributeError:
                         self.bind_class(tkobj, key, command)
-
-    def setup_markdown(self, filename=None):
-        self.marker = self.converters.get('markdown', None) or Markdown()
-        self.markup = self.marker.to_markup
-        self.markdown = self.marker.to_markdown
 
     def change_language(self, event=None):
         language = self.info['language'].get()[:2]

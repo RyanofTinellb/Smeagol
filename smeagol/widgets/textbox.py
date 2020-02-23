@@ -5,6 +5,7 @@ from tkinter.scrolledtext import ScrolledText
 from tkinter.font import Font
 from ..utils import ignored
 from itertools import cycle
+from smeagol.conversion import Markdown
 
 START = '1.0'
 END = 'end-1c'
@@ -46,6 +47,7 @@ class Textbox(Tk.Text):
             self.translator = Translator()
         self.languages = self.translator.languages
         self.language.set(self.translator.fullname)
+        self.marker = self.converters.get('markdown', None) or Markdown()
         self.add_commands()
 
     def __getattr__(self, attr):
