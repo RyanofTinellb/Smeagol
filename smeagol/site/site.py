@@ -6,6 +6,7 @@ from .templates import Templates
 from .files import Files
 from smeagol import utils
 from ..utils import asynca
+from ..errors import *
 
 from .page import Page
 
@@ -35,12 +36,11 @@ class Site:
         if self.source:
             try:
                 with open(self.source, encoding='utf-8') as source:
-                    tree = json.load(source)
+                    self.tree = json.load(source)
             except FileNotFoundError:
                 raise SourceFileNotFoundError
         else:
-            raise SourceFileNotFoundError
-        self.tree = tree
+            self.tree = {}
 
     def __getattr__(self, attr):
         if attr == 'files':

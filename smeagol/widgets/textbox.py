@@ -6,6 +6,7 @@ from tkinter.font import Font
 from ..utils import ignored
 from itertools import cycle
 from smeagol.conversion import Markdown
+from ..editor import Interface
 
 START = '1.0'
 END = 'end-1c'
@@ -26,28 +27,21 @@ BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
 
 
 class Textbox(Tk.Text):
-    def __init__(self, master=None, converters=None):
+    def __init__(self, master=None, interface=None):
         super().__init__(master, height=1, width=1, wrap=Tk.WORD,
                          undo=True)
-        self.converters = converters or {}
-        try:
-            self.tagger = self.converters['tagger']
-        except KeyError:
-            from ..conversion import Tagger
-            self.tagger = Tagger()
+        self.interface = interface or Interface()
         self.ready()
+
+    def grid(self, *args, **kwargs):
+        super().grid(*args, **kwargs)
+        return self
 
     def ready(self):
         self.info = dict(wordcount=Tk.StringVar(), randomwords=Tk.StringVar(),
                          style=Tk.StringVar(), language=Tk.StringVar())
-        try:
-            self.translator = self.converters['translator']
-        except KeyError:
-            from ..conversion import Translator
-            self.translator = Translator()
-        self.languages = self.translator.languages
-        self.language.set(self.translator.fullname)
-        self.marker = self.converters.get('markdown', None) or Markdown()
+        self.languages = self.interface.translator.languages
+        self.language.set(self.interface.translator.fullname)
         self.add_commands()
 
     def __getattr__(self, attr):
@@ -59,7 +53,7 @@ class Textbox(Tk.Text):
             if language := self.language.get():
                 return language[:2]
         elif attr == 'font':
-            return self.tagger['default'].Font
+            return self.interface.tagger['default'].Font
         else:
             try:
                 return self.info[attr]
@@ -81,9 +75,9 @@ class Textbox(Tk.Text):
 
     def set_styles(self):
         self.current_style = ''
-        default = self.tagger['default']
+        default = self.interface.tagger['default']
         self.config(font=self.font, foreground=default.colour, background=default.background)
-        for style in self.tagger:
+        for style in self.interface.tagger:
             self._set_style(style)
 
     def _set_style(self, style):
@@ -191,7 +185,7 @@ class Textbox(Tk.Text):
         self.is_html = False
         self.current_style = ''
         text = self.text
-        text = self.tagger.hide_tags(text)
+        text = self.interface.tagger.hide_tags(text)
         self._paste(borders=ALL, text=text)
 
     def show_tags(self, event=None):
@@ -201,13 +195,13 @@ class Textbox(Tk.Text):
         self.is_html = True
         self.current_style = ''
         text = self.formatted_text
-        text = self.tagger.show_tags(text)
+        text = self.interface.tagger.show_tags(text)
         self._paste(borders=ALL, text=text)
     
     def modify_fontsize(self, size):
         self.font.config(size=size)
         self.config(font=self.font)
-        for (name, key, style) in self.tagger:
+        for (name, key, style) in self.interface.tagger:
             self.tag_config(name, **style)
 
     def change_fontsize(self, event):

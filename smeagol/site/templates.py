@@ -1,5 +1,5 @@
-from smeagol import utils
 from ..errors import SectionFileNotFoundError
+from ..utils import *
 
 import re
 

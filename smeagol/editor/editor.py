@@ -7,21 +7,19 @@ import tkinter.ttk as ttk
 import webbrowser as web
 from tkinter.ttk import Combobox
 
-from ..widgets import Textbox, StylesWindow, MarkdownWindow
+from .. import widgets as wd
 from ..conversion import *
 from smeagol import utils
-from ..utils import tkinter
+from ..utils import tkinter, ignored
 
 
 class Editor(Tk.Frame):
-    def __init__(self, master=None, converters=None, tests=None):
+    def __init__(self, master=None, interface=None):
         super().__init__(master)
         self.master.withdraw()
         self.closed_tabs = []
         self.create_layout(self.master)
-        self.new_tab(converters=converters)
-        if tests:
-            tests(self)
+        self.new_tab(interface=interface)
 
     def Text(self, text):
         return Text(self, text)
@@ -31,6 +29,8 @@ class Editor(Tk.Frame):
             return self.notebook.nametowidget(self.notebook.select())
         if attr == 'textbox':
             return self.tab.textbox
+        elif attr == 'interface':
+            return self.textbox.interface
         else:
             return getattr(super(), attr)
 
@@ -70,26 +70,22 @@ class Editor(Tk.Frame):
                                     underline=underline)
                 submenu.bind(f'<KeyPress-{keypress}>', command)
         return menubar
-    
+
     def textframe(self, master):
         frame = Tk.Frame(master)
         self.notebook = self.new_notebook(frame)
         self.notebook.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
         return frame
-    
+
     def new_notebook(self, master):
         notebook = ttk.Notebook(master)
         notebook.bind('<<NotebookTabChanged>>', self.change_tab)
         notebook.bind('<Button-2>', self.close_tab)
         return notebook
 
-    def new_textbox(self, master, styles=None):
-        textbox = Textbox(master, styles)
-        self.add_commands(textbox, self.textbox_commands)
-        return textbox
-        
     def sidebar(self, master):
         frame = Tk.Frame(master)
+        self.headings = self.headings_frame().grid(row=0, column=0)
         self.displays = dict(
             wordcount=Tk.Label(master=frame, font=('Arial', 14), width=20),
             style=Tk.Label(master=frame, font=('Arial', 12)),
@@ -98,6 +94,11 @@ class Editor(Tk.Frame):
             blank=Tk.Label(master=frame, height=1000))
         for row, display in enumerate(self.displays.values(), start=1):
             display.grid(row=row, column=0)
+        return frame
+
+    def headings_frame(self):
+        frame = wd.HeadingFrame(bounds=(0, 10), master=self)
+        frame.bind_commands(self.heading_commands)
         return frame
 
     def update_displays(self):
@@ -147,18 +148,23 @@ class Editor(Tk.Frame):
     def go_to(self, position):
         self.textbox.mark_set(Tk.INSERT, position)
         self.textbox.see(Tk.INSERT)
-    
-    def new_tab(self, name='', text='', converters=None):
+
+    def new_textbox(self, master, interface=None):
+        textbox = wd.Textbox(master, interface)
+        self.add_commands(textbox, self.textbox_commands)
+        return textbox
+
+    def new_tab(self, name='', text='', interface=None):
         notebook = self.notebook
         frame = Tk.Frame(notebook)
-        textbox = self.new_textbox(frame, converters)
+        textbox = self.new_textbox(frame, interface)
         textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
         textbox.insert(text)
         frame.textbox = textbox
         notebook.add(frame)
         notebook.select(frame)
         self.rename_tab(name)
-    
+
     def open_new_tab(self, event=None):
         self.new_tab(converters=self.textbox.converters)
 
@@ -184,9 +190,23 @@ class Editor(Tk.Frame):
             self.notebook.add(tab)
             self.notebook.select(tab)
         return 'break'
-    
+
     def rename_tab(self, text):
         self.notebook.tab(self.tab, text=text)
+
+    def previous_entry(self, event):
+        level = event.widget.level
+        entry = self.interface.find_entry(self.headings.headings[:level+1])
+        lineage = entry.previous_sister.lineage
+        self.headings.headings = [x.name for x in lineage][1:]
+        return 'break'
+
+    def next_entry(self, event):
+        level = event.widget.level
+        entry = self.interface.find_entry(self.headings.headings[:level+1])
+        lineage = entry.next_sister.lineage
+        self.headings.headings = [x.name for x in lineage][1:]
+        return 'break'
 
     def refresh_random(self, event=None):
         if self.randomwords:
@@ -321,14 +341,14 @@ class Editor(Tk.Frame):
 
     def markdown_edit(self, event=None):
         top = Tk.Toplevel(self)
-        editor = MarkdownWindow(top, self.marker)
+        editor = wd.MarkdownWindow(top, self.marker)
         self.wait_window(top)
         self.marker = editor.markdown
 
     def edit_styles(self, event=None):
         top = Tk.Toplevel()
         tagger = self.textbox.tagger
-        window = StylesWindow(tagger, master=top)
+        window = wd.StylesWindow(tagger, master=top)
         self.wait_window(top)
         self.textbox.add_commands()
 
@@ -366,3 +386,8 @@ class Editor(Tk.Frame):
                 ('<Control-t>', self.open_new_tab),
                 ('<Control-T>', self.reopen_tab),
                 ('<Control-w>', self.close_tab)]
+
+    @property
+    def heading_commands(self):
+        return [('<Prior>', self.previous_entry),
+                ('<Next>', self.next_entry)]

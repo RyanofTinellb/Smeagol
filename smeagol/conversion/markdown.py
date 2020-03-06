@@ -1,6 +1,5 @@
 import os
 import json
-from smeagol.defaults import default
 from smeagol.errors import MarkdownFileNotFoundError
 from smeagol import utils
 

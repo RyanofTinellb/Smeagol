@@ -2,11 +2,9 @@ import os
 import shutil
 from uuid import uuid4 as uuid
 
-from page_utils import *
-
 from ..defaults import default
 from ..conversion import *
-from smeagol import utils
+from ..utils import asynca
 from .node import Node
 
 
@@ -56,6 +54,26 @@ class Page(Node):
 
     def __str__(self):
         return '['.join(self.text) # some pages are meant to start without a [
+    
+    alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
+    punctuation = "$-.#()!_"
+    radix = len(punctuation)
+    double_letter = rf'([^{punctuation}])\1'
+
+    @staticmethod
+    def score_pattern(word, pattern, radix, points):
+        return sum([points * radix**index
+                    for index in pattern_indices(word, pattern)])
+
+    @staticmethod
+    def pattern_indices(word, pattern):
+        index = -1
+        while True:
+            try:
+                index = word.index(pattern, index + 1)
+                yield index
+            except ValueError:
+                return
 
     def update_date(self):
         self.find()['date'] = dt.strftime(dt.today(), '%Y-%m-%d')

@@ -1,43 +1,191 @@
 class default:
-    markdown = '''<!DOCTYPE text/html>
-á | (a | s<br>
-é | (e | s<br>
-í | (i | s<br>
-ó | (o | s<br>
-ú | (u | s<br>
-à | )a | s<br>
-è | )e | s<br>
-ì | )i | s<br>
-ò | )o | s<br>
-Ṭ | )T | s<br>
-ṭ | )t | s<br>
-ù | )u | s<br>
-â | ()a | s<br>
-ê | ()e | s<br>
-î | ()i | s<br>
-ô | ()o | s<br>
-û | ()u | s<br>
-ž | )(z | s<br>
-ñ | !!n | s<br>
-ã | !!a | s<br>
-õ | !!o | s<br>
-h̰ | !!h | s<br>
-l̰ | !!l | s<br>
-ä | !a | s<br>
-ë | !e | s<br>
-ï | !i | s<br>
-ö | !o | s<br>
-ü | !u | s<br>
-ā | _a | s<br>
-ē | _e | s<br>
-ī | _i | s<br>
-ō | _o | s<br>
-ū | _u | s<br>
-ŗ | ,r | s<br>
-’ | ' | s<br>
-ʔ | '' | s<br>
-· | .. | s<br>
-'''
+    markdown = [
+  {
+    "markup": "á",
+    "markdown": "(a",
+    "display_markdown": False
+  },
+  {
+    "markup": "é",
+    "markdown": "(e",
+    "display_markdown": False
+  },
+  {
+    "markup": "í",
+    "markdown": "(i",
+    "display_markdown": False
+  },
+  {
+    "markup": "ó",
+    "markdown": "(o",
+    "display_markdown": False
+  },
+  {
+    "markup": "ú",
+    "markdown": "(u",
+    "display_markdown": False
+  },
+  {
+    "markup": "à",
+    "markdown": ")a",
+    "display_markdown": False
+  },
+  {
+    "markup": "è",
+    "markdown": ")e",
+    "display_markdown": False
+  },
+  {
+    "markup": "ì",
+    "markdown": ")i",
+    "display_markdown": False
+  },
+  {
+    "markup": "ò",
+    "markdown": ")o",
+    "display_markdown": False
+  },
+  {
+    "markup": "Ṭ",
+    "markdown": ")T",
+    "display_markdown": False
+  },
+  {
+    "markup": "ṭ",
+    "markdown": ")t",
+    "display_markdown": False
+  },
+  {
+    "markup": "ù",
+    "markdown": ")u",
+    "display_markdown": False
+  },
+  {
+    "markup": "â",
+    "markdown": "()a",
+    "display_markdown": False
+  },
+  {
+    "markup": "ê",
+    "markdown": "()e",
+    "display_markdown": False
+  },
+  {
+    "markup": "î",
+    "markdown": "()i",
+    "display_markdown": False
+  },
+  {
+    "markup": "ô",
+    "markdown": "()o",
+    "display_markdown": False
+  },
+  {
+    "markup": "û",
+    "markdown": "()u",
+    "display_markdown": False
+  },
+  {
+    "markup": "ž",
+    "markdown": ")(z",
+    "display_markdown": False
+  },
+  {
+    "markup": "ñ",
+    "markdown": "!!n",
+    "display_markdown": False
+  },
+  {
+    "markup": "ã",
+    "markdown": "!!a",
+    "display_markdown": False
+  },
+  {
+    "markup": "õ",
+    "markdown": "!!o",
+    "display_markdown": False
+  },
+  {
+    "markup": "h̰",
+    "markdown": "!!h",
+    "display_markdown": False
+  },
+  {
+    "markup": "l̰",
+    "markdown": "!!l",
+    "display_markdown": False
+  },
+  {
+    "markup": "ä",
+    "markdown": "!a",
+    "display_markdown": False
+  },
+  {
+    "markup": "ë",
+    "markdown": "!e",
+    "display_markdown": False
+  },
+  {
+    "markup": "ï",
+    "markdown": "!i",
+    "display_markdown": False
+  },
+  {
+    "markup": "ö",
+    "markdown": "!o",
+    "display_markdown": False
+  },
+  {
+    "markup": "ü",
+    "markdown": "!u",
+    "display_markdown": False
+  },
+  {
+    "markup": "ā",
+    "markdown": "_a",
+    "display_markdown": False
+  },
+  {
+    "markup": "ē",
+    "markdown": "_e",
+    "display_markdown": False
+  },
+  {
+    "markup": "ī",
+    "markdown": "_i",
+    "display_markdown": False
+  },
+  {
+    "markup": "ō",
+    "markdown": "_o",
+    "display_markdown": False
+  },
+  {
+    "markup": "ū",
+    "markdown": "_u",
+    "display_markdown": False
+  },
+  {
+    "markup": "ŗ",
+    "markdown": ",r",
+    "display_markdown": False
+  },
+  {
+    "markup": "ʔ",
+    "markdown": "''",
+    "display_markdown": False
+  },
+  {
+    "markup": "’",
+    "markdown": "'",
+    "display_markdown": False
+  },
+  {
+    "markup": "·",
+    "markdown": "..",
+    "display_markdown": False
+  }
+]
 
     config = '''
 {
