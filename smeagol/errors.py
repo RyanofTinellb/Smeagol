@@ -3,7 +3,11 @@ class SiteError(BaseException):
         smeagol.site.site.Site'''
 
 
-class SiteFileError(SiteError, FileNotFoundError):
+class FileNotFound(FileNotFoundError):
+    '''Base class for File errors'''
+
+
+class SiteFileError(SiteError, FileNotFound):
     '''Base class for File errors raised by
         smeagol.site.site.Site'''
 
@@ -12,23 +16,23 @@ class SourceFileNotFoundError(SiteFileError):
     '''Raised when Site cannot find .src file'''
 
 
-class TemplateFileNotFoundError(SiteFileError):
+class TemplateFileNotFound(SiteFileError):
     '''Raised when Site cannot find .html file'''
 
 
-class SectionFileNotFoundError(SiteFileError):
+class SectionFileNotFound(SiteFileError):
     '''Raised when Site cannot find .html file'''
 
 
-class WholepageTemplateFileNotFoundError(SiteFileError):
+class WholepageTemplateFileNotFound(SiteFileError):
     '''Raised when Site cannot find .html file'''
 
 
-class SearchTemplateFileNotFoundError(SiteFileError):
+class SearchTemplateFileNotFound(SiteFileError):
     '''Raised when Site cannot find .html file'''
 
 
-class Search404TemplateFileNotFoundError(SiteFileError):
+class Search404TemplateFileNotFound(SiteFileError):
     '''Raised when Site cannot find .html file'''
 
 
@@ -37,5 +41,5 @@ class MarkdownError(BaseException):
         smeagol.translation.markdown.Markdown'''
 
 
-class MarkdownFileNotFoundError(MarkdownError, FileNotFoundError):
+class MarkdownFileNotFound(MarkdownError, FileNotFound):
     '''Raised when Markdown cannot find .mkd file'''

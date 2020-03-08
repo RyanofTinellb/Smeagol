@@ -7,10 +7,10 @@ import tkinter.ttk as ttk
 import webbrowser as web
 from tkinter.ttk import Combobox
 
+from .. import conversion, utils
 from .. import widgets as wd
-from ..conversion import *
-from smeagol import utils
-from ..utils import tkinter, ignored
+from ..utilities import RandomWords
+from ..utils import ignored, tkinter
 
 
 class Editor(Tk.Frame):
@@ -85,7 +85,7 @@ class Editor(Tk.Frame):
 
     def sidebar(self, master):
         frame = Tk.Frame(master)
-        self.headings = self.headings_frame().grid(row=0, column=0)
+        self.headings = self.headings_frame(frame).grid(row=0, column=0)
         self.displays = dict(
             wordcount=Tk.Label(master=frame, font=('Arial', 14), width=20),
             style=Tk.Label(master=frame, font=('Arial', 12)),
@@ -96,9 +96,9 @@ class Editor(Tk.Frame):
             display.grid(row=row, column=0)
         return frame
 
-    def headings_frame(self):
-        frame = wd.HeadingFrame(bounds=(0, 10), master=self)
-        frame.bind_commands(self.heading_commands)
+    def headings_frame(self, master):
+        frame = wd.HeadingFrame(bounds=(0,10), master=master)
+        frame.commands = self.heading_commands
         return frame
 
     def update_displays(self):
@@ -113,7 +113,7 @@ class Editor(Tk.Frame):
         return label
 
     def language_display(self, master):
-        translator = Translator()
+        translator = conversion.Translator()
         languages = [f'{code}: {lang().name}'
                      for code, lang in translator.languages.items()]
         menu = Combobox(master,
@@ -140,9 +140,8 @@ class Editor(Tk.Frame):
                         self.bind_class(tkobj, key, command)
 
     def change_language(self, event=None):
-        language = self.info['language'].get()[:2]
-        self.translator = Translator(language)
-        self.randomwords = RandomWords(language)
+        language = self.info['language'].get()
+        self.interface.change_language(language)
         return 'break'
 
     def go_to(self, position):
@@ -197,16 +196,30 @@ class Editor(Tk.Frame):
     def previous_entry(self, event):
         level = event.widget.level
         entry = self.interface.find_entry(self.headings.headings[:level+1])
-        lineage = entry.previous_sister.lineage
-        self.headings.headings = [x.name for x in lineage][1:]
+        with ignored(IndexError):
+            self.set_headings(entry.previous_sister)
         return 'break'
 
     def next_entry(self, event):
         level = event.widget.level
         entry = self.interface.find_entry(self.headings.headings[:level+1])
-        lineage = entry.next_sister.lineage
-        self.headings.headings = [x.name for x in lineage][1:]
+        with ignored(IndexError):
+            self.set_headings(entry.next_sister)
         return 'break'
+    
+    def open_entry(self, event):
+        level = event.widget.level
+        entry = self.interface.find_entry(self.headings.headings[:level+1])
+        self.headings.add_heading()
+        self.textbox.text = str(entry)
+    
+    def open_site(self, filename=''):
+        entry = self.interface.open_site(filename)
+        self.set_headings(entry)
+    
+    def set_headings(self, entry):
+        lineage = entry.lineage
+        self.headings.headings = [x.name for x in lineage][1:]
 
     def refresh_random(self, event=None):
         if self.randomwords:
@@ -365,17 +378,20 @@ class Editor(Tk.Frame):
 
     @property
     def menu_commands(self):
-        return [('Styles', [
-                 ('Edit', self.edit_styles),
-                 ('Apply', self.hide_tags),
-                 ('Show as Ht_ml', self.show_tags)]),
-                ('Markdown', [
-                 ('Edit', self.markdown_edit),
-                 ('Clear', self.markdown_clear),
-                 ('Reset', self.markdown_reset),
-                 ('Load', self.markdown_load),
-                 ('Refresh', self.markdown_refresh),
-                 ('Open as _Html', self.markdown_open)])]
+        return [
+            ('Site', [
+                ('Open', self.open_site)]),
+            ('Styles', [
+                ('Edit', self.edit_styles),
+                ('Apply', self.hide_tags),
+                ('Show as Ht_ml', self.show_tags)]),
+            ('Markdown', [
+                ('Edit', self.markdown_edit),
+                ('Clear', self.markdown_clear),
+                ('Reset', self.markdown_reset),
+                ('Load', self.markdown_load),
+                ('Refresh', self.markdown_refresh),
+                ('Open as _Html', self.markdown_open)])]
 
     @property
     def textbox_commands(self):
@@ -390,4 +406,5 @@ class Editor(Tk.Frame):
     @property
     def heading_commands(self):
         return [('<Prior>', self.previous_entry),
-                ('<Next>', self.next_entry)]
+                ('<Next>', self.next_entry),
+                ('<Return>', self.open_entry)]

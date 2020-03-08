@@ -1,6 +1,6 @@
 import os
 import json
-from smeagol.errors import MarkdownFileNotFoundError
+from smeagol.errors import MarkdownFileNotFound
 from smeagol import utils
 
 

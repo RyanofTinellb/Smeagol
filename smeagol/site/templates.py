@@ -1,4 +1,4 @@
-from ..errors import SectionFileNotFoundError
+from ..errors import SectionFileNotFound
 from ..utils import *
 
 import re

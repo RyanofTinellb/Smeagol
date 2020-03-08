@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from datetime import datetime as dt
 from threading import Thread
 
-from .errors import *
+from . import errors
 
 
 @contextmanager

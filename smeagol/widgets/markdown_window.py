@@ -1,4 +1,4 @@
-from ..errors import MarkdownFileNotFoundError
+from ..errors import MarkdownFileNotFound
 from ..conversion import Markdown
 import tkinter as Tk
 import tkinter.messagebox as mb

@@ -37,3 +37,6 @@ def test_previous_entry(editor, site):
     editor.previous_entry(Object(widget=h._headings[1]))
 
     assert editor.headings.headings == ['b', 'd']
+
+def test_open(editor):
+    editor.open_site('c:/users/ryan/tinellbianlanguages/grammar/grammar.smg')

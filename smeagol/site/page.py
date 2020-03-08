@@ -53,7 +53,7 @@ class Page(Node):
             super().__setattr__(attr, value)
 
     def __str__(self):
-        return '['.join(self.text) # some pages are meant to start without a [
+        return '\n'.join(self.text)
     
     alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
     punctuation = "$-.#()!_"

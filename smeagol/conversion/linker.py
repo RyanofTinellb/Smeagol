@@ -1,7 +1,7 @@
 import re
 import json
 from itertools import chain
-from smeagol import Translator
+from .translator import Translator
 from ..utils import urlform, ignored, buyCaps, sellCaps, page_initial
 
 class Linker:

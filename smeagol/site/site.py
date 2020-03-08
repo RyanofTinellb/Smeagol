@@ -1,69 +1,75 @@
 import json
 import os
 
+from .. import utils, errors
 from ..conversion import Markdown, Translator
-from .templates import Templates
 from .files import Files
-from smeagol import utils
-from ..utils import asynca
-from ..errors import *
-
 from .page import Page
+from .templates import Templates
+
 
 class Site:
     def __init__(self, destination=None, name=None, files=None):
         self.destination = destination
         self.name = name
-        self.files = files or Files()
-        if isinstance(self.files, dict):
-            self.files = Files(self.files)
-        self.load_site()
+        self.files = files or {}
+        self.tree = self.load_site()
         self.setup_templates()
     
     def setup_templates(self):
         templates = (
-            (self.template_file, 'template', TemplateFileNotFoundError),
+            (self.template_file, 'template', errors.TemplateFileNotFound),
             (self.wholepage_template, 'wholepage',
-                WholepageTemplateFileNotFoundError),
-            (self.search_template, 'search', SearchTemplateFileNotFoundError),
+                errors.WholepageTemplateFileNotFound),
+            (self.search_template, 'search', errors.SearchTemplateFileNotFound),
             (self.search_template404, 'search404',
-                Search404TemplateFileNotFoundError)
+                errors.Search404TemplateFileNotFound)
         )
         for name, text in Templates(templates, self.sections).items():
             setattr(self, name, text)
+    
+    def refresh_tree(self):
+        self.tree = self.load_site()
 
-    def load_site(self):
+    def load_site(self, source=''):
+        self.source = source or self.source
         if self.source:
             try:
-                with open(self.source, encoding='utf-8') as source:
-                    self.tree = json.load(source)
+                return utils.load(self.source)
             except FileNotFoundError:
-                raise SourceFileNotFoundError
+                raise errors.SourceFileNotFound
         else:
-            self.tree = {}
-
+            return {}
+    
     def __getattr__(self, attr):
         if attr == 'files':
-            return
+            return None
+        elif attr == '_destination':
+            return ''
         try:
             return getattr(self.files, attr)
         except AttributeError:
             return getattr(super(), attr)
-    
+
     def __setattr__(self, attr, value):
         if attr == 'destination':
+            self.change_destination(value)
+        elif attr == 'files':
+            value = Files(value) if isinstance(value, dict) else value
             setattr(Site, attr, value)
-            self.change_destination()
         else:
-            setattr(Site, attr, value)
+            try:
+                setattr(self.files, attr, value)
+            except AttributeError:
+                setattr(Site, attr, value)
 
-    def change_destination(self):
-        if self.destination:
-            destination = self.destination
-            with ignored(os.error):
-                os.makedirs(self.destination)
-            os.chdir(self.destination)
-
+    def change_destination(self, destination=''):
+        self._destination = destination or self._destination
+        if self._destination:
+            with utils.ignored(os.error):
+                os.makedirs(self._destination)
+            os.chdir(self._destination)
+    
     def __iter__(self):
         return self.iterator
 
@@ -85,7 +91,7 @@ class Site:
                 page = page.successor
                 count += 1
         except IndexError:
-            raise KeyError(entry)
+            raise (KeyError if type(entry) in (list, str) else IndexError)(entry)
         return page
 
     @property
@@ -125,12 +131,12 @@ class Site:
         )
 
     def update_source(self):
-        dump(self.tree, self.source)
+        utils.dump(self.tree, self.source)
 
     def update_searchindex(self):
-        dump(self.analysis, self.search_index)
+        utils.dump(self.analysis, self.search_index)
     
-    @asynca
+    @utils.asynca
     def save_wholepage(self):
         contents = map(lambda x: x.wholepage, self)
         contents = '\n'.join(filter(None, contents))
@@ -142,9 +148,9 @@ class Site:
         page = page.replace('{whole-contents}', contents)
         page = re.sub(r'<li class="normal">(.*?)</li>',
                         r'<li><a href="index.html">\1</a></li>', page)
-        dumps(page, self.wholepage_file)
+        utils.dumps(page, self.wholepage_file)
 
-    @asynca
+    @utils.asynca
     def save_search_pages(self):
         for template in (
                 (self.search, self.search_page),
@@ -160,7 +166,7 @@ class Site:
         )
         if filename is self.search_page404:
             page = re.sub(r'(href|src)="/*', r'\1="/', page)
-        dumps(page, filename)
+        utils.dumps(page, filename)
 
     @property
     def analysis(self):
@@ -174,9 +180,9 @@ class Site:
             new_words = analysis['words']
             sentences += analysis['sentences']
             urls.append(entry.link)
-            names.append(buyCaps(entry.name))
+            names.append(utils.buyCaps(entry.name))
             for word, line_numbers in new_words.items():
-                line_numbers = increment(line_numbers, by=base)
+                line_numbers = utils.increment(line_numbers, by=base)
                 locations = {str(page_number): line_numbers}
                 try:
                     words[word].update(locations)

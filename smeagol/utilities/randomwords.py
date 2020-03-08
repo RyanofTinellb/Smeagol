@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from .evolve import HighToDemoticLulani
+from .. import conversion
 import random
 import json
 import re
@@ -19,7 +19,7 @@ class RandomWords:
     def select(self, language=None):
         self.language = language
         try:
-            language = language.lower()
+            language = language.lower()[:2]
             self.converter = self.languages[language]()
         except:
             self.converter = English(self.sample_texts)
@@ -131,7 +131,7 @@ class DemoticLulani:
     def __init__(self):
         self.name = 'Demotic Lulani'
         self.lulani = HighLulani()
-        self.vulgar = HighToDemoticLulani()
+        self.demotic = conversion.HighToDemoticLulani()
         self.rewrites = [
             ('&rsquo;', "\u2019"),
             ('&middot;', '\u00b7'),
@@ -153,7 +153,7 @@ class DemoticLulani:
 
     @property
     def word(self):
-        word = self.vulgar.evolve(self._word)[-1]
+        word = self.demotic.evolve(self._word)[-1]
         for rewrite in self.rewrites:
             word = word.replace(*rewrite)
         return word
