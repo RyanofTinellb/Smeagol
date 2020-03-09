@@ -198,7 +198,8 @@ class Node:
 
     @property
     def lineage(self):
-        yield self.root
+        if not self.is_root:
+            yield self.root
         for ancestor in self.ancestors:
             yield ancestor
         yield self.new()

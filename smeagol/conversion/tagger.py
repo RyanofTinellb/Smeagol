@@ -42,9 +42,9 @@ class Tagger:
 
     def add(self, style):
         try:
-            self.styles[style.name] = style
+            self.styles.setdefault(style.name, style)
         except AttributeError:
-            self.styles[style] = Style(name=style)
+            self.styles.setdefault(style, Style(name=style))
     
     def remove(self, style):
         try:
@@ -57,7 +57,10 @@ class Tagger:
         with ignored(TypeError):
             text = json.loads(text[1:])
         self.tags = []
-        text = ''.join([self._retag(*elt) for elt in text])
+        try:
+            text = ''.join([self._retag(*elt) for elt in text])
+        except TypeError:
+            raise TypeError(text)
         self.tags.reverse()
         text += ''.join([self._untag(tag) for tag in self.tags])
         return text
@@ -71,19 +74,27 @@ class Tagger:
         elif key == 'tagoff' and value != 'sel':
             value = self.tags.pop()
             return f'</{value}>'
+        else:
+            return ''
 
     def _untag(self, tag):
         return f'</{tag}>'
 
     def hide_tags(self, text):
+        self.tags = []
         text = re.split('[<>]', text)
         text = [f(x) for f, x in zip(cycle([self._text, self._tag]), text)]
         return f'\x08{json.dumps(text, indent=2)}'
     
     def _tag(self, text):
         if text.startswith('/'):
-            return 'tagoff', text[1:], None
+            tag = self.tags.pop()
+            return ('text', f'<{text}>', None) if ' ' in tag else ('tagoff', text[1:], None)
         else:
+            self.tags.append(text)
+            if ' ' in text:
+                return 'text', f'<{text}>', None
+            self.add(text)
             return 'tagon', text, None
 
     def _text(self, text):

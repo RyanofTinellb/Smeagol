@@ -20,9 +20,10 @@ class Editor(Tk.Frame):
         self.closed_tabs = []
         self.create_layout(self.master)
         self.new_tab(interface=interface)
+        self.open_site('c:/users/ryan/tinellbianlanguages/grammar/grammar.smg')
 
     def Text(self, text):
-        return Text(self, text)
+        return utils.Text(self, text)
 
     def __getattr__(self, attr):
         if attr == 'tab':
@@ -97,7 +98,7 @@ class Editor(Tk.Frame):
         return frame
 
     def headings_frame(self, master):
-        frame = wd.HeadingFrame(bounds=(0,10), master=master)
+        frame = wd.HeadingFrame(bounds=(1, 10), master=master)
         frame.commands = self.heading_commands
         return frame
 
@@ -147,7 +148,7 @@ class Editor(Tk.Frame):
     def go_to(self, position):
         self.textbox.mark_set(Tk.INSERT, position)
         self.textbox.see(Tk.INSERT)
-
+    
     def new_textbox(self, master, interface=None):
         textbox = wd.Textbox(master, interface)
         self.add_commands(textbox, self.textbox_commands)
@@ -165,7 +166,7 @@ class Editor(Tk.Frame):
         self.rename_tab(name)
 
     def open_new_tab(self, event=None):
-        self.new_tab(converters=self.textbox.converters)
+        self.new_tab(interface=self.textbox.interface)
 
     def change_tab(self, event=None):
         self.update_displays()
@@ -192,34 +193,46 @@ class Editor(Tk.Frame):
 
     def rename_tab(self, text):
         self.notebook.tab(self.tab, text=text)
+    
+    def _entry(self, level):
+        return self.interface.find_entry(self.headings.headings[:level+1])
 
     def previous_entry(self, event):
-        level = event.widget.level
-        entry = self.interface.find_entry(self.headings.headings[:level+1])
         with ignored(IndexError):
-            self.set_headings(entry.previous_sister)
+            self.set_headings(self._entry(event.widget.level).previous_sister)
         return 'break'
 
     def next_entry(self, event):
-        level = event.widget.level
-        entry = self.interface.find_entry(self.headings.headings[:level+1])
         with ignored(IndexError):
-            self.set_headings(entry.next_sister)
+            self.set_headings(self._entry(event.widget.level).next_sister)
         return 'break'
+
+    def load_entry(self, event):
+        entry = self._entry(event.widget.level)
+        self.textbox.entry = entry
+        self.rename_tab(entry.name)
+        try:
+            self.set_headings(entry.eldest_daughter)
+            self.headings.select_last()
+        except IndexError:
+            self.textbox.focus_set()
+            self.textbox.see(Tk.INSERT)
+
+    def open_entry(self, entry):
+        self.set_headings(entry)
     
-    def open_entry(self, event):
-        level = event.widget.level
-        entry = self.interface.find_entry(self.headings.headings[:level+1])
-        self.headings.add_heading()
-        self.textbox.text = str(entry)
-    
+    def reset_entry(self, event):
+        with ignored(AttributeError):
+            self.set_headings(self.textbox.entry)
+
     def open_site(self, filename=''):
         entry = self.interface.open_site(filename)
         self.set_headings(entry)
-    
+
     def set_headings(self, entry):
         lineage = entry.lineage
-        self.headings.headings = [x.name for x in lineage][1:]
+        with ignored(IndexError):
+            self.headings.headings = [x.name for x in lineage][1:]
 
     def refresh_random(self, event=None):
         if self.randomwords:
@@ -262,7 +275,6 @@ class Editor(Tk.Frame):
         except Tk.TclError:
             text = self.select_word(event)
             textbox.tag_remove(Tk.SEL, '1.0', Tk.END)
-        length = len(text)
         text = self.markup(text)
         example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
         converter = self.translator.convert_word  # default setting
@@ -360,8 +372,8 @@ class Editor(Tk.Frame):
 
     def edit_styles(self, event=None):
         top = Tk.Toplevel()
-        tagger = self.textbox.tagger
-        window = wd.StylesWindow(tagger, master=top)
+        tagger = self.interface.tagger
+        wd.StylesWindow(tagger, master=top)
         self.wait_window(top)
         self.textbox.add_commands()
 
@@ -401,10 +413,11 @@ class Editor(Tk.Frame):
                 ('<Control-R>', self.add_translation),
                 ('<Control-t>', self.open_new_tab),
                 ('<Control-T>', self.reopen_tab),
-                ('<Control-w>', self.close_tab)]
+                ('<Control-w>', self.close_tab),
+                ('<Enter>', self.reset_entry)]
 
     @property
     def heading_commands(self):
         return [('<Prior>', self.previous_entry),
                 ('<Next>', self.next_entry),
-                ('<Return>', self.open_entry)]
+                ('<Return>', self.load_entry)]

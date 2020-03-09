@@ -18,7 +18,9 @@ class HeadingFrame(Tk.Frame):
             if heading is None:
                 self.add_heading(entry)
             elif entry is None:
-                self.remove_heading()
+                success = self.remove_heading()
+                if not success:
+                    heading.set()
             else:
                 heading.set(entry)
 
@@ -33,11 +35,16 @@ class HeadingFrame(Tk.Frame):
             self._headings.append(heading.grid())
             if entry is not None:
                 heading.set(entry)
+            return True
 
     def remove_heading(self):
         if len(self._headings) > self.min:
             heading = self._headings.pop()
             heading.destroy()
+            return True
+        
+    def select_last(self):
+        self._headings[-1].focus_set()
         
     @property
     def commands(self):
@@ -59,7 +66,7 @@ class Heading(Tk.Entry):
         for key, command in commands:
             self.bind(f'{key}', command)
 
-    def set(self, value):
+    def set(self, value=''):
         self.delete(0, 'end')
         self.insert(0, value)
 

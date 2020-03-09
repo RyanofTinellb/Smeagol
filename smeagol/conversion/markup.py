@@ -9,14 +9,23 @@ class Markup:
         return '\n'.join([self.convert(line) for line in text])
     
     def convert(self, line):
-        if re.match(r'<table', line):
+        beginning_is = line.startswith
+        if beginning_is('<table'):
             self.table = True
             return line
-        elif re.match(r'</table>', line):
+        elif beginning_is('</table>'):
             self.table = False
+            return line
+        elif beginning_is('<ul') or beginning_is('<ol'):
+            self.list = True
+            return line
+        elif beginning_is('</ul>') or beginning_is('</ol>'):
+            self.list = False
             return line
         elif self.table:
             return self._table(line)
+        elif self.list:
+            return f'<li>{line}</li>'
         elif re.match(r'</*(?:h|div)', line):
             return line
         else:

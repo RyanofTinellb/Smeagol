@@ -131,10 +131,10 @@ class Site:
         )
 
     def update_source(self):
-        utils.dump(self.tree, self.source)
+        utils.save(self.tree, self.source)
 
     def update_searchindex(self):
-        utils.dump(self.analysis, self.search_index)
+        utils.save(self.analysis, self.search_index)
     
     @utils.asynca
     def save_wholepage(self):

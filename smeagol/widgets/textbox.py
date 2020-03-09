@@ -65,8 +65,11 @@ class Textbox(Tk.Text):
             self.replace(value)
         elif attr == 'current_style':
             with ignored(AttributeError):
-                value = ' '.join(value)
+                value = ' '.join([v for v in value if v != 'sel'])
             self.style.set(value)
+        elif attr == 'entry':
+            super().__setattr__(attr, value)
+            self.text = str(self.entry)
         else:
             super().__setattr__(attr, value)
 
@@ -157,10 +160,7 @@ class Textbox(Tk.Text):
         self.insert(text, start)
 
     def insert(self, text='', position=INSERT, tags=None):
-        try:
-            super().insert(position, text, tags)
-        except Tk.TclError:
-            super().insert(text, position, tags)
+        super().insert(position, text, tags)
 
     def delete(self, start=START, end=END):
         super().delete(start, end)
@@ -201,7 +201,7 @@ class Textbox(Tk.Text):
     def modify_fontsize(self, size):
         self.font.config(size=size)
         self.config(font=self.font)
-        for (name, key, style) in self.interface.tagger:
+        for (name, _, style) in self.interface.tagger:
             self.tag_config(name, **style)
 
     def change_fontsize(self, event):
@@ -228,10 +228,12 @@ class Textbox(Tk.Text):
     def insert_characters(self, event):
         key = event.char
         keysym = event.keysym
-        code = event.keycode
+        # code = event.keycode
         styles = self.current_style
         if keysym.startswith('Control_'):
             self.edit_modified(False)
+        elif keysym == 'BackSpace':
+            return
         elif key and event.num == '??':
             if not self.match_brackets(key):
                 try:
@@ -325,7 +327,7 @@ class Textbox(Tk.Text):
         if text.startswith('\x08'):
             styles = []
             tags = json.loads(text[1:])
-            for key, value, index in tags:
+            for key, value, _ in tags:
                 if key == 'mark' and value == INSERT:
                     self.mark_set(USER_MARK, INSERT)
                     self.mark_gravity(USER_MARK, Tk.LEFT)
@@ -361,9 +363,9 @@ class Textbox(Tk.Text):
             self.compare(INSERT, '==', '1.0')
         ):
             correction = ' wordend +1c'
-        elif get_char() == ' ':
+        elif self.get_char() == ' ':
             correction = '+1c wordend'
-        elif get_char() in '.,;:?!':
+        elif self.get_char() in '.,;:?!':
             correction = '+1c'
         else:
             correction = ' wordend'

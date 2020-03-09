@@ -1,12 +1,11 @@
 import os
 import shutil
+from datetime import datetime as dt
 from uuid import uuid4 as uuid
 
+from .. import conversion, utils
 from ..defaults import default
-from ..conversion import *
-from ..utils import asynca
 from .node import Node
-
 
 
 class Page(Node):
@@ -41,8 +40,8 @@ class Page(Node):
 
     def __setattr__(self, attr, value):
         if attr == 'text':
-            with ignored(AttributeError):
-                value = [_f for _f in value.split('[') if _f]
+            with utils.ignored(AttributeError):
+                value = [_f for _f in value.split('\n') if _f]
             self.find()['text'] = value
         elif attr in {'name', 'position', 'script', 'flatname', 'id'}:
             if value:
@@ -203,10 +202,10 @@ class Page(Node):
         entry.id = ''
         return entry
 
-    @asynca
+    @utils.asynca
     def publish(self, template=None):
         text = self.html(template)
-        dumps(text, self.link)
+        utils.saves(text, self.link)
 
     @property
     def list(self):
