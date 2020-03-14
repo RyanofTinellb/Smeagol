@@ -13,7 +13,7 @@ class Markdown:
         except (TypeError, AttributeError):
             self.replacements = arg
             self.filename = ''
-        
+    
     def __getitem__(self, index):
         return self.replacements[index]
     
@@ -23,6 +23,7 @@ class Markdown:
     
     @property
     def non_blank(self):
+        # returns the non-blank entries from the Markdown Window
         return [r for r in self if r['markdown']]
     
     def copy(self):
@@ -36,14 +37,14 @@ class Markdown:
         try:
             self.replacements = utils.load(self.filename)
         except FileNotFoundError:
-            raise MarkdownFileNotFoundError
+            raise MarkdownFileNotFound
     
     def save(self, filename=''):
         self.filename = filename or self.filename
         try:
             utils.save(self.non_blank, self.filename)
         except FileNotFoundError:
-            raise MarkdownFileNotFoundError
+            raise MarkdownFileNotFound
 
     def to_markup(self, text):
         for replacement in reversed(self.replacements):

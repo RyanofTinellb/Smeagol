@@ -62,14 +62,14 @@ class Textbox(Tk.Text):
 
     def __setattr__(self, attr, value):
         if attr == 'text':
-            self.replace(value)
+            self._paste(borders=ALL, text=value)
         elif attr == 'current_style':
             with ignored(AttributeError):
                 value = ' '.join([v for v in value if v != 'sel'])
             self.style.set(value)
         elif attr == 'entry':
             super().__setattr__(attr, value)
-            self.text = str(self.entry)
+            self.text = self.interface.display(self.entry)
         else:
             super().__setattr__(attr, value)
 

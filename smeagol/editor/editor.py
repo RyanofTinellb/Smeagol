@@ -209,14 +209,17 @@ class Editor(Tk.Frame):
 
     def load_entry(self, event):
         entry = self._entry(event.widget.level)
-        self.textbox.entry = entry
-        self.rename_tab(entry.name)
+        self.display_entry(entry)
         try:
             self.set_headings(entry.eldest_daughter)
             self.headings.select_last()
         except IndexError:
             self.textbox.focus_set()
             self.textbox.see(Tk.INSERT)
+        
+    def display_entry(self, entry):
+        self.textbox.entry = entry
+        self.rename_tab(entry.name)
 
     def open_entry(self, entry):
         self.set_headings(entry)
@@ -228,11 +231,10 @@ class Editor(Tk.Frame):
     def open_site(self, filename=''):
         entry = self.interface.open_site(filename)
         self.set_headings(entry)
+        self.display_entry(entry)
 
     def set_headings(self, entry):
-        lineage = entry.lineage
-        with ignored(IndexError):
-            self.headings.headings = [x.name for x in lineage][1:]
+        self.headings.headings = [x.name for x in entry.lineage][1:]
 
     def refresh_random(self, event=None):
         if self.randomwords:
@@ -366,9 +368,9 @@ class Editor(Tk.Frame):
 
     def markdown_edit(self, event=None):
         top = Tk.Toplevel(self)
-        editor = wd.MarkdownWindow(top, self.marker)
+        editor = wd.MarkdownWindow(top, self.interface.markdown)
         self.wait_window(top)
-        self.marker = editor.markdown
+        self.interface.markdown = editor.markdown
 
     def edit_styles(self, event=None):
         top = Tk.Toplevel()

@@ -9,14 +9,18 @@ from ..utils import ignored
 
 class Tagger:
     def __init__(self, styles=None):
+        self.styles = self.load(styles)
+
+    def load(self, styles=None):
         styles = styles or {}
         with ignored(TypeError):
             styles = json.loads(styles)
-        self.styles = {'default': Style(name='default')}
         if isinstance(styles, self.__class__):
-            self.styles.update({n: s.copy() for n, s in styles.styles.items()})
+            styles.update({n: s.copy() for n, s in styles.styles.items()})
         else:
-            self.styles.update({n: Style(name=n, **s) for n, s in styles.items()})
+            styles.update({n: Style(name=n, **s) for n, s in styles.items()})
+        styles.setdefault('default', Style(name='default'))
+        return styles
 
     def __contains__(self, item):
         return item in self.styles

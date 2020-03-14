@@ -14,7 +14,8 @@ class HeadingFrame(Tk.Frame):
 
     @headings.setter
     def headings(self, entries):
-        for entry, heading in zip_longest(entries, self._headings):
+        entries = [x for x in zip_longest(entries, self._headings)]
+        for entry, heading in entries:
             if heading is None:
                 self.add_heading(entry)
             elif entry is None:
@@ -39,7 +40,7 @@ class HeadingFrame(Tk.Frame):
 
     def remove_heading(self):
         if len(self._headings) > self.min:
-            heading = self._headings.pop()
+            heading = self._headings.pop(0)
             heading.destroy()
             return True
         

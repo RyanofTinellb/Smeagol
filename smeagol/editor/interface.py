@@ -35,12 +35,14 @@ class Interface:
         else:
             config = default.config
             self.site.source = filename
+        self.markdown.load(config.get('markdown', None))
+        self.tagger.load(config.get('styles', None))
         self.site.refresh_tree()
         return config
 
     def new_config(self):
         self.translator = conversion.Translator()
-        self.marker = conversion.Markdown()
+        self.markdown = conversion.Markdown()
         self.tagger = conversion.Tagger()
         self.linker = conversion.Linker()
         self.randomwords = RandomWords()
@@ -58,3 +60,9 @@ class Interface:
     def change_language(self, language):
         self.translator.select(language)
         self.randomwords.select(language)
+
+    def display(self, entry):
+         text = str(entry)
+         text = self.markdown.to_markdown(text)
+         text = self.tagger.hide_tags(text)
+         return text

@@ -69,13 +69,13 @@ class MarkdownWindow(Tk.Frame):
         try:
             self.markdown.load(filename)
             self.move(0)
-        except MarkdownFileNotFoundError:
+        except MarkdownFileNotFound:
             self.file_not_found(filename)
 
     def save(self):
         try:
             self.markdown.save()
-        except MarkdownFileNotFoundError:
+        except MarkdownFileNotFound:
             self.saveas()
 
     def saveas(self):
@@ -85,7 +85,7 @@ class MarkdownWindow(Tk.Frame):
             defaultextension='.mkd')
         try:
             self.markdown.save(filename)
-        except MarkdownFileNotFoundError:
+        except MarkdownFileNotFound:
             self.file_not_found(filename)
 
     def file_not_found(self, filename):
@@ -105,6 +105,7 @@ class Entry(Tk.Entry):
         self.bind('<Prior>', parent.up)
         self.bind('<Next>', parent.down)
         self.bind('<MouseWheel>', parent.shift)
+        self.bind('<KeyPress>', lambda x: print(x.keypress))
         
         def handler(*args, master=master, name=name):
             master.entry[name] = self.get()
