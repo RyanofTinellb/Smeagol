@@ -4,7 +4,7 @@ from itertools import cycle
 from contextlib import contextmanager
 
 from ..widgets import Style
-from ..utils import ignored
+from .. import utils
 
 
 class Tagger:
@@ -13,12 +13,12 @@ class Tagger:
 
     def load(self, styles=None):
         styles = styles or {}
-        with ignored(TypeError):
+        with utils.ignored(TypeError):
             styles = json.loads(styles)
         if isinstance(styles, self.__class__):
-            styles.update({n: s.copy() for n, s in styles.styles.items()})
+            styles = {n: s.copy() for n, s in styles.styles.items()}
         else:
-            styles.update({n: Style(name=n, **s) for n, s in styles.items()})
+            styles = {n: Style(name=n, **s) for n, s in styles.items()}
         styles.setdefault('default', Style(name='default'))
         return styles
 
@@ -48,7 +48,9 @@ class Tagger:
         try:
             self.styles.setdefault(style.name, style)
         except AttributeError:
-            self.styles.setdefault(style, Style(name=style))
+            style = style.split('-')
+            language = len(style) > 1
+            self.styles.setdefault(style[0], Style(name=style[0], language=language))
     
     def remove(self, style):
         try:
@@ -58,7 +60,7 @@ class Tagger:
     
     def show_tags(self, text):
         '''text is formatted'''
-        with ignored(TypeError):
+        with utils.ignored(TypeError):
             text = json.loads(text[1:])
         self.tags = []
         try:

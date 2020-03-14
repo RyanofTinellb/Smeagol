@@ -6,6 +6,9 @@ __pycache__/
 *.exe
 *.pyc
 
+# Visual Studio Code
+.vscode/
+
 # C extensions
 *.so
 

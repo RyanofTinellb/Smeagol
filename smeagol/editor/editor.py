@@ -307,7 +307,6 @@ class Editor(Tk.Frame):
         except Tk.TclError:
             text = self.select_word(event)
             textbox.tag_remove(Tk.SEL, '1.0', Tk.END)
-        length = len(text)
         text = self.markup(text)
         example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
         converter = self.evolver.evolve  # default setting
@@ -358,9 +357,8 @@ class Editor(Tk.Frame):
         self.marker.refresh(new_markdown)
         self.textbox.replace(text.markdown)
 
-    @tkinter()
     def markdown_clear(self, event=None):
-        self.textbox.replace(self.Text(self.textbox.text).markup)
+        self.textbox.replace(self.interface.markdown.to_markup(self.textbox.text))
 
     @tkinter()
     def markdown_reset(self, event=None):

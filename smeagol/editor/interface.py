@@ -62,7 +62,7 @@ class Interface:
         self.randomwords.select(language)
 
     def display(self, entry):
-         text = str(entry)
-         text = self.markdown.to_markdown(text)
-         text = self.tagger.hide_tags(text)
-         return text
+        text = str(entry)
+        text = self.markdown.to_markdown(text)
+        text = self.tagger.hide_tags(text)
+        return text

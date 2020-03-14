@@ -3,7 +3,7 @@ import json
 import tkinter as Tk
 from tkinter.scrolledtext import ScrolledText
 from tkinter.font import Font
-from ..utils import ignored
+from .. import utils
 from itertools import cycle
 from smeagol.conversion import Markdown
 from ..editor import Interface
@@ -64,8 +64,8 @@ class Textbox(Tk.Text):
         if attr == 'text':
             self._paste(borders=ALL, text=value)
         elif attr == 'current_style':
-            with ignored(AttributeError):
-                value = ' '.join([v for v in value if v != 'sel'])
+            with utils.ignored(AttributeError):
+                value = '\n'.join([v for v in value if v != 'sel'])
             self.style.set(value)
         elif attr == 'entry':
             super().__setattr__(attr, value)
@@ -107,11 +107,11 @@ class Textbox(Tk.Text):
     def _change_style(self, name):
         if name in self.current_style:
             self._remove_style(name)
-            with ignored(Tk.TclError):
+            with utils.ignored(Tk.TclError):
                 self.tag_remove(name, *SELECTION)
         else:
             self._add_style(name)
-            with ignored(Tk.TclError):
+            with utils.ignored(Tk.TclError):
                 self.tag_add(name, *SELECTION)
 
     def _add_style(self, name):
@@ -179,7 +179,7 @@ class Textbox(Tk.Text):
         self.info['wordcount'].set(wordcount)
 
     def hide_tags(self):
-        with ignored(AttributeError):
+        with utils.ignored(AttributeError):
             if not self.is_html:
                 return
         self.is_html = False
@@ -189,7 +189,7 @@ class Textbox(Tk.Text):
         self._paste(borders=ALL, text=text)
 
     def show_tags(self, event=None):
-        with ignored(AttributeError):
+        with utils.ignored(AttributeError):
             if self.is_html:
                 return
         self.is_html = True
@@ -280,11 +280,11 @@ class Textbox(Tk.Text):
         return 'break'
 
     def deselect(self, start=START, end=END):
-        with ignored(Tk.TclError):
+        with utils.ignored(Tk.TclError):
             self.tag_remove(Tk.SEL, start, end)
 
     def copy_text(self, event=None):
-        with ignored(Tk.TclError):
+        with utils.ignored(Tk.TclError):
             self._copy(SELECTION)
         return 'break'
 
@@ -298,7 +298,7 @@ class Textbox(Tk.Text):
         return text
 
     def cut_text(self, event=None):
-        with ignored(Tk.TclError):
+        with utils.ignored(Tk.TclError):
             self._cut(SELECTION)
         return 'break'
 
@@ -336,7 +336,10 @@ class Textbox(Tk.Text):
                 elif key == 'text':
                     self.insert(value, tags=styles)
                 elif key == 'tagoff':
-                    styles.remove(value)
+                    try:
+                        styles.remove(value)
+                    except ValueError:
+                        break
         else:
             self.insert(text)
 
