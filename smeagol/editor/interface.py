@@ -33,7 +33,6 @@ class Interface:
         super().__setattr__(attr, value)
 
     def open_site(self, filename=''):
-        filename = filename or self.filename
         if not filename:
             options = dict(filetypes=[('Sméagol File', '*.smg'), ('Source Data File', '*.src')],
                            title='Open Site',

@@ -13,10 +13,11 @@ from ..utils import ignored
 
 
 class StylesWindow(Tk.Frame):
-    def __init__(self, styles, master=None):
+    def __init__(self, styles, master=None, name=''):
         super().__init__(master)
         self.grid()
         self.master.protocol('WM_DELETE_WINDOW', self.cancel)
+        self.master.title(f'{name} Styles')
         self.original = styles
         self.styles = styles.copy()
         self.styles_box(self).grid(
@@ -85,7 +86,6 @@ class StylesWindow(Tk.Frame):
         top = Tk.Toplevel()
         editor = StyleEditor(
             master=top, style=self.styles[self.current.get()])
-        editor.grid()
         self.master.withdraw()
         self.wait_window(top)
         self.styles[self.current.get()] = editor.style
@@ -121,6 +121,8 @@ class StylesWindow(Tk.Frame):
 class StyleEditor(Tk.Frame):
     def __init__(self, master=None, style=None):
         super().__init__(master)
+        self.master.title(style.name)
+        self.grid()
         self.backup = style
         self.style = style.copy()
         self.disabled = 'disabled' if self.style.group == 'font' else ''
@@ -145,7 +147,7 @@ class StyleEditor(Tk.Frame):
             self.colour_frame(self).grid(row=1, column=0)
             self.sample_frame(self).grid(row=2, column=0, padx=20)
             self.buttons_frame(self).grid(row=2, column=1, sticky='s')
-
+    
     def options_frame(self, master=None):
         frame = ttk.LabelFrame(master, text='options')
         self.group_frame(frame).grid(row=0, column=0, sticky='w')

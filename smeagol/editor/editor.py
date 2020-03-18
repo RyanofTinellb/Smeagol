@@ -27,7 +27,7 @@ class Editor(Tk.Frame):
 
     def open_random_site(self, root):
         files = [os.path.join(root, file_) for root, _, files in os.walk(root)
-                 for file_ in files if file_.endswith('main.smg')]
+                 for file_ in files if file_.endswith('.smg')]
         print(choice := random.choice(files))
         self.open_site(choice)
 
@@ -39,13 +39,17 @@ class Editor(Tk.Frame):
             return self.notebook.nametowidget(self.notebook.select())
         if attr == 'textbox':
             return self.tab.textbox
-        elif attr == 'interface':
+        if attr == 'interface':
             return self.textbox.interface
-        else:
-            try:
-                return getattr(super(), attr)
-            except AttributeError:
-                raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
+        try:
+            return getattr(super(), attr)
+        except AttributeError:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
+
+    def __setattr__(self, attr, value):
+        if attr == 'title':
+            self.master.title(f'{value} - Sméagol Site Editor')
+        super().__setattr__(attr, value)
 
     @property
     def info(self):
@@ -245,6 +249,7 @@ class Editor(Tk.Frame):
         self.set_headings(entry)
         self.textbox.set_styles()
         self.display_entry(entry)
+        self.title = self.interface.site.name
 
     def save_site(self, filename=''):
         self.interface.save_site(filename)
@@ -361,7 +366,7 @@ class Editor(Tk.Frame):
     def edit_styles(self, event=None):
         top = Tk.Toplevel()
         tagger = self.interface.tagger
-        wd.StylesWindow(tagger, master=top)
+        wd.StylesWindow(tagger, master=top, name=self.interface.site.name)
         self.wait_window(top)
         self.textbox.add_commands()
         self.interface.config['styles'] = dict(self.interface.tagger.items())

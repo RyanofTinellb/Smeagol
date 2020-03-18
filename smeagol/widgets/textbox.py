@@ -87,7 +87,6 @@ class Textbox(Tk.Text):
         name = style.name
         key = style.key
         font = style.Font
-        print(name)
         self.tag_config(name, font=font, **style.paragraph)
         if style.language:
             for language in self.languages:
