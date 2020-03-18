@@ -214,7 +214,7 @@ class StyleEditor(Tk.Frame):
                             width=2)
 
             def handler(name=name, attr=attr, var=var, frame=frame, btn=btn):
-                rgb, colour = ColourChooser.askcolor(
+                _, colour = ColourChooser.askcolor(
                     initialcolor=var.get(), parent=frame, title=name)
                 if colour:
                     var.set(colour)

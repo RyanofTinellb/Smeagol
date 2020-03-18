@@ -2,6 +2,7 @@ import re
 import json
 from contextlib import contextmanager
 from tkinter.font import Font
+from .. import utils
 
 '''
 properties:
@@ -24,23 +25,17 @@ properties:
     top, bottom, line_spacing (int) => paragraph.{spacing1, spacing2, spacing3}
 '''
 
-defaults = dict(name='default', key='', tags=['', ''], group='font', font='Calibri', size=12,
+DEFAULTS = dict(name='default', key='', tags=('', ''), group='font', font='Calibri', size=12,
                 bold=False, italics=False, underline=False, strikethrough=False,
                 offset='baseline', colour='black', background='white', border=False,
                 justification='left', unit='cm', indent=0.0, line_spacing=0.0,
                 left=0.0, right=0.0, top=0.0, bottom=0.0, language=False, hyperlink=False)
 
+defaults = DEFAULTS.copy()
+
 attrs = ('group', 'key', 'font', 'size', 'bold', 'italics', 'underline', 'strikethrough', 'offset',
          'colour', 'background', 'border', 'justification', 'unit', 'left', 'right',
          'top', 'bottom', 'indent', 'line_spacing', 'language', 'hyperlink')
-
-
-@contextmanager
-def ignored(*exceptions):
-    try:
-        yield
-    except exceptions:
-        pass
 
 
 def _int_part(_dict, key):
@@ -174,17 +169,21 @@ class Style:
         return left1, left2
 
     def copy(self):
-        return Style(**self.style.copy())
+        return Style(name=self.name, **self.style.copy())
 
     def items(self, attrs=attrs):
         for attr in attrs:
             yield attr, getattr(self, attr)
 
     def unique_items(self, attrs=attrs, defaults=defaults):
-        for attr in ('name', 'tags') + attrs:
+        for attr in ('tags',) + attrs:
             value = getattr(self, attr)
-            if value != defaults[attr] or attr == 'group' or self.group == 'default':
-                yield attr, value
+            if self.group == 'default':
+                if value != DEFAULTS[attr]:
+                    yield attr, value
+            else:
+                if value != defaults[attr]:
+                    yield attr, value
 
     @property
     def style(self, defaults=defaults):

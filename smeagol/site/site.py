@@ -37,7 +37,7 @@ class Site:
             try:
                 return utils.load(self.source)
             except FileNotFoundError:
-                raise errors.SourceFileNotFound
+                raise errors.SourceFileNotFound(f"No such file or directory: '{self.source}'")
         else:
             return {}
     

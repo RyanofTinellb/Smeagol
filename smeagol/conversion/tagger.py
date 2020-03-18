@@ -9,18 +9,21 @@ from .. import utils
 
 class Tagger:
     def __init__(self, styles=None):
-        self.styles = self.load(styles)
+        self.load(styles)
 
-    def load(self, styles=None):
+    def setup(self, styles=None):
         styles = styles or {}
         with utils.ignored(TypeError):
             styles = json.loads(styles)
+        tagger = dict(default=Style(name='default', group='default'))
         if isinstance(styles, self.__class__):
-            styles = {n: s.copy() for n, s in styles.styles.items()}
+            tagger.update({n: s.copy() for n, s in styles.styles.items()})
         else:
-            styles = {n: Style(name=n, **s) for n, s in styles.items()}
-        styles.setdefault('default', Style(name='default'))
-        return styles
+            tagger.update({n: Style(name=n, **s) for n, s in styles.items()})
+        return tagger
+    
+    def load(self, styles=None):
+        self.styles = self.setup(styles)
 
     def __contains__(self, item):
         return item in self.styles
@@ -39,7 +42,23 @@ class Tagger:
     
     @property
     def names(self):
-        return list(self.styles.keys())
+        return list(self.keys())
+    
+    @property
+    def keys(self):
+        return self.styles.keys
+    
+    @property
+    def values(self):
+        return self._items.values
+
+    @property
+    def items(self):
+        return self._items.items
+    
+    @property
+    def _items(self):
+        return {n: s.style for n, s in self.styles.items()}
     
     def update(self, styles):
         self.styles = styles.styles

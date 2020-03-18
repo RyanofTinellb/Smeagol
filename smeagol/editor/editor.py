@@ -1,4 +1,6 @@
 import json
+import os
+import random
 import re
 import time
 import tkinter as Tk
@@ -17,10 +19,17 @@ class Editor(Tk.Frame):
     def __init__(self, master=None, interface=None):
         super().__init__(master)
         self.master.withdraw()
+        self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.closed_tabs = []
         self.create_layout(self.master)
         self.new_tab(interface=interface)
-        self.open_site('c:/users/ryan/tinellbianlanguages/grammar/grammar.smg')
+        self.open_random_site('c:/users/ryan/tinellbianlanguages')
+
+    def open_random_site(self, root):
+        files = [os.path.join(root, file_) for root, _, files in os.walk(root)
+                 for file_ in files if file_.endswith('main.smg')]
+        print(choice := random.choice(files))
+        self.open_site(choice)
 
     def Text(self, text):
         return utils.Text(self, text)
@@ -33,7 +42,10 @@ class Editor(Tk.Frame):
         elif attr == 'interface':
             return self.textbox.interface
         else:
-            return getattr(super(), attr)
+            try:
+                return getattr(super(), attr)
+            except AttributeError:
+                raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
 
     @property
     def info(self):
@@ -148,7 +160,7 @@ class Editor(Tk.Frame):
     def go_to(self, position):
         self.textbox.mark_set(Tk.INSERT, position)
         self.textbox.see(Tk.INSERT)
-    
+
     def new_textbox(self, master, interface=None):
         textbox = wd.Textbox(master, interface)
         self.add_commands(textbox, self.textbox_commands)
@@ -193,7 +205,7 @@ class Editor(Tk.Frame):
 
     def rename_tab(self, text):
         self.notebook.tab(self.tab, text=text)
-    
+
     def _entry(self, level):
         return self.interface.find_entry(self.headings.headings[:level+1])
 
@@ -216,14 +228,14 @@ class Editor(Tk.Frame):
         except IndexError:
             self.textbox.focus_set()
             self.textbox.see(Tk.INSERT)
-        
+
     def display_entry(self, entry):
         self.textbox.entry = entry
         self.rename_tab(entry.name)
 
     def open_entry(self, entry):
         self.set_headings(entry)
-    
+
     def reset_entry(self, event):
         with ignored(AttributeError):
             self.set_headings(self.textbox.entry)
@@ -231,7 +243,14 @@ class Editor(Tk.Frame):
     def open_site(self, filename=''):
         entry = self.interface.open_site(filename)
         self.set_headings(entry)
+        self.textbox.set_styles()
         self.display_entry(entry)
+
+    def save_site(self, filename=''):
+        self.interface.save_site(filename)
+
+    def save_site_as(self, filename=''):
+        self.interface.save_site_as
 
     def set_headings(self, entry):
         self.headings.headings = [x.name for x in entry.lineage][1:]
@@ -325,44 +344,13 @@ class Editor(Tk.Frame):
         self.hide_tags()
         return 'break'
 
-    def markdown_open(self, event=None):
-        web.open_new_tab(self.marker.filename)
-
-    def markdown_load(self, event=None):
-        filename = fd.askopenfilename(
-            filetypes=[('Sméagol Markdown File', '*.mkd')],
-            title='Load Markdown',
-            defaultextension='.mkd')
-        if filename:
-            self._markdown_load(filename)
-
-    @tkinter()
-    def _markdown_load(self, filename):
-        text = self.Text(self.textbox.text).markup
-        self.markdown_file = filename
-        self.setup_markdown()
-        self.textbox.replace(text.markdown)
-
-    def markdown_refresh(self, event=None, new_markdown=None):
-        try:
-            self._markdown_refresh(new_markdown)
-            self.information.set('OK')
-        except AttributeError:
-            self.information.set('Not OK')
-        return 'break'
-
-    @tkinter()
-    def _markdown_refresh(self, new_markdown=None):
-        text = self.Text(self.textbox.text).markup
-        self.marker.refresh(new_markdown)
-        self.textbox.replace(text.markdown)
-
     def markdown_clear(self, event=None):
-        self.textbox.replace(self.interface.markdown.to_markup(self.textbox.text))
+        text = self.interface.markdown.to_markup(self.textbox.text)
+        self.textbox.replace(text)
 
-    @tkinter()
-    def markdown_reset(self, event=None):
-        self.textbox.replace(self.Text(self.textbox.text).markdown)
+    def markdown_apply(self, event=None):
+        text = self.interface.markdown.to_markdown(self.textbox.text)
+        self.textbox.replace(text)
 
     def markdown_edit(self, event=None):
         top = Tk.Toplevel(self)
@@ -376,6 +364,7 @@ class Editor(Tk.Frame):
         wd.StylesWindow(tagger, master=top)
         self.wait_window(top)
         self.textbox.add_commands()
+        self.interface.config['styles'] = dict(self.interface.tagger.items())
 
     def show_tags(self):
         self.textbox.show_tags()
@@ -387,12 +376,18 @@ class Editor(Tk.Frame):
         self.set_window_size(self.top)
         self.master.update()
         self.master.deiconify()
+    
+    def quit(self):
+        self.save_site()
+        self.master.quit()
 
     @property
     def menu_commands(self):
         return [
             ('Site', [
-                ('Open', self.open_site)]),
+                ('Open', self.open_site),
+                ('Save', self.save_site),
+                ('Save _As', self.save_site_as)]),
             ('Styles', [
                 ('Edit', self.edit_styles),
                 ('Apply', self.hide_tags),
@@ -400,15 +395,11 @@ class Editor(Tk.Frame):
             ('Markdown', [
                 ('Edit', self.markdown_edit),
                 ('Clear', self.markdown_clear),
-                ('Reset', self.markdown_reset),
-                ('Load', self.markdown_load),
-                ('Refresh', self.markdown_refresh),
-                ('Open as _Html', self.markdown_open)])]
+                ('Reset', self.markdown_apply)])]
 
     @property
     def textbox_commands(self):
         return [('<Control-d>', self.add_descendant),
-                ('<Control-m>', self.markdown_refresh),
                 ('<Control-r>', self.refresh_random),
                 ('<Control-R>', self.add_translation),
                 ('<Control-t>', self.open_new_tab),

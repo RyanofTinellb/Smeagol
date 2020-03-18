@@ -7,25 +7,61 @@ from ..site import Site
 
 
 class Interface:
-    def __init__(self):
-        self.new_config()
+    def __init__(self, filename=''):
+        if filename:
+            self.setup(filename)
+        else:
+            self.new_config()
 
     def __getattr__(self, attr):
         if attr == 'site_info':
             return self.config['site']
+        elif attr == 'filename':
+            return None
         else:
-            return getattr(super(), attr)
+            try:
+                return getattr(super(), attr)
+            except AttributeError:
+                name = self.__class__.__name__
+                raise AttributeError(f"'{name}' object has no attribute '{attr}'")
     
-    def open_site(self, filename):
+    def __setattr__(self, attr, value):
+        if attr == 'markdown' and isinstance(value, conversion.Markdown):
+            self.config['markdown'] = value.filename
+        elif attr == 'tagger' and isinstance(value, conversion.Tagger):
+            self.config['styles'] = value.values
+        super().__setattr__(attr, value)
+
+    def open_site(self, filename=''):
+        filename = filename or self.filename
         if not filename:
             options = dict(filetypes=[('Sméagol File', '*.smg'), ('Source Data File', '*.src')],
-                        title='Open Site',
-                        defaultextension='.smg')
+                           title='Open Site',
+                           defaultextension='.smg')
             filename = fd.askopenfilename(**options)
         if filename:
             self.config = self.setup(filename)
         headings = self.config.get('current', {}).get('page', [])
+        self.filename = filename
         return self.find_entry(headings)
+
+    def save_site(self, filename=''):
+        filename = filename or self.filename
+        if filename:
+            utils.save(self.config, filename)
+        else:
+            self.save_site_as(filename)
+        self.filename = filename
+
+    def save_site_as(self, filename=''):
+        filename = filename or self.filename
+        if not filename:
+            options = dict(filetypes=[('Sméagol File', '*.smg')],
+                           title='Save Site',
+                           defaultextension='.smg')
+            filename = fd.asksaveasfilename(**options)
+        if filename:
+            self.save_site(filename)
 
     def setup(self, filename):
         if filename.endswith('.smg'):
@@ -41,6 +77,7 @@ class Interface:
         return config
 
     def new_config(self):
+        self.config = default.config
         self.translator = conversion.Translator()
         self.markdown = conversion.Markdown()
         self.tagger = conversion.Tagger()
@@ -56,7 +93,7 @@ class Interface:
             except (KeyError, IndexError):
                 break
         return entry
-    
+
     def change_language(self, language):
         self.translator.select(language)
         self.randomwords.select(language)

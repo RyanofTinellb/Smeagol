@@ -33,11 +33,13 @@ class Markdown:
             return __class__(self.replacements)
 
     def load(self, filename=''):
-        self.filename = filename or self.filename
-        try:
-            self.replacements = utils.load(self.filename)
-        except FileNotFoundError:
-            raise MarkdownFileNotFound
+        filename = filename or self.filename
+        if filename:
+            try:
+                self.replacements = utils.load(filename)
+            except FileNotFoundError:
+                raise MarkdownFileNotFound
+            self.filename = filename
     
     def save(self, filename=''):
         self.filename = filename or self.filename

@@ -12,7 +12,7 @@ class SiteFileError(SiteError, FileNotFound):
         smeagol.site.site.Site'''
 
 
-class SourceFileNotFoundError(SiteFileError):
+class SourceFileNotFound(SiteFileError):
     '''Raised when Site cannot find .src file'''
 
 

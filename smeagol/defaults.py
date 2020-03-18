@@ -1,3 +1,5 @@
+import json
+
 class default:
     markdown = [
   {
@@ -187,7 +189,7 @@ class default:
   }
 ]
 
-    config = '''
+    config = json.loads('''
 {
   "site": {
     "name": "",
@@ -224,7 +226,7 @@ class default:
   },
   "links": {}
 }
-    '''
+    ''')
 
     page404 = '''<!DOCTYPE html>
     <html>
