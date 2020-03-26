@@ -8,42 +8,52 @@ from ..site import Site
 
 class Interface:
     def __init__(self, filename=''):
-        if filename:
-            self.setup(filename)
-        else:
-            self.new_config()
+        self.filename = filename
+        config = self.load_config(filename) if filename else default.config
+        self.setup(config)
 
     def __getattr__(self, attr):
         if attr == 'site_info':
             return self.config['site']
-        elif attr == 'filename':
-            return None
         else:
             try:
                 return getattr(super(), attr)
             except AttributeError:
                 name = self.__class__.__name__
-                raise AttributeError(f"'{name}' object has no attribute '{attr}'")
-    
+                raise AttributeError(
+                    f"'{name}' object has no attribute '{attr}'")
+
     def __setattr__(self, attr, value):
         if attr == 'markdown' and isinstance(value, conversion.Markdown):
             self.config['markdown'] = value.filename
         elif attr == 'tagger' and isinstance(value, conversion.Tagger):
             self.config['styles'] = value.values
         super().__setattr__(attr, value)
+    
+    @property
+    def entry(self):
+        try:
+            entry = self.config['tabs'][0]['location']
+        except (IndexError, KeyError):
+            entry = []
+        return self.find_entry(entry)
 
-    def open_site(self, filename=''):
-        if not filename:
-            options = dict(filetypes=[('Sméagol File', '*.smg'), ('Source Data File', '*.src')],
-                           title='Open Site',
-                           defaultextension='.smg')
-            filename = fd.askopenfilename(**options)
-        if filename:
-            self.config = self.setup(filename)
-        headings = self.config.get('current', {}).get('page', [])
-        self.filename = filename
-        return self.find_entry(headings)
-
+    def load_config(self, filename):
+        if filename.endswith('.smg'):
+            config = utils.load(filename)
+        else:
+            config = default.config
+            config['site']['files']['source'] = filename
+        return config
+    
+    def setup(self, config):
+        self.config = config
+        self.site = Site(**config.get('site', None))
+        self.translator = conversion.Translator()
+        self.markdown = conversion.Markdown(config.get('markdown', None))
+        self.tagger = conversion.Tagger(config.get('styles', None))
+        self.randomwords = RandomWords()
+    
     def save_site(self, filename=''):
         filename = filename or self.filename
         if filename:
@@ -61,28 +71,6 @@ class Interface:
             filename = fd.asksaveasfilename(**options)
         if filename:
             self.save_site(filename)
-
-    def setup(self, filename):
-        if filename.endswith('.smg'):
-            config = utils.load(filename)
-            for key, value in config['site'].items():
-                setattr(self.site, key, value)
-        else:
-            config = default.config
-            self.site.source = filename
-        self.markdown.load(config.get('markdown', None))
-        self.tagger.load(config.get('styles', None))
-        self.site.refresh_tree()
-        return config
-
-    def new_config(self):
-        self.config = default.config
-        self.translator = conversion.Translator()
-        self.markdown = conversion.Markdown()
-        self.tagger = conversion.Tagger()
-        self.linker = conversion.Linker()
-        self.randomwords = RandomWords()
-        self.site = Site()
 
     def find_entry(self, headings):
         entry = self.site.root

@@ -13,16 +13,19 @@ from .. import conversion, utils
 from .. import widgets as wd
 from ..utilities import RandomWords
 from ..utils import ignored, tkinter
+from . import file_system as fs
+from .interface import Interface
 
 
 class Editor(Tk.Frame):
-    def __init__(self, master=None, interface=None):
+    def __init__(self, master=None):
         super().__init__(master)
+        self.interfaces = {}
         self.master.withdraw()
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.closed_tabs = []
         self.create_layout(self.master)
-        self.new_tab(interface=interface)
+        self.new_tab()
         self.open_random_site('c:/users/ryan/tinellbianlanguages')
 
     def open_random_site(self, root):
@@ -49,7 +52,10 @@ class Editor(Tk.Frame):
     def __setattr__(self, attr, value):
         if attr == 'title':
             self.master.title(f'{value} - Sméagol Site Editor')
-        super().__setattr__(attr, value)
+        elif attr == 'interface':
+            self.textbox.interface = value
+        else:
+            super().__setattr__(attr, value)
 
     @property
     def info(self):
@@ -167,7 +173,7 @@ class Editor(Tk.Frame):
 
     def new_textbox(self, master, interface=None):
         textbox = wd.Textbox(master, interface)
-        self.add_commands(textbox, self.textbox_commands)
+        self.add_commands(textbox, self.textbox_commands())
         return textbox
 
     def new_tab(self, name='', text='', interface=None):
@@ -239,17 +245,21 @@ class Editor(Tk.Frame):
 
     def open_entry(self, entry):
         self.set_headings(entry)
+        self.textbox.set_styles()
+        self.display_entry(entry)
+        self.title = entry.root.name
 
     def reset_entry(self, event):
         with ignored(AttributeError):
             self.set_headings(self.textbox.entry)
 
     def open_site(self, filename=''):
-        entry = self.interface.open_site(filename)
-        self.set_headings(entry)
-        self.textbox.set_styles()
-        self.display_entry(entry)
-        self.title = self.interface.site.name
+        filename = filename or fs.open_smeagol()
+        try:
+            self.interface = self.interfaces[filename]
+        except KeyError:
+            self.interface = self.interfaces[filename] = Interface(filename)
+        self.open_entry(self.interface.entry)
 
     def save_site(self, filename=''):
         self.interface.save_site(filename)
@@ -292,62 +302,6 @@ class Editor(Tk.Frame):
         )
         textbox.tag_add(Tk.SEL, *borders)
         return textbox.get(*borders)
-
-    def add_translation(self, event):
-        textbox = event.widget
-        try:
-            borders = Tk.SELECTION
-            text = textbox.get(*borders)
-        except Tk.TclError:
-            text = self.select_word(event)
-            textbox.tag_remove(Tk.SEL, '1.0', Tk.END)
-        text = self.markup(text)
-        example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
-        converter = self.translator.convert_word  # default setting
-        for mark in '.!?':
-            if mark in text:
-                converter = self.translator.convert_word
-                break
-        text = converter(text)
-        if example:
-            text = '[e]' + text
-        self.markdown(text)
-        try:
-            text += '\n' if textbox.compare(Tk.SEL_LAST,
-                                            '==', Tk.SEL_LAST + ' lineend') else ' '
-            textbox.insert(Tk.SEL_LAST + '+1c', text)
-        except Tk.TclError:
-            text += ' '
-            textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
-            textbox.insert(Tk.INSERT + '+1c', text)
-        self.hide_tags()
-        return 'break'
-
-    def add_descendant(self, event):
-        textbox = event.widget
-        try:
-            borders = Tk.SELECTION
-            text = textbox.get(*borders)
-        except Tk.TclError:
-            text = self.select_word(event)
-            textbox.tag_remove(Tk.SEL, '1.0', Tk.END)
-        text = self.markup(text)
-        example = re.match(r'\[[ef]\]', text)  # line has 'example' formatting
-        converter = self.evolver.evolve  # default setting
-        text = converter(text)[-1]
-        if example:
-            text = '[e]' + text
-        text = self.markdown(text)
-        try:
-            text += '\n' if textbox.compare(Tk.SEL_LAST,
-                                            '==', Tk.SEL_LAST + ' lineend') else ' '
-            textbox.insert(Tk.SEL_LAST + '+1c', text)
-        except Tk.TclError:
-            text += ' '
-            textbox.mark_set(Tk.INSERT, Tk.INSERT + ' wordend')
-            textbox.insert(Tk.INSERT + '+1c', text)
-        self.hide_tags()
-        return 'break'
 
     def markdown_clear(self, event=None):
         text = self.interface.markdown.to_markup(self.textbox.text)
@@ -402,11 +356,9 @@ class Editor(Tk.Frame):
                 ('Clear', self.markdown_clear),
                 ('Reset', self.markdown_apply)])]
 
-    @property
+    # @property
     def textbox_commands(self):
-        return [('<Control-d>', self.add_descendant),
-                ('<Control-r>', self.refresh_random),
-                ('<Control-R>', self.add_translation),
+        return [('<Control-r>', self.refresh_random),
                 ('<Control-t>', self.open_new_tab),
                 ('<Control-T>', self.reopen_tab),
                 ('<Control-w>', self.close_tab),

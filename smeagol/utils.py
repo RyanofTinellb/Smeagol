@@ -67,10 +67,7 @@ def increment(lst, by):
 
 
 def save(dictionary, filename):
-    with ignored(os.error):
-        os.makedirs(os.path.dirname(filename))
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(dictionary, f, ensure_ascii=False, indent=2)
+    saves(json.dumps(dictionary, ensure_ascii=False, indent=2), filename)
 
 
 def saves(string, filename):
@@ -159,81 +156,3 @@ def page_initial(name, markdown=None):
     if markdown:
         name = markdown.to_markdown(name)
     return re.findall(r'\w', name)[0]
-
-
-class ShortList(list):
-    def __init__(self, arr, max_length):
-        if len(arr) > max_length:
-            arr = arr[:max_length]
-        super().__init__(arr)
-        self.max_length = max_length
-
-    def __iadd__(self, other):
-        self.append(other)
-        if len(self) > self.max_length:
-            self.pop(0)
-        return self
-
-    def replace(self, other):
-        try:
-            self[-1] = other
-        except IndexError:
-            self += other
-        return self
-
-    def next(self):
-        try:
-            page = self.pop(0)
-        except IndexError:
-            return None
-        self += page
-        return page
-
-    def previous(self):
-        try:
-            self.insert(0, self.pop())
-        except IndexError:
-            return None
-        return self[-1]
-
-
-class Text:
-    def __init__(self, master, text=''):
-        with ignored(AttributeError):
-            text = ''.join(map(self.add_tags, text.formatted_text))
-        self.text = text
-        self.entry = master.entry
-        self.master = master
-
-    def __getattr__(self, attr):
-        if attr.endswith('_links'):
-            self.text = getattr(self.master, attr)(self.text, self.entry)
-            return self
-        elif attr.startswith('mark'):
-            self.text = getattr(self.master, attr)(self.text)
-            return self
-        else:
-            return getattr(super(), attr)
-
-    def __str__(self):
-        return self.text
-
-    def add_tags(self, tag):
-        key, value, index = tag
-        if key == 'tagon':
-            if value.startswith('example'):
-                return '['
-            elif value in (Tk.SEL, ''):
-                return ''
-            else:
-                return f'<{value}>'
-        elif key == 'text':
-            return value
-        elif key == 'tagoff':
-            if value.startswith('example'):
-                return ']'
-            elif value in (Tk.SEL, ''):
-                return ''
-            else:
-                return f'</{value}>'
-        return ''

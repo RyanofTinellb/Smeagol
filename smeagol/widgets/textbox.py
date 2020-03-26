@@ -184,8 +184,7 @@ class Textbox(Tk.Text):
                 return
         self.is_html = False
         self.current_style = ''
-        text = self.text
-        text = self.interface.tagger.hide_tags(text)
+        text = self.interface.tagger.hide_tags(self.text)
         self._paste(borders=ALL, text=text)
 
     def show_tags(self, event=None):
@@ -194,8 +193,7 @@ class Textbox(Tk.Text):
                 return
         self.is_html = True
         self.current_style = ''
-        text = self.formatted_text
-        text = self.interface.tagger.show_tags(text)
+        text = self.interface.tagger.show_tags(self.formatted_text)
         self._paste(borders=ALL, text=text)
     
     def modify_fontsize(self, size):
