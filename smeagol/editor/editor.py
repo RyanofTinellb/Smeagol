@@ -20,7 +20,7 @@ from .interface import Interface
 class Editor(Tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
-        self.interfaces = {}
+        self.interfaces = {'': Interface()}
         self.master.withdraw()
         self.master.protocol('WM_DELETE_WINDOW', self.quit)
         self.closed_tabs = []
@@ -30,12 +30,9 @@ class Editor(Tk.Frame):
 
     def open_random_site(self, root):
         files = [os.path.join(root, file_) for root, _, files in os.walk(root)
-                 for file_ in files if file_.endswith('.smg')]
+                 for file_ in files if file_.endswith('nth.smg')]
         print(choice := random.choice(files))
         self.open_site(choice)
-
-    def Text(self, text):
-        return utils.Text(self, text)
 
     def __getattr__(self, attr):
         if attr == 'tab':
@@ -43,11 +40,15 @@ class Editor(Tk.Frame):
         if attr == 'textbox':
             return self.tab.textbox
         if attr == 'interface':
-            return self.textbox.interface
+            try:
+                return self.textbox.interface
+            except AttributeError:
+                return self.interfaces['']
         try:
             return getattr(super(), attr)
         except AttributeError:
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{attr}'")
 
     def __setattr__(self, attr, value):
         if attr == 'title':
@@ -176,19 +177,12 @@ class Editor(Tk.Frame):
         self.add_commands(textbox, self.textbox_commands())
         return textbox
 
-    def new_tab(self, name='', text='', interface=None):
-        notebook = self.notebook
-        frame = Tk.Frame(notebook)
-        textbox = self.new_textbox(frame, interface)
-        textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
-        textbox.insert(text)
-        frame.textbox = textbox
-        notebook.add(frame)
-        notebook.select(frame)
-        self.rename_tab(name)
-
-    def open_new_tab(self, event=None):
-        self.new_tab(interface=self.textbox.interface)
+    def new_tab(self, event=None):
+        frame = Tk.Frame(self.notebook)
+        frame.textbox = self.new_textbox(frame, self.interface)
+        frame.textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
+        self.notebook.add(frame)
+        self.notebook.select(frame)
 
     def change_tab(self, event=None):
         self.update_displays()
@@ -259,13 +253,22 @@ class Editor(Tk.Frame):
             self.interface = self.interfaces[filename]
         except KeyError:
             self.interface = self.interfaces[filename] = Interface(filename)
-        self.open_entry(self.interface.entry)
+        for i, entry in enumerate(self.interface.entries):
+            if i:
+                self.new_tab()
+            self.open_entry(entry)
 
     def save_site(self, filename=''):
-        self.interface.save_site(filename)
+        try:
+            self.interface.save()
+        except IOError:
+            self.save_site_as()
 
     def save_site_as(self, filename=''):
-        self.interface.save_site_as
+        filename = filename or fs.save_smeagol()
+        if filename:
+            self.interface.filename = filename
+            self.save_site()
 
     def set_headings(self, entry):
         self.headings.headings = [x.name for x in entry.lineage][1:]
@@ -335,7 +338,7 @@ class Editor(Tk.Frame):
         self.set_window_size(self.top)
         self.master.update()
         self.master.deiconify()
-    
+
     def quit(self):
         self.save_site()
         self.master.quit()
@@ -359,7 +362,7 @@ class Editor(Tk.Frame):
     # @property
     def textbox_commands(self):
         return [('<Control-r>', self.refresh_random),
-                ('<Control-t>', self.open_new_tab),
+                ('<Control-t>', self.new_tab),
                 ('<Control-T>', self.reopen_tab),
                 ('<Control-w>', self.close_tab),
                 ('<Enter>', self.reset_entry)]

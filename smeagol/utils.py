@@ -66,8 +66,26 @@ def increment(lst, by):
     return lst
 
 
-def save(dictionary, filename):
-    saves(json.dumps(dictionary, ensure_ascii=False, indent=2), filename)
+def stringify(obj, indent=0):
+    output = ''
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            output += f'{indent * "-"}{k} - {stringify(v, indent+2)}'
+    elif isinstance(obj, list) or isinstance(obj, tuple):
+        for v in obj:
+            output += f'{indent * "-"}{stringify(v, indent+2)}'
+    else:
+        output += f'{indent * "-"}{obj}'
+    return output
+
+
+def save(obj, filename):
+    try:
+        saves(json.dumps(obj, ensure_ascii=False, indent=2), filename)
+    except TypeError:
+        saves(str(obj), f := filename + '!error.txt')
+        print(f)
+        raise
 
 
 def saves(string, filename):
@@ -85,6 +103,19 @@ def load(filename):
 def loads(filename):
     with open(filename, encoding='utf-8') as f:
         return f.read()
+
+
+def update(filename, fn):
+    '''
+    Run function `fn` on object `obj` in `filename`
+    '''
+    obj = load(filename)
+    fn(obj)
+    save(obj, filename)
+
+
+def updates(filename, fn):
+    saves(fn(loads(filename)), filename)
 
 
 def buyCaps(word):
@@ -129,10 +160,6 @@ def Tk_compare(tb, first, op, second):
 
 def remove_text(item, text):
     return change_text(item, '', text)
-
-
-def get_text(textbox):
-    return textbox.get(*Tk.WHOLE_BOX)
 
 
 def un_url(text, markdown=None):

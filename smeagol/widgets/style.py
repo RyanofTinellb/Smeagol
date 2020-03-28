@@ -62,8 +62,11 @@ class Style:
                 setattr(self, attr, value)
 
     def __getattr__(self, attr):
-        if attr in {'_font', 'paragraph'}:
+        if attr == 'paragraph':
             super().__setattr__(attr, {})
+            return getattr(self, attr)
+        elif attr == '_font':
+            super().__setattr__(attr, self.default_font)
             return getattr(self, attr)
         elif attr == 'rounding':
             return int if self.unit[0] in 'mp' else float
@@ -188,3 +191,14 @@ class Style:
     @property
     def style(self, defaults=defaults):
         return dict(self.unique_items(defaults=defaults))
+    
+    @property
+    def default_font(self):
+        return dict(family=defaults['font'], size=defaults['size'],
+                    weight='bold' if defaults['bold'] else 'normal',
+                    slant='italic' if defaults['italics'] else 'roman',
+                    underline=defaults['underline'], overstrike=defaults['strikethrough'])
+
+    @property
+    def Font(self):
+        return Font(**self._font)

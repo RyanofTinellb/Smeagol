@@ -14,7 +14,9 @@ class Interface:
 
     def __getattr__(self, attr):
         if attr == 'site_info':
-            return self.config['site']
+            return self.config.setdefault('site', {})
+        elif attr == 'tabs':
+            return self.config.setdefault('tabs', [[]])
         else:
             try:
                 return getattr(super(), attr)
@@ -27,16 +29,12 @@ class Interface:
         if attr == 'markdown' and isinstance(value, conversion.Markdown):
             self.config['markdown'] = value.filename
         elif attr == 'tagger' and isinstance(value, conversion.Tagger):
-            self.config['styles'] = value.values
+            self.config['styles'] = dict(value.items())
         super().__setattr__(attr, value)
     
     @property
-    def entry(self):
-        try:
-            entry = self.config['tabs'][0]['location']
-        except (IndexError, KeyError):
-            entry = []
-        return self.find_entry(entry)
+    def entries(self):
+        return map(self.find_entry, self.tabs)
 
     def load_config(self, filename):
         if filename.endswith('.smg'):
@@ -54,23 +52,8 @@ class Interface:
         self.tagger = conversion.Tagger(config.get('styles', None))
         self.randomwords = RandomWords()
     
-    def save_site(self, filename=''):
-        filename = filename or self.filename
-        if filename:
-            utils.save(self.config, filename)
-        else:
-            self.save_site_as(filename)
-        self.filename = filename
-
-    def save_site_as(self, filename=''):
-        filename = filename or self.filename
-        if not filename:
-            options = dict(filetypes=[('Sméagol File', '*.smg')],
-                           title='Save Site',
-                           defaultextension='.smg')
-            filename = fd.asksaveasfilename(**options)
-        if filename:
-            self.save_site(filename)
+    def save(self):
+        utils.save(self.config, self.filename)
 
     def find_entry(self, headings):
         entry = self.site.root

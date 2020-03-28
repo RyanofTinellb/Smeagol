@@ -235,7 +235,7 @@ class StyleEditor(Tk.Frame):
         return frame
 
     def family_box(self, master=None):
-        families = sorted(
+        families = sorted([''] + 
             [f for f in font_families() if not f.startswith('@')])
 
         def handler(*args):
