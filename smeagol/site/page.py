@@ -1,3 +1,4 @@
+import re
 import os
 import shutil
 from datetime import datetime as dt
@@ -85,6 +86,12 @@ class Page(Node):
 
     def remove_script(self):
         self.find().pop('script', None)
+    
+    def replace(self, old, new):
+        self.text = '\n'.join(self.text).replace(old, new)
+    
+    def regex_replace(self, pattern, repl):
+        self.text = re.sub(pattern, repl, '\n'.join(self.text))
 
     @property
     def link(self):
@@ -97,34 +104,34 @@ class Page(Node):
     def url(self):
         if self.location is None:
             return 'index'
-        return urlform(self.name)
-
+        return utils.urlform(self.name)
+    
     @property
     def analysis(self):
         wordlist = {}
         content = [str(self)]
         # remove tags, and items between some tags
-        change_text(
+        utils.change_text(
             r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>|^\d\]', ' ', content)
         # remove heading markers from tables
-        remove_text(r'\|\w*', content)
+        utils.remove_text(r'\|\w*', content)
         # change punctuation to paragraph marks, so that splitlines works
-        change_text(r'[!?.|]', '\n', content)
+        utils.change_text(r'[!?.|]', '\n', content)
         # change punctuation to space
-        change_text(r'[_()]', ' ', content)
+        utils.change_text(r'[_()]', ' ', content)
         # remove spaces at the beginnings and end of lines,
         #    duplicate spaces and end-lines
-        remove_text(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[,:]', content)
+        utils.remove_text(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[,:]', content)
         # remove duplicate end-lines, and tags in square brackets
-        remove_text(r'\n+(?=\n)|\[.*?\]', content)
-        content = buyCaps(content[0])
+        utils.remove_text(r'\n+(?=\n)|\[.*?\]', content)
+        content = utils.buyCaps(content[0])
         lines = content.splitlines()
-        content = [markdown.to_markdown(content).lower()]
-        change_text(r'&.*?;', ' ', content)
+        content = [content.lower()]
+        utils.change_text(r'&.*?;', ' ', content)
         # change punctuation, and tags in square brackets, into spaces
-        change_text(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|\d', ' ', content)
+        utils.change_text(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|\d', ' ', content)
         # make glottal stops lower case where appropriate
-        change_text(r"(?<=[ \n])''", "'", content)
+        utils.change_text(r"(?<=[ \n])''", "'", content)
         for number, line in enumerate(content[0].splitlines()):
             for word in line.split():
                 try:
@@ -201,11 +208,9 @@ class Page(Node):
         entry = self.root[ID]
         entry.id = ''
         return entry
-
-    @utils.asynca
+        
     def publish(self, template=None):
-        text = self.html(template)
-        utils.saves(text, self.link)
+        return self.html(template), self.link
 
     @property
     def list(self):
@@ -254,21 +259,24 @@ class Page(Node):
             urls[-1] = 'index'
         down = '/'.join(urls)
         address = (up * '../') + down + '.html'
-        destination = template.format(buyCaps(destination.name))
+        destination = template.format(utils.buyCaps(destination.name))
         link = f'<a href="{address}">{destination}</a>'
         return address, link
 
     @property
     def title(self):
-        return remove_text(r'[\[<].*?[\]>]', [buyCaps(self.name)])[0]
+        return utils.remove_text(r'[\[<].*?[\]>]', [utils.buyCaps(self.name)])[0]
+    
+    def heading(self, name, level=1):
+        return f'<h{level}>{name}</h{level}>'
 
     @property
     def title_heading(self):
-        return heading(buyCaps(self.name))
+        return self.heading(utils.buyCaps(self.name))
     
     @property
     def wholepage_heading(self):
-        return heading(buyCaps(self.name), self.level)
+        return self.heading(utils.buyCaps(self.name), self.level)
 
     @property
     def wholepage(self):
@@ -295,32 +303,33 @@ class Page(Node):
         
     @property
     def main_contents(self):
-        return f'<div class="main-contents">{html(self.text)}</div>'
+        text = '\n'.join(self.text)
+        return f'<div class="main-contents">{text}</div>'
     
     @property
     def wholepage_contents(self):
-        return f'<div class="main-contents">{html(self.text, self.level)}</div>'
+        return f'<div class="main-contents">{self.text}</div>'
 
     def stylesheets(self, sheets):
         links = sheets.split(' ')
         links = [self.hyperlink(link, anchors=False) for link in links]
-        template = '<link rel="stylesheet" type="text/css" href="{0}">\n'
-        return ''.join([template.format(link) for link in links])
+        template = '<link rel="stylesheet" type="text/css" href="{0}">'
+        return '\n'.join([template.format(link) for link in links])
 
     def icon(self, icon):
         icon = self.hyperlink(icon, anchors=False)
-        return f'<link rel="icon" type="image/png" href="{icon}">\n'
+        return f'<link rel="icon" type="image/png" href="{icon}">'
 
     @property
     def search_script(self):
         hyperlink = self.hyperlink('search.html', anchors=False)
-        return ('    <script type="text/javascript">\n'
+        return ('<script type="text/javascript">\n'
                 'let href = window.location.href;\n'
                 'if (href.indexOf("?") != -1 && href.indexOf("?highlight=") == -1) {\n'
                 '    let term = href.replace(/(.*?\\?)(.*?)(#.*|$)/, "$2");\n'
                 f'    window.location.href = `{hyperlink}?${{term}}&andOr=and`;\n'
                 '}\n'
-                '</script>\n')
+                '</script>')
 
     @property
     def toc(self):
@@ -336,7 +345,8 @@ class Page(Node):
     def links(self):
         return ('<label>\n'
                 '  <input type="checkbox" class="menu">\n'
-                '  <ul>\n  <li{0}>{2}</li>\n'
+                '  <ul>\n'
+                '    <li{0}>{2}</li>\n'
                 '    <div class="javascript">\n'
                 '      <form id="search">\n'
                 '        <li class="search">\n'
@@ -455,7 +465,7 @@ class Page(Node):
                 return getattr(self, main)(sub)
 
     def delete_html(self):
-        with ignored(WindowsError):
+        with utils.ignored(WindowsError):
             if self.has_children:
                 shutil.rmtree(os.path.dirname(self.link))
             else:

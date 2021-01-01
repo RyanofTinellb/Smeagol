@@ -19,7 +19,7 @@ class HeadingFrame(Tk.Frame):
             if heading is None:
                 self.add_heading(entry)
             elif entry is None:
-                success = self.remove_heading()
+                success = self.remove_heading(heading)
                 if not success:
                     heading.set()
             else:
@@ -38,10 +38,10 @@ class HeadingFrame(Tk.Frame):
                 heading.set(entry)
             return True
 
-    def remove_heading(self):
+    def remove_heading(self, heading):
         if len(self._headings) > self.min:
-            heading = self._headings.pop(0)
             heading.destroy()
+            self._headings.remove(heading)
             return True
         
     def select_last(self):

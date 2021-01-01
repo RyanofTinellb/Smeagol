@@ -1,7 +1,9 @@
 import json
 import os
+import re
 
-from .. import utils, errors
+from ..editor import file_system as fs
+from .. import errors, utils
 from ..conversion import Markdown, Translator
 from .files import Files
 from .page import Page
@@ -9,8 +11,8 @@ from .templates import Templates
 
 
 class Site:
-    def __init__(self, destination=None, name=None, files=None):
-        self.destination = destination
+    def __init__(self, directory=None, name=None, files=None):
+        self.directory = directory
         self.name = name
         self.files = files or {}
         self.tree = self.load_site()
@@ -35,7 +37,7 @@ class Site:
         self.source = source or self.source
         if self.source:
             try:
-                return utils.load(self.source)
+                return fs.load(self.source)
             except FileNotFoundError:
                 raise errors.SourceFileNotFound(f"No such file or directory: '{self.source}'")
         else:
@@ -44,32 +46,21 @@ class Site:
     def __getattr__(self, attr):
         if attr == 'files':
             return None
-        elif attr == '_destination':
-            return ''
         try:
             return getattr(self.files, attr)
         except AttributeError:
             return getattr(super(), attr)
 
     def __setattr__(self, attr, value):
-        if attr == 'destination':
-            self.change_destination(value)
-        elif attr == 'files':
+        if attr == 'files':
             value = Files(value) if isinstance(value, dict) else value
-            setattr(Site, attr, value)
+            super().__setattr__(attr, value)
         else:
             try:
                 setattr(self.files, attr, value)
             except AttributeError:
-                setattr(Site, attr, value)
+                super().__setattr__(attr, value)
 
-    def change_destination(self, destination=''):
-        self._destination = destination or self._destination
-        if self._destination:
-            with utils.ignored(os.error):
-                os.makedirs(self._destination)
-            os.chdir(self._destination)
-    
     def __iter__(self):
         return self.iterator
 
@@ -106,32 +97,16 @@ class Site:
         for page in self:
             page.flatname = ''
 
-    def publish(self):
-        pages = 0
-        errors = 0
-        errorstring = ''
-        for page in self:
+    def publish(self, page=None):
+        pages = [page] or self
+        for page in pages:
             try:
-                page.publish(template=self.template)
+                yield page.publish(template=self.template)
             except Exception as err:
-                errorstring += f'{err} Error in {page.name}\n'
-                errors += 1
-            else:
-                pages += 1
-        self.update_searchindex()
-        self.update_source()
-        return '{4} page{5} printed to {6}\n{0}{1} error{2}\n{3}'.format(
-            errorstring,
-            errors,
-            '' if errors == 1 else 's',
-            '-' * 10,
-            pages,
-            '' if pages == 1 else 's',
-            os.getcwd()
-        )
+                yield err, page.link
 
     def update_source(self):
-        utils.save(self.tree, self.source)
+        return dict(obj=self.tree, filename=self.source)
 
     def update_searchindex(self):
         utils.save(self.analysis, self.search_index)
@@ -148,7 +123,7 @@ class Site:
         page = page.replace('{whole-contents}', contents)
         page = re.sub(r'<li class="normal">(.*?)</li>',
                         r'<li><a href="index.html">\1</a></li>', page)
-        utils.dumps(page, self.wholepage_file)
+        utils.saves(page, self.wholepage_file)
 
     @utils.asynca
     def save_search_pages(self):
@@ -167,6 +142,14 @@ class Site:
         if filename is self.search_page404:
             page = re.sub(r'(href|src)="/*', r'\1="/', page)
         utils.dumps(page, filename)
+    
+    def replace_all(self, old, new):
+        for page in self:
+            page.replace(old, new)
+        
+    def regex_replace_all(self, pattern, repl):
+        for page in self:
+            page.regex_replace(pattern, repl)
 
     @property
     def analysis(self):

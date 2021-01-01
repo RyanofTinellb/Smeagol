@@ -3,10 +3,8 @@ import json
 import tkinter as Tk
 from tkinter.scrolledtext import ScrolledText
 from tkinter.font import Font
-from .. import utils
-from itertools import cycle
-from smeagol.conversion import Markdown
-from ..editor import Interface
+from .. import utils, conversion
+from .styles import Styles
 
 START = '1.0'
 END = 'end-1c'
@@ -27,10 +25,11 @@ BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
 
 
 class Textbox(Tk.Text):
-    def __init__(self, master=None, interface=None):
+    def __init__(self, master=None, styles=None, translator=None):
         super().__init__(master, height=1, width=1, wrap=Tk.WORD,
                          undo=True)
-        self.interface = interface or Interface()
+        self.styles = styles or Styles()
+        self.translator = translator or conversion.Translator()
         self.ready()
 
     def grid(self, *args, **kwargs):
@@ -40,8 +39,8 @@ class Textbox(Tk.Text):
     def ready(self):
         self.info = dict(wordcount=Tk.StringVar(), randomwords=Tk.StringVar(),
                          style=Tk.StringVar(), language=Tk.StringVar())
-        self.languages = self.interface.translator.languages
-        self.language.set(self.interface.translator.fullname)
+        self.languages = self.translator.languages
+        self.language.set(self.translator.fullname)
         self.add_commands()
 
     def __getattr__(self, attr):
@@ -53,7 +52,7 @@ class Textbox(Tk.Text):
             if language := self.language.get():
                 return language[:2]
         elif attr == 'font':
-            return self.interface.tagger['default'].Font
+            return self.styles['default'].Font
         else:
             try:
                 return self.info[attr]
@@ -67,9 +66,6 @@ class Textbox(Tk.Text):
             with utils.ignored(AttributeError):
                 value = '\n'.join([v for v in value if v != 'sel'])
             self.style.set(value)
-        elif attr == 'entry':
-            super().__setattr__(attr, value)
-            self.text = self.interface.display(self.entry)
         else:
             super().__setattr__(attr, value)
 
@@ -78,9 +74,10 @@ class Textbox(Tk.Text):
 
     def set_styles(self):
         self.current_style = ''
-        default = self.interface.tagger['default']
-        self.config(font=self.font, foreground=default.colour, background=default.background)
-        for style in self.interface.tagger:
+        default = self.styles['default']
+        self.config(font=self.font, foreground=default.colour,
+                    background=default.background)
+        for style in self.styles:
             self._set_style(style)
 
     def _set_style(self, style):
@@ -115,11 +112,6 @@ class Textbox(Tk.Text):
                 self.tag_add(name, *SELECTION)
 
     def _add_style(self, name):
-        try:
-            if self.is_html:
-                self.hide_tags()
-        except AttributeError:
-            self.hide_tags()
         styles = set(self.current_style)
         styles.add(name)
         self.current_style = styles
@@ -172,34 +164,16 @@ class Textbox(Tk.Text):
         self.update_wordcount()
         if event.keycode == '??' or 33 <= event.keycode <= 40:
             self.current_style = self.tag_names(Tk.INSERT)
-    
+
     def update_wordcount(self):
         text = self.text
         wordcount = text.count(' ') + text.count('\n') - text.count('|')
         self.info['wordcount'].set(wordcount)
 
-    def hide_tags(self):
-        with utils.ignored(AttributeError):
-            if not self.is_html:
-                return
-        self.is_html = False
-        self.current_style = ''
-        text = self.interface.tagger.hide_tags(self.text)
-        self._paste(borders=ALL, text=text)
-
-    def show_tags(self, event=None):
-        with utils.ignored(AttributeError):
-            if self.is_html:
-                return
-        self.is_html = True
-        self.current_style = ''
-        text = self.interface.tagger.show_tags(self.formatted_text)
-        self._paste(borders=ALL, text=text)
-    
     def modify_fontsize(self, size):
         self.font.config(size=size)
         self.config(font=self.font)
-        for (name, _, style) in self.interface.tagger:
+        for (name, _, style) in self.styles:
             self.tag_config(name, **style)
 
     def change_fontsize(self, event):
@@ -244,7 +218,7 @@ class Textbox(Tk.Text):
             spaces = re.sub(r'( *).*', r'\1', self.get(*CURRLINE))
             self.insert(spaces, INSERT)
             return 'break'
-        
+
     def match_brackets(self, key):
         if key in BRACKETS:
             try:
@@ -322,24 +296,26 @@ class Textbox(Tk.Text):
             text = text or self.clipboard_get()
         except Tk.TclError:
             return
-        if text.startswith('\x08'):
-            styles = []
-            tags = json.loads(text[1:])
-            for key, value, _ in tags:
-                if key == 'mark' and value == INSERT:
-                    self.mark_set(USER_MARK, INSERT)
-                    self.mark_gravity(USER_MARK, Tk.LEFT)
-                elif key == 'tagon':
-                    styles.append(value)
-                elif key == 'text':
-                    self.insert(value, tags=styles)
-                elif key == 'tagoff':
-                    try:
-                        styles.remove(value)
-                    except ValueError:
-                        break
-        else:
-            self.insert(text)
+        styles = []
+        if type(text) != list:
+            if text.startswith('\x08'):
+                text = json.loads(text[1:])
+            else:
+                self.insert(text)
+                return
+        for key, value, _ in text:
+            if key == 'mark' and value == INSERT:
+                self.mark_set(USER_MARK, INSERT)
+                self.mark_gravity(USER_MARK, Tk.LEFT)
+            elif key == 'tagon':
+                styles.append(value)
+            elif key == 'text':
+                self.insert(value, tags=styles)
+            elif key == 'tagoff':
+                try:
+                    styles.remove(value)
+                except ValueError:
+                    break
 
     def delete_line(self, event=None):
         try:

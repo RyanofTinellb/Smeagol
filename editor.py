@@ -1,6 +1,6 @@
 import os
-from smeagol import Editor
+from smeagol import AllSitesEditor
 
 os.system('cls')
-e = Editor()
+e = AllSitesEditor()
 e.mainloop()

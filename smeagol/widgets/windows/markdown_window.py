@@ -1,5 +1,5 @@
-from ..errors import MarkdownFileNotFound
-from ..conversion import Markdown
+from ...errors import MarkdownFileNotFound
+from ...conversion import Markdown
 import tkinter as Tk
 import tkinter.messagebox as mb
 import tkinter.filedialog as fd
@@ -105,7 +105,6 @@ class Entry(Tk.Entry):
         self.bind('<Prior>', parent.up)
         self.bind('<Next>', parent.down)
         self.bind('<MouseWheel>', parent.shift)
-        self.bind('<KeyPress>', lambda x: print(x.keypress))
         
         def handler(*args, master=master, name=name):
             master.entry[name] = self.get()

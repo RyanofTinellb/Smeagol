@@ -18,18 +18,6 @@ def ignored(*exceptions):
         pass
 
 
-def tkinter():
-    def decorator(function):
-        @functools.wraps(function)
-        def wrapper(self, *args, **kwargs):
-            self._to_html()
-            value = function(self, *args, **kwargs)
-            self._from_html()
-            return value
-        return wrapper
-    return decorator
-
-
 def timeit(function):
     @functools.wraps(function)
     def wrapper(*args, **kwargs):
@@ -77,45 +65,6 @@ def stringify(obj, indent=0):
     else:
         output += f'{indent * "-"}{obj}'
     return output
-
-
-def save(obj, filename):
-    try:
-        saves(json.dumps(obj, ensure_ascii=False, indent=2), filename)
-    except TypeError:
-        saves(str(obj), f := filename + '!error.txt')
-        print(f)
-        raise
-
-
-def saves(string, filename):
-    with ignored(os.error):
-        os.makedirs(os.path.dirname(filename))
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(string)
-
-
-def load(filename):
-    with open(filename, encoding='utf-8') as f:
-        return json.load(f)
-
-
-def loads(filename):
-    with open(filename, encoding='utf-8') as f:
-        return f.read()
-
-
-def update(filename, fn):
-    '''
-    Run function `fn` on object `obj` in `filename`
-    '''
-    obj = load(filename)
-    fn(obj)
-    save(obj, filename)
-
-
-def updates(filename, fn):
-    saves(fn(loads(filename)), filename)
 
 
 def buyCaps(word):

@@ -2,7 +2,7 @@ import re
 import json
 from contextlib import contextmanager
 from tkinter.font import Font
-from .. import utils
+from ... import utils
 
 '''
 properties:
@@ -25,15 +25,16 @@ properties:
     top, bottom, line_spacing (int) => paragraph.{spacing1, spacing2, spacing3}
 '''
 
-DEFAULTS = dict(name='default', key='', tags=('', ''), group='font', font='Calibri', size=12,
+DEFAULTS = dict(name='default', key='', tags=('', ''), font='Calibri', size=12,
                 bold=False, italics=False, underline=False, strikethrough=False,
                 offset='baseline', colour='black', background='white', border=False,
                 justification='left', unit='cm', indent=0.0, line_spacing=0.0,
-                left=0.0, right=0.0, top=0.0, bottom=0.0, language=False, hyperlink=False)
+                left=0.0, right=0.0, top=0.0, bottom=0.0,
+                language=False, hyperlink=False, block=False)
 
 defaults = DEFAULTS.copy()
 
-attrs = ('group', 'key', 'font', 'size', 'bold', 'italics', 'underline', 'strikethrough', 'offset',
+attrs = ('key', 'font', 'size', 'bold', 'italics', 'underline', 'strikethrough', 'offset',
          'colour', 'background', 'border', 'justification', 'unit', 'left', 'right',
          'top', 'bottom', 'indent', 'line_spacing', 'language', 'hyperlink')
 
@@ -51,7 +52,7 @@ def _int_part(_dict, key):
 
 class Style:
     def __init__(self, **style):
-        if style.get('group', None) == 'default':
+        if style.get('block', None) == 'default':
             for attr, value in style.items():
                 if attr == 'size':
                     value = self._size(value)
@@ -70,8 +71,8 @@ class Style:
             return getattr(self, attr)
         elif attr == 'rounding':
             return int if self.unit[0] in 'mp' else float
-        elif attr == 'group':
-            return 'font'
+        elif attr == 'block':
+            return False
         elif attr == 'defaults':
             return defaults
         elif attr == 'Font':
@@ -124,12 +125,11 @@ class Style:
             self.paragraph['spacing2'] = self.add_unit(value)
         elif attr == 'tags':
             start, end = value
-            para = '' if end.endswith(
-                '\n') or self.group != 'paragraph' else '\n'
+            para = '' if self.block or end.endswith('\n') else '\n'
             super().__setattr__(attr, (start, f'{end}{para}'))
-        elif attr == 'group':
+        elif attr == 'block':
             start, end = self.tags
-            para = '' if end.endswith('\n') or value != 'paragraph' else '\n'
+            para = '' if value or end.endswith('\n') else '\n'
             self.tags = start, f'{end}{para}'
         elif attr == 'unit':
             self._change_units(value)
@@ -181,7 +181,7 @@ class Style:
     def unique_items(self, attrs=attrs, defaults=defaults):
         for attr in ('tags',) + attrs:
             value = getattr(self, attr)
-            if self.group == 'default':
+            if self.block == 'default':
                 if value != DEFAULTS[attr]:
                     yield attr, value
             else:
@@ -191,7 +191,7 @@ class Style:
     @property
     def style(self, defaults=defaults):
         return dict(self.unique_items(defaults=defaults))
-    
+
     @property
     def default_font(self):
         return dict(family=defaults['font'], size=defaults['size'],
@@ -202,3 +202,5 @@ class Style:
     @property
     def Font(self):
         return Font(**self._font)
+
+

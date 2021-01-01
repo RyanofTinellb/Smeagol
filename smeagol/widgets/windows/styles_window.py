@@ -8,8 +8,8 @@ import tkinter.messagebox as mb
 import tkinter.simpledialog as sd
 from tkinter.font import Font
 from tkinter.font import families as font_families
-from .style import Style
-from ..utils import ignored
+from ..styles import Style
+from ...utils import ignored
 
 
 class StylesWindow(Tk.Frame):
@@ -125,7 +125,7 @@ class StyleEditor(Tk.Frame):
         self.grid()
         self.backup = style
         self.style = style.copy()
-        self.disabled = 'disabled' if self.style.group == 'font' else ''
+        self.disabled = 'disabled' if not self.style.block else ''
         self.spinners = []
         self.non_spinners = []
         self.units = 'points', 'millimetres', 'centimetres', 'inches'
@@ -324,7 +324,6 @@ class StyleEditor(Tk.Frame):
 
     def spinner(self, master, name):
         decimals = self.unit.get()[0] in 'ci'
-        rounding = float if decimals else int
         var = getattr(self, name)
 
         def handler(name=name):

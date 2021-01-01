@@ -193,7 +193,7 @@ class default:
 {
   "site": {
     "name": "",
-    "destination": "",
+    "directory": "",
     "files": {
       "source": "",
       "template_file": "",

@@ -6,15 +6,15 @@ import time
 import tkinter as Tk
 import tkinter.filedialog as fd
 import tkinter.ttk as ttk
-import webbrowser as web
 from tkinter.ttk import Combobox
 
 from .. import conversion, utils
 from .. import widgets as wd
 from ..utilities import RandomWords
-from ..utils import ignored, tkinter
+from ..utils import ignored
 from . import file_system as fs
 from .interface import Interface
+from .tab import Tab
 
 
 class Editor(Tk.Frame):
@@ -26,13 +26,6 @@ class Editor(Tk.Frame):
         self.closed_tabs = []
         self.create_layout(self.master)
         self.new_tab()
-        self.open_random_site('c:/users/ryan/tinellbianlanguages')
-
-    def open_random_site(self, root):
-        files = [os.path.join(root, file_) for root, _, files in os.walk(root)
-                 for file_ in files if file_.endswith('nth.smg')]
-        print(choice := random.choice(files))
-        self.open_site(choice)
 
     def __getattr__(self, attr):
         if attr == 'tab':
@@ -41,9 +34,11 @@ class Editor(Tk.Frame):
             return self.tab.textbox
         if attr == 'interface':
             try:
-                return self.textbox.interface
+                return self.tab.interface
             except AttributeError:
                 return self.interfaces['']
+        if attr == 'entry':
+            return self.tab.entry
         try:
             return getattr(super(), attr)
         except AttributeError:
@@ -54,7 +49,9 @@ class Editor(Tk.Frame):
         if attr == 'title':
             self.master.title(f'{value} - Sméagol Site Editor')
         elif attr == 'interface':
-            self.textbox.interface = value
+            self.tab.interface = value
+        elif attr == 'entry':
+            self.tab.entry = value
         else:
             super().__setattr__(attr, value)
 
@@ -172,21 +169,16 @@ class Editor(Tk.Frame):
         self.textbox.mark_set(Tk.INSERT, position)
         self.textbox.see(Tk.INSERT)
 
-    def new_textbox(self, master, interface=None):
-        textbox = wd.Textbox(master, interface)
-        self.add_commands(textbox, self.textbox_commands())
-        return textbox
-
     def new_tab(self, event=None):
-        frame = Tk.Frame(self.notebook)
-        frame.textbox = self.new_textbox(frame, self.interface)
-        frame.textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
-        self.notebook.add(frame)
-        self.notebook.select(frame)
+        Tab(self.notebook, self.interface)
+        self.add_commands(self.textbox, self.textbox_commands)
 
     def change_tab(self, event=None):
         self.update_displays()
         self.change_language()
+        self.textbox.set_styles()
+        self.set_headings(self.entry)
+        self.title = self.interface.site.root.name
 
     def close_tab(self, event=None):
         if self.notebook.index('end') - len(self.closed_tabs) > 1:
@@ -207,41 +199,43 @@ class Editor(Tk.Frame):
             self.notebook.select(tab)
         return 'break'
 
-    def rename_tab(self, text):
-        self.notebook.tab(self.tab, text=text)
-
     def _entry(self, level):
         return self.interface.find_entry(self.headings.headings[:level+1])
 
     def previous_entry(self, event):
+        entry = self._entry(event.widget.level)
         with ignored(IndexError):
-            self.set_headings(self._entry(event.widget.level).previous_sister)
+            self.set_headings(entry.previous_sister)
         return 'break'
 
     def next_entry(self, event):
-        with ignored(IndexError):
-            self.set_headings(self._entry(event.widget.level).next_sister)
+        entry = self._entry(event.widget.level)
+        try:
+            entry = entry.next_sister
+        except IndexError:
+            with ignored(IndexError):
+                entry = entry.eldest_daughter
+        self.set_headings(entry)
         return 'break'
 
     def load_entry(self, event):
-        entry = self._entry(event.widget.level)
-        self.display_entry(entry)
+        self.entry = self._entry(event.widget.level)
         try:
-            self.set_headings(entry.eldest_daughter)
+            self.set_headings(self.entry.eldest_daughter)
             self.headings.select_last()
         except IndexError:
             self.textbox.focus_set()
             self.textbox.see(Tk.INSERT)
 
-    def display_entry(self, entry):
-        self.textbox.entry = entry
-        self.rename_tab(entry.name)
+    def open_entry_in_browser(self, event=None):
+        self.interface.open_entry_in_browser(self.entry)
+        return 'break'
 
     def open_entry(self, entry):
         self.set_headings(entry)
         self.textbox.set_styles()
-        self.display_entry(entry)
-        self.title = entry.root.name
+        self.tab.entry = entry
+        self.title = self.interface.site.root.name
 
     def reset_entry(self, event):
         with ignored(AttributeError):
@@ -271,11 +265,15 @@ class Editor(Tk.Frame):
             self.save_site()
 
     def set_headings(self, entry):
-        self.headings.headings = [x.name for x in entry.lineage][1:]
+        self.headings.headings = [e.name for e in entry.lineage][1:]
+    
+    def save_page(self, event=None):
+        self.interface.save_page(self.textbox.formatted_text, self.entry)
+        return 'break'
 
     def refresh_random(self, event=None):
-        if self.randomwords:
-            self.info['randomwords'].set('\n'.join(self.randomwords.words))
+        if r := self.interface.randomwords:
+            self.info['randomwords'].set('\n'.join(r.words))
         return 'break'
 
     def clear_random(self, event=None):
@@ -322,17 +320,11 @@ class Editor(Tk.Frame):
 
     def edit_styles(self, event=None):
         top = Tk.Toplevel()
-        tagger = self.interface.tagger
-        wd.StylesWindow(tagger, master=top, name=self.interface.site.name)
+        styles = self.interface.styles
+        wd.StylesWindow(styles, master=top, name=self.interface.site.name)
         self.wait_window(top)
         self.textbox.add_commands()
-        self.interface.config['styles'] = dict(self.interface.tagger.items())
-
-    def show_tags(self):
-        self.textbox.show_tags()
-
-    def hide_tags(self):
-        self.textbox.hide_tags()
+        self.interface.config['styles'] = dict(self.interface.styles.items())
 
     def show_window(self):
         self.set_window_size(self.top)
@@ -340,8 +332,15 @@ class Editor(Tk.Frame):
         self.master.deiconify()
 
     def quit(self):
-        self.save_site()
+        self.interfaces.pop('', None)
+        for interface in self.interfaces.values():
+            with utils.ignored(IOError):
+                interface.save()
+        self.master.withdraw()
         self.master.quit()
+        print('Closing Servers...')
+        fs.close_servers()
+        print('Servers closed. Enjoy the rest of your day.')
 
     @property
     def menu_commands(self):
@@ -350,18 +349,17 @@ class Editor(Tk.Frame):
                 ('Open', self.open_site),
                 ('Save', self.save_site),
                 ('Save _As', self.save_site_as)]),
-            ('Styles', [
-                ('Edit', self.edit_styles),
-                ('Apply', self.hide_tags),
-                ('Show as Ht_ml', self.show_tags)]),
-            ('Markdown', [
-                ('Edit', self.markdown_edit),
-                ('Clear', self.markdown_clear),
-                ('Reset', self.markdown_apply)])]
+            ('Page', [
+                ('Open in Browser', self.open_entry_in_browser)
+            ]),
+            ('Edit', [
+                ('Styles', self.edit_styles),
+                ('Markdown', self.markdown_edit)])]
 
-    # @property
+    @property
     def textbox_commands(self):
         return [('<Control-r>', self.refresh_random),
+                ('<Control-s>', self.save_page),
                 ('<Control-t>', self.new_tab),
                 ('<Control-T>', self.reopen_tab),
                 ('<Control-w>', self.close_tab),
