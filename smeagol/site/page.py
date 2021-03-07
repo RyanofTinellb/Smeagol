@@ -42,7 +42,7 @@ class Page(Node):
     def __setattr__(self, attr, value):
         if attr == 'text':
             with utils.ignored(AttributeError):
-                value = [_f for _f in value.split('\n') if _f]
+                value = [_f for _f in value.splitlines() if _f]
             self.find()['text'] = value
         elif attr in {'name', 'position', 'script', 'flatname', 'id'}:
             if value:

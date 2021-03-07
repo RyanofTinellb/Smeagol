@@ -8,7 +8,7 @@ class AllSitesEditor(Editor):
     
     def open_all_sites(self, root):
         files = [os.path.join(root, file_) for root, _, files in os.walk(root)
-                 for file_ in files if file_.endswith('grammar.smg')]
+                 for file_ in files if file_.endswith('main.smg')]
         for i, site in enumerate(files):
             if i:
                 self.new_tab()

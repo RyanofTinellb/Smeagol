@@ -10,11 +10,13 @@ from ..site import Site
 
 
 class Interface:
-    def __init__(self, filename=''):
+    def __init__(self, filename='', server=True):
         self.filename = filename
         config = self.load_config(filename) if filename else default.config
         self.setup(config)
-        self.port = fs.start_server(port=41809, directory=self.site.directory, page404=self.page404)
+        if server:
+            self.port = fs.start_server(
+                port=41809, directory=self.site.directory, page404=self.page404)
 
     def __getattr__(self, attr):
         if attr == 'site_info':
@@ -35,7 +37,7 @@ class Interface:
         elif attr == 'styles' and isinstance(value, widgets.Styles):
             self.config['styles'] = dict(value.items())
         super().__setattr__(attr, value)
-    
+
     @property
     def entries(self):
         k = [self.find_entry(e) for e in self.tabs]
@@ -59,18 +61,19 @@ class Interface:
         self.randomwords = RandomWords()
 
     def save(self):
-        utils.save(self.config, self.filename)
+        fs.save(self.config, self.filename)
 
     def find_entry(self, headings):
         entry = self.site.root
-        if not headings: return entry
+        if not headings:
+            return entry
         for heading in headings:
             try:
                 entry = entry[heading]
             except (KeyError, IndexError):
                 break
         return entry
-    
+
     def open_entry_in_browser(self, entry):
         fs.open_in_browser(self.port, entry.link)
         return 'break'
@@ -78,7 +81,7 @@ class Interface:
     def change_language(self, language):
         self.translator.select(language)
         self.randomwords.select(language)
-    
+
     def save_page(self, text, entry):
         ''' text is formatted'''
         entry.text = self._save(text)
@@ -87,17 +90,23 @@ class Interface:
                 raise string
             string = self.templates.html(entry)
             filename = os.path.join(self.site.directory, filename)
-            utils.saves(string, filename)
+            fs.saves(string, filename)
         # Save source, wholepage
-    
+
     def _save(self, text):
         text = self.markdown.to_markup(text)
         return text
-    
+
     def _publish(self, text, entry):
         text = self.linker.add_links(text, entry)
         text = conversion.markup(text)
         return text
+
+    def save_site(self):
+        fs.save(**self.site.source_info)
+
+    def close_servers(self):
+        fs.close_servers()
 
     @property
     def page404(self):

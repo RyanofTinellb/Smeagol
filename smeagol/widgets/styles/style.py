@@ -30,13 +30,13 @@ DEFAULTS = dict(name='default', key='', tags=('', ''), font='Calibri', size=12,
                 offset='baseline', colour='black', background='white', border=False,
                 justification='left', unit='cm', indent=0.0, line_spacing=0.0,
                 left=0.0, right=0.0, top=0.0, bottom=0.0,
-                language=False, hyperlink=False, block=False)
+                language=False, hyperlink=False, block='')
 
 defaults = DEFAULTS.copy()
 
 attrs = ('key', 'font', 'size', 'bold', 'italics', 'underline', 'strikethrough', 'offset',
          'colour', 'background', 'border', 'justification', 'unit', 'left', 'right',
-         'top', 'bottom', 'indent', 'line_spacing', 'language', 'hyperlink')
+         'top', 'bottom', 'indent', 'line_spacing', 'language', 'hyperlink', 'block')
 
 
 def _int_part(_dict, key):
@@ -71,8 +71,6 @@ class Style:
             return getattr(self, attr)
         elif attr == 'rounding':
             return int if self.unit[0] in 'mp' else float
-        elif attr == 'block':
-            return False
         elif attr == 'defaults':
             return defaults
         elif attr == 'Font':

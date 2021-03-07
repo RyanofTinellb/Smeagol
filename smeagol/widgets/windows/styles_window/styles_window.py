@@ -1,15 +1,15 @@
 import re
 import json
-
 import tkinter as Tk
-import tkinter.ttk as ttk
 import tkinter.colorchooser as ColourChooser
 import tkinter.messagebox as mb
 import tkinter.simpledialog as sd
+import tkinter.ttk as ttk
 from tkinter.font import Font
 from tkinter.font import families as font_families
-from ..styles import Style
-from ...utils import ignored
+
+from ....utils import ignored
+from ...styles import Style
 
 
 class StylesWindow(Tk.Frame):
@@ -150,7 +150,7 @@ class StyleEditor(Tk.Frame):
     
     def options_frame(self, master=None):
         frame = ttk.LabelFrame(master, text='options')
-        self.group_frame(frame).grid(row=0, column=0, sticky='w')
+        self.block_frame(frame).grid(row=0, column=0, sticky='w')
         self.key_frame(frame).grid(row=1, column=0, sticky='w')
         self.tags_frame(frame).grid(row=2, column=0, sticky='w')
         attrs = 'language', 'hyperlink'
@@ -203,6 +203,7 @@ class StyleEditor(Tk.Frame):
     def ok(self):
         with ignored(AttributeError):
             self.style.tags = [b.get() for b in self.tag_boxes]
+            self.style.block = self.block_box.get()
         self.master.destroy()
 
     def colour_frame(self, master=None):
@@ -282,17 +283,14 @@ class StyleEditor(Tk.Frame):
         self.units_frame(frame).grid(row=1, column=0, columnspan=2)
         return frame
 
-    def group_frame(self, master=None):
+    def block_frame(self, master=None):
         frame = Tk.Frame(master)
-        Tk.Label(frame, text='group').grid(row=0, column=0)
+        Tk.Label(frame, text='block').grid(row=0, column=0)
 
-        def handler(*args):
-            self.update_config('group')
-            self.set_para_element_state()
-        box = ttk.Combobox(frame, width=10, values=('font', 'paragraph'),
-                           textvariable=self.group, state='readonly')
-        box.bind('<<ComboboxSelected>>', handler)
-        box.grid(row=0, column=1)
+        self.block_box = Tk.Entry(frame, width=30)
+        self.block_box.grid(row=0, column=1)
+        self.block_box.insert(0, self.block.get())
+        self.block_box.bind('<KeyRelease>', self.set_para_element_state)
         return frame
 
     def enable_para_elements(self):
@@ -305,11 +303,11 @@ class StyleEditor(Tk.Frame):
         for _, elt in self.spinners + self.non_spinners:
             elt.config(state='disabled')
 
-    def set_para_element_state(self):
-        if self.group.get() == 'font':
-            self.disable_para_elements()
-        else:
+    def set_para_element_state(self, event=None):
+        if self.block_box.get():
             self.enable_para_elements()
+        else:
+            self.disable_para_elements()
 
     def direction_frame(self, master=None):
         frame = ttk.LabelFrame(

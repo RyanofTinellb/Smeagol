@@ -105,7 +105,8 @@ class Site:
             except Exception as err:
                 yield err, page.link
 
-    def update_source(self):
+    @property
+    def source_info(self):
         return dict(obj=self.tree, filename=self.source)
 
     def update_searchindex(self):
