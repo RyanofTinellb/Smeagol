@@ -1,6 +1,7 @@
 import re
 import json
 from contextlib import contextmanager
+import tkinter as Tk
 from tkinter.font import Font
 from ... import utils
 
@@ -8,9 +9,9 @@ from ... import utils
 properties:
     name (str) => name
     key (str) => key
-    tags (str()) => tags
-    size (int): absolute size => font.size
-         (str): relative size (include +/- sign)
+    start (str) => start
+    end (str) => end
+    size (int) => font.size
     font (str) => font.family
     bold (bool) => font.weight
     italics (bool) => font.slant
@@ -25,7 +26,7 @@ properties:
     top, bottom, line_spacing (int) => paragraph.{spacing1, spacing2, spacing3}
 '''
 
-DEFAULTS = dict(name='default', key='', tags=('', ''), font='Calibri', size=12,
+DEFAULTS = dict(name='default', key='', start='', end='', font='Calibri', size=12,
                 bold=False, italics=False, underline=False, strikethrough=False,
                 offset='baseline', colour='black', background='white', border=False,
                 justification='left', unit='cm', indent=0.0, line_spacing=0.0,
@@ -34,8 +35,8 @@ DEFAULTS = dict(name='default', key='', tags=('', ''), font='Calibri', size=12,
 
 defaults = DEFAULTS.copy()
 
-attrs = ('key', 'font', 'size', 'bold', 'italics', 'underline', 'strikethrough', 'offset',
-         'colour', 'background', 'border', 'justification', 'unit', 'left', 'right',
+attrs = ('key', 'start', 'end', 'font', 'size', 'bold', 'italics', 'underline', 'strikethrough',
+         'offset', 'colour', 'background', 'border', 'justification', 'unit', 'left', 'right',
          'top', 'bottom', 'indent', 'line_spacing', 'language', 'hyperlink', 'block')
 
 
@@ -52,7 +53,8 @@ def _int_part(_dict, key):
 
 class Style:
     def __init__(self, **style):
-        if style.get('block', None) == 'default':
+        self.changed = Tk.BooleanVar()
+        if style['name'] == 'default':
             for attr, value in style.items():
                 if attr == 'size':
                     value = self._size(value)
@@ -79,6 +81,8 @@ class Style:
             return defaults[attr]
 
     def __setattr__(self, attr, value):
+        if attr != 'changed':
+            self.changed.set(True)
         if attr in ('left', 'right', 'top', 'bottom', 'line_spacing', 'indent'):
             value = self.rounding(value)
         super().__setattr__(attr, value)
@@ -121,16 +125,11 @@ class Style:
             self.paragraph['lmargin1'] = self.add_unit(self.left + value)
         elif attr == 'line_spacing':
             self.paragraph['spacing2'] = self.add_unit(value)
-        elif attr == 'tags':
-            start, end = value
-            para = '' if self.block or end.endswith('\n') else '\n'
-            super().__setattr__(attr, (start, f'{end}{para}'))
-        elif attr == 'block':
-            start, end = self.tags
-            para = '' if value or end.endswith('\n') else '\n'
-            self.tags = start, f'{end}{para}'
         elif attr == 'unit':
             self._change_units(value)
+        
+    def trace_add(self, mode, fn):
+        self.changed.trace_add(mode, fn)
 
     def add_unit(self, value):
         return f'{value}{self.unit[0]}'
@@ -177,9 +176,9 @@ class Style:
             yield attr, getattr(self, attr)
 
     def unique_items(self, attrs=attrs, defaults=defaults):
-        for attr in ('tags',) + attrs:
+        for attr in attrs:
             value = getattr(self, attr)
-            if self.block == 'default':
+            if self.name == 'default':
                 if value != DEFAULTS[attr]:
                     yield attr, value
             else:

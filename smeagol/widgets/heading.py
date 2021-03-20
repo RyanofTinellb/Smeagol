@@ -3,8 +3,8 @@ import tkinter as Tk
 
 
 class HeadingFrame(Tk.Frame):
-    def __init__(self, bounds, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, parent, bounds):
+        super().__init__(parent)
         self.min, self.max = bounds
         self._headings = []
 
@@ -59,8 +59,8 @@ class HeadingFrame(Tk.Frame):
 
 
 class Heading(Tk.Entry):
-    def __init__(self, level, master, *args, **kwargs):
-        super().__init__(master, *args, **kwargs)
+    def __init__(self, level, parent, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
         self.level = level
 
     def bind_commands(self, commands):

@@ -1,4 +1,4 @@
-from . import utils
+from . import utils, filesystem as fs
 from .conversion import Translator, Markdown
-from .editor import Editor, file_system, AllSitesEditor, Interface
+from .editor import Editor, AllSitesEditor, Interface
 from .site import Site

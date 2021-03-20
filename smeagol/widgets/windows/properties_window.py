@@ -4,14 +4,14 @@ from smeagol.utils import *
 from smeagol.defaults import default
 
 class PropertiesWindow(Tk.Toplevel):
-    def __init__(self, properties, master=None):
-        super().__init__(master)
+    def __init__(self, properties, parent=None):
+        super().__init__(parent)
         self.properties = properties
         properties = json.loads(default.properties)
         self.property_frames = []
         for row, prop in enumerate(properties):
             self.prepare(prop, row)
-            frame = PropertyFrame(prop, master=self)
+            frame = PropertyFrame(prop, parent=self)
             self.property_frames.append(frame)
         self.configure_buttons(row+1)
         self.property_frames[0].entry.focus_set()
@@ -45,9 +45,9 @@ class PropertiesWindow(Tk.Toplevel):
         self.destroy()
 
 class PropertyFrame:
-    def __init__(self, prop, master):
+    def __init__(self, prop, parent):
         self.property = prop
-        self.master = master
+        self.parent = parent
         self.ready_label()
         if self.check:
             self.ready_checkbox()
@@ -77,24 +77,24 @@ class PropertyFrame:
     def ready_checkbox(self):
         self.checkvar = Tk.IntVar()
         self.checkvar.set(self.checked)
-        check = Tk.Checkbutton(self.master, variable=self.checkvar)
+        check = Tk.Checkbutton(self.parent, variable=self.checkvar)
         check.grid(row=self.row, column=0)
 
     def ready_label(self):
-        label = Tk.Label(self.master, text=self.name)
+        label = Tk.Label(self.parent, text=self.name)
         label.grid(row=self.row, column=1, sticky=Tk.W)
 
     def ready_entry(self):
         self.entryvar = Tk.StringVar()
         self.entryvar.set(self.value)
-        self.entry = Tk.Entry(self.master, width=50, textvariable=self.entryvar)
-        self.entry.bind('<Return>', self.master.done)
-        self.entry.bind('<Escape>', self.master.cancel)
+        self.entry = Tk.Entry(self.parent, width=50, textvariable=self.entryvar)
+        self.entry.bind('<Return>', self.parent.done)
+        self.entry.bind('<Escape>', self.parent.cancel)
         self.entry.grid(row=self.row, column=2)
         self.entry.xview('end')
 
     def ready_button(self):
-        button = Tk.Button(self.master,
+        button = Tk.Button(self.parent,
                            text='Browse...',
                            command=self.browse)
         button.grid(row=self.row, column=3)

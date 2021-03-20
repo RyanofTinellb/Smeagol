@@ -3,12 +3,12 @@ from smeagol import utils
 import tkinter as Tk
 
 class TemplatesWindow(Tk.Toplevel):
-    def __init__(self, templates=None, editor=None, master=None):
+    def __init__(self, templates=None, editor=None, parent=None):
         '''
         @param editor: function to edit template from Editor or derived class
             thereof
         '''
-        super().__init__(master)
+        super().__init__(parent)
         self.protocol('WM_DELETE_WINDOW', self.cancel)
         self.title('Templates')
         self.templates = templates or []
@@ -19,7 +19,7 @@ class TemplatesWindow(Tk.Toplevel):
             frame = TemplateFrame(self.main_frame, template, self, editor, row)
             self.frames.append(frame)
         self.main_frame.grid()
-        buttonsframe = ButtonsFrame(master=self)
+        buttonsframe = ButtonsFrame(parent=self)
         buttonsframe.grid(row=row+1, column=0, sticky=Tk.E)
         self.frames[0].entry.focus_set()
 
@@ -55,8 +55,8 @@ class TemplatesWindow(Tk.Toplevel):
 
 
 class TemplateFrame():
-    def __init__(self, master, template, window, editor, row):
-        self.master = master
+    def __init__(self, parent, template, window, editor, row):
+        self.parent = parent
         self.template = template
         self.window = window
         self.editor = editor
@@ -81,7 +81,7 @@ class TemplateFrame():
     def ready_label(self):
         self.labelvar = Tk.StringVar()
         self.labelvar.set(self.use_name)
-        label = Tk.Label(self.master, text=self.use_name, # width=20,
+        label = Tk.Label(self.parent, text=self.use_name, # width=20,
                          textvariable=self.labelvar)
         label.grid(row=self.row, column=1, sticky=Tk.W+Tk.E)
         self.widgets += [label]
@@ -90,7 +90,7 @@ class TemplateFrame():
         state = Tk.NORMAL if self.enabled else Tk.DISABLED
         self.entryvar = Tk.StringVar()
         self.entryvar.set(self.filename)
-        entry = Tk.Entry(self.master, textvariable=self.entryvar,
+        entry = Tk.Entry(self.parent, textvariable=self.entryvar,
             state=state, width=50)
         entry.bind('<Return>', self.window.done)
         entry.bind('<Escape>', self.window.cancel)
@@ -106,7 +106,7 @@ class TemplateFrame():
         buttons = (('0', 'Rename', self.change_name),
                    ('6', 'Remove', self.remove))
         for button in buttons:
-            new = Tk.Button(self.master,
+            new = Tk.Button(self.parent,
                             text=button[1],
                             command=button[2],
                             state=state)
@@ -117,7 +117,7 @@ class TemplateFrame():
                    ('3', 'Open', self.open),
                    ('4', 'New', self.save))
         for button in buttons:
-            new = Tk.Button(self.master,
+            new = Tk.Button(self.parent,
                             text=button[1],
                             command=button[2])
             new.grid(row=self.row, column=button[0])
@@ -176,13 +176,13 @@ class TemplateFrame():
         return self.template
 
 class ButtonsFrame(Tk.Frame):
-    def __init__(self, master):
-        super().__init__(master)
-        new = Tk.Button(self, text ='New', command=master.new)
+    def __init__(self, parent):
+        super().__init__(parent)
+        new = Tk.Button(self, text ='New', command=parent.new)
         new.grid(row=0, column=0, sticky=Tk.E)
-        add = Tk.Button(self, text='Open', command=master.add)
+        add = Tk.Button(self, text='Open', command=parent.add)
         add.grid(row=0, column=1)
-        cancel = Tk.Button(self, text='Cancel', command=master.cancel)
+        cancel = Tk.Button(self, text='Cancel', command=parent.cancel)
         cancel.grid(row=0, column=2, sticky=Tk.E+Tk.W)
-        done = Tk.Button(self, text='OK', command=master.done)
+        done = Tk.Button(self, text='OK', command=parent.done)
         done.grid(row=0, column=3, sticky=Tk.W)

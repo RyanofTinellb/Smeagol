@@ -2,8 +2,7 @@ import json
 import os
 import re
 
-from ..editor import file_system as fs
-from .. import errors, utils
+from .. import errors, utils, filesystem as fs
 from ..conversion import Markdown, Translator
 from .files import Files
 from .page import Page

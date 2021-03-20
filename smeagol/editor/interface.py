@@ -2,11 +2,10 @@ import os
 import re
 import tkinter.filedialog as fd
 
-from . import file_system as fs
-from .. import conversion, errors, utils, widgets
-from ..utilities import RandomWords
+from .. import conversion, errors, utils, widgets, filesystem as fs
 from ..defaults import default
 from ..site import Site
+from ..utilities import RandomWords
 
 
 class Interface:

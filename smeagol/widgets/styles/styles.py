@@ -13,7 +13,7 @@ class Styles(Tagger):
         styles = styles or {}
         with utils.ignored(TypeError):
             styles = json.loads(styles)
-        tagger = dict(default=Style(name='default', block='default'))
+        tagger = dict(default=Style(name='default'))
         if isinstance(styles, self.__class__):
             tagger.update({n: s.copy() for n, s in styles.styles.items()})
         else:

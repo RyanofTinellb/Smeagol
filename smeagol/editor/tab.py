@@ -4,9 +4,9 @@ from ..widgets import Textbox
 
 
 class Tab(Tk.Frame):
-    def __init__(self, master=None, interface=None, entry=None):
-        super().__init__(master)
-        self.notebook = master
+    def __init__(self, parent=None, interface=None, entry=None):
+        super().__init__(parent)
+        self.notebook = parent
         self.notebook.add(self)
         self.notebook.select(self)
         self.interface = interface or Interface()

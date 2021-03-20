@@ -2,8 +2,8 @@ import os
 from .editor import Editor
 
 class AllSitesEditor(Editor):
-    def __init__(self, master=None):
-        super().__init__(master=master)
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.open_all_sites('c:/users/ryan/tinellbianlanguages')
     
     def open_all_sites(self, root):

@@ -4,27 +4,27 @@ import random
 import re
 import time
 import tkinter as Tk
-import tkinter.filedialog as fd
-import tkinter.ttk as ttk
-from tkinter.ttk import Combobox
+from tkinter import filedialog as fd
+from tkinter import ttk
 
 from .. import conversion, utils
 from .. import widgets as wd
 from ..utilities import RandomWords
 from ..utils import ignored
-from . import file_system as fs
+from .. import filesystem as fs
 from .interface import Interface
 from .tab import Tab
 
 
 class Editor(Tk.Frame):
-    def __init__(self, master=None):
-        super().__init__(master)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = self.master
         self.interfaces = {'': Interface()}
-        self.master.withdraw()
-        self.master.protocol('WM_DELETE_WINDOW', self.quit)
+        self.parent.withdraw()
+        self.parent.protocol('WM_DELETE_WINDOW', self.quit)
         self.closed_tabs = []
-        self.create_layout(self.master)
+        self.create_layout(self.parent)
         self.new_tab()
 
     def __getattr__(self, attr):
@@ -47,7 +47,7 @@ class Editor(Tk.Frame):
 
     def __setattr__(self, attr, value):
         if attr == 'title':
-            self.master.title(f'{value} - Sméagol Site Editor')
+            self.parent.title(f'{value} - Sméagol Site Editor')
         elif attr == 'interface':
             self.tab.interface = value
         elif attr == 'entry':
@@ -60,12 +60,12 @@ class Editor(Tk.Frame):
         '''override Tk.Frame.info'''
         return self.textbox.info
 
-    def create_layout(self, master):
+    def create_layout(self, parent):
         top = self.winfo_toplevel()
         self.set_window_size(top)
         top['menu'] = self.menu(top, self.menu_commands)
-        self.textframe(master).pack(side=Tk.RIGHT, expand=True, fill=Tk.BOTH)
-        self.sidebar(master).pack(side=Tk.LEFT)
+        self.textframe(parent).pack(side=Tk.RIGHT, expand=True, fill=Tk.BOTH)
+        self.sidebar(parent).pack(side=Tk.LEFT)
 
     def set_window_size(self, top):
         top.state('normal')
@@ -75,8 +75,8 @@ class Editor(Tk.Frame):
         top.geometry(f'{w}x{h}+{w_pos}+{h_pos}')
 
     @staticmethod
-    def menu(master, commands):
-        menubar = Tk.Menu(master)
+    def menu(parent, commands):
+        menubar = Tk.Menu(parent)
         for menu in commands:
             submenu = Tk.Menu(menubar, tearoff=0)
             label, options = menu
@@ -92,33 +92,33 @@ class Editor(Tk.Frame):
                 submenu.bind(f'<KeyPress-{keypress}>', command)
         return menubar
 
-    def textframe(self, master):
-        frame = Tk.Frame(master)
+    def textframe(self, parent):
+        frame = Tk.Frame(parent)
         self.notebook = self.new_notebook(frame)
         self.notebook.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
         return frame
 
-    def new_notebook(self, master):
-        notebook = ttk.Notebook(master)
+    def new_notebook(self, parent):
+        notebook = ttk.Notebook(parent)
         notebook.bind('<<NotebookTabChanged>>', self.change_tab)
         notebook.bind('<Button-2>', self.close_tab)
         return notebook
 
-    def sidebar(self, master):
-        frame = Tk.Frame(master)
+    def sidebar(self, parent):
+        frame = Tk.Frame(parent)
         self.headings = self.headings_frame(frame).grid(row=0, column=0)
         self.displays = dict(
-            wordcount=Tk.Label(master=frame, font=('Arial', 14), width=20),
-            style=Tk.Label(master=frame, font=('Arial', 12)),
+            wordcount=Tk.Label(frame, font=('Arial', 14), width=20),
+            style=Tk.Label(frame, font=('Arial', 12)),
             language=self.language_display(frame),
             randomwords=self.random_words_display(frame),
-            blank=Tk.Label(master=frame, height=1000))
+            blank=Tk.Label(frame, height=1000))
         for row, display in enumerate(self.displays.values(), start=1):
             display.grid(row=row, column=0)
         return frame
 
-    def headings_frame(self, master):
-        frame = wd.HeadingFrame(bounds=(1, 10), master=master)
+    def headings_frame(self, parent):
+        frame = wd.HeadingFrame(parent, bounds=(1, 10))
         frame.commands = self.heading_commands
         return frame
 
@@ -127,17 +127,17 @@ class Editor(Tk.Frame):
             if name != 'blank':
                 display.config(textvariable=self.info[name])
 
-    def random_words_display(self, master=None):
-        label = Tk.Label(master=master, font=('Arial', 14))
+    def random_words_display(self, parent):
+        label = Tk.Label(parent, font=('Arial', 14))
         label.bind('<Button-1>', self.refresh_random)
         label.bind('<Button-3>', self.clear_random)
         return label
 
-    def language_display(self, master):
+    def language_display(self, parent):
         translator = conversion.Translator()
         languages = [f'{code}: {lang().name}'
                      for code, lang in translator.languages.items()]
-        menu = Combobox(master,
+        menu = ttk.Combobox(parent,
                         values=languages,
                         height=2000,
                         width=25,
@@ -320,24 +320,26 @@ class Editor(Tk.Frame):
 
     def edit_styles(self, event=None):
         top = Tk.Toplevel()
-        styles = self.interface.styles
-        wd.StylesWindow(styles, master=top, name=self.interface.site.name)
+        window = wd.styles.Window(top, self.interface.styles)
+        window.grid()
+        top.protocol('WM_DELETE_WINDOW', window.cancel)
+        top.title(f'{self.interface.site.name} Styles')
         self.wait_window(top)
-        self.textbox.add_commands()
+        self.textbox.update_styles()
         self.interface.config['styles'] = dict(self.interface.styles.items())
 
     def show_window(self):
         self.set_window_size(self.top)
-        self.master.update()
-        self.master.deiconify()
+        self.parent.update()
+        self.parent.deiconify()
 
     def quit(self):
         self.interfaces.pop('', None)
         for interface in self.interfaces.values():
             with utils.ignored(IOError):
                 interface.save()
-        self.master.withdraw()
-        self.master.quit()
+        self.parent.withdraw()
+        self.parent.quit()
         print('Closing Servers...')
         fs.close_servers()
         print('Servers closed. Enjoy the rest of your day.')

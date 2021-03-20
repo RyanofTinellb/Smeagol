@@ -1,6 +1,5 @@
 import os
-from smeagol import AllSitesEditor
+from smeagol import AllSitesEditor, utils
 
-os.system('cls')
-e = AllSitesEditor()
-e.mainloop()
+utils.clear_screen()
+AllSitesEditor().mainloop()

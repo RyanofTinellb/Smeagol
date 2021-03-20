@@ -25,8 +25,8 @@ BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
 
 
 class Textbox(Tk.Text):
-    def __init__(self, master=None, styles=None, translator=None):
-        super().__init__(master, height=1, width=1, wrap=Tk.WORD,
+    def __init__(self, parent=None, styles=None, translator=None):
+        super().__init__(parent, height=1, width=1, wrap=Tk.WORD,
                          undo=True)
         self.styles = styles or Styles()
         self.translator = translator or conversion.Translator()
@@ -120,9 +120,12 @@ class Textbox(Tk.Text):
         styles = set(self.current_style)
         styles.discard(name)
         self.current_style = styles
+    
+    def update_styles(self):
+        self.set_styles()
+        self.add_commands()
 
     def add_commands(self):
-        self.set_styles()
         for keys, command in self.commands:
             if isinstance(keys, str):
                 self.bind(keys, command)

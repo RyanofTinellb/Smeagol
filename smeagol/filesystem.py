@@ -7,8 +7,8 @@ from http.server import SimpleHTTPRequestHandler
 from socketserver import TCPServer as Server
 from threading import Thread
 
-from ..defaults import default
-from ..utils import ignored
+from .defaults import default
+from .utils import ignored
 
 
 def save(obj, filename):

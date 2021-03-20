@@ -7,9 +7,9 @@ from tkinter.font import Font
 
 
 class MarkdownWindow(Tk.Frame):
-    def __init__(self, master=None, markdown=None):
-        super().__init__(master)
-        self.master.title('Editing Markdown')
+    def __init__(self, parent=None, markdown=None):
+        super().__init__(parent)
+        self.parent.title('Editing Markdown')
         markdown = markdown or Markdown()
         self.original = markdown
         self.markdown = markdown.copy()
@@ -29,8 +29,8 @@ class MarkdownWindow(Tk.Frame):
         self.buttons_frame(self).grid(row=rows, column=columns+1, sticky='e')
         self.move()
 
-    def buttons_frame(self, master=None):
-        frame = Tk.Frame(master)
+    def buttons_frame(self, parent=None):
+        frame = Tk.Frame(parent)
         Tk.Button(frame, text='Load', command=self.load).grid(row=0, column=0)
         Tk.Button(frame, text='Save', command=self.save).grid(row=0, column=1)
         Tk.Button(frame, text='Save As', command=self.saveas).grid(
@@ -96,7 +96,7 @@ class MarkdownWindow(Tk.Frame):
         self.enter()
 
     def enter(self):
-        self.master.destroy()
+        self.parent.destroy()
 
 
 class Entry(Tk.Entry):
@@ -106,8 +106,8 @@ class Entry(Tk.Entry):
         self.bind('<Next>', parent.down)
         self.bind('<MouseWheel>', parent.shift)
         
-        def handler(*args, master=master, name=name):
-            master.entry[name] = self.get()
+        def handler(*args, parent=parent, name=name):
+            parent.entry[name] = self.get()
 
         self.bind('<KeyRelease>', handler)
 
@@ -117,12 +117,12 @@ class Entry(Tk.Entry):
 
 
 class EntryFrame(Tk.Frame):
-    def __init__(self, master, font):
-        super().__init__(master)
+    def __init__(self, parent, font):
+        super().__init__(parent)
         self.display_markdown = Tk.BooleanVar()
         self.state = Tk.StringVar()
-        self.markup = Entry(self, self.master, 'markup')
-        self.markdown = Entry(self, self.master, 'markdown')
+        self.markup = Entry(self, self.parent, 'markup')
+        self.markdown = Entry(self, self.parent, 'markdown')
         self.markup.grid(row=0, column=0)
         self.markdown.grid(row=0, column=2)
         Tk.Checkbutton(self, indicatoron=False, textvariable=self.state,
