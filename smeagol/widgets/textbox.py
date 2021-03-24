@@ -68,7 +68,7 @@ class Textbox(Tk.Text):
             self.style.set(value)
         else:
             super().__setattr__(attr, value)
-
+        
     def clear_style(self, styles):
         self.tag_remove(styles, Tk.INSERT)
 
@@ -96,30 +96,31 @@ class Textbox(Tk.Text):
                 return 'break'
             self.bind(f'<Control-{key}>', command)
 
-    def change_style(self, name, language=False):
-        if language and (code := self.language_code):
-            name += f'-{code}'
-        self._change_style(name)
+    def style_changer(self, name, style):
+        def command(event):
+            if style.language and (code := self.language_code):
+                name += f'-{code}'
+            self._change_style(name)
+            return 'break'
+        return command
 
     def _change_style(self, name):
+        styles = set(self.current_style)
         if name in self.current_style:
-            self._remove_style(name)
-            with utils.ignored(Tk.TclError):
-                self.tag_remove(name, *SELECTION)
+            self._remove_style(name, styles)
         else:
-            self._add_style(name)
-            with utils.ignored(Tk.TclError):
-                self.tag_add(name, *SELECTION)
+            self._add_style(name, styles)
+        self.current_style = styles
 
-    def _add_style(self, name):
-        styles = set(self.current_style)
+    def _add_style(self, name, styles):
         styles.add(name)
-        self.current_style = styles
+        with utils.ignored(Tk.TclError):
+            self.tag_add(name, *SELECTION)
 
-    def _remove_style(self, name):
-        styles = set(self.current_style)
+    def _remove_style(self, name, styles):
         styles.discard(name)
-        self.current_style = styles
+        with utils.ignored(Tk.TclError):
+            self.tag_remove(name, *SELECTION)
     
     def update_styles(self):
         self.set_styles()

@@ -172,6 +172,7 @@ class Editor(Tk.Frame):
     def new_tab(self, event=None):
         Tab(self.notebook, self.interface)
         self.add_commands(self.textbox, self.textbox_commands)
+        return 'break'
 
     def change_tab(self, event=None):
         self.update_displays()

@@ -4,12 +4,12 @@ from ..widgets import Textbox
 
 
 class Tab(Tk.Frame):
-    def __init__(self, parent=None, interface=None, entry=None):
+    def __init__(self, parent, interface, entry=None):
         super().__init__(parent)
         self.notebook = parent
         self.notebook.add(self)
         self.notebook.select(self)
-        self.interface = interface or Interface()
+        self.interface = interface
         self.textbox = self._textbox
         self.entry = entry or self.interface.site.root
 
@@ -28,8 +28,15 @@ class Tab(Tk.Frame):
     @entry.setter
     def entry(self, entry):
         self._entry = entry
-        self.textbox.text = self.interface.styles.hide_tags(str(self.entry))
+        self.textbox.styles = self.interface.styles
+        self.textbox.text = self.entry_text
         self.name = self.entry.name
+    
+    @property
+    def entry_text(self):
+        text = '\n'.join(self._entry.text)
+        hidden_tags = self.interface.styles.hide_tags
+        return hidden_tags(text)
     
     @property
     def name(self):

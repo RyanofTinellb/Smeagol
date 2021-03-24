@@ -52,9 +52,6 @@ class Page(Node):
         else:
             super().__setattr__(attr, value)
 
-    def __str__(self):
-        return '\n'.join(self.text)
-    
     alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
     punctuation = "$-.#()!_"
     radix = len(punctuation)

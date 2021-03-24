@@ -39,8 +39,7 @@ class Interface:
 
     @property
     def entries(self):
-        k = [self.find_entry(e) for e in self.tabs]
-        return k
+        return [self.find_entry(e) for e in self.tabs]
 
     def load_config(self, filename):
         if filename.endswith('.smg'):
