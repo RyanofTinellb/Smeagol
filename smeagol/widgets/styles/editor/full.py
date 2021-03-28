@@ -5,19 +5,17 @@ from tkinter.font import Font
 
 from smeagol.utils import ignored
 
-from . import options, sample, font
+from . import options, sample, font, paragraph
 from .colour import Colour as ColourFrame
 
 
 class FullEditor(Tk.Frame):
     def __init__(self, parent, style):
         super().__init__(parent)
-        self.grid()
-        parent.title(style.name)
+        self.parent.title(f'"{style.name.capitalize()}" Style')
         self.backup = style.copy()
         self.style = style
-        self.spinners = []
-        self.non_spinners = []
+        self.parent.protocol('WM_DELETE_WINDOW', self.cancel)
         for frame, options in self.frames:
             frame(self, self.style).grid(**options)
 
@@ -29,9 +27,11 @@ class FullEditor(Tk.Frame):
     def frames(self):
         return (
             (font.Frame, dict(row=0, column=0)),
-            (ColourFrame, dict(row=1, column=0)),
-            (sample.Frame, dict(row=2, column=0, padx=20)),
-            (self.buttons_frame, dict(row=2, column=1, sticky='s')))
+            (paragraph.Frame, dict(row=0, column=1)),
+            (ColourFrame, dict(row=1, column=0, columnspan=2)),
+            (options.Frame, dict(row=0, column=2)),
+            (sample.Frame, dict(row=2, column=0, padx=20, columnspan=3)),
+            (self.buttons_frame, dict(row=2, column=2, sticky='se')))
 
     def buttons_frame(self, *_):
         frame = Tk.Frame(self)
@@ -43,7 +43,7 @@ class FullEditor(Tk.Frame):
 
     def cancel(self):
         self.style = self.backup
-        self.ok()
+        self.parent.destroy()
 
     def ok(self):
         self.style = self.style.style

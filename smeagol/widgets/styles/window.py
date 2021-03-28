@@ -46,10 +46,9 @@ class Window(Tk.Frame):
         self.delete_btn.config(state=state)
         self.rename_btn.config(state=state)
         font = style.Font
-        box = self._sample
-        box.tag_delete('sample')
-        box.tag_add('sample', 1.0, 'end')
-        box.tag_config('sample', font=font, **style.paragraph)
+        self._sample.tag_delete('sample')
+        self._sample.tag_add('sample', 1.0, 'end')
+        self._sample.tag_config('sample', font=font, **style.paragraph)
 
     def window_buttons(self, parent=None):
         frame = Tk.Frame(parent)
@@ -81,6 +80,7 @@ class Window(Tk.Frame):
     def edit(self, event=None):
         top = Tk.Toplevel()
         editor = self._editor(top, style=Interface(self.style))
+        editor.grid()
         self.parent.withdraw()
         self.wait_window(top)
         self.styles[self.current.get()] = editor.style
@@ -101,7 +101,7 @@ class Window(Tk.Frame):
     
     @property
     def _editor(self):
-        return FullEditor if self.style.name == 'default' else DefaultEditor
+        return DefaultEditor if self.style.name == 'default' else FullEditor
 
     def add(self, event=None):
         name = sd.askstring('Style Name', 'What is the name of the new style?')

@@ -91,13 +91,10 @@ class Textbox(Tk.Text):
                 self.tag_config(f'{name}-{language}',
                                 font=font, **style.paragraph)
         if key:
-            def command(event, name=name, style=style):
-                self.change_style(name, style.language)
-                return 'break'
-            self.bind(f'<Control-{key}>', command)
+            self.bind(f'<Control-{key}>', self.style_changer(name, style))
 
     def style_changer(self, name, style):
-        def command(event):
+        def command(event, name=name):
             if style.language and (code := self.language_code):
                 name += f'-{code}'
             self._change_style(name)
