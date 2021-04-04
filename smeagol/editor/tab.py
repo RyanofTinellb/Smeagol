@@ -39,6 +39,12 @@ class Tab(Tk.Frame):
         return hidden_tags(text)
     
     @property
+    def text(self):
+        text = self.textbox.formatted_text
+        shown_tags = self.interface.styles.show_tags
+        return shown_tags(text)
+    
+    @property
     def name(self):
         return self._name
     

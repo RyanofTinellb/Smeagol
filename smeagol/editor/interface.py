@@ -83,16 +83,18 @@ class Interface:
     def save_page(self, text, entry):
         ''' text is formatted'''
         entry.text = self._save(text)
-        for string, filename in self.site.publish(entry):
-            if isinstance(string, Exception):
-                raise string
-            string = self.templates.html(entry)
-            filename = os.path.join(self.site.directory, filename)
-            fs.saves(string, filename)
+        self.save_site()
+        # for string, filename in self.site.publish(entry):
+        #     if isinstance(string, Exception):
+        #         raise string
+        #     string = self.templates.html(entry)
+        #     filename = os.path.join(self.site.directory, filename)
+        #     fs.saves(string, filename)
         # Save source, wholepage
 
     def _save(self, text):
         text = self.markdown.to_markup(text)
+        text = self.styles.show_tags(text)
         return text
 
     def _publish(self, text, entry):
