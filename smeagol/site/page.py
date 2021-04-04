@@ -44,7 +44,7 @@ class Page(Node):
             with utils.ignored(AttributeError):
                 value = [_f for _f in value.splitlines() if _f]
             self.find()['text'] = value
-        elif attr in {'name', 'position', 'script', 'flatname', 'id'}:
+        elif attr in {'name', 'position', 'script', 'id'}:
             if value:
                 self.find()[attr] = value
             else:
@@ -52,34 +52,8 @@ class Page(Node):
         else:
             super().__setattr__(attr, value)
 
-    alphabet = " aeiyuow'pbtdcjkgmnqlrfvszxh"
-    punctuation = "$-.#()!_"
-    radix = len(punctuation)
-    double_letter = rf'([^{punctuation}])\1'
-
-    @staticmethod
-    def score_pattern(word, pattern, radix, points):
-        return sum([points * radix**index
-                    for index in pattern_indices(word, pattern)])
-
-    @staticmethod
-    def pattern_indices(word, pattern):
-        index = -1
-        while True:
-            try:
-                index = word.index(pattern, index + 1)
-                yield index
-            except ValueError:
-                return
-
     def update_date(self):
         self.find()['date'] = dt.strftime(dt.today(), '%Y-%m-%d')
-
-    def refresh_flatname(self):
-        self.find()['flatname'] = self._flatname
-
-    def remove_flatname(self):
-        self.find().pop('flatname', None)
 
     def remove_script(self):
         self.find().pop('script', None)
@@ -139,16 +113,6 @@ class Page(Node):
         return dict(words=wordlist,
                     sentences=lines)
 
-    @property
-    def _flatname(self):
-        name = markdown.to_markdown(self.name)
-        score = 0
-        name = re.sub(double_letter, r'#\1', name)
-        for points, pattern in enumerate(punctuation):
-            score += score_pattern(name, pattern, radix, points + 1)
-            name = re.sub('\\' + pattern, '', name)
-        return dict(name=name, score=score)
-
     def __getitem__(self, entry):
         if entry == '':
             return self
@@ -170,41 +134,6 @@ class Page(Node):
             return self.name == other.name
         except AttributeError:
             return self == self.new(other.location)
-
-    def __lt__(self, other):
-        try:
-            if self.flatname == other.flatname and self.score < other.score:
-                return True
-        except AttributeError:
-            return self < self.new(other.location)
-        for s, t in zip(self.flatname, other.flatname):
-            if s != t:
-                try:
-                    return alphabet.index(s) < alphabet.index(t)
-                except ValueError:
-                    continue
-        else:
-            return len(self.name) < len(other.name)
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __ge__(self, other):
-        return not self < other
-
-    def __gt__(self, other):
-        return self != other and self >= other
-
-    def __le__(self, other):
-        return self == other or self < other
-
-    def sort(self, entry=None):
-        if entry:
-            ID = entry.id = str(uuid())
-        self.children = [child.find() for child in sorted(self.daughters)]
-        entry = self.root[ID]
-        entry.id = ''
-        return entry
         
     def publish(self, template=None):
         return self.html(template), self.link
