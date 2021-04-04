@@ -5,6 +5,7 @@ import re
 import time
 import tkinter as Tk
 from tkinter import filedialog as fd
+from tkinter import simpledialog as sd
 from tkinter import ttk
 
 from .. import conversion, utils
@@ -237,12 +238,12 @@ class Editor(Tk.Frame):
     def open_entry(self, entry):
         self.set_headings(entry)
         self.textbox.set_styles()
-        self.tab.entry = entry
+        self.entry = entry
         self.title = self.interface.site.root.name
 
-    def reset_entry(self, event):
+    def reset_entry(self, event=None):
         with ignored(AttributeError):
-            self.set_headings(self.textbox.entry)
+            self.set_headings(self.entry)
 
     def open_site(self, filename=''):
         filename = filename or fs.open_smeagol()
@@ -269,9 +270,19 @@ class Editor(Tk.Frame):
 
     def set_headings(self, entry):
         self.headings.headings = [e.name for e in entry.lineage][1:]
+
+    def rename_page(self, event=None):
+        name = self.entry.name
+        name = sd.askstring(
+            'Page Name', f'What is the new name of "{name}"?')
+        if name:
+            self.entry.name = name
+            self.tab.name = name
+            self.reset_entry()
     
     def save_page(self, event=None):
         self.interface.save_page(self.textbox.formatted_text, self.entry)
+        self.interface.save_site()
         return 'break'
 
     def refresh_random(self, event=None):
@@ -355,6 +366,7 @@ class Editor(Tk.Frame):
                 ('Save', self.save_site),
                 ('Save _As', self.save_site_as)]),
             ('Page', [
+                ('Rename', self.rename_page),
                 ('Open in Browser', self.open_entry_in_browser)
             ]),
             ('Edit', [

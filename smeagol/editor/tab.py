@@ -44,6 +44,7 @@ class Tab(Tk.Frame):
     
     @name.setter
     def name(self, name):
+        self._name = name
         self.notebook.tab(self, text=name)
     
 
