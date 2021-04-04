@@ -17,7 +17,7 @@ from .tab import Tab
 
 
 class Editor(Tk.Frame):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, filename=None):
         super().__init__(parent)
         self.parent = self.master
         self.interfaces = {'': Interface()}
@@ -26,6 +26,8 @@ class Editor(Tk.Frame):
         self.closed_tabs = []
         self.create_layout(self.parent)
         self.new_tab()
+        if filename:
+            self.open_site(filename)
 
     def __getattr__(self, attr):
         if attr == 'tab':
