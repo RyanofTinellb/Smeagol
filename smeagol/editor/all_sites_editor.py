@@ -1,4 +1,5 @@
 import os
+from .. import filesystem as fs
 from .editor import Editor
 
 class AllSitesEditor(Editor):
@@ -6,9 +7,12 @@ class AllSitesEditor(Editor):
         super().__init__(parent)
         self.open_all_sites('c:/users/ryan/tinellbianlanguages')
     
+    @staticmethod
+    def _smg(filename):
+        return filename.endswith('.smg')
+    
     def open_all_sites(self, root):
-        files = [os.path.join(root, file_) for root, _, files in os.walk(root)
-                 for file_ in files if file_.endswith('.smg')]
+        files = fs.walk(root, self._smg)
         for i, site in enumerate(files):
             if i:
                 self.new_tab()

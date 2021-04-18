@@ -10,10 +10,12 @@ from tkinter import ttk
 
 from .. import conversion, utils
 from .. import widgets as wd
+from ..widgets import window
 from ..utilities import RandomWords
 from ..utils import ignored
 from .. import filesystem as fs
 from .interface import Interface
+from . import template as tpl
 from .tab import Tab
 
 
@@ -172,8 +174,9 @@ class Editor(Tk.Frame):
         self.textbox.mark_set(Tk.INSERT, position)
         self.textbox.see(Tk.INSERT)
 
-    def new_tab(self, event=None):
-        Tab(self.notebook, self.interface)
+    def new_tab(self, event=None, interface=None):
+        interface = interface or self.interface
+        Tab(self.notebook, interface)
         self.add_commands(self.textbox, self.textbox_commands)
         return 'break'
 
@@ -328,9 +331,19 @@ class Editor(Tk.Frame):
 
     def markdown_edit(self, event=None):
         top = Tk.Toplevel(self)
-        editor = wd.MarkdownWindow(top, self.interface.markdown)
+        editor = window.MarkdownWindow(top, self.interface.markdown)
         self.wait_window(top)
         self.interface.markdown = editor.markdown
+    
+    def template_edit(self, event=None):
+        top = Tk.Toplevel(self)
+        templates = self.interface.templates
+        window.Templates(top, self.interface.templates).grid()
+        self.wait_window(top)
+        for template in templates.values():
+            if template.edited:
+                template.edited = False
+                self.new_tab(interface=template)
 
     def edit_styles(self, event=None):
         top = Tk.Toplevel()
@@ -371,7 +384,8 @@ class Editor(Tk.Frame):
             ]),
             ('Edit', [
                 ('Styles', self.edit_styles),
-                ('Markdown', self.markdown_edit)])]
+                ('Markdown', self.markdown_edit),
+                ('Templates', self.template_edit)])]
 
     @property
     def textbox_commands(self):

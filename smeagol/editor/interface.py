@@ -2,10 +2,13 @@ import os
 import re
 import tkinter.filedialog as fd
 
-from .. import conversion, errors, utils, widgets, filesystem as fs
+from .. import conversion, errors
+from .. import filesystem as fs
+from .. import utils, widgets
 from ..defaults import default
 from ..site import Site
 from ..utilities import RandomWords
+from . import template
 
 
 class Interface:
@@ -52,11 +55,22 @@ class Interface:
     def setup(self, config):
         self.config = config
         self.site = Site(**config.get('site', None))
+        self.files = self.site.files
+        self.templates = self._templates
         self.translator = conversion.Translator()
         self.markdown = conversion.Markdown(config.get('markdown', None))
         self.styles = widgets.Styles(config.get('styles', None))
         self.linker = conversion.Linker(config.get('links', None))
         self.randomwords = RandomWords()
+
+    @property
+    def _templates(self):
+        templates = {None: template.Interface()}
+        for name, filename in self.files.templates.items():
+            templates[name] = template.Interface(filename=filename, optional=False)
+        for name, filename in self.files.sections.items():
+            templates[name] = template.Interface(filename=filename)
+        return templates
 
     def save(self):
         fs.save(self.config, self.filename)
@@ -95,11 +109,6 @@ class Interface:
     def _save(self, text):
         text = self.markdown.to_markup(text)
         text = self.styles.show_tags(text)
-        return text
-
-    def _publish(self, text, entry):
-        text = self.linker.add_links(text, entry)
-        text = conversion.markup(text)
         return text
 
     def save_site(self):

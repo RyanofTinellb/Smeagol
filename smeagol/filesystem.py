@@ -64,6 +64,11 @@ def save_smeagol():
     return fd.asksaveasfilename(**options)
 
 
+def walk(root, condition):
+    return [os.path.join(root, file_) for root, _, files in os.walk(root)
+            for file_ in files if condition(file_)]
+
+
 servers = []
 
 

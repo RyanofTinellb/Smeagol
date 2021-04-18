@@ -28,6 +28,10 @@ class MarkdownWindow(Tk.Frame):
         Tk.Label(self, padx=10).grid(row=0, column=2*columns)
         self.buttons_frame(self).grid(row=rows, column=columns+1, sticky='e')
         self.move()
+    
+    @property
+    def parent(self):
+        return self.master
 
     def buttons_frame(self, parent=None):
         frame = Tk.Frame(parent)

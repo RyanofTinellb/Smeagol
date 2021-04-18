@@ -109,7 +109,7 @@ class Site:
         return dict(obj=self.tree, filename=self.source)
 
     def update_searchindex(self):
-        utils.save(self.analysis, self.search_index)
+        fs.save(self.analysis, self.search_index)
     
     @utils.asynca
     def save_wholepage(self):
@@ -123,7 +123,7 @@ class Site:
         page = page.replace('{whole-contents}', contents)
         page = re.sub(r'<li class="normal">(.*?)</li>',
                         r'<li><a href="index.html">\1</a></li>', page)
-        utils.saves(page, self.wholepage_file)
+        fs.saves(page, self.wholepage_file)
 
     @utils.asynca
     def save_search_pages(self):
@@ -141,7 +141,7 @@ class Site:
         )
         if filename is self.search_page404:
             page = re.sub(r'(href|src)="/*', r'\1="/', page)
-        utils.dumps(page, filename)
+        fs.saves(page, filename)
     
     def replace_all(self, old, new):
         for page in self:

@@ -6,7 +6,7 @@ utils.clear_screen()
 try:
     filename = sys.argv[1]
 except IndexError:
-    filename = None
+    filename = '-all'
 if filename == '-all':
     AllSitesEditor().mainloop()
 else:

@@ -9,7 +9,7 @@ class Files:
                         template404='', page404=''),
             sections={}
         )
-    
+
     def __getattr__(self, attr):
         if attr in {'source', 'template_file', 'wordlist'}:
             return self.files.setdefault(attr, '')
@@ -31,6 +31,14 @@ class Files:
             self.files.setdefault(attr, {}).update({sub: value})
         else:
             raise AttributeError
-    
+
+    @property
+    def templates(self):
+        return {
+            'main': dict(filename=self.template_file),
+            'wholepage': dict(filename=self.wholepage_template),
+            'search': dict(filename=self.search_template),
+            '404': dict(filename=self.search_template404)}
+
     def __dir__(self):
         return self.files

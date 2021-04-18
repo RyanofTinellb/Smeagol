@@ -1,9 +1,8 @@
 class Template:
-    def __init__(self, name='', page=None, styles=None, templates=None):
-        self.name = name
-        self.page = page or {}
-        self.styles = styles
-        self.templates = templates or Templates()
+    def __init__(self, text, tagger, templates):
+        self.tagger = tagger
+        self.text = tagger.show_tags(text)
+        self.templates = templates
         self.replace = self.block = False
         self.tags = ['p']
     
@@ -13,7 +12,7 @@ class Template:
             if value == 'template':
                 self.replace = True
             else:
-                style = self.styles[value]
+                style = self.tagger[value]
                 if style.tag:
                     self.tags.append(style.tag)
                 if self.block and not style.block:
@@ -24,7 +23,7 @@ class Template:
             if value == 'template':
                 self.replace = False
             else:
-                style = self.styles[value]
+                style = self.tagger[value]
                 if style.tag:
                     self.tags.pop()
                 if not self.block and style.block:
@@ -39,12 +38,4 @@ class Template:
 
     @property
     def html(self):
-        return ''.join([self.expand(*elt) for elt in self.page])
-
-
-class Templates:
-    def __init__(self, templates=None):
-        self.templates = templates or {}
-
-    def html(self, entry):
-        return self.templates['template'].html
+        return ''.join([self.expand(*elt) for elt in self.text])
