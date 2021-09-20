@@ -6,6 +6,7 @@ from .row import Row
 from .buttons import Buttons
 
 class Templates(Tk.Frame):
+    '''Templates Window'''
     def __init__(self, parent, templates=None, editor=None):
         '''
         @param editor: function to edit template from Editor or derived class

@@ -247,17 +247,6 @@ class Page(Node):
         return f'<link rel="icon" type="image/png" href="{icon}">'
 
     @property
-    def search_script(self):
-        hyperlink = self.hyperlink('search.html', anchors=False)
-        return ('<script type="text/javascript">\n'
-                'let href = window.location.href;\n'
-                'if (href.indexOf("?") != -1 && href.indexOf("?highlight=") == -1) {\n'
-                '    let term = href.replace(/(.*?\\?)(.*?)(#.*|$)/, "$2");\n'
-                f'    window.location.href = `{hyperlink}?${{term}}&andOr=and`;\n'
-                '}\n'
-                '</script>')
-
-    @property
     def toc(self):
         if self.is_root or self.is_leaf:
             return ''
@@ -360,7 +349,6 @@ class Page(Node):
     def html(self, template=None):
         page = template or default.template
         for (section, function) in [
-            ('{search-script}', 'search_script'),
             ('{title-heading}', 'title_heading'),
             ('{main-contents}', 'main_contents'),
             ('{toc}', 'toc'),

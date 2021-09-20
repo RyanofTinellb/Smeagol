@@ -66,9 +66,11 @@ class Styles(Tagger):
             self.styles.setdefault(style.name, style)
         except AttributeError:
             style = style.split('-')
+            name = style[0]
             language = len(style) > 1
-            self.styles.setdefault(style[0], Style(
-                name=style[0], language=language))
+            style = Style(name=style[0], language=language)
+            self.styles.setdefault(name, style)
+        return style
 
     def remove(self, style):
         try:

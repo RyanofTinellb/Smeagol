@@ -35,10 +35,10 @@ class Files:
     @property
     def templates(self):
         return {
-            'main': dict(filename=self.template_file),
-            'wholepage': dict(filename=self.wholepage_template),
-            'search': dict(filename=self.search_template),
-            '404': dict(filename=self.search_template404)}
+            'main': self.template_file,
+            'wholepage': self.wholepage_template,
+            'search': self.search_template,
+            '404': self.search_template404}
 
     def __dir__(self):
         return self.files

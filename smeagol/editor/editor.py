@@ -8,7 +8,7 @@ from tkinter import filedialog as fd
 from tkinter import simpledialog as sd
 from tkinter import ttk
 
-from .. import conversion, utils
+from .. import conversion, utils, errors
 from .. import widgets as wd
 from ..widgets import window
 from ..utilities import RandomWords

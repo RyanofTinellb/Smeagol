@@ -127,7 +127,7 @@ class Style:
             self.paragraph['spacing2'] = self.add_unit(value)
         elif attr == 'unit':
             self._change_units(value)
-        
+
     def trace_add(self, mode, fn):
         self.changed.trace_add(mode, fn)
 
@@ -199,5 +199,3 @@ class Style:
     @property
     def Font(self):
         return Font(**self._font)
-
-

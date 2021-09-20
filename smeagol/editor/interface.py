@@ -54,23 +54,34 @@ class Interface:
 
     def setup(self, config):
         self.config = config
-        self.site = Site(**config.get('site', None))
+        self.open_site(config.get('site', None))
         self.files = self.site.files
-        self.templates = self._templates
+        self.templates = self._templates()
         self.translator = conversion.Translator()
         self.markdown = conversion.Markdown(config.get('markdown', None))
         self.styles = widgets.Styles(config.get('styles', None))
         self.linker = conversion.Linker(config.get('links', None))
         self.randomwords = RandomWords()
 
-    @property
+    # @property
     def _templates(self):
         templates = {None: template.Interface()}
         for name, filename in self.files.templates.items():
-            templates[name] = template.Interface(filename=filename, optional=False)
+            templates[name] = template.Interface(
+                filename=filename, optional=False, templates=templates)
         for name, filename in self.files.sections.items():
-            templates[name] = template.Interface(filename=filename)
+            templates[name] = template.Interface(
+                filename=filename, templates=templates)
         return templates
+
+    def open_site(self, site):
+        site = site or {}
+        while True:
+            try:
+                self.site = Site(**site)
+                break
+            except errors.SourceFileNotFound:
+                site.setdefault('files', {})['source'] = fs.open_source()
 
     def save(self):
         fs.save(self.config, self.filename)
@@ -98,13 +109,14 @@ class Interface:
         ''' text is formatted'''
         entry.text = self._save(text)
         self.save_site()
-        # for string, filename in self.site.publish(entry):
-        #     if isinstance(string, Exception):
-        #         raise string
-        #     string = self.templates.html(entry)
-        #     filename = os.path.join(self.site.directory, filename)
-        #     fs.saves(string, filename)
-        # Save source, wholepage
+        for string, filename in self.site.publish(entry):
+            if isinstance(string, Exception):
+                raise string
+            template = self.templates['main']
+            html = template.html(entry)
+            filename = os.path.join(self.site.directory, filename)
+            fs.saves(html, filename)
+        # Save wholepage
 
     def _save(self, text):
         text = self.markdown.to_markup(text)

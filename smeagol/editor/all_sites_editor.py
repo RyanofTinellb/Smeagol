@@ -8,11 +8,13 @@ class AllSitesEditor(Editor):
         self.open_all_sites('c:/users/ryan/tinellbianlanguages')
     
     @staticmethod
-    def _smg(filename):
-        return filename.endswith('.smg')
+    def _endswith(ending):
+        def condition(filename):
+            return filename.endswith(ending)
+        return condition
     
     def open_all_sites(self, root):
-        files = fs.walk(root, self._smg)
+        files = fs.walk(root, self._endswith('.smg'))
         for i, site in enumerate(files):
             if i:
                 self.new_tab()

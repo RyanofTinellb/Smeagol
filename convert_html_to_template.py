@@ -6,23 +6,33 @@ import smeagol.filesystem as fs
 
 class Converter:
     def __init__(self):
-        root = 'C:\\Users\\Ryan.000\\TinellbianLanguages\\toplevel\\sections'
-        files = fs.walk(root, lambda x: x.endswith('.html'))
+        root = 'c:\\Users\\Ryan\\TinellbianLanguages'
+        files = fs.walk(root, self.legit)
         self.convert_all(files)
+    
+    def legit(self, filename):
+        if filename.endswith('page.html'):
+            return True
+        if filename.endswith('404.html'):
+            return True
+        if filename.endswith('search.html'):
+            return True
+        if filename.endswith('wholepage.html'):
+            return True
+        return False
 
     def convert_all(self, files):
         for filename in files:
             text = fs.loads(filename)
             self.divs = []
-            fs.save(self.convert(text), filename.replace('.html', '.json'))
-            os.remove(filename)
+            fs.save(self.convert(text), filename.replace('.html', '.tpl'))
 
     def convert(self, text):
         text = text.splitlines()
         text = [line.replace('{!', '<template>').replace(
             '!}', '</template>') for line in text]
         text = [self.replache(line) for line in text]
-        return dict(template=text, styles={})
+        return dict(text=text, styles={})
 
     def replache(self, line):
         try:

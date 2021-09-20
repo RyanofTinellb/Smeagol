@@ -37,18 +37,26 @@ def loads(filename):
         return f.read()
 
 
-def update(filename, fn):
+def update(filename, fn, newfilename=None):
     '''
-    Run function `fn` on object `obj` in `filename`
+    Run function `fn` on each element `elt` of an object `obj` in `filename`
     '''
+    newfilename = newfilename or filename
     obj = load(filename)
-    fn(obj)
-    save(obj, filename)
+    for elt in obj:
+        fn(elt)
+    save(obj, newfilename)
 
 
-def updates(filename, fn):
-    saves(fn(loads(filename)), filename)
+def updates(filename, fn, newfilename=None):
+    newfilename = newfilename or filename
+    saves(fn(loads(filename)), newfilename)
 
+def open_source():
+    options = dict(filetypes=[('Source Data File', '*.src')],
+                   title='Open Source Data File',
+                   defaultextension='.src')
+    return fd.askopenfilename(**options)
 
 def open_smeagol():
     options = dict(filetypes=[('Sméagol File', '*.smg'), ('Source Data File', '*.src')],
@@ -56,13 +64,11 @@ def open_smeagol():
                    defaultextension='.smg')
     return fd.askopenfilename(**options)
 
-
 def save_smeagol():
     options = dict(filetypes=[('Sméagol File', '*.smg')],
                    title='Save Site',
                    defaultextension='.smg')
     return fd.asksaveasfilename(**options)
-
 
 def walk(root, condition):
     return [os.path.join(root, file_) for root, _, files in os.walk(root)
