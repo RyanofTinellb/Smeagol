@@ -12,21 +12,8 @@ class Site:
     def __init__(self, directory=None, root=None, name=None, files=None):
         self.directory = directory
         self.name = name
-        self.files = files or {}
+        self.files = files or Files()
         self.tree = self.load_site()
-        self.setup_templates()
-    
-    def setup_templates(self):
-        templates = (
-            (self.template_file, 'template', errors.TemplateFileNotFound),
-            (self.wholepage_template, 'wholepage',
-                errors.WholepageTemplateFileNotFound),
-            (self.search_template, 'search', errors.SearchTemplateFileNotFound),
-            (self.search_template404, 'search404',
-                errors.Search404TemplateFileNotFound)
-        )
-        for name, text in Templates(templates, self.sections).items():
-            setattr(self, name, text)
     
     def refresh_tree(self):
         self.tree = self.load_site()

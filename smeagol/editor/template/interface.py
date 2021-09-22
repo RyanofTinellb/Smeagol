@@ -4,10 +4,9 @@ from .template import Template
 
 
 class Interface:
-    def __init__(self, filename=None, optional=True, templates=None):
+    def __init__(self, filename=None, templates=None):
         self.templates = templates
         self.filename = filename
-        self.optional = optional
         if filename:
             template = fs.load(filename)
             try:
@@ -16,6 +15,9 @@ class Interface:
             except (AttributeError, KeyError, TypeError) as e:
                 raise e(f"Template file {filename} of wrong structure")
             self.template = Template(text, tagger, templates)
+    
+    def __str__(self):
+        return self.filename
         
     @property
     def html(self):

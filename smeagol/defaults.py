@@ -196,7 +196,7 @@ class default:
     "directory": "",
     "files": {
       "source": "",
-      "template_file": "",
+      "template": "",
       "wordlist": "",
       "wholepage": {
         "file": "",
@@ -293,7 +293,7 @@ class default:
       },
       {
         "name": "Template",
-        "property": "template_file",
+        "property": "template",
         "owner": "files",
         "textbox": true,
         "browse": {

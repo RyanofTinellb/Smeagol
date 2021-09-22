@@ -36,17 +36,8 @@ class Template:
             if self.replace:
                 value = value.replace('\n', '')
                 return self.templates[value].html
-            if self.hyperlink:
-                return self._hyperlink(value)
             return value
         return ''
-
-    def _hyperlink(self, value):
-        return self.templates
-    
-    @property
-    def page(self):
-        return self.templates[None]
 
     @property
     def html(self):

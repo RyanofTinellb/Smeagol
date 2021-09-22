@@ -70,7 +70,7 @@ class Styles(Tagger):
             style = style.split('-')
             name = style[0]
             language = len(style) > 1
-            style = Style(name=style[0], language=language)
+            style = Style(name=style[0], language=language, start=f'<{name}>', end=f'</{name}>')
             self.styles.setdefault(name, style)
         return style
 

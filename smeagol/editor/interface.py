@@ -8,8 +8,7 @@ from .. import utils, widgets
 from ..defaults import default
 from ..site import Site
 from ..utilities import RandomWords
-from . import template
-
+from .template.templates import Templates
 
 class Interface:
     def __init__(self, filename='', server=True):
@@ -55,7 +54,7 @@ class Interface:
     def setup(self, config):
         self.config = config
         self.open_site(config.get('site', None))
-        self.files = self.site.files
+        self.templates = Templates(config['site']['files'])
         self.translator = conversion.Translator()
         self.markdown = conversion.Markdown(config.get('markdown', None))
         self.styles = widgets.Styles(config.get('styles', None))
@@ -97,7 +96,8 @@ class Interface:
         ''' text is formatted'''
         entry.text = self._save(text)
         self.save_site()
-        html = self.templates.html(entry, self.styles)
+        self.templates.set_data(entry=entry, styles=self.styles)
+        html = self.templates.main_template.html
         filename = os.path.join(self.site.directory, entry.link)
         fs.saves(html, filename)
         # Save wholepage

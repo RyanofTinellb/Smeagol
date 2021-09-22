@@ -3,7 +3,7 @@ class Files:
 
     def __init__(self, files=None):
         self.files = files or dict(
-            source='', template_file='', wordlist='',
+            source='', main_template='', wordlist='',
             wholepage=dict(file='', template=''),
             search=dict(index='', template='', page='',
                         template404='', page404=''),
@@ -11,7 +11,7 @@ class Files:
         )
 
     def __getattr__(self, attr):
-        if attr in {'source', 'template_file', 'wordlist'}:
+        if attr in {'source', 'main_template', 'wordlist'}:
             return self.files.setdefault(attr, '')
         elif attr in {'sections'}:
             return self.files.setdefault(attr, {})
@@ -24,21 +24,13 @@ class Files:
     def __setattr__(self, attr, value):
         if attr == 'files':
             setattr(Files, attr, value)
-        elif attr in {'source', 'template_file', 'wordlist', 'sections'}:
+        elif attr in {'source', 'main_template', 'wordlist', 'sections'}:
             self.files[attr] = value
         elif attr.startswith('wholepage_') or attr.startswith('search_'):
             attr, sub = attr.split('_')
             self.files.setdefault(attr, {}).update({sub: value})
         else:
-            raise AttributeError
-
-    @property
-    def templates(self):
-        return {
-            'main': self.template_file,
-            'wholepage': self.wholepage_template,
-            'search': self.search_template,
-            '404': self.search_template404}
+            super().__setattr__(attr, value)
 
     def __dir__(self):
         return self.files
