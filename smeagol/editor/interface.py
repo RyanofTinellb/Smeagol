@@ -56,23 +56,11 @@ class Interface:
         self.config = config
         self.open_site(config.get('site', None))
         self.files = self.site.files
-        self.templates = self._templates()
         self.translator = conversion.Translator()
         self.markdown = conversion.Markdown(config.get('markdown', None))
         self.styles = widgets.Styles(config.get('styles', None))
         self.linker = conversion.Linker(config.get('links', None))
         self.randomwords = RandomWords()
-
-    # @property
-    def _templates(self):
-        templates = {None: template.Interface()}
-        for name, filename in self.files.templates.items():
-            templates[name] = template.Interface(
-                filename=filename, optional=False, templates=templates)
-        for name, filename in self.files.sections.items():
-            templates[name] = template.Interface(
-                filename=filename, templates=templates)
-        return templates
 
     def open_site(self, site):
         site = site or {}
@@ -109,13 +97,9 @@ class Interface:
         ''' text is formatted'''
         entry.text = self._save(text)
         self.save_site()
-        for string, filename in self.site.publish(entry):
-            if isinstance(string, Exception):
-                raise string
-            template = self.templates['main']
-            html = template.html(entry)
-            filename = os.path.join(self.site.directory, filename)
-            fs.saves(html, filename)
+        html = self.templates.html(entry, self.styles)
+        filename = os.path.join(self.site.directory, entry.link)
+        fs.saves(html, filename)
         # Save wholepage
 
     def _save(self, text):

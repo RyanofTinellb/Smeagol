@@ -13,14 +13,10 @@ class Interface:
             try:
                 text = '\n'.join(template['text'])
                 tagger = Styles(template.get('tagger', {}))
-            except (AttributeError, KeyError, TypeError):
-                print(f"Template file {filename} of wrong structure")
+            except (AttributeError, KeyError, TypeError) as e:
+                raise e(f"Template file {filename} of wrong structure")
             self.template = Template(text, tagger, templates)
         
     @property
     def html(self):
-        try:
-            return self.template.html
-        except KeyError:
-            print(self.filename)
-            raise
+        return self.template.html

@@ -13,6 +13,9 @@ class Page(Node):
     def __init__(self, tree=None, location=None):
         super().__init__(tree, location)
 
+    def __str__(self):
+        return ''.join(self.text)
+
     def __hash__(self):
         return hash(tuple(self.location))
 
@@ -135,9 +138,6 @@ class Page(Node):
         except AttributeError:
             return self == self.new(other.location)
         
-    def publish(self, template=None):
-        return self.html(template), self.link
-
     @property
     def list(self):
         if self.is_root:
@@ -345,46 +345,3 @@ class Page(Node):
             return f'<script>\n{self.script}\n</script>'
         else:
             return ''
-
-    def html(self, template=None):
-        page = template or default.template
-        for (section, function) in [
-            ('{title-heading}', 'title_heading'),
-            ('{main-contents}', 'main_contents'),
-            ('{toc}', 'toc'),
-            ('{nav-footer}', 'nav_footer'),
-            ('{title}', 'title'),
-            ('{scripts}', 'scripts')
-        ]:
-            if page.count(section):
-                try:
-                    page = page.replace(section, getattr(self, function))
-                except TypeError:
-                    raise TypeError(section, function)
-        try:
-            page = re.sub(r'{(.*?): (.*?)}', self.section_replace, page)
-        except TypeError:
-            raise TypeError(section, function)
-        return page
-
-    def section_replace(self, regex):
-        main, sub = [regex.group(i+1) for i in range(2)]
-        try:
-            func, arg = sub.split(': ', 1)
-            return getattr(self, f'{func}_{main}')(arg)
-        except (AttributeError, TypeError, ValueError):
-            try:
-                return getattr(self, f'{sub}_{main}')
-            except (AttributeError, TypeError):
-                return getattr(self, main)(sub)
-
-    def delete_html(self):
-        with utils.ignored(WindowsError):
-            if self.has_children:
-                shutil.rmtree(os.path.dirname(self.link))
-            else:
-                os.remove(self.link)
-
-    def delete(self):
-        self.delete_html()
-        super().delete()

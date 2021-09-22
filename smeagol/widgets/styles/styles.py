@@ -30,6 +30,8 @@ class Styles(Tagger):
         return iter(self.styles.values())
 
     def __getitem__(self, name):
+        if '-' in name:
+            name, language = name.split('-')
         return self.styles[name]
 
     def __setitem__(self, name, value):

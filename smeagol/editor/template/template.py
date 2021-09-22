@@ -4,9 +4,8 @@ class Template:
         self.text = tagger.hide_tags(text)
         self.templates = templates
         self.replace = self.block = False
-        self.tags = ['p']
     
-    def expand(self, key='text', value='', _='', entry=None):
+    def expand(self, key='text', value='', _=''):
         tag = ''
         if key == 'tagon':
             if value == 'template':
@@ -16,8 +15,8 @@ class Template:
                     style = self.tagger[value]
                 except KeyError:
                     style = self.tagger.add(value)
-                if style.block:
-                    self.tags.append(style.block)
+                if style.hyperlink:
+                    self.hyperlink = True
                 if self.block and not style.block:
                     tag = f'<{style.block}>{style.start}'
                 self.block = style.block
@@ -27,8 +26,8 @@ class Template:
                 self.replace = False
             else:
                 style = self.tagger[value]
-                if style.block:
-                    self.tags.pop()
+                if style.hyperlink:
+                    self.hyperlink = False
                 if not self.block and style.block:
                     tag = f'</{style.block}>{style.end}'
                 self.block = style.block
@@ -37,8 +36,17 @@ class Template:
             if self.replace:
                 value = value.replace('\n', '')
                 return self.templates[value].html
+            if self.hyperlink:
+                return self._hyperlink(value)
             return value
         return ''
+
+    def _hyperlink(self, value):
+        return self.templates
+    
+    @property
+    def page(self):
+        return self.templates[None]
 
     @property
     def html(self):

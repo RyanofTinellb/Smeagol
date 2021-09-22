@@ -31,7 +31,7 @@ DEFAULTS = dict(name='default', key='', start='', end='', font='Calibri', size=1
                 offset='baseline', colour='black', background='white', border=False,
                 justification='left', unit='cm', indent=0.0, line_spacing=0.0,
                 left=0.0, right=0.0, top=0.0, bottom=0.0,
-                language=False, hyperlink=False, block='')
+                language='', hyperlink=False, block='')
 
 defaults = DEFAULTS.copy()
 
