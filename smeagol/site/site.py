@@ -6,11 +6,10 @@ from .. import errors, utils, filesystem as fs
 from ..conversion import Markdown, Translator
 from .files import Files
 from .page import Page
-from .templates import Templates
 
 
 class Site:
-    def __init__(self, directory=None, name=None, files=None):
+    def __init__(self, directory=None, root=None, name=None, files=None):
         self.directory = directory
         self.name = name
         self.files = files or {}
@@ -95,14 +94,6 @@ class Site:
     def remove_flatnames(self):
         for page in self:
             page.flatname = ''
-
-    def publish(self, page=None):
-        pages = [page] or self
-        for page in pages:
-            try:
-                yield page.publish(template=self.template)
-            except Exception as err:
-                yield err, page.link
 
     @property
     def source_info(self):
