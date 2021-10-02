@@ -26,11 +26,14 @@ def saves(string, filename):
 
 
 def load(filename):
+    if not filename:
+        return {}
     with open(filename, encoding='utf-8') as f:
         return json.load(f)
 
-
 def loads(filename):
+    if not filename:
+        return ''
     with open(filename, encoding='utf-8') as f:
         return f.read()
 

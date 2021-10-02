@@ -1,5 +1,5 @@
-from ....utilities import filesystem as fs
-from ....utilities import utils
+from ....utilities import utils, filesystem as fs
+from ....widgets import api as widgets
 from .template import Template
 
 
@@ -11,7 +11,7 @@ class Templates:
         self.search = self._new('search404')
         self.wholepage = self._new('wholepage')
         sections = self.filenames.get('sections', {})
-        self.sections = {section: self._open(filename) for section, filename in sections}
+        self.sections = {section: self._open(filename) for section, filename in sections.items()}
     
     def __getitem__(self, key):
         return self.sections[key]

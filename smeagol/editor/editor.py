@@ -353,9 +353,7 @@ class Editor(Tk.Frame):
         self.parent.deiconify()
 
     def quit(self):
-        for interface in self.interfaces.values():
-            with utils.utils.ignored(IOError):
-                interface.save()
+        self.interfaces.save_all()
         self.parent.withdraw()
         self.parent.quit()
         print('Closing Servers...')

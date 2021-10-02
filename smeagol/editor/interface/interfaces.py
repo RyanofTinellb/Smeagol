@@ -1,3 +1,4 @@
+from ...utilities import utils
 from .interface import Interface
 
 
@@ -18,12 +19,16 @@ class Interfaces:
         try:
             return next(filter(lambda x: x.filename == filename, self.interfaces))
         except StopIteration:
-            # filename = filename.replace('\\', '/')
-            raise KeyError(f'There is no Interface with filename {filename!r}')
+            self.interfaces.append(interface := Interface(filename))
+            return interface
     
-    def values(self):
-        for interface in interfaces:
-            yield interface
+    def save_all(self):
+        for interface in self.interfaces:
+            self.save(interface)
+    
+    def save(self, interface):
+        with utils.ignored(IOError):
+            interface.save()
 
     def open_site(self, filename=''):
         filename = filename or fs.open_smeagol()

@@ -68,11 +68,7 @@ class Interface:
         self.templates = templates.Templates(config.get('templates', None))
         
     def open_site(self):
-        try:
-            tree = fs.load(self.assets.source)
-        except FileNotFoundError:
-            tree = {}
-        return Site(tree)
+        return Site(fs.load(self.assets.source))
     
     def save(self):
         fs.save(self.config, self.filename)

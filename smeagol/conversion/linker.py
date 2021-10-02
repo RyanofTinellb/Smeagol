@@ -1,7 +1,7 @@
 import re
-import json
 from itertools import chain
 from .translator import Translator
+from ..utilities import filesystem as fs
 from ..utilities.utils import urlform, ignored, buyCaps, sellCaps, page_initial
 
 class Linker:
@@ -55,12 +55,7 @@ class Linker:
 class Glossary:
     def __init__(self, filename, wordlist=None, translator=None):
         self.adder = {'Glossary': filename}
-        try:
-            with open(filename, encoding='utf-8') as glossary:
-                self._file = glossary.read()
-            self.glossary = json.loads(self._file)
-        except IOError:
-            self.glossary = {}
+        self.glossary = fs.load(filename)
         self.tooltip = ('<span class="tooltip">'
                         '<small-caps>{0}</small-caps>'
                         '<span class="tooltip-text">{1}</span>'
@@ -70,11 +65,9 @@ class Glossary:
     def __str__(self):
         return self._file
 
-    def refresh(self, new_file=''):
-        self._file = new_file
-        with open(self.filename, 'w', encoding='utf-8') as f:
-            f.write(new_file)
-        self.glossary = json.loads(new_file)
+    def refresh(self, filename=''):
+        self._file = filename
+        self.glossary = fs.load(filename)
 
     def add_links(self, text, entry):
         for abbrev, full_form in self.glossary.items():
@@ -141,12 +134,8 @@ class ExternalDictionary:
         return '<{0}>{1}:{2}</{0}>'.format(tag, tr.encode(lang), link)
 
     def wordlist_setup(self):
-        if self.wordlist_file:
-            with open(self.wordlist_file, encoding='utf-8') as wordlist:
-                wordlist = json.load(wordlist)
-            self.wordlist = [word['t'] for word in wordlist]
-        else:
-            self.wordlist = None
+        wordlist = fs.load(self.wordlist_file)
+        self.wordlist = [word['t'] for word in wordlist]
 
     def refresh(self, text=''):
         self.wordlist_setup()
@@ -203,12 +192,8 @@ class InternalDictionary:
         return r'<{0}>{1}:{2}</{0}>'.format(tag, tr.encode(language), link)
 
     def wordlist_setup(self):
-        if self.wordlist_file:
-            with open(self.wordlist_file, encoding='utf-8') as wordlist:
-                wordlist = json.load(wordlist)
-            self.wordlist = [word['t'] for word in wordlist]
-        else:
-            self.wordlist = None
+        wordlist = fs.load(self.wordlist_file)
+        self.wordlist = [word['t'] for word in wordlist]
 
     def refresh(self, text=''):
         self.wordlist_setup()
@@ -216,9 +201,7 @@ class InternalDictionary:
 class ExternalGrammar:
     def __init__(self, filename, wordlist=None, translator=None):
         self.adder = {'ExternalGrammar': filename}
-        with open(filename, encoding='utf-8') as replacements:
-            self._file = replacements.read()
-        self.replacements = json.loads(self._file)
+        self.replacements = fs.load(filename)
         self.url = self.replacements['url']
         self.language = None
         self.filename = filename
@@ -226,11 +209,9 @@ class ExternalGrammar:
     def __str__(self):
         return self._file
 
-    def refresh(self, new_file=''):
-        self._file = new_file
-        with open(self.filename, 'w', encoding='utf-8') as f:
-            f.write(new_file)
-        self.replacements = json.loads(new_file)
+    def refresh(self, filename=''):
+        self._file = filename
+        self.replacements = fs.load(self.filename)
 
     def add_links(self, text, entry):
         """
