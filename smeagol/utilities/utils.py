@@ -1,5 +1,4 @@
 import functools
-import json
 import os
 import re
 import tkinter as Tk
@@ -7,7 +6,6 @@ from contextlib import contextmanager
 from datetime import datetime as dt
 from threading import Thread
 
-from . import errors
 
 
 @contextmanager

@@ -1,4 +1,4 @@
-from itertools import chain, zip_longest
+from itertools import chain
 
 
 class Node:

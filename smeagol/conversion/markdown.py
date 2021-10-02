@@ -1,5 +1,3 @@
-import os
-import json
 from ..utilities.errors import MarkdownFileNotFound
 from ..utilities import utils
 

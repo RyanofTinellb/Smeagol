@@ -1,4 +1,3 @@
-import os
 from ..utilities import filesystem as fs
 from .editor import Editor
 

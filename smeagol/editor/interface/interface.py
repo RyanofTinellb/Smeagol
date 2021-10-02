@@ -1,7 +1,4 @@
 import os
-import re
-import tkinter.filedialog as fd
-from ...utilities import errors
 from ...conversion import api as conversion
 from ...widgets import api as widgets
 from ...utilities import filesystem as fs

@@ -1,8 +1,6 @@
 import re
 import json
 import tkinter as Tk
-from tkinter.scrolledtext import ScrolledText
-from tkinter.font import Font
 from ..utilities import utils
 from .. import conversion
 from ..widgets.api import Styles

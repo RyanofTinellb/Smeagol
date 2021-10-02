@@ -1,16 +1,9 @@
-import json
-import os
-import random
-import re
-import time
 import tkinter as Tk
-from tkinter import filedialog as fd
 from tkinter import simpledialog as sd
 from tkinter import ttk
 
-from ..utilities import errors
 from ..utilities import filesystem as fs
-from ..utilities import errors, utils
+from ..utilities import utils
 from ..conversion import api as conversion
 from ..widgets import api as wd
 from .interface.interfaces import Interfaces

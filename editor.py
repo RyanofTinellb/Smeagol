@@ -1,7 +1,6 @@
-import os
 import sys
 from smeagol.editors import AllSites, Editor
-from smeagol.utilities import errors, utils
+from smeagol.utilities import utils
 
 utils.clear_screen()
 try:

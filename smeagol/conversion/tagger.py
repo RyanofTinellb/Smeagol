@@ -1,6 +1,4 @@
 import re
-import json
-from ..utilities import utils
 from itertools import cycle
 
 class Tagger:

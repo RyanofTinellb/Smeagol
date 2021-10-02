@@ -2,7 +2,7 @@ import re
 from itertools import chain
 from .translator import Translator
 from ..utilities import filesystem as fs
-from ..utilities.utils import urlform, ignored, buyCaps, sellCaps, page_initial
+from ..utilities.utils import ignored, page_initial, sellCaps, urlform
 
 class Linker:
     def __init__(self, link_adders=None, wordlist=None, translator=None):

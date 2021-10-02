@@ -1,4 +1,4 @@
-from ....utilities import utils, filesystem as fs
+from ....utilities import filesystem as fs
 from ....widgets import api as widgets
 from .template import Template
 
