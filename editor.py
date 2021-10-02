@@ -1,6 +1,7 @@
 import os
 import sys
-from smeagol import AllSitesEditor, Editor, utils, errors
+from smeagol.editors import AllSites, Editor
+from smeagol.utilities import errors, utils
 
 utils.clear_screen()
 try:
@@ -8,6 +9,6 @@ try:
 except IndexError:
     filename = '-all'
 if filename == '-all':
-    AllSitesEditor().mainloop()
+    AllSites().mainloop()
 else:
     Editor(filename=filename).mainloop()

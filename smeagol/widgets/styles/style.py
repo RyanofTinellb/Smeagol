@@ -1,9 +1,6 @@
 import re
-import json
-from contextlib import contextmanager
 import tkinter as Tk
 from tkinter.font import Font
-from ... import utils
 
 '''
 properties:

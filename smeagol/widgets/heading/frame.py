@@ -1,8 +1,9 @@
+from .heading import Heading
 from itertools import zip_longest
 import tkinter as Tk
 
 
-class HeadingFrame(Tk.Frame):
+class Frame(Tk.Frame):
     def __init__(self, parent, bounds):
         super().__init__(parent)
         self.min, self.max = bounds
@@ -56,21 +57,3 @@ class HeadingFrame(Tk.Frame):
         self._commands = commands
         for heading in self._headings:
             heading.bind_commands(self.commands)
-
-
-class Heading(Tk.Entry):
-    def __init__(self, level, parent, *args, **kwargs):
-        super().__init__(parent, *args, **kwargs)
-        self.level = level
-
-    def bind_commands(self, commands):
-        for key, command in commands:
-            self.bind(f'{key}', command)
-
-    def set(self, value=''):
-        self.delete(0, 'end')
-        self.insert(0, value)
-
-    def grid(self, *args, **kwargs):
-        super().grid(*args, **kwargs)
-        return self

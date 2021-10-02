@@ -10,14 +10,12 @@ from threading import Thread
 from .defaults import default
 from .utils import ignored
 
-
 def save(obj, filename):
     try:
         saves(json.dumps(obj, ensure_ascii=False, indent=2), filename)
-    except TypeError:
-        saves(str(obj), f := filename + '!error.txt')
-        print(f)
-        raise
+    except TypeError as e:
+        saves(str(obj), f := f'{filename}!error.txt')
+        raise TypeError(str(e), f)
 
 
 def saves(string, filename):
@@ -36,6 +34,13 @@ def loads(filename):
     with open(filename, encoding='utf-8') as f:
         return f.read()
 
+def change(filename, fn, newfilename=None):
+    '''Run function `fn` on entire object in filename'''
+    newfilename = newfilename or filename
+    obj = load(filename)
+    fn(obj)
+    save(obj, newfilename)
+
 
 def update(filename, fn, newfilename=None):
     '''
@@ -52,11 +57,13 @@ def updates(filename, fn, newfilename=None):
     newfilename = newfilename or filename
     saves(fn(loads(filename)), newfilename)
 
+
 def open_source():
     options = dict(filetypes=[('Source Data File', '*.src')],
                    title='Open Source Data File',
                    defaultextension='.src')
     return fd.askopenfilename(**options)
+
 
 def open_smeagol():
     options = dict(filetypes=[('Sméagol File', '*.smg'), ('Source Data File', '*.src')],
@@ -64,16 +71,31 @@ def open_smeagol():
                    defaultextension='.smg')
     return fd.askopenfilename(**options)
 
+
 def save_smeagol():
     options = dict(filetypes=[('Sméagol File', '*.smg')],
                    title='Save Site',
                    defaultextension='.smg')
     return fd.asksaveasfilename(**options)
 
-def walk(root, condition):
-    return [os.path.join(root, file_) for root, _, files in os.walk(root)
-            for file_ in files if condition(file_)]
 
+def walk(root, condition):
+    return [os.path.join(root, filename) for root, _, files in os.walk(root)
+            for filename in files if condition(filename)]
+
+def findbytype(root, ext):
+    return walk(root, isfiletype(ext))
+
+def find(root, name):
+    return walk(root, lambda x: os.path.basename(x) == name)
+
+def extension(filename):
+    return os.path.splitext(filename)[1]
+
+def isfiletype(ext):
+    def _isfiletype(filename, ext=ext):
+        return extension(filename) == ext
+    return _isfiletype
 
 servers = []
 

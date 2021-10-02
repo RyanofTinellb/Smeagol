@@ -2,49 +2,15 @@ import json
 import os
 import re
 
-from .. import errors, utils, filesystem as fs
-from ..conversion import Markdown, Translator
-from .files import Files
-from .page import Page
+from ..utilities import utils
+from ..conversion.markdown import Markdown
+from ..conversion.translator import Translator
+from .entry import Entry
 
 
 class Site:
-    def __init__(self, directory=None, root=None, name=None, files=None):
-        self.directory = directory
-        self.name = name
-        self.files = files or Files()
-        self.tree = self.load_site()
-    
-    def refresh_tree(self):
-        self.tree = self.load_site()
-
-    def load_site(self, source=''):
-        self.source = source or self.source
-        if self.source:
-            try:
-                return fs.load(self.source)
-            except FileNotFoundError:
-                raise errors.SourceFileNotFound(f"No such file or directory: '{self.source}'")
-        else:
-            return {}
-    
-    def __getattr__(self, attr):
-        if attr == 'files':
-            return None
-        try:
-            return getattr(self.files, attr)
-        except AttributeError:
-            return getattr(super(), attr)
-
-    def __setattr__(self, attr, value):
-        if attr == 'files':
-            value = Files(value) if isinstance(value, dict) else value
-            super().__setattr__(attr, value)
-        else:
-            try:
-                setattr(self.files, attr, value)
-            except AttributeError:
-                super().__setattr__(attr, value)
+    def __init__(self, tree=None):
+        self.tree = tree or {}
 
     def __iter__(self):
         return self.iterator
@@ -59,75 +25,28 @@ class Site:
             except IndexError:
                 return
 
-    def __getitem__(self, entry):
-        page = Page(self.tree, [])
+    def __getitem__(self, name):
+        entry = Entry(self.tree, [])
         count = 0
         try:
-            while page.name != entry != count:
-                page = page.successor
+            while entry.name != name != count:
+                entry = entry.successor
                 count += 1
         except IndexError:
-            raise (KeyError if type(entry) in (list, str) else IndexError)(entry)
-        return page
+            raise (KeyError if type(name) in (list, str) else IndexError)(name)
+        return entry
 
     @property
     def root(self):
         return self[0]
 
-    def refresh_flatnames(self):
-        for page in self:
-            page.refresh_flatname()
-
-    def remove_flatnames(self):
-        for page in self:
-            page.flatname = ''
-
-    @property
-    def source_info(self):
-        return dict(obj=self.tree, filename=self.source)
-
-    def update_searchindex(self):
-        fs.save(self.analysis, self.search_index)
-    
-    @utils.asynca
-    def save_wholepage(self):
-        contents = map(lambda x: x.wholepage, self)
-        contents = '\n'.join(filter(None, contents))
-        
-        root = self.root
-        root.update_date()
-        
-        page = root.html(self.wholepage)
-        page = page.replace('{whole-contents}', contents)
-        page = re.sub(r'<li class="normal">(.*?)</li>',
-                        r'<li><a href="index.html">\1</a></li>', page)
-        fs.saves(page, self.wholepage_file)
-
-    @utils.asynca
-    def save_search_pages(self):
-        for template in (
-                (self.search, self.search_page),
-                (self.search404, self.search_page404)):
-            self._search(*template)
-
-    def _search(self, template, filename):
-        page = re.sub('{(.*?): (.*?)}', self.root.section_replace, template)
-        page = re.sub(
-            r'<li class="normal">(.*?)</li>',
-            r'<li><a href="index.html">\1</a></li>',
-            page
-        )
-        if filename is self.search_page404:
-            page = re.sub(r'(href|src)="/*', r'\1="/', page)
-        fs.saves(page, filename)
-    
     def replace_all(self, old, new):
-        for page in self:
-            page.replace(old, new)
+        for entry in self:
+            entry.replace(old, new)
         
     def regex_replace_all(self, pattern, repl):
-        for page in self:
-            page.regex_replace(pattern, repl)
+        for entry in self:
+            entry.regex_replace(pattern, repl)
 
     @property
     def analysis(self):
@@ -135,7 +54,7 @@ class Site:
         sentences = []
         urls = []
         names = []
-        for page_number, entry in enumerate(self):
+        for entry_number, entry in enumerate(self):
             base = len(sentences)
             analysis = entry.analysis
             new_words = analysis['words']
@@ -144,7 +63,7 @@ class Site:
             names.append(utils.buyCaps(entry.name))
             for word, line_numbers in new_words.items():
                 line_numbers = utils.increment(line_numbers, by=base)
-                locations = {str(page_number): line_numbers}
+                locations = {str(entry_number): line_numbers}
                 try:
                     words[word].update(locations)
                 except KeyError:

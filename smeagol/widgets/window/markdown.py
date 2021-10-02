@@ -1,5 +1,5 @@
 from ...errors import MarkdownFileNotFound
-from ...conversion import Markdown
+from ...conversion.markdown import Markdown
 import tkinter as Tk
 import tkinter.messagebox as mb
 import tkinter.filedialog as fd

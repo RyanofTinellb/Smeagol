@@ -1,4 +1,3 @@
-import tkinter as Tk
 from tkinter import ttk
 from tkinter.font import families
 from .offset import Offset

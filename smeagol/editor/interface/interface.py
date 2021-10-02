@@ -1,23 +1,27 @@
 import os
 import re
 import tkinter.filedialog as fd
-
-from .. import conversion, errors
-from .. import filesystem as fs
-from .. import utils, widgets
-from ..defaults import default
-from ..site import Site
-from ..utilities import RandomWords
-from .template.templates import Templates
+from ...utilities import errors
+from ...conversion import api as conversion
+from ...widgets import api as widgets
+from ...utilities import filesystem as fs
+from ...utilities import utils
+from ...utilities.defaults import default
+from ...site.site import Site
+from ...utilities import api as utilities
+from .template import templates
+from .assets import Assets
+from .locations import Locations
 
 class Interface:
     def __init__(self, filename='', server=True):
         self.filename = filename
         config = self.load_config(filename) if filename else default.config
         self.setup(config)
+        self.site = self.open_site()
         if server:
             self.port = fs.start_server(
-                port=41809, directory=self.site.directory, page404=self.page404)
+                port=41809, directory=self.locations.directory)
 
     def __getattr__(self, attr):
         if attr == 'site_info':
@@ -33,10 +37,12 @@ class Interface:
                     f"'{name}' object has no attribute '{attr}'")
 
     def __setattr__(self, attr, value):
-        if attr == 'markdown' and isinstance(value, conversion.Markdown):
-            self.config['markdown'] = value.filename
-        elif attr == 'styles' and isinstance(value, widgets.Styles):
-            self.config['styles'] = dict(value.items())
+        if attr == 'markdown':
+            with utils.ignored(AttributeError):
+                self.config['markdown'] = value.filename
+        elif attr == 'styles':
+            with utils.ignored(AttributeError):
+                self.config['styles'] = dict(value.items())
         super().__setattr__(attr, value)
 
     @property
@@ -45,31 +51,29 @@ class Interface:
 
     def load_config(self, filename):
         if filename.endswith('.smg'):
-            config = fs.load(filename)
-        else:
-            config = default.config
-            config['site']['files']['source'] = filename
+            return fs.load(filename)
+        config = default.config
+        config['assets']['source'] = filename
         return config
 
     def setup(self, config):
         self.config = config
-        self.open_site(config.get('site', None))
-        self.templates = Templates(config['site']['files'])
+        self.assets = Assets(config.get('assets', None))
+        self.locations = Locations(config.get('locations', None))
+        self.styles = widgets.Styles(config.get('styles', None))
         self.translator = conversion.Translator()
         self.markdown = conversion.Markdown(config.get('markdown', None))
-        self.styles = widgets.Styles(config.get('styles', None))
         self.linker = conversion.Linker(config.get('links', None))
-        self.randomwords = RandomWords()
-
-    def open_site(self, site):
-        site = site or {}
-        while True:
-            try:
-                self.site = Site(**site)
-                break
-            except errors.SourceFileNotFound:
-                site.setdefault('files', {})['source'] = fs.open_source()
-
+        self.randomwords = utilities.RandomWords()
+        self.templates = templates.Templates(config.get('templates', None))
+        
+    def open_site(self):
+        try:
+            tree = fs.load(self.assets.source)
+        except FileNotFoundError:
+            tree = {}
+        return Site(tree)
+    
     def save(self):
         fs.save(self.config, self.filename)
 
@@ -107,18 +111,5 @@ class Interface:
         text = self.styles.show_tags(text)
         return text
 
-    def save_site(self):
-        fs.save(**self.site.source_info)
-
     def close_servers(self):
         fs.close_servers()
-
-    @property
-    def page404(self):
-        name = self.site.name
-        page404 = default.page404.format(
-            self.site[0].elder_links).replace(
-            f'<li class="normal">{name}</li>',
-            f'<li><a href="/index.html">{name}</a></li>'
-        )
-        page404 = re.sub(r'href="/*', 'href="/', page404)

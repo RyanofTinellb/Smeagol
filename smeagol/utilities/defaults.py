@@ -190,42 +190,7 @@ class default:
 ]
 
     config = json.loads('''
-{
-  "site": {
-    "name": "",
-    "directory": "",
-    "files": {
-      "source": "",
-      "template": "",
-      "wordlist": "",
-      "wholepage": {
-        "file": "",
-        "template": ""
-      },
-      "search": {
-        "index": "",
-        "template": "",
-        "page": "",
-        "template404": "",
-        "page404": ""
-      },
-      "templates": {
-
-      }
-    }
-  },
-  "sample texts": "",
-  "current": {
-    "page": [
-      ""
-    ],
-    "markdown": "",
-    "language": "en: English",
-    "position": "1.0",
-    "fontsize": 14
-  },
-  "links": {}
-}
+      {}
     ''')
 
     page404 = '''<!DOCTYPE html>

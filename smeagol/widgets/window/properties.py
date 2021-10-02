@@ -1,6 +1,7 @@
+import json
 import tkinter as Tk
 import tkinter.filedialog as fd
-from smeagol.utils import *
+from smeagol import utils
 from smeagol.defaults import default
 
 class PropertiesWindow(Tk.Toplevel):
@@ -126,7 +127,7 @@ class PropertyFrame:
                 if action == 'save':
                     with open(filename, 'a', encoding='utf-8') as textfile:
                         textfile.write
-                with ignored(AttributeError):
+                with utils.ignored(AttributeError):
                     self.check.select()
             self.entry.focus_set()
         return browse_file

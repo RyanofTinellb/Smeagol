@@ -3,8 +3,9 @@ import json
 import tkinter as Tk
 from tkinter.scrolledtext import ScrolledText
 from tkinter.font import Font
-from .. import utils, conversion
-from .styles import Styles
+from ..utilities import utils
+from .. import conversion
+from ..widgets.api import Styles
 
 START = '1.0'
 END = 'end-1c'

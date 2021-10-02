@@ -1,7 +1,7 @@
 import os
 import json
-from smeagol.errors import MarkdownFileNotFound
-from smeagol import utils
+from ..utilities.errors import MarkdownFileNotFound
+from ..utilities import utils
 
 
 class Markdown:

@@ -8,22 +8,18 @@ from tkinter import filedialog as fd
 from tkinter import simpledialog as sd
 from tkinter import ttk
 
-from .. import conversion, utils, errors
-from .. import widgets as wd
-from ..widgets import window
-from ..utilities import RandomWords
-from ..utils import ignored
-from .. import filesystem as fs
-from .interface import Interface
-from . import template as tpl
-from .tab import Tab
-
+from ..utilities import errors
+from ..utilities import filesystem as fs
+from ..utilities import errors, utils
+from ..conversion import api as conversion
+from ..widgets import api as wd
+from .interface.interfaces import Interfaces
 
 class Editor(Tk.Frame):
     def __init__(self, parent=None, filename=None):
         super().__init__(parent)
         self.parent = self.master
-        self.interfaces = {'': Interface()}
+        self.interfaces = Interfaces()
         self.parent.withdraw()
         self.parent.protocol('WM_DELETE_WINDOW', self.quit)
         self.closed_tabs = []
@@ -41,7 +37,7 @@ class Editor(Tk.Frame):
             try:
                 return self.tab.interface
             except AttributeError:
-                return self.interfaces['']
+                return self.interfaces.blank
         if attr == 'entry':
             return self.tab.entry
         try:
@@ -176,7 +172,7 @@ class Editor(Tk.Frame):
 
     def new_tab(self, event=None, interface=None):
         interface = interface or self.interface
-        Tab(self.notebook, interface)
+        wd.Tab(self.notebook, interface)
         self.add_commands(self.textbox, self.textbox_commands)
         return 'break'
 
@@ -200,7 +196,7 @@ class Editor(Tk.Frame):
         return 'break'
 
     def reopen_tab(self, event=None):
-        with ignored(IndexError):
+        with utils.ignored(IndexError):
             tab = self.closed_tabs.pop()
             self.notebook.add(tab)
             self.notebook.select(tab)
@@ -211,7 +207,7 @@ class Editor(Tk.Frame):
 
     def previous_entry(self, event):
         entry = self._entry(event.widget.level)
-        with ignored(IndexError):
+        with utils.ignored(IndexError):
             self.set_headings(entry.previous_sister)
         return 'break'
 
@@ -220,7 +216,7 @@ class Editor(Tk.Frame):
         try:
             entry = entry.next_sister
         except IndexError:
-            with ignored(IndexError):
+            with utils.ignored(IndexError):
                 entry = entry.eldest_daughter
         self.set_headings(entry)
         return 'break'
@@ -245,15 +241,11 @@ class Editor(Tk.Frame):
         self.title = self.interface.site.root.name
 
     def reset_entry(self, event=None):
-        with ignored(AttributeError):
+        with utils.ignored(AttributeError):
             self.set_headings(self.entry)
 
     def open_site(self, filename=''):
-        filename = filename or fs.open_smeagol()
-        try:
-            self.interface = self.interfaces[filename]
-        except KeyError:
-            self.interface = self.interfaces[filename] = Interface(filename)
+        self.interface = self.interfaces[filename]
         for i, entry in enumerate(self.interface.entries):
             if i:
                 self.new_tab()
@@ -361,9 +353,8 @@ class Editor(Tk.Frame):
         self.parent.deiconify()
 
     def quit(self):
-        self.interfaces.pop('', None)
         for interface in self.interfaces.values():
-            with utils.ignored(IOError):
+            with utils.utils.ignored(IOError):
                 interface.save()
         self.parent.withdraw()
         self.parent.quit()

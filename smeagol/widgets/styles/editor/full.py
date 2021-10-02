@@ -1,9 +1,4 @@
-import re
 import tkinter as Tk
-from tkinter import ttk
-from tkinter.font import Font
-
-from smeagol.utils import ignored
 
 from . import options, sample, font, paragraph
 from .colour import Colour as ColourFrame
@@ -16,8 +11,8 @@ class FullEditor(Tk.Frame):
         self.backup = style.copy()
         self.style = style
         self.parent.protocol('WM_DELETE_WINDOW', self.cancel)
-        for frame, options in self.frames:
-            frame(self, self.style).grid(**options)
+        for frame, location in self.frames:
+            frame(self, self.style).grid(**location)
 
     @property        
     def parent(self):

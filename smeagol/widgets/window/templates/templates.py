@@ -1,5 +1,3 @@
-import os.path
-from smeagol import utils
 import tkinter as Tk
 from tkinter import simpledialog as sd
 from .row import Row

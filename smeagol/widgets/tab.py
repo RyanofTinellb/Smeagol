@@ -1,6 +1,5 @@
 import tkinter as Tk
-from .interface import Interface
-from ..widgets import Textbox
+from .textbox import Textbox
 
 
 class Tab(Tk.Frame):

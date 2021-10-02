@@ -1,4 +1,3 @@
-import tkinter as Tk
 from tkinter import ttk
 
 class Units(ttk.LabelFrame):

@@ -1,11 +1,11 @@
 import json
 
-from ... import utils
-from . import Style
-from ...conversion import Tagger
+from ...utilities import utils
+from .style import Style
+from ...conversion import api as conversion
 
 
-class Styles(Tagger):
+class Styles(conversion.Tagger):
     def __init__(self, styles=None):
         self.load(styles)
 

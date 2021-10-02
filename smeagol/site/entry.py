@@ -4,17 +4,18 @@ import shutil
 from datetime import datetime as dt
 from uuid import uuid4 as uuid
 
-from .. import conversion, utils
-from ..defaults import default
+from .. import conversion
+from ..utilities import utils
+from ..utilities.defaults import default
 from .node import Node
 
 
-class Page(Node):
+class Entry(Node):
     def __init__(self, tree=None, location=None):
         super().__init__(tree, location)
 
     def __str__(self):
-        return ''.join(self.text)
+        return '\n'.join(self.text)
 
     def __hash__(self):
         return hash(tuple(self.location))

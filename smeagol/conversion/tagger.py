@@ -1,6 +1,6 @@
 import re
 import json
-from .. import utils
+from ..utilities import utils
 from itertools import cycle
 
 class Tagger:
@@ -44,3 +44,9 @@ class Tagger:
         self.tags.reverse()
         text += ''.join([self._untag(tag) for tag in self.tags])
         return text
+    
+    def add_line_breaks(self, text):
+        return [self._break(line) for line in text]
+    
+    def _break(self, line):
+        return line if line.endswith('\n') else f'{line}\n'
