@@ -22,6 +22,9 @@ class Interfaces:
             self.interfaces.append(interface := Interface(filename))
             return interface
     
+    def __iter__(self):
+        return iter(self.interfaces)
+    
     def save_all(self):
         for interface in self.interfaces:
             self.save(interface)

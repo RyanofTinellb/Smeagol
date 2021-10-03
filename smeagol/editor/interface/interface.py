@@ -3,7 +3,6 @@ from ...conversion import api as conversion
 from ...widgets import api as widgets
 from ...utilities import filesystem as fs
 from ...utilities import utils
-from ...utilities.defaults import default
 from ...site.site import Site
 from ...utilities import api as utilities
 from .template import templates
@@ -13,7 +12,7 @@ from .locations import Locations
 class Interface:
     def __init__(self, filename='', server=True):
         self.filename = filename
-        config = self.load_config(filename) if filename else default.config
+        config = self.load_config(filename) if filename else {}
         self.setup(config)
         self.site = self.open_site()
         if server:
@@ -49,9 +48,7 @@ class Interface:
     def load_config(self, filename):
         if filename.endswith('.smg'):
             return fs.load(filename)
-        config = default.config
-        config['assets']['source'] = filename
-        return config
+        return dict(assets=dict(source=filename))
 
     def setup(self, config):
         self.config = config

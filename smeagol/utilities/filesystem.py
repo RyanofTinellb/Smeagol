@@ -100,6 +100,9 @@ def isfiletype(ext):
         return extension(filename) == ext
     return _isfiletype
 
+def isfolder(filename):
+    return os.path.isdir(filename)
+
 servers = []
 
 

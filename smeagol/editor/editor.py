@@ -8,6 +8,7 @@ from ..conversion import api as conversion
 from ..widgets import api as wd
 from .interface.interfaces import Interfaces
 
+
 class Editor(Tk.Frame):
     def __init__(self, parent=None, filename=None):
         super().__init__(parent)
@@ -132,10 +133,10 @@ class Editor(Tk.Frame):
         languages = [f'{code}: {lang().name}'
                      for code, lang in translator.languages.items()]
         menu = ttk.Combobox(parent,
-                        values=languages,
-                        height=2000,
-                        width=25,
-                        justify=Tk.CENTER)
+                            values=languages,
+                            height=2000,
+                            width=25,
+                            justify=Tk.CENTER)
         menu.state(['readonly'])
         menu.bind('<<ComboboxSelected>>', self.change_language)
         return menu
@@ -164,6 +165,7 @@ class Editor(Tk.Frame):
         self.textbox.see(Tk.INSERT)
 
     def new_tab(self, event=None, interface=None):
+        first_tab = False
         interface = interface or self.interface
         wd.Tab(self.notebook, interface)
         self.add_commands(self.textbox, self.textbox_commands)
@@ -238,11 +240,30 @@ class Editor(Tk.Frame):
             self.set_headings(self.entry)
 
     def open_site(self, filename=''):
-        self.interface = self.interfaces[filename]
-        for i, entry in enumerate(self.interface.entries):
-            if i:
-                self.new_tab()
-            self.open_entry(entry)
+        try:
+            self.interface = self.interfaces[filename]
+        except AttributeError:  # filename is a list
+            self.interface = self.open_sites(filename)
+        for interface in self.interfaces:
+            print(interface.filename)
+
+    def open_sites(self, filenames):
+        first_tab = True
+        for filename in filenames:
+            interface = self.interfaces[filename]
+            self.open_interface(interface, first_tab)
+            first_tab = False
+        return interface
+
+    def open_interface(self, interface, first_tab=False):
+        for entry in interface.entries:
+            self.open_tab(entry, first_tab)
+            first_tab = False
+
+    def open_tab(self, entry, first_tab=False):
+        if not first_tab:
+            self.new_tab()
+        self.open_entry(entry)
 
     def save_site(self, filename=''):
         try:
@@ -267,7 +288,7 @@ class Editor(Tk.Frame):
             self.entry.name = name
             self.tab.name = name
             self.reset_entry()
-    
+
     def save_page(self, event=None):
         self.interface.save_page(self.textbox.formatted_text, self.entry)
         self.interface.save_site()
@@ -319,7 +340,7 @@ class Editor(Tk.Frame):
         editor = window.MarkdownWindow(top, self.interface.markdown)
         self.wait_window(top)
         self.interface.markdown = editor.markdown
-    
+
     def template_edit(self, event=None):
         top = Tk.Toplevel(self)
         templates = self.interface.templates

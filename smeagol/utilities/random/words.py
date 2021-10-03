@@ -3,15 +3,19 @@ from .highlulani import HighLulani
 from .demoticlulani import DemoticLulani
 
 class Words:
-    def __init__(self, language=None, samples=''):
+    def __init__(self, language='', samples=''):
         self.languages = dict(
                               en=(English, samples),
                               hl=(HighLulani,),
                               dl=(DemoticLulani,)
                              )
+        self.select(language)
+
+    def select(self, language=''):
+        language = language.lower()[:2]
         self.converter = self._converters(language)
 
-    def _converters(self, language=None):
+    def _converters(self, language=''):
         language = language or next(iter(self.languages))
         try:
             converter, *args = self.languages[language]
