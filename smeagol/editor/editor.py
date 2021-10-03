@@ -296,7 +296,7 @@ class Editor(Tk.Frame):
 
     def refresh_random(self, event=None):
         if r := self.interface.randomwords:
-            self.info['randomwords'].set('\n'.join(r.words))
+            self.info['randomwords'].set('\n'.join(r.words(15)))
         return 'break'
 
     def clear_random(self, event=None):

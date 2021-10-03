@@ -19,7 +19,7 @@ class Words:
         language = language or next(iter(self.languages))
         try:
             converter, *args = self.languages[language]
-        except AttributeError:
+        except (AttributeError, KeyError):
             converter, *args = next(iter(self.languages.values()))
         return converter(*args)
     

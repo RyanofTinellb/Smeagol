@@ -52,14 +52,16 @@ class Interface:
 
     def setup(self, config):
         self.config = config
-        self.assets = Assets(config.get('assets', None))
-        self.locations = Locations(config.get('locations', None))
-        self.styles = widgets.Styles(config.get('styles', None))
-        self.translator = conversion.Translator()
-        self.markdown = conversion.Markdown(config.get('markdown', None))
-        self.linker = conversion.Linker(config.get('links', None))
-        self.randomwords = utilities.RandomWords()
-        self.templates = templates.Templates(config.get('templates', None))
+        self.assets = Assets(config.get('assets', {}))
+        self.locations = Locations(config.get('locations', {}))
+        self.styles = widgets.Styles(config.get('styles', {}))
+        self.language = config.get('language', '')
+        self.translator = conversion.Translator(self.language)
+        self.markdown = conversion.Markdown(config.get('markdown', ''))
+        self.linker = conversion.Linker(config.get('links', {}))
+        samples = self.assets.samples
+        self.randomwords = utilities.RandomWords(self.language, samples)
+        self.templates = templates.Templates(config.get('templates', {}))
         
     def open_site(self):
         return Site(fs.load(self.assets.source))

@@ -4,10 +4,9 @@ from .. import filesystem as fs
 
 
 class English:
-    def __init__(self, samples):
+    def __init__(self, filenames):
         self.name = 'English'
         self.words = set()
-        filenames = samples.split(';')
         for filename in filenames:
             self.collate(fs.load(filename), self.words)
         self.words = list(self.words)
