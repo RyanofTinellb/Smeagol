@@ -23,32 +23,33 @@ class Editor(Tk.Frame):
             self.open_site(filename)
 
     def __getattr__(self, attr):
-        if attr == 'tab':
-            return self.notebook.nametowidget(self.notebook.select())
-        if attr == 'textbox':
-            return self.tab.textbox
-        if attr == 'interface':
-            try:
-                return self.tab.interface
-            except AttributeError:
-                return self.interfaces.blank
-        if attr == 'entry':
-            return self.tab.entry
-        try:
-            return getattr(super(), attr)
-        except AttributeError:
-            raise AttributeError(
-                f"'{self.__class__.__name__}' object has no attribute '{attr}'")
+        match attr:
+            case'tab':
+                return self.notebook.nametowidget(self.notebook.select())
+            case'textbox':
+                return self.tab.textbox
+            case'entry':
+                return self.tab.entry
+            case default:
+                return utils.default_getter(self, attr)
 
     def __setattr__(self, attr, value):
-        if attr == 'title':
-            self.parent.title(f'{value} - Sméagol Site Editor')
-        elif attr == 'interface':
-            self.tab.interface = value
-        elif attr == 'entry':
-            self.tab.entry = value
-        else:
-            super().__setattr__(attr, value)
+        match attr:
+            case'title':
+                self.parent.title(f'{value} - Sméagol Site Editor')
+            case'interface':
+                self.tab.interface = value
+            case'entry':
+                self.tab.entry = value
+            case default:
+                utils.default_setter(self, attr, value)
+    
+    @property
+    def interface(self):
+        try:
+            return self.tab.interface
+        except AttributeError:
+            return self.interfaces.blank
 
     @property
     def info(self):
@@ -244,8 +245,6 @@ class Editor(Tk.Frame):
             self.interface = self.interfaces[filename]
         except AttributeError:  # filename is a list
             self.interface = self.open_sites(filename)
-        for interface in self.interfaces:
-            print(interface.filename)
 
     def open_sites(self, filenames):
         first_tab = True

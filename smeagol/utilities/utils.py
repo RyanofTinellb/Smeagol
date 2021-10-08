@@ -7,7 +7,6 @@ from datetime import datetime as dt
 from threading import Thread
 
 
-
 @contextmanager
 def ignored(*exceptions):
     try:
@@ -34,6 +33,18 @@ def asynca(function):
         thread.start()
         return thread
     return async_function
+
+
+def default_getter(obj, attr):
+    try:
+        return getattr(super(type(obj)), attr)
+    except AttributeError:
+        name = obj.__class__.__name__
+        raise AttributeError(f"'{name}' object has no attribute '{attr}'")
+
+
+def default_setter(obj, attr, value):
+    super(type(obj), obj).__setattr__(attr, value)
 
 
 def display_attrs(obj):

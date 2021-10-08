@@ -1,10 +1,10 @@
 import re
 import tkinter as Tk
 from tkinter.font import Font
+from ...conversion.tagger.tag import Tag
 
 '''
 properties:
-    name (str) => name
     key (str) => key
     start (str) => start
     end (str) => end
@@ -23,29 +23,17 @@ properties:
     top, bottom, line_spacing (int) => paragraph.{spacing1, spacing2, spacing3}
 '''
 
-DEFAULTS = dict(name='default', key='', start='', end='', font='Calibri', size=12,
+DEFAULTS = dict(key='', font='Calibri', size=12,
                 bold=False, italics=False, underline=False, strikethrough=False,
                 offset='baseline', colour='black', background='white', border=False,
                 justification='left', unit='cm', indent=0.0, line_spacing=0.0,
-                left=0.0, right=0.0, top=0.0, bottom=0.0,
-                language='', hyperlink=False, block='')
+                left=0.0, right=0.0, top=0.0, bottom=0.0)
 
 defaults = DEFAULTS.copy()
 
-attrs = ('key', 'start', 'end', 'font', 'size', 'bold', 'italics', 'underline', 'strikethrough',
-         'offset', 'colour', 'background', 'border', 'justification', 'unit', 'left', 'right',
-         'top', 'bottom', 'indent', 'line_spacing', 'language', 'hyperlink', 'block')
-
-
-def _int_part(_dict, key):
-    value = _dict.get(key, 0)
-    try:
-        return int(value)
-    except ValueError:
-        try:
-            return int(re.sub(r'\D', '', value))
-        except ValueError:
-            return 0
+attrs = ('key', 'font', 'size', 'bold', 'italics', 'underline', 'strikethrough',
+        'offset', 'colour', 'background', 'border', 'justification', 'unit',
+        'left', 'right', 'top', 'bottom', 'indent', 'line_spacing')
 
 
 class Style:
@@ -134,14 +122,17 @@ class Style:
     def _change_units(self, value):
         unit = value[0]
         if unit in 'cpim':
-            rounding = float if unit in 'ci' else int
-            attrs = 'left', 'right', 'top', 'bottom', 'line_spacing', 'indent'
-            for attr in attrs:
-                value = getattr(self, attr)
-                setattr(self, attr, rounding(value))
+            self._round(unit)
         else:
-            raise AttributeError(
-                f'unit "{value}" is not a valid unit for {type(self).__name__} object')
+            name = self.__class__.__name__
+            raise AttributeError(f'"{value}" is not a valid unit for {name} object')
+    
+    def _round(self, unit):
+        rounding = float if unit in 'ci' else int
+        attrs = 'left', 'right', 'top', 'bottom', 'line_spacing', 'indent'
+        for attr in attrs:
+            value = getattr(self, attr)
+            setattr(self, attr, rounding(value))
 
     def _size(self, value):
         if isinstance(value, str):

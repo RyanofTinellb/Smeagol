@@ -2,8 +2,12 @@ class Template:
     def __init__(self, text, tagger, templates):
         self.tagger = tagger
         self.text = tagger.hide_tags(text)
+        self.output = '\n'.join([f'{key} {self._j(value)}' for (key, value, _) in self.text])
         self.templates = templates
         self.replace = self.block = False
+    
+    def _j(self, text):
+        return text.replace('\n', '\\n')
     
     def expand(self, key='text', value='', _=''):
         tag = ''
@@ -18,7 +22,7 @@ class Template:
                 if style.hyperlink:
                     self.hyperlink = True
                 if self.block and not style.block:
-                    tag = f'<{style.block}>{style.start}'
+                    tag = f'<{self.block}>{style.start}'
                 self.block = style.block
                 return tag or style.start
         elif key == 'tagoff':
@@ -29,7 +33,7 @@ class Template:
                 if style.hyperlink:
                     self.hyperlink = False
                 if not self.block and style.block:
-                    tag = f'</{style.block}>{style.end}'
+                    tag = f'</{self.block}>{style.end}'
                 self.block = style.block
                 return tag or style.end
         elif key == 'text':

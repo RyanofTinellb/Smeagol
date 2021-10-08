@@ -21,7 +21,7 @@ class Tagger:
     
     def _retag(self, key, value, index):
         if key == 'tagon' and value != 'sel':
-            self.tags.append(value)
+            self.collecting = True
             return f'<{value}>'
         elif key == 'text':
             return value

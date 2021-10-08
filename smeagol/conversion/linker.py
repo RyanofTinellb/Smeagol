@@ -1,8 +1,7 @@
 import re
 from itertools import chain
 from .translator import Translator
-from ..utilities import filesystem as fs
-from ..utilities.utils import ignored, page_initial, sellCaps, urlform
+from ..utilities import filesystem as fs, utils
 
 class Linker:
     def __init__(self, link_adders=None, wordlist=None, translator=None):
@@ -29,11 +28,12 @@ class Linker:
         return self
 
     def __getattr__(self, attr):
-        if attr == 'link_adders':
-            self.link_adders = {}
-            return self.link_adders
-        else:
-            raise AttributeError(f'Linker has no attribute {attr}')
+        match attr:
+            case 'link_adders':
+                self.link_adders = {}
+                return self.link_adders
+            case default:
+                return utils.default_getter(self, attr)
 
     def add_links(self, text, entry):
         for link_adder in list(self.link_adders.values()):
@@ -97,18 +97,18 @@ class ExternalDictionary:
         text: 'foo<link>bar</link>baz' =>
             'foo<a href="url/b/bar.html#language">bar</a>baz'
         """
-        with ignored(IndexError, AttributeError):
+        with utils.ignored(IndexError, AttributeError):
             self.language = entry.matriarch.url
         return re.sub(r'<{0}>(.*?)</{0}>'.format('[bl]ink'), self._link, text)
 
     def _link(self, matchobj):
         word = matchobj.group(1).split(':')
         tr = self.translator
-        lang = urlform(self.language if len(word) == 1 else tr.select(word[0]))
+        lang = utils.urlform(self.language if len(word) == 1 else tr.select(word[0]))
         word = word[-1]
-        link = urlform(sellCaps(word))
+        link = utils.urlform(utils.sellCaps(word))
         try:
-            initial = page_initial(link)
+            initial = utils.page_initial(link)
         except IndexError:
             return word
         return '<a href="{0}/{1}/{2}.html#{3}">{4}</a>'.format(
@@ -120,7 +120,7 @@ class ExternalDictionary:
                     'foo<link>bar</link>baz'
 
         """
-        with ignored(IndexError, AttributeError):
+        with utils.ignored(IndexError, AttributeError):
             self.language = entry.matriarch.url
         regex = fr'<a href="{self.url}.*?#(.*?)">(.*?)</a>'
         return re.sub(regex, self._unlink, text)
@@ -129,7 +129,7 @@ class ExternalDictionary:
         tr = self.translator
         lang, link = [regex.group(x) for x in range(1,3)]
         tag = 'link' if not self.wordlist or link in self.wordlist else 'bink'
-        if lang == urlform(self.language):
+        if lang == utils.urlform(self.language):
             return '<{0}>{1}</{0}>'.format(tag, link)
         return '<{0}>{1}:{2}</{0}>'.format(tag, tr.encode(lang), link)
 
@@ -166,9 +166,9 @@ class InternalDictionary:
     def _link(self, text):
         word = text.group(1).split(':')
         tr = self.translator
-        language = urlform(self.language if len(word) == 1 else tr.select(word[0]))
-        link = urlform(sellCaps(word[-1]))
-        initial = page_initial(link)
+        language = utils.urlform(self.language if len(word) == 1 else tr.select(word[0]))
+        link = utils.urlform(utils.sellCaps(word[-1]))
+        initial = utils.page_initial(link)
         return '<a href="../{0}/{1}.html#{2}">{3}</a>'.format(
             initial, link, language, word[-1])
 
@@ -187,7 +187,7 @@ class InternalDictionary:
         tr = self.translator
         language, link = [regex.group(x) for x in range(1,3)]
         tag = 'link' if not self.wordlist or link in self.wordlist else 'bink'
-        if language == urlform(self.language):
+        if language == utils.urlform(self.language):
             return r'<{0}>{1}</{0}>'.format(tag, link)
         return r'<{0}>{1}:{2}</{0}>'.format(tag, tr.encode(language), link)
 
@@ -235,7 +235,7 @@ class ExternalGrammar:
     def _link(self, pos):
         if re.match('\W+|rarr', pos):
             return pos
-        with ignored(KeyError):
+        with utils.ignored(KeyError):
             link = self.replacements['languages'][self.language][pos]
             try:
                 notwith = link.get('not with', [])
@@ -245,7 +245,7 @@ class ExternalGrammar:
             show = self.poses.isdisjoint(notwith)
             show = '{0}' if show else '<span class="hidden">{0}</span>'
             if link:
-                language = urlform(self.language)
+                language = utils.urlform(self.language)
                 href = '<a href="{0}/{1}/{2}">{3}</a>'
                 pos = href.format(self.url, language, link, pos)
             return show.format(pos)

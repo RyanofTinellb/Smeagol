@@ -17,7 +17,9 @@ class Styles(conversion.Tagger):
         if isinstance(styles, self.__class__):
             tagger.update({n: s.copy() for n, s in styles.styles.items()})
         else:
-            tagger.update({n: Style(name=n, **s) for n, s in styles.items()})
+            for i, (n, s) in enumerate(styles.items()):
+                style = Style(name=n, rank=i+1, **s)
+                tagger.update({n: style})
         return tagger
 
     def load(self, styles=None):

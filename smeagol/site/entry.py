@@ -16,43 +16,50 @@ class Entry(Node):
         return hash(tuple(self.location))
 
     def __getattr__(self, attr):
-        if attr in {'name', 'script', 'id'}:
-            return self.find().get(attr, '')
-        elif attr in {'text'}:
-            return self.find().get(attr, [])
-        elif attr in {'position'}:
-            return self.find().get(attr, '1.0')
-        elif attr == 'date':
-            try:
-                date = self.find()['date']
-                return dt.strptime(date, '%Y-%m-%d')
-            except (ValueError, KeyError):
-                return dt.now()
-        elif attr in ('flatname', 'score'):
-            try:
-                key = 'name' if attr == 'flatname' else 'score'
-                return self.find()['flatname'][key]
-            except KeyError:
-                self.refresh_flatname()
-                return getattr(self, attr)
-        else:
-            return super().__getattr__(attr)
+        match attr:
+            case 'name' | 'script' | 'id':
+                return self.find().get(attr, '')
+            case 'position':
+                return self.find().get(attr, '1.0')
+            case default:
+                return utils.default_getter(self, attr)
 
     def __setattr__(self, attr, value):
-        if attr == 'text':
-            with utils.ignored(AttributeError):
-                value = [_f for _f in value.splitlines() if _f]
-            self.find()['text'] = value
-        elif attr in {'name', 'position', 'script', 'id'}:
-            if value:
-                self.find()[attr] = value
-            else:
-                self.find().pop(attr, None)
-        else:
-            super().__setattr__(attr, value)
-
-    def update_date(self):
-        self.find()['date'] = dt.strftime(dt.today(), '%Y-%m-%d')
+        match attr:
+            case 'name' | 'position' | 'script' | 'id'}:
+                self._conditional_set(attr, value)
+            case default:
+                utils.default_setter(self, attr, value)
+    
+    def _conditional_set(self, attr, value):
+        if not value:
+            return self.find().pop(attr, None)
+        self.find()[attr] = value
+    
+    @property
+    def text(self):
+        return self.find().get(attr, [])
+    
+    @text.setter
+    def text(self, value):
+        with utils.ignored(AttributeError):
+            value = [line for line in value.splitlines() if line]
+        self.find()['text'] = value
+    
+    @property
+    def date(self):
+        try:
+            date = self.find()['date']
+            return dt.strptime(date, '%Y-%m-%d')
+        except (ValueError, KeyError):
+            return dt.now()
+    
+    @date.setter
+    def date(self, value):
+        try:
+            date = dt.strftime(value, '%Y-%m-%d')
+        except (ValueError, KeyError):
+            date = dt.strftime(dt.today(), '%Y-%m-%d')
 
     def remove_script(self):
         self.find().pop('script', None)
