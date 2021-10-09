@@ -31,7 +31,10 @@ class Editor(Tk.Frame):
             case'entry':
                 return self.tab.entry
             case default:
-                return utils.default_getter(self, attr)
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError:
+                    raise errors.attribute_error(self)
 
     def __setattr__(self, attr, value):
         match attr:
@@ -42,7 +45,7 @@ class Editor(Tk.Frame):
             case'entry':
                 self.tab.entry = value
             case default:
-                utils.default_setter(self, attr, value)
+                super().__setattr__(attr, value)
     
     @property
     def interface(self):

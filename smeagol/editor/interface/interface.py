@@ -1,13 +1,16 @@
 import os
+
 from ...conversion import api as conversion
-from ...widgets import api as widgets
-from ...utilities import filesystem as fs
-from ...utilities import utils
 from ...site.site import Site
 from ...utilities import api as utilities
-from .template import templates
+from ...utilities import filesystem as fs
+from ...utilities import utils
+from ...utilities import errors
+from ...widgets import api as widgets
 from .assets import Assets
 from .locations import Locations
+from .template import templates
+
 
 class Interface:
     def __init__(self, filename='', server=True):
@@ -26,7 +29,10 @@ class Interface:
             case 'tabs':
                 return self.config.setdefault('entries', [[]])
             case default:
-                return utils.default_getter(self, attr)
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError:
+                    raise errors.attribute_error(self, attr)
 
     def __setattr__(self, attr, value):
         match attr:
@@ -36,8 +42,7 @@ class Interface:
             case 'styles':
                 with utils.ignored(AttributeError):
                     self.config['styles'] = dict(value.items())
-            case default:
-                utils.default_setter(self, attr, value)
+        super().__setattr__(attr, value)
 
     @property
     def entries(self):

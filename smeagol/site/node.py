@@ -44,15 +44,19 @@ class Node:
             return type(self)(self.tree, location[:])
         except TypeError:
             return type(self)(self.tree, None)
+    
+    @property
+    def find(self):
+        return self._find()
 
-    def find(self, node=None, location=None):
+    def _find(self, node=None, location=None):
         node = node or self.tree
         location = location or self.location or []
         if len(location) == 1:
             return node['children'][location[0]]
         elif len(location) > 1:
             try:
-                return self.find(node['children'][location[0]],
+                return self._find(node['children'][location[0]],
                                  location[1:])
             except TypeError:
                 raise TypeError(type(node))
@@ -68,7 +72,7 @@ class Node:
 
     def delete(self):
         sisters = self.parent.children
-        index = sisters.index(self.find())
+        index = sisters.index(self.find)
         sisters.pop(index)
 
     def sister(self, index):
@@ -91,16 +95,22 @@ class Node:
         return self.sister(1)
 
     def __getattr__(self, attr):
-        if attr == 'children':
-            return self.find().get('children', [])
-        else:
-            return getattr(super(), attr)
+        match attr:
+            case 'children':
+                return self.find.get('children', [])
+            case default:
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError:
+                    name = self.__class__.__name__
+                    raise AttributeError(f"'{name}' object has no attribute '{attr}'")
 
     def __setattr__(self, attr, value):
-        if attr == 'children':
-            self.find()['children'] = value
-        else:
-            super().__setattr__(attr, value)
+        match attr:
+            case 'children':
+                self.find['children'] = value
+            case default:
+                super().__setattr__(attr, value)
 
     @property
     def num_children(self):

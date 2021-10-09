@@ -18,7 +18,10 @@ class Tag:
             case 'separator':
                 return self.level.get(attr, '')
             case default:
-                return utils.default_getter(self, attr)
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError:
+                    raise errors.attribute_error(self)
     
     def __setattr__(self, attr, value):
         match attr:
@@ -27,4 +30,4 @@ class Tag:
             case 'block' | 'separator':
                 self.level[attr] = value
             case default:
-                utils.default_setter(self, attr, value)
+                super().__setattr__(attr, value)

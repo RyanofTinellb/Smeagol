@@ -35,16 +35,16 @@ def asynca(function):
     return async_function
 
 
-def default_getter(obj, attr):
-    try:
-        return getattr(super(type(obj)), attr)
-    except AttributeError:
-        name = obj.__class__.__name__
-        raise AttributeError(f"'{name}' object has no attribute '{attr}'")
+def compose(*functions):
+    def compose2(f, g):
+        return lambda x: f(g(x))
+    return functools.reduce(compose2, functions, lambda x: x)
 
 
-def default_setter(obj, attr, value):
-    super(type(obj), obj).__setattr__(attr, value)
+def setnonzero(obj, attr, value):
+    if not value:
+        return obj.pop(attr, None)
+    obj[attr] = value
 
 
 def display_attrs(obj):

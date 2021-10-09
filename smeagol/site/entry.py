@@ -14,42 +14,46 @@ class Entry(Node):
 
     def __hash__(self):
         return hash(tuple(self.location))
-
+    
     def __getattr__(self, attr):
         match attr:
             case 'name' | 'script' | 'id':
-                return self.find().get(attr, '')
+                return self.find.get(attr, '')
             case 'position':
-                return self.find().get(attr, '1.0')
+                return self.find.get(attr, '1.0')
             case default:
-                return utils.default_getter(self, attr)
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError:
+                    name = self.__class__.__name__
+                    raise AttributeError(f"'{name}' object has no attribute '{attr}'")
 
     def __setattr__(self, attr, value):
         match attr:
-            case 'name' | 'position' | 'script' | 'id'}:
+            case 'name' | 'position' | 'script' | 'id':
                 self._conditional_set(attr, value)
             case default:
-                utils.default_setter(self, attr, value)
+                super().__setattr__(attr, value)
     
     def _conditional_set(self, attr, value):
         if not value:
-            return self.find().pop(attr, None)
-        self.find()[attr] = value
+            return self.find.pop(attr, None)
+        self.find[attr] = value
     
     @property
     def text(self):
-        return self.find().get(attr, [])
+        return self.find.get('text', [])
     
     @text.setter
     def text(self, value):
         with utils.ignored(AttributeError):
             value = [line for line in value.splitlines() if line]
-        self.find()['text'] = value
+        self.find['text'] = value
     
     @property
     def date(self):
         try:
-            date = self.find()['date']
+            date = self.find['date']
             return dt.strptime(date, '%Y-%m-%d')
         except (ValueError, KeyError):
             return dt.now()
@@ -62,7 +66,7 @@ class Entry(Node):
             date = dt.strftime(dt.today(), '%Y-%m-%d')
 
     def remove_script(self):
-        self.find().pop('script', None)
+        self.find.pop('script', None)
     
     def replace(self, old, new):
         self.text = '\n'.join(self.text).replace(old, new)
@@ -126,7 +130,7 @@ class Entry(Node):
         try:
             page = self.eldest_daughter
         except AttributeError:
-            raise KeyError('{self.name} has no children')
+            raise KeyError(f'{self.name} has no children')
         try:
             while entry not in (page.name, page.id) and entry != count:
                 page = page.next()

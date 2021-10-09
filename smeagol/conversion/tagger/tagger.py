@@ -1,3 +1,4 @@
+from ...utilities import utils
 import re
 from itertools import cycle
 
@@ -9,26 +10,34 @@ class Tagger:
         if text.startswith('/'):
             tag = self.tags.pop()
             return ('text', f'<{text}>', None) if ' ' in tag else ('tagoff', text[1:], None)
-        else:
-            self.tags.append(text)
-            return ('text', f'<{text}>', None) if ' ' in text else ('tagon', text, None)
+        self.tags.append(text)
+        return ('text', f'<{text}>', None) if ' ' in text else ('tagon', text, None)
 
     def hide_tags(self, text):
         self.tags = []
-        text = re.split('[<>]', text)
-        text = [f(x) for f, x in zip(cycle([self._text, self._tag]), text)]
-        return text
+        return self._hidetags(text)
+    
+    def _splittags(self, text):
+        print(text)
+        return re.split('[<>]', text)
+    
+    def _mutatetags(self, text):
+        return [f(x) for f, x in zip(cycle([self._text, self._tag]), text)]
+    
+    @property
+    def _hidetags(self):
+        return utils.compose(self._splittags, self._mutatetags)
     
     def _retag(self, key, value, index):
-        if key == 'tagon' and value != 'sel':
-            self.collecting = True
-            return f'<{value}>'
-        elif key == 'text':
-            return value
-        elif key == 'tagoff' and value != 'sel':
-            return self._untag(self.tags.pop())
-        else:
-            return ''
+        match key:
+            case 'tagon':
+                return self._tagon(value)
+            case 'text':
+                return self._text(value)
+            case 'tagoff':
+                return self._tagoff(value)
+            case default:
+                return ''
         
     def _untag(self, tag):
         return f'</{tag}>'

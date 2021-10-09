@@ -33,7 +33,10 @@ class Linker:
                 self.link_adders = {}
                 return self.link_adders
             case default:
-                return utils.default_getter(self, attr)
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError:
+                    raise errors.attribute_error(self)
 
     def add_links(self, text, entry):
         for link_adder in list(self.link_adders.values()):
