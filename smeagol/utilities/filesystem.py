@@ -25,6 +25,15 @@ def saves(string, filename):
         f.write(string)
 
 
+def jsonify(obj):
+    return json.dumps(obj, ensure_ascii=False)
+
+
+def savelines(obj, filename):
+    obj = ',\n'.join([jsonify(elt) for elt in obj])
+    saves(f'[{obj}]', filename)
+
+
 def load(filename):
     if not filename:
         return {}

@@ -2,7 +2,7 @@ import re
 import json
 import tkinter as Tk
 from ..utilities import utils
-from .. import conversion
+from ..conversion import api as conversion
 from ..widgets.api import Styles
 
 START = '1.0'
@@ -67,7 +67,7 @@ class Textbox(Tk.Text):
             self.style.set(value)
         else:
             super().__setattr__(attr, value)
-        
+
     def clear_style(self, styles):
         self.tag_remove(styles, Tk.INSERT)
 
@@ -117,7 +117,7 @@ class Textbox(Tk.Text):
         styles.discard(name)
         with utils.ignored(Tk.TclError):
             self.tag_remove(name, *SELECTION)
-    
+
     def update_styles(self):
         self.set_styles()
         self.add_commands()
@@ -298,24 +298,30 @@ class Textbox(Tk.Text):
             return
         styles = []
         if type(text) != list:
-            if text.startswith('\x08'):
-                text = json.loads(text[1:])
-            else:
+            if not text.startswith('\x08'):
                 self.insert(text)
                 return
-        for key, value, _ in text:
-            if key == 'mark' and value == INSERT:
-                self.mark_set(USER_MARK, INSERT)
-                self.mark_gravity(USER_MARK, Tk.LEFT)
-            elif key == 'tagon':
+            text = json.loads(text[1:])
+        for elt in text:
+            finished = self._insert(styles, *elt)
+            if finished:
+                break
+
+    def _insert(self, styles, key, value, index=0):
+        match key:
+            case 'mark':
+                if value == INSERT:
+                    self.mark_set(USER_MARK, INSERT)
+                    self.mark_gravity(USER_MARK, Tk.LEFT)
+            case 'tagon':
                 styles.append(value)
-            elif key == 'text':
+            case 'text':
                 self.insert(value, tags=styles)
-            elif key == 'tagoff':
+            case 'tagoff':
                 try:
                     styles.remove(value)
                 except ValueError:
-                    break
+                    return True
 
     def delete_line(self, event=None):
         try:

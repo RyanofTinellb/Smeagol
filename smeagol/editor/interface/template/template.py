@@ -1,48 +1,16 @@
-class Template:
-    def __init__(self, text, tagger, templates):
-        self.tagger = tagger
-        self.text = tagger.hide_tags(text)
-        self.output = '\n'.join([f'{key} {self._j(value)}' for (key, value, _) in self.text])
+from ....conversion.api import Tagger
+
+class Template(Tagger):
+    def __init__(self, text, tags, templates):
+        super().__init__(self, tags)
+        self.text = text
         self.templates = templates
+        self.text = self.hide_tags(text)
         self.replace = self.block = False
     
-    def _j(self, text):
-        return text.replace('\n', '\\n')
+    def expand(self):
+        return self.hide
     
-    def expand(self, key='text', value='', _=''):
-        tag = ''
-        if key == 'tagon':
-            if value == 'template':
-                self.replace = True
-            else:
-                try:
-                    style = self.tagger[value]
-                except KeyError:
-                    style = self.tagger.add(value)
-                if style.hyperlink:
-                    self.hyperlink = True
-                if self.block and not style.block:
-                    tag = f'<{self.block}>{style.start}'
-                self.block = style.block
-                return tag or style.start
-        elif key == 'tagoff':
-            if value == 'template':
-                self.replace = False
-            else:
-                style = self.tagger[value]
-                if style.hyperlink:
-                    self.hyperlink = False
-                if not self.block and style.block:
-                    tag = f'</{self.block}>{style.end}'
-                self.block = style.block
-                return tag or style.end
-        elif key == 'text':
-            if self.replace:
-                value = value.replace('\n', '')
-                return self.templates[value].html
-            return value
-        return ''
-
     @property
     def html(self):
         return ''.join([self.expand(*elt) for elt in self.text])
