@@ -2,9 +2,10 @@ import tkinter as Tk
 from tkinter import simpledialog as sd
 from tkinter import ttk
 
+from ..conversion import api as conversion
+from ..utilities import errors
 from ..utilities import filesystem as fs
 from ..utilities import utils
-from ..conversion import api as conversion
 from ..widgets import api as wd
 from .interface.interfaces import Interfaces
 
@@ -30,19 +31,21 @@ class Editor(Tk.Frame):
                 return self.tab.textbox
             case'entry':
                 return self.tab.entry
+            case 'status':
+                return self.textbox.displays
             case default:
                 try:
                     return super().__getattr__(attr)
                 except AttributeError:
-                    raise errors.attribute_error(self)
+                    raise errors.throw_error(AttributeError, self, attr)
 
     def __setattr__(self, attr, value):
         match attr:
-            case'title':
+            case 'title':
                 self.parent.title(f'{value} - Sméagol Site Editor')
-            case'interface':
+            case 'interface':
                 self.tab.interface = value
-            case'entry':
+            case 'entry':
                 self.tab.entry = value
             case default:
                 super().__setattr__(attr, value)
@@ -53,11 +56,6 @@ class Editor(Tk.Frame):
             return self.tab.interface
         except AttributeError:
             return self.interfaces.blank
-
-    @property
-    def info(self):
-        '''override Tk.Frame.info'''
-        return self.textbox.info
 
     def create_layout(self, parent):
         top = self.winfo_toplevel()
@@ -110,10 +108,10 @@ class Editor(Tk.Frame):
             wordcount=Tk.Label(frame, font=('Arial', 14), width=20),
             style=Tk.Label(frame, font=('Arial', 12)),
             language=self.language_display(frame),
-            randomwords=self.random_words_display(frame),
-            blank=Tk.Label(frame, height=1000))
+            randomwords=self.random_words_display(frame))
         for row, display in enumerate(self.displays.values(), start=1):
             display.grid(row=row, column=0)
+        Tk.Label(frame, height=1000).grid(row=row+1, column=0)
         return frame
 
     def headings_frame(self, parent):
@@ -123,8 +121,7 @@ class Editor(Tk.Frame):
 
     def update_displays(self):
         for name, display in self.displays.items():
-            if name != 'blank':
-                display.config(textvariable=self.info[name])
+            display.config(textvariable=self.status[name])
 
     def random_words_display(self, parent):
         label = Tk.Label(parent, font=('Arial', 14))
@@ -160,7 +157,7 @@ class Editor(Tk.Frame):
                         self.bind_class(tkobj, key, command)
 
     def change_language(self, event=None):
-        language = self.info['language'].get()
+        language = self.status['language'].get()
         self.interface.change_language(language)
         return 'break'
 
@@ -169,7 +166,6 @@ class Editor(Tk.Frame):
         self.textbox.see(Tk.INSERT)
 
     def new_tab(self, event=None, interface=None):
-        first_tab = False
         interface = interface or self.interface
         wd.Tab(self.notebook, interface)
         self.add_commands(self.textbox, self.textbox_commands)
@@ -235,7 +231,6 @@ class Editor(Tk.Frame):
 
     def open_entry(self, entry):
         self.set_headings(entry)
-        self.textbox.set_styles()
         self.entry = entry
         self.title = self.interface.site.root.name
 
@@ -253,6 +248,7 @@ class Editor(Tk.Frame):
         first_tab = True
         for filename in filenames:
             interface = self.interfaces[filename]
+            self.textbox.styles = interface.styles
             self.open_interface(interface, first_tab)
             first_tab = False
         return interface
@@ -260,7 +256,6 @@ class Editor(Tk.Frame):
     def open_interface(self, interface, first_tab=False):
         for entry in interface.entries:
             self.open_tab(entry, first_tab)
-            first_tab = False
 
     def open_tab(self, entry, first_tab=False):
         if not first_tab:
@@ -298,11 +293,11 @@ class Editor(Tk.Frame):
 
     def refresh_random(self, event=None):
         if r := self.interface.randomwords:
-            self.info['randomwords'].set('\n'.join(r.words(15)))
+            self.status['randomwords'].set('\n'.join(r.words(15)))
         return 'break'
 
     def clear_random(self, event=None):
-        self.info['randomwords'].set('')
+        self.status['randomwords'].set('')
         return 'break'
 
     def replace(self, heading, text):

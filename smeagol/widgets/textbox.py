@@ -27,68 +27,70 @@ class Textbox(Tk.Text):
     def __init__(self, parent=None, styles=None, translator=None):
         super().__init__(parent, height=1, width=1, wrap=Tk.WORD,
                          undo=True)
-        self.styles = styles or Styles()
+        self.displays = dict(wordcount=Tk.StringVar(), randomwords=Tk.StringVar(),
+                         style=Tk.StringVar(), language=Tk.StringVar())
         self.translator = translator or conversion.Translator()
-        self.ready()
+        self.languages = self.translator.languages
+        self.language.set(self.translator.fullname)
+        self.styles = styles or Styles()
+        self.add_commands()
 
     def grid(self, *args, **kwargs):
         super().grid(*args, **kwargs)
         return self
 
-    def ready(self):
-        self.info = dict(wordcount=Tk.StringVar(), randomwords=Tk.StringVar(),
-                         style=Tk.StringVar(), language=Tk.StringVar())
-        self.languages = self.translator.languages
-        self.language.set(self.translator.fullname)
-        self.add_commands()
-
     def __getattr__(self, attr):
-        if attr == 'text':
-            return self.get()
-        elif attr == 'current_style':
-            return self.style.get().split()
-        elif attr == 'language_code':
-            if language := self.language.get():
-                return language[:2]
-        elif attr == 'font':
-            return self.styles['default'].Font
-        else:
-            try:
-                return self.info[attr]
-            except KeyError:
-                return getattr(super(), attr)
+        match attr:
+            case 'text':
+                return self.get()
+            case 'current_style':
+                return self.style.get().split()
+            case 'language_code':
+                if language := self.language.get():
+                    return language[:2]
+            case 'font':
+                return self.styles['default'].Font
+            case default:
+                try:
+                    return self.displays[attr]
+                except KeyError:
+                    return getattr(super(), attr)
 
     def __setattr__(self, attr, value):
-        if attr == 'text':
-            self._paste(borders=ALL, text=value)
-        elif attr == 'current_style':
-            with utils.ignored(AttributeError):
-                value = '\n'.join([v for v in value if v != 'sel'])
-            self.style.set(value)
-        else:
-            super().__setattr__(attr, value)
+        match attr:
+            case 'text':
+                return self._paste(borders=ALL, text=value)
+            case 'styles':
+                super().__setattr__(attr, value)
+                self.set_styles()
+            case 'current_style':
+                with utils.ignored(AttributeError):
+                    value = '\n'.join([v for v in value if v != 'sel'])
+                self.style.set(value)
+        super().__setattr__(attr, value)
 
     def clear_style(self, styles):
         self.tag_remove(styles, Tk.INSERT)
 
     def set_styles(self):
         self.current_style = ''
-        default = self.styles['default']
-        self.config(font=self.font, foreground=default.colour,
-                    background=default.background)
+        with utils.ignored(KeyError):
+            self.set_default_style()
         for style in self.styles:
             self._set_style(style)
+
+    def set_default_style(self):
+        if (default := self.styles.default):
+            self.config(**default.textbox_settings)
 
     def _set_style(self, style):
         name = style.name
         key = style.key
-        font = style.Font
-        self.tag_config(name, font=font, **style.paragraph)
+        self.tag_config(name, **style.paragraph)
         if style.language:
             for language in self.languages:
                 language = language[:2]
-                self.tag_config(f'{name}-{language}',
-                                font=font, **style.paragraph)
+                self.tag_config(f'{name}-{language}', **style.paragraph)
         if key:
             self.bind(f'<Control-{key}>', self.style_changer(name, style))
 
@@ -168,7 +170,7 @@ class Textbox(Tk.Text):
     def update_wordcount(self):
         text = self.text
         wordcount = text.count(' ') + text.count('\n') - text.count('|')
-        self.info['wordcount'].set(wordcount)
+        self.displays['wordcount'].set(wordcount)
 
     def modify_fontsize(self, size):
         self.font.config(size=size)
@@ -288,12 +290,12 @@ class Textbox(Tk.Text):
         self.deselect_all()
         return 'break'
 
-    def _paste(self, location=INSERT, borders=SELECTION, text=''):
+    def _paste(self, location=INSERT, borders=SELECTION, text=None):
         '''@error: raise TclError if no text is selected'''
         self.delete(*borders)
         self.mark_set(INSERT, location)
         try:
-            text = text or self.clipboard_get()
+            text = text if text is not None else self.clipboard_get()
         except Tk.TclError:
             return
         styles = []

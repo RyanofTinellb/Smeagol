@@ -6,24 +6,21 @@ from ...conversion import api as conversion
 
 
 class Styles(conversion.Tagger):
-    def __init__(self, styles=None):
-        self.load(styles)
+    def __init__(self, styles):
+        self.default = None
+        super().__init__(styles)
 
-    def setup(self, styles=None):
-        styles = styles or {}
-        with utils.ignored(TypeError):
-            styles = json.loads(styles)
-        tagger = dict(default=Style(name='default'))
-        if isinstance(styles, self.__class__):
-            tagger.update({n: s.copy() for n, s in styles.styles.items()})
-        else:
-            for i, (n, s) in enumerate(styles.items()):
-                style = Style(name=n, rank=i+1, **s)
-                tagger.update({n: style})
-        return tagger
-
-    def load(self, styles=None):
-        self.styles = self.setup(styles)
+    
+    def create_tag(self, rank=0, tag=None):
+        tag = tag or {}
+        if self.default:
+            return Style(rank, **tag, defaults=self.default)
+        self.default = Style(rank, **tag)
+        return self.default
+    
+    @property
+    def styles(self):
+        return self.tags
 
     def __contains__(self, item):
         return item in self.styles

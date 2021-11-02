@@ -47,6 +47,12 @@ def setnonzero(obj, attr, value):
     obj[attr] = value
 
 
+def setnotequal(obj, attr, value, default):
+    if value == default:
+        return obj.pop(attr, None)
+    obj[attr] = value
+
+
 def display_attrs(obj):
     for attr in dir(obj):
         value = getattr(obj, attr)

@@ -28,10 +28,10 @@ class Templates:
         if not filename:
             return None
         template = fs.load(filename)
-        try:
-            return self._open(template)
-        except (AttributeError, KeyError, TypeError) as e:
-            raise e.__class__(f"Template file {filename} of wrong structure")
+        # try:
+        return self._open(template)
+        # except (AttributeError, KeyError, TypeError) as e:
+        #     raise e.__class__(f"Template file {filename} of wrong structure")
     
     def _open(self, template):
         # Tk()

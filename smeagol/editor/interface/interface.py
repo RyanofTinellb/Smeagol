@@ -63,7 +63,7 @@ class Interface:
         self.config = config
         self.assets = Assets(config.get('assets', {}))
         self.locations = Locations(config.get('locations', {}))
-        self.styles = widgets.Styles(config.get('styles', {}))
+        self.styles = self.open_styles(config.get('styles', ''))
         self.language = config.get('language', '')
         self.translator = conversion.Translator(self.language)
         self.markdown = conversion.Markdown(config.get('markdown', ''))
@@ -71,6 +71,11 @@ class Interface:
         samples = self.assets.samples
         self.randomwords = utilities.RandomWords(self.language, samples)
         self.templates = templates.Templates(config.get('templates', {}))
+    
+    def open_styles(self, styles):
+        n = fs.load(styles)
+        k = widgets.Styles(fs.load(styles))
+        return k
         
     def open_site(self):
         return Site(fs.load(self.assets.source))

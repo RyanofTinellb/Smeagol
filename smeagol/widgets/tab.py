@@ -33,7 +33,7 @@ class Tab(Tk.Frame):
     
     @property
     def entry_text(self):
-        text = '\n'.join(self._entry.text)
+        text = self._entry.text
         hidden_tags = self.interface.styles.hide_tags
         return hidden_tags(text)
     
