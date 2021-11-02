@@ -10,10 +10,9 @@ from ..widgets import api as wd
 from .interface.interfaces import Interfaces
 
 
-class Editor(Tk.Frame):
+class Editor(wd.Manager):
     def __init__(self, parent=None, filename=None):
         super().__init__(parent)
-        self.parent = self.master
         self.interfaces = Interfaces()
         self.parent.withdraw()
         self.parent.protocol('WM_DELETE_WINDOW', self.quit)
