@@ -1,7 +1,7 @@
 import re
-import tkinter as Tk
+import tkinter as tk
 
-class Key(Tk.Frame):
+class Key(tk.Frame):
     def __init__(self, parent, style):
         super().__init__(parent)
         self.style = style
@@ -10,7 +10,7 @@ class Key(Tk.Frame):
     
     @property
     def Box(self):
-        box = Tk.Entry(self, **self.box_options)
+        box = tk.Entry(self, **self.box_options)
         box.bind('<KeyPress>', self.change_key)
         return box
     
@@ -31,4 +31,4 @@ class Key(Tk.Frame):
     
     @property
     def Label(self):
-        return Tk.Label(self, text='key', justify='right')
+        return tk.Label(self, text='key', justify='right')

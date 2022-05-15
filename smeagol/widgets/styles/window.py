@@ -1,4 +1,4 @@
-import tkinter as Tk
+import tkinter as tk
 import tkinter.messagebox as mb
 import tkinter.simpledialog as sd
 import tkinter.ttk as ttk
@@ -6,7 +6,7 @@ import tkinter.ttk as ttk
 from .interface import Interface
 from .editor import FullEditor, DefaultEditor
 
-class Window(Tk.Frame):
+class Window(tk.Frame):
     def __init__(self, parent=None, styles=None):
         super().__init__(parent)
         self.styles = styles
@@ -24,13 +24,13 @@ class Window(Tk.Frame):
         return self.master
 
     def style_buttons(self, parent=None):
-        frame = Tk.Frame(parent)
-        Tk.Button(frame, text='Edit', command=self.edit).grid(row=0, column=0)
-        self.rename_btn = Tk.Button(frame, text='Rename', command=self.rename)
+        frame = tk.Frame(parent)
+        tk.Button(frame, text='Edit', command=self.edit).grid(row=0, column=0)
+        self.rename_btn = tk.Button(frame, text='Rename', command=self.rename)
         self.rename_btn.grid(row=0, column=1)
-        self.delete_btn = Tk.Button(frame, text='Delete', command=self.delete)
+        self.delete_btn = tk.Button(frame, text='Delete', command=self.delete)
         self.delete_btn.grid(row=0, column=2, sticky='w')
-        Tk.Button(frame, text='New', command=self.add).grid(row=0, column=3)
+        tk.Button(frame, text='New', command=self.add).grid(row=0, column=3)
         return frame
 
     def styles_box(self, parent=None):
@@ -51,16 +51,16 @@ class Window(Tk.Frame):
         self._sample.tag_config('sample', font=font, **style.paragraph)
 
     def window_buttons(self, parent=None):
-        frame = Tk.Frame(parent)
-        button = Tk.Button(frame, text='Cancel', command=self.cancel)
+        frame = tk.Frame(parent)
+        button = tk.Button(frame, text='Cancel', command=self.cancel)
         button.grid(row=0, column=0)
-        button = Tk.Button(frame, text='OK', command=self.ok)
+        button = tk.Button(frame, text='OK', command=self.ok)
         button.grid(row=0, column=1)
         return frame
 
     def sample_box(self, parent=None):
-        box = Tk.Text(parent, height=3, width=20)
-        box.insert(Tk.INSERT, 'Sample', 'sample')
+        box = tk.Text(parent, height=3, width=20)
+        box.insert(tk.INSERT, 'Sample', 'sample')
         box.config(state='disabled')
         self._sample = box
         return box
@@ -78,7 +78,7 @@ class Window(Tk.Frame):
             self.select_style()
 
     def edit(self, event=None):
-        top = Tk.Toplevel()
+        top = tk.Toplevel()
         editor = self._editor(top, style=Interface(self.style))
         editor.grid()
         self.parent.withdraw()

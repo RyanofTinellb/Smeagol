@@ -1,10 +1,10 @@
-import tkinter as Tk
+import tkinter as tk
 from .leftovers import Leftovers
 from .direction import Direction
 from .units import Units
 
 
-class Frame(Tk.LabelFrame):
+class Frame(tk.LabelFrame):
     def __init__(self, parent, style):
         super().__init__(parent, text='paragraph')
         Leftovers(self, style).grid(row=0, column=0)

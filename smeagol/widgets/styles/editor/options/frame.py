@@ -1,4 +1,4 @@
-import tkinter as Tk
+import tkinter as tk
 from tkinter import ttk
 
 from .key import Key
@@ -14,7 +14,7 @@ class Frame(ttk.LabelFrame):
         Key(self, style).grid(row=1, column=0, sticky='w')
         Tags(self, style).grid(row=2, column=0, sticky='w')
         for row, (attr, var) in enumerate(self.buttons, start=3):
-            Tk.Checkbutton(self, text=attr, var=var).grid(row=row, column=0, sticky='w')
+            tk.Checkbutton(self, text=attr, var=var).grid(row=row, column=0, sticky='w')
     
     @property
     def buttons(self):

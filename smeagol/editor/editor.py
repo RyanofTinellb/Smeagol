@@ -1,4 +1,4 @@
-import tkinter as Tk
+import tkinter as tk
 from tkinter import simpledialog as sd
 from tkinter import ttk
 
@@ -6,29 +6,32 @@ from ..conversion import api as conversion
 from ..utilities import errors
 from ..utilities import filesystem as fs
 from ..utilities import utils
-from ..widgets import api as wd
+from ..widgets.manager import Manager
+from ..widgets import window
 from .interface.interfaces import Interfaces
 
 
-class Editor(wd.Manager):
+class Editor(Manager):
     def __init__(self, parent=None, filename=None):
         super().__init__(parent)
-        self.interfaces = Interfaces()
-        self.parent.withdraw()
-        self.parent.protocol('WM_DELETE_WINDOW', self.quit)
-        self.closed_tabs = []
-        self.create_layout(self.parent)
-        self.new_tab()
         if filename:
             self.open_site(filename)
+    
+    @property
+    def interfaces(self):
+        return self.notebook.interfaces
+    
+    @property
+    def closed_tabs(self):
+        return self.notebook.closed_tabs
 
     def __getattr__(self, attr):
         match attr:
-            case'tab':
+            case 'tab':
                 return self.notebook.nametowidget(self.notebook.select())
-            case'textbox':
+            case 'textbox':
                 return self.tab.textbox
-            case'entry':
+            case 'entry':
                 return self.tab.entry
             case 'status':
                 return self.textbox.displays
@@ -56,104 +59,9 @@ class Editor(wd.Manager):
         except AttributeError:
             return self.interfaces.blank
 
-    def create_layout(self, parent):
-        top = self.winfo_toplevel()
-        self.set_window_size(top)
-        top['menu'] = self.menu(top, self.menu_commands)
-        self.textframe(parent).pack(side=Tk.RIGHT, expand=True, fill=Tk.BOTH)
-        self.sidebar(parent).pack(side=Tk.LEFT)
-
-    def set_window_size(self, top):
-        top.state('normal')
-        w = w_pos = int(top.winfo_screenwidth() / 2)
-        h = top.winfo_screenheight() - 50
-        h_pos = 0
-        top.geometry(f'{w}x{h}+{w_pos}+{h_pos}')
-
-    @staticmethod
-    def menu(parent, commands):
-        menubar = Tk.Menu(parent)
-        for menu in commands:
-            submenu = Tk.Menu(menubar, tearoff=0)
-            label, options = menu
-            menubar.add_cascade(label=label, menu=submenu)
-            for option in options:
-                label, command = option
-                underline = label.find('_')
-                underline = 0 if underline == -1 else underline
-                label = label.replace('_', '')
-                keypress = label[underline]
-                submenu.add_command(label=label, command=command,
-                                    underline=underline)
-                submenu.bind(f'<KeyPress-{keypress}>', command)
-        return menubar
-
-    def textframe(self, parent):
-        frame = Tk.Frame(parent)
-        self.notebook = self.new_notebook(frame)
-        self.notebook.pack(side=Tk.TOP, expand=True, fill=Tk.BOTH)
-        return frame
-
-    def new_notebook(self, parent):
-        notebook = ttk.Notebook(parent)
-        notebook.bind('<<NotebookTabChanged>>', self.change_tab)
-        notebook.bind('<Button-2>', self.close_tab)
-        return notebook
-
-    def sidebar(self, parent):
-        frame = Tk.Frame(parent)
-        self.headings = self.headings_frame(frame).grid(row=0, column=0)
-        self.displays = dict(
-            wordcount=Tk.Label(frame, font=('Arial', 14), width=20),
-            style=Tk.Label(frame, font=('Arial', 12)),
-            language=self.language_display(frame),
-            randomwords=self.random_words_display(frame))
-        for row, display in enumerate(self.displays.values(), start=1):
-            display.grid(row=row, column=0)
-        Tk.Label(frame, height=1000).grid(row=row+1, column=0)
-        return frame
-
-    def headings_frame(self, parent):
-        frame = wd.HeadingFrame(parent, bounds=(1, 10))
-        frame.commands = self.heading_commands
-        return frame
-
     def update_displays(self):
         for name, display in self.displays.items():
             display.config(textvariable=self.status[name])
-
-    def random_words_display(self, parent):
-        label = Tk.Label(parent, font=('Arial', 14))
-        label.bind('<Button-1>', self.refresh_random)
-        label.bind('<Button-3>', self.clear_random)
-        return label
-
-    def language_display(self, parent):
-        translator = conversion.Translator()
-        languages = [f'{code}: {lang().name}'
-                     for code, lang in translator.languages.items()]
-        menu = ttk.Combobox(parent,
-                            values=languages,
-                            height=2000,
-                            width=25,
-                            justify=Tk.CENTER)
-        menu.state(['readonly'])
-        menu.bind('<<ComboboxSelected>>', self.change_language)
-        return menu
-
-    def add_commands(self, tkobj, commands):
-        for (keys, command) in commands:
-            if isinstance(keys, str):
-                try:
-                    tkobj.bind(keys, command)
-                except AttributeError:
-                    self.bind_class(tkobj, keys, command)
-            else:
-                for key in keys:
-                    try:
-                        tkobj.bind(key, command)
-                    except AttributeError:
-                        self.bind_class(tkobj, key, command)
 
     def change_language(self, event=None):
         language = self.status['language'].get()
@@ -161,13 +69,13 @@ class Editor(wd.Manager):
         return 'break'
 
     def go_to(self, position):
-        self.textbox.mark_set(Tk.INSERT, position)
-        self.textbox.see(Tk.INSERT)
+        self.textbox.mark_set(tk.INSERT, position)
+        self.textbox.see(tk.INSERT)
 
     def new_tab(self, event=None, interface=None):
         interface = interface or self.interface
         wd.Tab(self.notebook, interface)
-        self.add_commands(self.textbox, self.textbox_commands)
+        self._bind_all(self.textbox, self.textbox_commands)
         return 'break'
 
     def change_tab(self, event=None):
@@ -185,7 +93,7 @@ class Editor(wd.Manager):
                     self.notebook.hide(tab)
                     self.closed_tabs += [tab]
                     break
-                except Tk.TclError:
+                except tk.TclError:
                     tab = self.notebook.select()
         return 'break'
 
@@ -222,7 +130,7 @@ class Editor(wd.Manager):
             self.headings.select_last()
         except IndexError:
             self.textbox.focus_set()
-            self.textbox.see(Tk.INSERT)
+            self.textbox.see(tk.INSERT)
 
     def open_entry_in_browser(self, event=None):
         self.interface.open_entry_in_browser(self.entry)
@@ -300,8 +208,8 @@ class Editor(wd.Manager):
         return 'break'
 
     def replace(self, heading, text):
-        heading.delete(*Tk.ALL)
-        heading.insert(Tk.FIRST, text)
+        heading.delete(*tk.ALL)
+        heading.insert(tk.FIRST, text)
 
     def display(self, text):
         self.textbox.replace(str(text))
@@ -314,13 +222,13 @@ class Editor(wd.Manager):
         pattern = r'\n|[^a-zA-Z0-9_\'’-]'
         borders = (
             textbox.search(
-                pattern, Tk.INSERT, backwards=True, regexp=True
-            ) + '+1c' or Tk.INSERT + ' linestart',
+                pattern, tk.INSERT, backwards=True, regexp=True
+            ) + '+1c' or tk.INSERT + ' linestart',
             textbox.search(
-                pattern, Tk.INSERT, regexp=True
-            ) or Tk.INSERT + ' lineend'
+                pattern, tk.INSERT, regexp=True
+            ) or tk.INSERT + ' lineend'
         )
-        textbox.tag_add(Tk.SEL, *borders)
+        textbox.tag_add(tk.SEL, *borders)
         return textbox.get(*borders)
 
     def markdown_clear(self, event=None):
@@ -332,13 +240,13 @@ class Editor(wd.Manager):
         self.textbox.replace(text)
 
     def markdown_edit(self, event=None):
-        top = Tk.Toplevel(self)
+        top = tk.Toplevel(self)
         editor = window.MarkdownWindow(top, self.interface.markdown)
         self.wait_window(top)
         self.interface.markdown = editor.markdown
 
     def template_edit(self, event=None):
-        top = Tk.Toplevel(self)
+        top = tk.Toplevel(self)
         templates = self.interface.templates
         window.Templates(top, self.interface.templates).grid()
         self.wait_window(top)
@@ -348,7 +256,7 @@ class Editor(wd.Manager):
                 self.new_tab(interface=template)
 
     def edit_styles(self, event=None):
-        top = Tk.Toplevel()
+        top = tk.Toplevel()
         window = wd.styles.Window(top, self.interface.styles)
         window.grid()
         top.protocol('WM_DELETE_WINDOW', window.cancel)
@@ -363,9 +271,8 @@ class Editor(wd.Manager):
         self.parent.deiconify()
 
     def quit(self):
+        super().quit()
         self.interfaces.save_all()
-        self.parent.withdraw()
-        self.parent.quit()
         print('Closing Servers...')
         fs.close_servers()
         print('Servers closed. Enjoy the rest of your day.')
@@ -376,27 +283,45 @@ class Editor(wd.Manager):
             ('Site', [
                 ('Open', self.open_site),
                 ('Save', self.save_site),
-                ('Save _As', self.save_site_as)]),
+                ('Save _As', self.save_site_as),
+            ]),
             ('Page', [
                 ('Rename', self.rename_page),
-                ('Open in Browser', self.open_entry_in_browser)
+                ('Open in Browser', self.open_entry_in_browser),
             ]),
             ('Edit', [
                 ('Styles', self.edit_styles),
                 ('Markdown', self.markdown_edit),
-                ('Templates', self.template_edit)])]
+                ('Templates', self.template_edit),
+            ]),
+        ]
 
     @property
     def textbox_commands(self):
-        return [('<Control-r>', self.refresh_random),
-                ('<Control-s>', self.save_page),
-                ('<Control-t>', self.new_tab),
-                ('<Control-T>', self.reopen_tab),
-                ('<Control-w>', self.close_tab),
-                ('<Enter>', self.reset_entry)]
+        return [
+            ('<Control-r>', self.refresh_random),
+            ('<Control-s>', self.save_page),
+            ('<Control-t>', self.new_tab),
+            ('<Control-T>', self.reopen_tab),
+            ('<Control-w>', self.close_tab),
+            ('<Enter>', self.reset_entry),
+        ]
 
     @property
     def heading_commands(self):
-        return [('<Prior>', self.previous_entry),
-                ('<Next>', self.next_entry),
-                ('<Return>', self.load_entry)]
+        return [
+            ('<Prior>', self.previous_entry),
+            ('<Next>', self.next_entry),
+            ('<Return>', self.load_entry),
+        ]
+            
+    @property
+    def language_commands(self):
+        return [('<<ComboboxSelected>>', self.change_language)]
+    
+    @property
+    def random_commands(self):
+        return [
+            ('<Button-1>', self.refresh_random),
+            ('<Button-3>', self.clear_random),
+        ]

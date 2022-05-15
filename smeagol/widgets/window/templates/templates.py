@@ -1,9 +1,9 @@
-import tkinter as Tk
+import tkinter as tk
 from tkinter import simpledialog as sd
 from .row import Row
 from .buttons import Buttons
 
-class Templates(Tk.Frame):
+class Templates(tk.Frame):
     '''Templates Window'''
     def __init__(self, parent, templates=None, editor=None):
         '''
@@ -20,12 +20,12 @@ class Templates(Tk.Frame):
             if name:
                 self.frames.append(self._new(name, template, row))
         buttons = Buttons(parent=self)
-        buttons.grid(row=row+1, column=0, sticky=Tk.E)
+        buttons.grid(row=row+1, column=0, sticky=tk.E)
         self.frames[0].entry.focus_set()
     
     @property
     def _main_frame(self):
-        frame = Tk.Frame(self)
+        frame = tk.Frame(self)
         frame.parent = frame.master
         frame.grid()
         return frame

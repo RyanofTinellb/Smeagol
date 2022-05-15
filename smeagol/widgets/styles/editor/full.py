@@ -1,10 +1,10 @@
-import tkinter as Tk
+import tkinter as tk
 
 from . import options, sample, font, paragraph
 from .colour import Colour as ColourFrame
 
 
-class FullEditor(Tk.Frame):
+class FullEditor(tk.Frame):
     def __init__(self, parent, style):
         super().__init__(parent)
         self.parent.title(f'"{style.name.capitalize()}" Style')
@@ -29,10 +29,10 @@ class FullEditor(Tk.Frame):
             (self.buttons_frame, dict(row=2, column=2, sticky='se')))
 
     def buttons_frame(self, *_):
-        frame = Tk.Frame(self)
-        Tk.Button(frame, text='Cancel', command=self.cancel).grid(
+        frame = tk.Frame(self)
+        tk.Button(frame, text='Cancel', command=self.cancel).grid(
             row=0, column=0)
-        Tk.Button(frame, text='OK', command=self.ok).grid(
+        tk.Button(frame, text='OK', command=self.ok).grid(
             row=0, column=1)
         return frame
 

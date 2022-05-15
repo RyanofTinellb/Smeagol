@@ -6,6 +6,7 @@ properties:
     start (str): the opening tag <tag>.
     end (str): the closing tag </tag>.
     block (bool): whether the element is block-level (True) or inline (False).
+    pipe (str): what to replace the pipe "|" character with within an element marked with this tag.
     separator (str): the tag name to be placed at the beginning and end of each line.
         e.g.: 'p' in '<p>This is a line</p>'.
     language (str): a template where '%l' will be replaced with the appropriate language code.
@@ -28,7 +29,7 @@ class Tag:
             return self.options[attr]
         except KeyError:
             return self.default(attr)
-    
+
     def default(self, attr):
         match attr:
             case 'start':
@@ -37,12 +38,10 @@ class Tag:
                 return f'</{self.name}>'
             case 'block' | 'hyperlink' | 'template':
                 return False
-            case 'separator':
+            case 'pipe' | 'separator' | 'key':
                 return ''
             case 'language':
                 return '%l'
-            case 'key':
-                return ''
             case default:
                 try:
                     return super().__getattr__(attr)
@@ -50,12 +49,14 @@ class Tag:
                     raise errors.throw_error(AttributeError, self, attr)
 
     def __setattr__(self, attr, value):
-        match attr:
-            case 'hyperlink' | 'language' | 'template':
-                utils.setnonzero(self.options, attr, value)
-            case 'block' | 'separator':
-                utils.setnonzero(self.level, attr, value)
-            case 'name' | 'start' | 'end':
-                utils.setnonzero(self.tags, attr, value)
-            case default:
-                super().__setattr__(attr, value)
+        if attr in self.attrs:
+            utils.setnonzero(self.options, attr, value)
+            return
+        super().__setattr__(attr, value)
+
+    @property
+    def attrs(self):
+        return {
+            'hyperlink', 'language', 'template', 'block', 'separator',
+            'name', 'start', 'end', 'pipe'
+        }

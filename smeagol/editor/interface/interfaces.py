@@ -1,3 +1,6 @@
+import os.path
+
+from ...utilities import filesystem as fs
 from ...utilities import utils
 from .interface import Interface
 
@@ -27,15 +30,15 @@ class Interfaces:
     
     def save_all(self):
         for interface in self.interfaces:
-            self.save(interface)
+            self._save(interface)
     
-    def save(self, interface):
+    def _save(self, interface):
         with utils.ignored(IOError):
             interface.save()
 
     def open_site(self, filename=''):
         filename = filename or fs.open_smeagol()
-        if path.isdir(filename):
+        if fs.isfolder(filename):
             filename = self._open_folder(filename)
         try:
             self.interface = self.interfaces[filename]
@@ -48,10 +51,10 @@ class Interfaces:
 
     def _open_folder(self, name):
         try:
-            return fs.walk(name, lambda x: fs.isfiletype(x, 'smg'))[0]
+            return fs.findbytype(name, '.smg')[0]
         except KeyError:
             try:
-                return fs.walk(name, lambda x: fs.isfiletype(x, 'src'))[0]
+                return fs.findbytype(name, '.src')[0]
             except KeyError:
                 raise FileNotFoundError(
                     f'{name} does not contain a .smg or .src file')

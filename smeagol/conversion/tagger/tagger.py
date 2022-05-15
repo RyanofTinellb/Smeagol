@@ -18,7 +18,7 @@ class Tagger:
         tag = tag or {}
         return Tag(rank, **tag)
 
-    '''Show Tags: transform a list of strings into something suitable for textboxes'''
+    '''Show Tags: transform a Tkinter dump into a list of strings'''
 
     def show_tags(self, text):
         self.open_tags = []
@@ -56,7 +56,7 @@ class Tagger:
         self.to_open = []
         return f'{tags}{text}'
 
-    '''Hide Tags: transform a Tkinter dump into a list of strings'''
+    '''Hide Tags: transform a list of strings into something suitable for textboxes'''
 
     def hide_tags(self, text):
         return self._flatten([self._remove(line) for line in text])

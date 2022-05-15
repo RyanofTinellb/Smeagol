@@ -1,10 +1,10 @@
 import json
-import tkinter as Tk
+import tkinter as tk
 import tkinter.filedialog as fd
 from smeagol import utils
 from smeagol.defaults import default
 
-class PropertiesWindow(Tk.Toplevel):
+class PropertiesWindow(tk.Toplevel):
     def __init__(self, properties, parent=None):
         super().__init__(parent)
         self.properties = properties
@@ -31,10 +31,10 @@ class PropertiesWindow(Tk.Toplevel):
             properties['value'] = getattr(self, prop)
 
     def configure_buttons(self, row):
-        done = Tk.Button(self, text='OK', command=self.done)
-        done.grid(row=row, column=3, sticky=Tk.E+Tk.W)
-        cancel = Tk.Button(self, text='Cancel', command=self.cancel)
-        cancel.grid(row=row, column=2, sticky=Tk.E)
+        done = tk.Button(self, text='OK', command=self.done)
+        done.grid(row=row, column=3, sticky=tk.E+tk.W)
+        cancel = tk.Button(self, text='Cancel', command=self.cancel)
+        cancel.grid(row=row, column=2, sticky=tk.E)
 
     def done(self, event=None):
         for frame in self.property_frames:
@@ -76,26 +76,26 @@ class PropertyFrame:
         return self.owner == 'links'
 
     def ready_checkbox(self):
-        self.checkvar = Tk.IntVar()
+        self.checkvar = tk.IntVar()
         self.checkvar.set(self.checked)
-        check = Tk.Checkbutton(self.parent, variable=self.checkvar)
+        check = tk.Checkbutton(self.parent, variable=self.checkvar)
         check.grid(row=self.row, column=0)
 
     def ready_label(self):
-        label = Tk.Label(self.parent, text=self.name)
-        label.grid(row=self.row, column=1, sticky=Tk.W)
+        label = tk.Label(self.parent, text=self.name)
+        label.grid(row=self.row, column=1, sticky=tk.W)
 
     def ready_entry(self):
-        self.entryvar = Tk.StringVar()
+        self.entryvar = tk.StringVar()
         self.entryvar.set(self.value)
-        self.entry = Tk.Entry(self.parent, width=50, textvariable=self.entryvar)
+        self.entry = tk.Entry(self.parent, width=50, textvariable=self.entryvar)
         self.entry.bind('<Return>', self.parent.done)
         self.entry.bind('<Escape>', self.parent.cancel)
         self.entry.grid(row=self.row, column=2)
         self.entry.xview('end')
 
     def ready_button(self):
-        button = Tk.Button(self.parent,
+        button = tk.Button(self.parent,
                            text='Browse...',
                            command=self.browse)
         button.grid(row=self.row, column=3)

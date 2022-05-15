@@ -1,7 +1,7 @@
 import functools
 import os
 import re
-import tkinter as Tk
+import tkinter as tk
 from contextlib import contextmanager
 from datetime import datetime as dt
 from threading import Thread
@@ -110,16 +110,16 @@ def change_text(item, replacement, text):
     return text
 
 
-Tk.FIRST = 0
-Tk.LAST = Tk.END
-Tk.ALL = (Tk.FIRST, Tk.LAST)
+tk.FIRST = 0
+tk.LAST = tk.END
+tk.ALL = (tk.FIRST, tk.LAST)
 
 
 def Tk_compare(tb, first, op, second):
     try:
         return tb.compare(first, op, second)
-    except Tk.TclError:
-        return tb.compare(Tk.INSERT, op, second)
+    except tk.TclError:
+        return tb.compare(tk.INSERT, op, second)
 
 
 def remove_text(item, text):

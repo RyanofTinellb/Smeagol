@@ -1,9 +1,9 @@
 from .heading import Heading
 from itertools import zip_longest
-import tkinter as Tk
+import tkinter as tk
 
 
-class Frame(Tk.Frame):
+class Frame(tk.Frame):
     def __init__(self, parent, bounds):
         super().__init__(parent)
         self.min, self.max = bounds
@@ -25,10 +25,6 @@ class Frame(Tk.Frame):
                     heading.set()
             else:
                 heading.set(entry)
-
-    def grid(self, *args, **kwargs):
-        super().grid(*args, **kwargs)
-        return self
 
     def add_heading(self, entry=None):
         if (i := len(self._headings)) < self.max:

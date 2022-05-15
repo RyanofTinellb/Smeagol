@@ -1,4 +1,4 @@
-import tkinter as Tk
+import tkinter as tk
 from tkinter import ttk
 
 class Offset(ttk.LabelFrame):
@@ -13,7 +13,7 @@ class Offset(ttk.LabelFrame):
         return 'superscript', 'baseline', 'subscript'
     
     def radio(self, attr):
-        return Tk.Radiobutton(self, **self.radio_options(attr))
+        return tk.Radiobutton(self, **self.radio_options(attr))
     
     def radio_options(self, attr):
         return dict(

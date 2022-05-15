@@ -1,4 +1,4 @@
-import tkinter as Tk
+import tkinter as tk
 from tkinter import ttk
 
 
@@ -7,7 +7,7 @@ class Tags(ttk.Labelframe):
         super().__init__(parent, text='tags')
         self.style = style
         for row, (entry, var) in enumerate(self.boxes):
-            Tk.Entry(self, textvar=var, width=30).grid(row=row, column=0)
+            tk.Entry(self, textvar=var, width=30).grid(row=row, column=0)
 
     @property
     def boxes(self):

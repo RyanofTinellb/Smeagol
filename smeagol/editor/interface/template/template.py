@@ -1,3 +1,5 @@
+import re
+from itertools import cycle
 from ....conversion.api import Tagger
 
 
@@ -7,6 +9,7 @@ class Template(Tagger):
         self.text = text
         self.templates = templates
         self.starting = self.ending = False
+        self.pipe = ''
         self.blocks = []
         self.replace = None
 
@@ -44,7 +47,8 @@ class Template(Tagger):
         return dict(
             starting=self.starting,
             ending=self.ending,
-            blocks=self.blocks)
+            blocks=self.blocks,
+            pipe=self.pipe)
 
     @current.setter
     def current(self, values):
@@ -52,6 +56,7 @@ class Template(Tagger):
         self.starting = values.get('starting', False)
         self.ending = values.get('ending', False)
         self.blocks = values.get('blocks', [])
+        self.pipe = values.get('pipe', '')
 
 
     def _tag(self, tag):

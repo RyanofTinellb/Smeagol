@@ -1,7 +1,7 @@
-import tkinter as Tk
+import tkinter as tk
 from .box import Box
 
-class Frame(Tk.LabelFrame):
+class Frame(tk.LabelFrame):
     def __init__(self, parent, style):
         super().__init__(parent, text='sample')
         Box(self, style).pack()

@@ -1,9 +1,9 @@
-import tkinter as Tk
+import tkinter as tk
 from tkinter import ttk
 from .justify import Justify
 from .spinner import Spinner
 
-class Leftovers(Tk.Frame):
+class Leftovers(tk.Frame):
     def __init__(self, parent, style):
         super().__init__(parent, padx=10)
         self.style = style

@@ -1,5 +1,5 @@
 import re
-import tkinter as Tk
+import tkinter as tk
 from tkinter.font import Font
 from ...conversion.tagger.tag import Tag
 from ...utilities.defaults import default
@@ -34,7 +34,7 @@ class Style(Tag):
 
     @property
     def default_size(self):
-         return defaults.get('props', {}).get('size', 18)
+         return self.defaults.get('props', {}).get('size', 18)
 
     def __getitem__(self, attr):
         try:
@@ -129,7 +129,7 @@ class Style(Tag):
         size = self['size']
         offset = self['offset']
         if isinstance(size, str):
-            size = max(int(value) + self.default_size, 1)
+            size = max(int(size) + self.default_size, 1)
         if offset.endswith('script'):
             return size * 2 // 3
         return size

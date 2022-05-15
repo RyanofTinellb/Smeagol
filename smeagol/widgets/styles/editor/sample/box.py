@@ -1,7 +1,7 @@
 from tkinter.font import Font
-import tkinter as Tk
+import tkinter as tk
 
-class Box(Tk.Text):
+class Box(tk.Text):
     def __init__(self, parent, style):
         super().__init__(parent, height=5, width=30)
         font = Font(self, **style._font)

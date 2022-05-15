@@ -1,9 +1,9 @@
 import re
 import json
-import tkinter as Tk
-from ..utilities import utils
-from ..conversion import api as conversion
-from ..widgets.api import Styles
+import tkinter as tk
+from smeagol.utilities import utils
+from smeagol.conversion import api as conversion
+from smeagol.widgets.api import Styles
 
 START = '1.0'
 END = 'end-1c'
@@ -17,18 +17,18 @@ PREVLINE = f'{PREV_LINE} lineend'
 NEXT_LINE = 'insert linestart +1l'
 SELECTION = 'sel.first', 'sel.last'
 SEL_LINE = 'sel.first linestart', 'sel.last lineend+1c'
-NO_SELECTION = (INSERT,) * 2
+NO_SELECTION = INSERT, INSERT
 USER_MARK = 'usermark'
 
 BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
 
 
-class Textbox(Tk.Text):
+class Textbox(tk.Text):
     def __init__(self, parent=None, styles=None, translator=None):
-        super().__init__(parent, height=1, width=1, wrap=Tk.WORD,
+        super().__init__(parent, height=1, width=1, wrap=tk.WORD,
                          undo=True)
-        self.displays = dict(wordcount=Tk.StringVar(), randomwords=Tk.StringVar(),
-                         style=Tk.StringVar(), language=Tk.StringVar())
+        self.displays = dict(wordcount=tk.StringVar(), randomwords=tk.StringVar(),
+                         style=tk.StringVar(), language=tk.StringVar())
         self.translator = translator or conversion.Translator()
         self.languages = self.translator.languages
         self.language.set(self.translator.fullname)
@@ -70,7 +70,7 @@ class Textbox(Tk.Text):
         super().__setattr__(attr, value)
 
     def clear_style(self, styles):
-        self.tag_remove(styles, Tk.INSERT)
+        self.tag_remove(styles, tk.INSERT)
 
     def set_styles(self):
         self.current_style = ''
@@ -112,12 +112,12 @@ class Textbox(Tk.Text):
 
     def _add_style(self, name, styles):
         styles.add(name)
-        with utils.ignored(Tk.TclError):
+        with utils.ignored(tk.TclError):
             self.tag_add(name, *SELECTION)
 
     def _remove_style(self, name, styles):
         styles.discard(name)
-        with utils.ignored(Tk.TclError):
+        with utils.ignored(tk.TclError):
             self.tag_remove(name, *SELECTION)
 
     def update_styles(self):
@@ -165,7 +165,7 @@ class Textbox(Tk.Text):
     def key_released(self, event):
         self.update_wordcount()
         if event.keycode == '??' or 33 <= event.keycode <= 40:
-            self.current_style = self.tag_names(Tk.INSERT)
+            self.current_style = self.tag_names(tk.INSERT)
 
     def update_wordcount(self):
         text = self.text
@@ -212,8 +212,8 @@ class Textbox(Tk.Text):
             if not self.match_brackets(key):
                 try:
                     self.delete(*SELECTION)
-                    self.insert(key, Tk.SEL, tags=styles)
-                except Tk.TclError:
+                    self.insert(key, tk.SEL, tags=styles)
+                except tk.TclError:
                     self.insert(key, tags=styles)
             return 'break'
         elif keysym == 'Return':
@@ -224,10 +224,10 @@ class Textbox(Tk.Text):
     def match_brackets(self, key):
         if key in BRACKETS:
             try:
-                self.insert(key, Tk.SEL_FIRST, tags=self.current_style)
-                self.insert(BRACKETS[key], Tk.SEL_LAST,
+                self.insert(key, tk.SEL_FIRST, tags=self.current_style)
+                self.insert(BRACKETS[key], tk.SEL_LAST,
                             tags=self.current_style)
-            except Tk.TclError:
+            except tk.TclError:
                 self.insert(key + BRACKETS[key], tags=self.current_style)
                 self.move_mark(INSERT, -1)
             return True
@@ -247,18 +247,18 @@ class Textbox(Tk.Text):
         return 'break'
 
     def select(self, start='1.0', end='end'):
-        self.tag_add(Tk.SEL, start, end)
+        self.tag_add(tk.SEL, start, end)
 
     def deselect_all(self, event=None):
         self.deselect()
         return 'break'
 
     def deselect(self, start=START, end=END):
-        with utils.ignored(Tk.TclError):
-            self.tag_remove(Tk.SEL, start, end)
+        with utils.ignored(tk.TclError):
+            self.tag_remove(tk.SEL, start, end)
 
     def copy_text(self, event=None):
-        with utils.ignored(Tk.TclError):
+        with utils.ignored(tk.TclError):
             self._copy(SELECTION)
         return 'break'
 
@@ -272,7 +272,7 @@ class Textbox(Tk.Text):
         return text
 
     def cut_text(self, event=None):
-        with utils.ignored(Tk.TclError):
+        with utils.ignored(tk.TclError):
             self._cut(SELECTION)
         return 'break'
 
@@ -285,7 +285,7 @@ class Textbox(Tk.Text):
     def paste_text(self, event=None):
         try:
             self._paste()
-        except Tk.TclError:
+        except tk.TclError:
             self._paste(borders=NO_SELECTION)
         self.deselect_all()
         return 'break'
@@ -296,7 +296,7 @@ class Textbox(Tk.Text):
         self.mark_set(INSERT, location)
         try:
             text = text if text is not None else self.clipboard_get()
-        except Tk.TclError:
+        except tk.TclError:
             return
         styles = []
         if type(text) != list:
@@ -314,7 +314,7 @@ class Textbox(Tk.Text):
             case 'mark':
                 if value == INSERT:
                     self.mark_set(USER_MARK, INSERT)
-                    self.mark_gravity(USER_MARK, Tk.LEFT)
+                    self.mark_gravity(USER_MARK, tk.LEFT)
             case 'tagon':
                 styles.append(value)
             case 'text':
@@ -328,7 +328,7 @@ class Textbox(Tk.Text):
     def delete_line(self, event=None):
         try:
             self.delete(*SEL_LINE)
-        except Tk.TclError:
+        except tk.TclError:
             self.delete(*CURRLINE)
         return 'break'
 
@@ -365,7 +365,7 @@ class Textbox(Tk.Text):
         try:
             text = self._cut(SEL_LINE, False)
             self._paste(location, NO_SELECTION, text)
-        except Tk.TclError:
+        except tk.TclError:
             text = self._cut(CURRLINE, False)
             self._paste(location, NO_SELECTION, text)
         self.mark_set(INSERT, USER_MARK)
@@ -376,7 +376,7 @@ class Textbox(Tk.Text):
     def commands(self):
         return [('<Control-MouseWheel>', self.change_fontsize),
                 ('<Return>', self.indent),
-                ('<KeyPress>', self.insert_characters),
+                # ('<KeyPress>', self.insert_characters),
                 (('<KeyRelease>', '<ButtonRelease>'), self.key_released),
                 (('<Tab>', '<Control-]>'), self.insert_tabs),
                 (('<Shift-Tab>', '<Control-[>'), self.remove_tabs),

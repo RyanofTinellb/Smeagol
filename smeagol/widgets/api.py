@@ -1,5 +1,5 @@
 from .styles.styles import Styles
-from .tab import Tab
-from .textbox import Textbox
+from .tabs.tabs import Tabs
+from .tabs.textbox import Textbox
 from .heading.frame import Frame as HeadingFrame
-from .manager import Manager
+__all__ = [Styles, Tabs, Textbox, HeadingFrame]

@@ -1,12 +1,12 @@
 from ...errors import MarkdownFileNotFound
 from ...conversion.markdown import Markdown
-import tkinter as Tk
+import tkinter as tk
 import tkinter.messagebox as mb
 import tkinter.filedialog as fd
 from tkinter.font import Font
 
 
-class MarkdownWindow(Tk.Frame):
+class MarkdownWindow(tk.Frame):
     def __init__(self, parent=None, markdown=None):
         super().__init__(parent)
         self.parent.title('Editing Markdown')
@@ -24,8 +24,8 @@ class MarkdownWindow(Tk.Frame):
                 frame = EntryFrame(self, self.font)
                 frame.grid(row=row, column=2*column+1, sticky='w')
                 self.frames.append(frame)
-            Tk.Label(self, padx=10).grid(row=0, column=2*column)
-        Tk.Label(self, padx=10).grid(row=0, column=2*columns)
+            tk.Label(self, padx=10).grid(row=0, column=2*column)
+        tk.Label(self, padx=10).grid(row=0, column=2*columns)
         self.buttons_frame(self).grid(row=rows, column=columns+1, sticky='e')
         self.move()
     
@@ -34,14 +34,14 @@ class MarkdownWindow(Tk.Frame):
         return self.master
 
     def buttons_frame(self, parent=None):
-        frame = Tk.Frame(parent)
-        Tk.Button(frame, text='Load', command=self.load).grid(row=0, column=0)
-        Tk.Button(frame, text='Save', command=self.save).grid(row=0, column=1)
-        Tk.Button(frame, text='Save As', command=self.saveas).grid(
+        frame = tk.Frame(parent)
+        tk.Button(frame, text='Load', command=self.load).grid(row=0, column=0)
+        tk.Button(frame, text='Save', command=self.save).grid(row=0, column=1)
+        tk.Button(frame, text='Save As', command=self.saveas).grid(
             row=0, column=2)
-        Tk.Button(frame, text='Cancel', command=self.cancel).grid(
+        tk.Button(frame, text='Cancel', command=self.cancel).grid(
             row=0, column=3)
-        Tk.Button(frame, text='OK', command=self.enter).grid(row=0, column=4)
+        tk.Button(frame, text='OK', command=self.enter).grid(row=0, column=4)
         return frame
 
     def move(self, position=None):
@@ -103,7 +103,7 @@ class MarkdownWindow(Tk.Frame):
         self.parent.destroy()
 
 
-class Entry(Tk.Entry):
+class Entry(tk.Entry):
     def __init__(self, master, parent, name):
         super().__init__(master, font=parent.font, width=20)
         self.bind('<Prior>', parent.up)
@@ -120,16 +120,16 @@ class Entry(Tk.Entry):
         self.insert('insert', text)
 
 
-class EntryFrame(Tk.Frame):
+class EntryFrame(tk.Frame):
     def __init__(self, parent, font):
         super().__init__(parent)
-        self.display_markdown = Tk.BooleanVar()
-        self.state = Tk.StringVar()
+        self.display_markdown = tk.BooleanVar()
+        self.state = tk.StringVar()
         self.markup = Entry(self, self.parent, 'markup')
         self.markdown = Entry(self, self.parent, 'markdown')
         self.markup.grid(row=0, column=0)
         self.markdown.grid(row=0, column=2)
-        Tk.Checkbutton(self, indicatoron=False, textvariable=self.state,
+        tk.Checkbutton(self, indicatoron=False, textvariable=self.state,
                        variable=self.display_markdown, command=self.set_state,
                        onvalue=0, offvalue=1, font=font, width=2).grid(row=0, column=1)
 

@@ -1,16 +1,16 @@
-import tkinter as Tk
+import tkinter as tk
 
 
-class Block(Tk.Frame):
+class Block(tk.Frame):
     def __init__(self, parent, style):
         super().__init__(parent)
         self.style = style
-        Tk.Label(self, text='block').grid(row=0, column=0)
+        tk.Label(self, text='block').grid(row=0, column=0)
         self.Box.grid(row=0, column=1)
 
     @property
     def Box(self):
-        return Tk.Entry(self, **self.box_options)
+        return tk.Entry(self, **self.box_options)
     
     @property
     def box_options(self):

@@ -6,7 +6,7 @@ from ...utilities import api as utilities
 from ...utilities import filesystem as fs
 from ...utilities import utils
 from ...utilities import errors
-from ...widgets import api as widgets
+from ...widgets.styles.styles import Styles
 from .assets import Assets
 from .locations import Locations
 from .template import templates
@@ -73,9 +73,7 @@ class Interface:
         self.templates = templates.Templates(config.get('templates', {}))
     
     def open_styles(self, styles):
-        n = fs.load(styles)
-        k = widgets.Styles(fs.load(styles))
-        return k
+        return Styles(fs.load(styles))
         
     def open_site(self):
         return Site(fs.load(self.assets.source))

@@ -1,5 +1,5 @@
-import os
 import json
+import os
 import socket
 import tkinter.filedialog as fd
 import webbrowser as web
@@ -7,12 +7,17 @@ from http.server import SimpleHTTPRequestHandler
 from socketserver import TCPServer as Server
 from threading import Thread
 
-from .defaults import default
-from .utils import ignored
+import yaml
+from smeagol.utilities.defaults import default
+from smeagol.utilities.utils import ignored
 
-def save(obj, filename):
+
+def jsave(obj, filename):
+    with ignored(os.error):
+        os.makedirs(os.path.dirname(filename))
     try:
-        saves(json.dumps(obj, ensure_ascii=False, indent=2), filename)
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(obj, filename, ensure_ascii=False, indent=2)
     except TypeError as e:
         saves(str(obj), f := f'{filename}!error.txt')
         raise TypeError(str(e), f)
@@ -25,6 +30,13 @@ def saves(string, filename):
         f.write(string)
 
 
+def saveyaml(obj, filename):
+    with ignored(os.error):
+        os.makedirs(os.path.dirname(filename))
+    with open(filename, 'w', encoding='utf-8') as f:
+        yaml.dump(obj, f)
+
+
 def jsonify(obj):
     return json.dumps(obj, ensure_ascii=False)
 
@@ -34,11 +46,19 @@ def savelines(obj, filename):
     saves(f'[{obj}]', filename)
 
 
-def load(filename):
+def jload(filename):
     if not filename:
         return {}
+    try:
+        return _jload(filename)
+    except TypeError:
+        raise TypeError(f'{filename} is not a json file, or is malformed')
+
+
+def _jload(filename):
     with open(filename, encoding='utf-8') as f:
         return json.load(f)
+
 
 def loads(filename):
     if not filename:
@@ -46,10 +66,25 @@ def loads(filename):
     with open(filename, encoding='utf-8') as f:
         return f.read()
 
+
+def yload(filename):
+    if not filename:
+        return {}
+    try:
+        return _yload(filename)
+    except TypeError:
+        raise TypeError(f'{filename} is not a json file, or is malformed')
+
+
+def _yload(filename):
+    with open(filename, encoding='utf-8') as f:
+        return yaml.load(f)
+
+
 def change(filename, fn, newfilename=None):
     '''Run function `fn` on entire object in filename'''
     newfilename = newfilename or filename
-    obj = load(filename)
+    obj = jload(filename)
     fn(obj)
     save(obj, newfilename)
 
@@ -59,7 +94,7 @@ def update(filename, fn, newfilename=None):
     Run function `fn` on each element `elt` of an object `obj` in `filename`
     '''
     newfilename = newfilename or filename
-    obj = load(filename)
+    obj = jload(filename)
     for elt in obj:
         fn(elt)
     save(obj, newfilename)
@@ -95,22 +130,28 @@ def walk(root, condition):
     return [os.path.join(root, filename) for root, _, files in os.walk(root)
             for filename in files if condition(filename)]
 
+
 def findbytype(root, ext):
     return walk(root, isfiletype(ext))
+
 
 def find(root, name):
     return walk(root, lambda x: os.path.basename(x) == name)
 
+
 def extension(filename):
     return os.path.splitext(filename)[1]
+
 
 def isfiletype(ext):
     def _isfiletype(filename, ext=ext):
         return extension(filename) == ext
     return _isfiletype
 
+
 def isfolder(filename):
     return os.path.isdir(filename)
+
 
 servers = []
 

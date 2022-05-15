@@ -1,4 +1,4 @@
-import tkinter as Tk
+import tkinter as tk
 from tkinter import colorchooser as ColourChooser
 from tkinter import ttk
 
@@ -15,7 +15,7 @@ class Colour(ttk.LabelFrame):
         return ttk.Label(self, text=attr, padding=(15, 0, 5, 0))
     
     def Button(self, attr, var):
-        button = Tk.Button(self, background=var.get(), width=2)
+        button = tk.Button(self, background=var.get(), width=2)
         button.config(command=lambda *_: self.change_colour(button, attr, var))
         return button
 

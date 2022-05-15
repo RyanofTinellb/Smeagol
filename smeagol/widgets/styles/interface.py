@@ -1,9 +1,9 @@
-import tkinter as Tk
+import tkinter as tk
 
-types = {int: Tk.IntVar,
-         float: Tk.DoubleVar,
-         str: Tk.StringVar,
-         bool: Tk.BooleanVar}
+types = {int: tk.IntVar,
+         float: tk.DoubleVar,
+         str: tk.StringVar,
+         bool: tk.BooleanVar}
 
 class Interface:
     def __init__(self, style):

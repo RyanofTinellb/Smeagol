@@ -1,4 +1,3 @@
-
 from ..utilities import utils
 from .entry import Entry
 

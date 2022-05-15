@@ -1,8 +1,8 @@
-import tkinter as Tk
+import tkinter as tk
 from .textbox import Textbox
 
 
-class Tab(Tk.Frame):
+class Tab(tk.Frame):
     def __init__(self, parent, interface, entry=None):
         super().__init__(parent)
         self.notebook = parent
@@ -17,7 +17,7 @@ class Tab(Tk.Frame):
         styles = self.interface.styles
         translator = self.interface.translator
         textbox = Textbox(self, styles, translator)
-        textbox.pack(side=Tk.LEFT, expand=True, fill=Tk.BOTH)
+        textbox.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
         return textbox
     
     @property

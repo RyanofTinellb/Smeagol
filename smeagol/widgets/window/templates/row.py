@@ -1,5 +1,5 @@
 import os
-import tkinter as Tk
+import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter import simpledialog as sd
 
@@ -17,33 +17,33 @@ class Row:
         self.ready_buttons()
 
     def ready_label(self):
-        self.labelvar = Tk.StringVar()
+        self.labelvar = tk.StringVar()
         self.labelvar.set(self.name)
-        label = Tk.Label(self.parent, text=self.name,  # width=20,
+        label = tk.Label(self.parent, text=self.name,  # width=20,
                          textvariable=self.labelvar)
         label.grid(row=self.row, column=1, sticky='ew')
         self.widgets += [label]
 
     def ready_entry(self):
-        self.entryvar = Tk.StringVar()
+        self.entryvar = tk.StringVar()
         self.entryvar.set(self.template.filename)
-        entry = Tk.Entry(self.parent, textvariable=self.entryvar, width=50)
+        entry = tk.Entry(self.parent, textvariable=self.entryvar, width=50)
         entry.bind('<Return>', self.window.done)
         entry.bind('<Escape>', self.window.cancel)
         entry.grid(row=self.row, column=2)
-        entry.xview(Tk.LAST)
-        entry.icursor(Tk.LAST)
+        entry.xview(tk.LAST)
+        entry.icursor(tk.LAST)
         self.entry = entry
         self.widgets += [entry]
 
     def ready_buttons(self):
-        state = Tk.NORMAL if self.template.optional else Tk.DISABLED
+        state = tk.NORMAL if self.template.optional else tk.DISABLED
 
         buttons = (('0', 'Rename', self.change_name),
                    ('6', 'Remove', self.remove))
         for button in buttons:
             column, text, command = button
-            new = Tk.Button(self.parent,
+            new = tk.Button(self.parent,
                             text=text,
                             command=command,
                             state=state)
@@ -55,7 +55,7 @@ class Row:
                    ('4', 'New', self.save))
         for button in buttons:
             column, text, command = button
-            new = Tk.Button(self.parent,
+            new = tk.Button(self.parent,
                             text=text,
                             command=command)
             new.grid(row=self.row, column=column)

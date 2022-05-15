@@ -1,6 +1,6 @@
-import tkinter as Tk
+import tkinter as tk
 
-class Heading(Tk.Entry):
+class Heading(tk.Entry):
     def __init__(self, level, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.level = level

@@ -1,4 +1,4 @@
-from tkinter import Tk
+import tkinter as tk
 from ....utilities import filesystem as fs
 from ....widgets import api as widgets
 from .template import Template
@@ -34,7 +34,7 @@ class Templates:
         #     raise e.__class__(f"Template file {filename} of wrong structure")
     
     def _open(self, template):
-        # Tk()
+        # tk()
         text = '\n'.join(template['text'])
         tagger = widgets.Styles(template.get('styles', {}))
         return Template(text, tagger, self)

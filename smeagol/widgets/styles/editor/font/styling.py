@@ -1,12 +1,12 @@
-import tkinter as Tk
+import tkinter as tk
 
 
-class Styling(Tk.Frame):
+class Styling(tk.Frame):
     def __init__(self, parent, style):
         super().__init__(parent)
         self.style = style
         for row, (attr, var) in enumerate(self.buttons, start=1):
-            btn = Tk.Checkbutton(self, text=attr, var=var)
+            btn = tk.Checkbutton(self, text=attr, var=var)
             btn.grid(row=row, column=0, sticky='w')
 
     @property
