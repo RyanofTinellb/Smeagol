@@ -15,7 +15,7 @@ class Manager(tk.Frame):
     def create_layout(self):
         top = self.winfo_toplevel()
         self.set_window_size(top)
-        top['menu'] = self.menu
+        # top['menu'] = self.menu
         self.textframe.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
         self.sidebar.pack(side=tk.LEFT)
         self.pack()
@@ -52,8 +52,8 @@ class Manager(tk.Frame):
     def textframe(self):
         frame = tk.Frame(self.parent)
         options = dict(side=tk.TOP, expand=True, fill=tk.BOTH)
-        self.notebook = Tabs(frame)
-        self.notebook.pack(**options)
+        self.tabs = Tabs(frame)
+        self.tabs.pack(**options)
         return frame
 
     @property
@@ -89,14 +89,14 @@ class Manager(tk.Frame):
         self._bind_all(menu, self.language_commands)
         return menu
     
-    def change_language(self, event=None):
-        language = self.status['language'].get()
-        return 'break'
-    
     def random_words_display(self, parent):
         label = tk.Label(parent, font=('Arial', 14))
         self._bind_all(label, self.random_commands)
         return label
+    
+    def update_displays(self):
+        for name, display in self.displays.items():
+            display.config(textvariable=self.status[name])
 
     def quit(self):
         self.parent.withdraw()

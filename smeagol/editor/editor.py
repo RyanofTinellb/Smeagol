@@ -1,40 +1,36 @@
 import tkinter as tk
 from tkinter import simpledialog as sd
-from tkinter import ttk
 
-from ..conversion import api as conversion
 from ..utilities import errors
 from ..utilities import filesystem as fs
 from ..utilities import utils
 from ..widgets.manager import Manager
 from ..widgets import window
-from .interface.interfaces import Interfaces
+from smeagol.widgets import styles
 
 
 class Editor(Manager):
     def __init__(self, parent=None, filename=None):
         super().__init__(parent)
         if filename:
-            self.open_site(filename)
-    
+            self.tabs.open_site(filename)
+
     @property
     def interfaces(self):
-        return self.notebook.interfaces
-    
-    @property
-    def closed_tabs(self):
-        return self.notebook.closed_tabs
+        return self.tabs.interfaces
 
     def __getattr__(self, attr):
         match attr:
             case 'tab':
-                return self.notebook.nametowidget(self.notebook.select())
+                return self.tabs.current
             case 'textbox':
                 return self.tab.textbox
             case 'entry':
                 return self.tab.entry
             case 'status':
                 return self.textbox.displays
+            case 'closed_tabs':
+                return self.tabs.closed
             case default:
                 try:
                     return super().__getattr__(attr)
@@ -51,17 +47,6 @@ class Editor(Manager):
                 self.tab.entry = value
             case default:
                 super().__setattr__(attr, value)
-    
-    @property
-    def interface(self):
-        try:
-            return self.tab.interface
-        except AttributeError:
-            return self.interfaces.blank
-
-    def update_displays(self):
-        for name, display in self.displays.items():
-            display.config(textvariable=self.status[name])
 
     def change_language(self, event=None):
         language = self.status['language'].get()
@@ -71,38 +56,6 @@ class Editor(Manager):
     def go_to(self, position):
         self.textbox.mark_set(tk.INSERT, position)
         self.textbox.see(tk.INSERT)
-
-    def new_tab(self, event=None, interface=None):
-        interface = interface or self.interface
-        wd.Tab(self.notebook, interface)
-        self._bind_all(self.textbox, self.textbox_commands)
-        return 'break'
-
-    def change_tab(self, event=None):
-        self.update_displays()
-        self.change_language()
-        self.textbox.set_styles()
-        self.set_headings(self.entry)
-        self.title = self.interface.site.root.name
-
-    def close_tab(self, event=None):
-        if self.notebook.index('end') - len(self.closed_tabs) > 1:
-            tab = f'@{event.x},{event.y}'
-            while True:
-                try:
-                    self.notebook.hide(tab)
-                    self.closed_tabs += [tab]
-                    break
-                except tk.TclError:
-                    tab = self.notebook.select()
-        return 'break'
-
-    def reopen_tab(self, event=None):
-        with utils.ignored(IndexError):
-            tab = self.closed_tabs.pop()
-            self.notebook.add(tab)
-            self.notebook.select(tab)
-        return 'break'
 
     def _entry(self, level):
         return self.interface.find_entry(self.headings.headings[:level+1])
@@ -145,29 +98,9 @@ class Editor(Manager):
         with utils.ignored(AttributeError):
             self.set_headings(self.entry)
 
-    def open_site(self, filename=''):
-        try:
-            self.interface = self.interfaces[filename]
-        except AttributeError:  # filename is a list
-            self.interface = self.open_sites(filename)
-
-    def open_sites(self, filenames):
-        first_tab = True
-        for filename in filenames:
-            interface = self.interfaces[filename]
-            self.textbox.styles = interface.styles
-            self.open_interface(interface, first_tab)
-            first_tab = False
-        return interface
-
     def open_interface(self, interface, first_tab=False):
         for entry in interface.entries:
             self.open_tab(entry, first_tab)
-
-    def open_tab(self, entry, first_tab=False):
-        if not first_tab:
-            self.new_tab()
-        self.open_entry(entry)
 
     def save_site(self, filename=''):
         try:
@@ -257,7 +190,7 @@ class Editor(Manager):
 
     def edit_styles(self, event=None):
         top = tk.Toplevel()
-        window = wd.styles.Window(top, self.interface.styles)
+        window = styles.Window(top, self.interface.styles)
         window.grid()
         top.protocol('WM_DELETE_WINDOW', window.cancel)
         top.title(f'{self.interface.site.name} Styles')
@@ -314,11 +247,11 @@ class Editor(Manager):
             ('<Next>', self.next_entry),
             ('<Return>', self.load_entry),
         ]
-            
+
     @property
     def language_commands(self):
         return [('<<ComboboxSelected>>', self.change_language)]
-    
+
     @property
     def random_commands(self):
         return [
