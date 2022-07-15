@@ -49,15 +49,28 @@ class Interface:
         return [self.find_entry(e) for e in self.tabs]
 
     def load_config(self, filename):
+        try:
+            return self._load_config_file(filename)
+        except AttributeError:
+            return self._create_config(filename)
+
+    @staticmethod
+    def _load_config_file(filename):
         if filename.endswith('.smg'):
-            return fs.load(filename)
+            return fs.load_yaml(filename)
+        raise AttributeError('File type is Sméagol Source File. '
+                             'Creating Sméagol Configuration File...')
+
+    @staticmethod
+    def _create_config(filename):
         return dict(assets=dict(source=filename))
-    
-    def save(self): # alias for use by (e.g.) Editor
+
+    def save(self):  # alias for use by (e.g.) Editor
         self.save_config()
-        
+
     def save_config(self):
-        fs.save(self.config, self.filename)
+        if self.filename:
+            fs.save_yaml(self.config, self.filename)
 
     def setup(self, config):
         self.config = config
@@ -71,13 +84,13 @@ class Interface:
         samples = self.assets.samples
         self.randomwords = utilities.RandomWords(self.language, samples)
         self.templates = templates.Templates(config.get('templates', {}))
-    
+
     def open_styles(self, styles):
-        return Styles(fs.load(styles))
-        
+        return Styles(fs.load_yaml(styles))
+
     def open_site(self):
-        return Site(fs.load(self.assets.source))
-    
+        return Site(fs.load_yaml(self.assets.source))
+
     def save_site(self):
         fs.save(self.site.tree, self.assets.source)
 
@@ -109,7 +122,8 @@ class Interface:
         html = self.templates.main.html
         filename = os.path.join(self.locations.directory, entry.link)
         fs.saves(html, filename)
-        fs.saves(self.templates.sections['contents'].output, 'c:/users/ryan/desktop/prac page.txt')
+        fs.saves(self.templates.sections['contents'].output,
+                 'c:/users/ryan/desktop/prac page.txt')
         # Save wholepage
 
     def _save(self, text):

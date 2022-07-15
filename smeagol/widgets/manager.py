@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from smeagol.conversion import api as conversion
+from smeagol.utilities import utils
 from smeagol.widgets.api import HeadingFrame, Tabs
 
 
@@ -15,8 +16,8 @@ class Manager(tk.Frame):
     def create_layout(self):
         top = self.winfo_toplevel()
         self.set_window_size(top)
-        # top['menu'] = self.menu
-        self.textframe.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
+        top['menu'] = self.menu
+        self.textframe().pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
         self.sidebar.pack(side=tk.LEFT)
         self.pack()
     
@@ -48,11 +49,11 @@ class Manager(tk.Frame):
                                 underline=underline)
             submenu.bind(f'<KeyPress-{keypress}>', command)
     
-    @property
+    # @property
     def textframe(self):
         frame = tk.Frame(self.parent)
         options = dict(side=tk.TOP, expand=True, fill=tk.BOTH)
-        self.tabs = Tabs(frame)
+        self.tabs = Tabs(frame, self.textbox_commands)
         self.tabs.pack(**options)
         return frame
 
@@ -86,12 +87,12 @@ class Manager(tk.Frame):
                             width=25,
                             justify=tk.CENTER)
         menu.state(['readonly'])
-        self._bind_all(menu, self.language_commands)
+        utils.bind_all(menu, self.language_commands)
         return menu
     
     def random_words_display(self, parent):
         label = tk.Label(parent, font=('Arial', 14))
-        self._bind_all(label, self.random_commands)
+        utils.bind_all(label, self.random_commands)
         return label
     
     def update_displays(self):
@@ -101,11 +102,6 @@ class Manager(tk.Frame):
     def quit(self):
         self.parent.withdraw()
         self.parent.quit()
-    
-    def _bind_all(self, obj, commands):
-        for command in commands:
-            obj.bind(*command)
-
     
     @property
     def menu_commands(self):

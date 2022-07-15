@@ -1,14 +1,17 @@
 import tkinter as tk
+
+from smeagol.utilities import utils
 from .textbox import Textbox
 
 
 class Tab(tk.Frame):
-    def __init__(self, parent, interface, entry=None):
+    def __init__(self, parent, interface, textbox_commands, entry=None):
         super().__init__(parent)
         self.notebook = parent
         self.notebook.add(self)
         self.notebook.select(self)
         self.interface = interface
+        self.textbox_commands = textbox_commands
         self.textbox = self._textbox
         self.entry = entry or self.interface.site.root
 
@@ -18,6 +21,8 @@ class Tab(tk.Frame):
         translator = self.interface.translator
         textbox = Textbox(self, styles, translator)
         textbox.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
+        textbox.insert('frhgsrs')
+        utils.bind_all(textbox, self.textbox_commands())
         return textbox
     
     @property

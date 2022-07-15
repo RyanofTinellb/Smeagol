@@ -5,16 +5,24 @@ from smeagol.utilities import utils
 from smeagol.widgets.tabs.tab import Tab
 from smeagol.editor.interface.interfaces import Interfaces
 
+
 class Tabs(ttk.Notebook):
     '''Keeps track of tabs and assigns Interfaces to them'''
-    def __init__(self, parent):
+    def __init__(self, parent, textbox_commands):
         super().__init__(parent)
+        utils.bind_all(self, self.commands)
         self.interfaces = Interfaces()
         self.closed = []
+        self.textbox_commands = textbox_commands
+        self.new(self.interfaces.blank)
     
     @property
     def current(self):
-        return self.nametowidget(self.tabs.select())
+        return self.nametowidget(self.select())
+
+    @property
+    def title(self):
+        return self.current.interface.site.root.name
     
     def open_site(self, filename=''):
         try:
@@ -26,52 +34,51 @@ class Tabs(ttk.Notebook):
         first_tab = True
         for filename in filenames:
             interface = self.interfaces[filename]
-            self.textbox.styles = interface.styles
             self.open_interface(interface, first_tab)
+            self.current.textbox.styles = interface.styles
             first_tab = False
         return interface
     
-    def new_tab(self, interface=None):
-        interface = interface or self.interface
-        Tab(self.tabs, interface)
-        self._bind_all(self.textbox, self.textbox_commands)
-        return 'break'
+    def open_interface(self, interface, first_tab=False):
+        for entry in interface.entries:
+            self.open(entry, first_tab)
     
-    def open_tab(self, entry, first_tab=False):
+    def new(self, interface=None):
+        interface = interface or self.current.interface
+        Tab(self, interface, self.textbox_commands)
+    
+    def open(self, entry, first_tab=False):
         if not first_tab:
-            self.new_tab()
-        self.open_entry(entry)
+            self.new()
 
-    def change_tab(self, event=None):
-        self.update_displays()
-        self.change_language()
-        self.textbox.set_styles()
-        self.set_headings(self.entry)
-        self.title = self.interface.site.root.name
+    def change(self, event=None):
+        self.current.textbox.set_styles()
 
-    def close_tab(self, event=None):
-        if self.tabs.index('end') - len(self.closed_tabs) > 1:
-            tab = f'@{event.x},{event.y}'
-            while True:
-                try:
-                    self.tabs.hide(tab)
-                    self.closed_tabs += [tab]
-                    break
-                except tk.TclError:
-                    tab = self.tabs.select()
-        return 'break'
+    def close(self, event):
+        print(self.index('end'), len(self.closed))
+        if self.index('end') - len(self.closed) <= 1:
+            return
+        tab = f'@{event.x},{event.y}'
+        try:
+            self._close(tab)
+        except tk.TclError:
+            self._close(self.select())
+    
+    def _close(self, tab):
+        self.hide(tab)
+        self.closed += [tab]
 
-    def reopen_tab(self, event=None):
+    def reopen(self, event=None):
         with utils.ignored(IndexError):
-            tab = self.closed_tabs.pop()
-            self.tabs.add(tab)
-            self.tabs.select(tab)
+            tab = self.closed.pop()
+            self.add(tab)
+            self.select(tab)
         return 'break'
     
     @property
     def commands(self):
         return [
-            ('<<NotebookTabChanged>>', self.change_tab),
-            ('<Button-2>', self.close_tab)
+            ('<<NotebookTabChanged>>', self.change),
+            ('<Button-2>', self.close)
         ]
 

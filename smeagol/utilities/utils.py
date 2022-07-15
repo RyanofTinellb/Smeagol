@@ -147,3 +147,8 @@ def page_initial(name, markdown=None):
     if markdown:
         name = markdown.to_markdown(name)
     return re.findall(r'\w', name)[0]
+
+
+def bind_all(obj, commands):
+    for command in commands:
+        obj.bind(*command)

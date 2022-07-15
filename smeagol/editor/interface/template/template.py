@@ -1,6 +1,6 @@
 import re
 from itertools import cycle
-from ....conversion.api import Tagger
+from smeagol.conversion.api import Tagger
 
 
 class Template(Tagger):

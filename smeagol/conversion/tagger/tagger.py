@@ -10,8 +10,11 @@ def name(tag):
 
 class Tagger:
     def __init__(self, tags):
-        self.tags = {name(tag): self.create_tag(rank, tag)
+        try:
+            self.tags = {name(tag): self.create_tag(rank, tag)
                      for rank, tag in enumerate(tags)}
+        except AttributeError:
+            raise AttributeError(type(tags), tags)
 
     @staticmethod
     def create_tag(rank=0, tag=None):

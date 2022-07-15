@@ -12,27 +12,33 @@ from smeagol.utilities.defaults import default
 from smeagol.utilities.utils import ignored
 
 
-def jsave(obj, filename):
+def makedirs(filename):
     with ignored(os.error):
         os.makedirs(os.path.dirname(filename))
+
+
+def save_json(obj, filename):
+    makedirs(filename)
     try:
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(obj, filename, ensure_ascii=False, indent=2)
+        _save_json(obj, filename)
     except TypeError as e:
-        saves(str(obj), f := f'{filename}!error.txt')
+        save_string(str(obj), f := f'{filename}!error.txt')
         raise TypeError(str(e), f)
 
 
-def saves(string, filename):
-    with ignored(os.error):
-        os.makedirs(os.path.dirname(filename))
+def _save_json(obj, filename):
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(obj, filename, ensure_ascii=False, indent=2)
+
+
+def save_string(string, filename):
+    makedirs(filename)
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(string)
 
 
-def saveyaml(obj, filename):
-    with ignored(os.error):
-        os.makedirs(os.path.dirname(filename))
+def save_yaml(obj, filename):
+    makedirs(filename)
     with open(filename, 'w', encoding='utf-8') as f:
         yaml.dump(obj, f)
 
@@ -43,50 +49,50 @@ def jsonify(obj):
 
 def savelines(obj, filename):
     obj = ',\n'.join([jsonify(elt) for elt in obj])
-    saves(f'[{obj}]', filename)
+    save_string(f'[{obj}]', filename)
 
 
-def jload(filename):
+def load_json(filename):
     if not filename:
         return {}
     try:
-        return _jload(filename)
+        return _load_json(filename)
     except TypeError:
         raise TypeError(f'{filename} is not a json file, or is malformed')
 
 
-def _jload(filename):
+def _load_json(filename):
     with open(filename, encoding='utf-8') as f:
         return json.load(f)
 
 
-def loads(filename):
+def load_string(filename):
     if not filename:
         return ''
     with open(filename, encoding='utf-8') as f:
         return f.read()
 
 
-def yload(filename):
+def load_yaml(filename):
     if not filename:
         return {}
     try:
-        return _yload(filename)
+        return _load_yaml(filename)
     except TypeError:
-        raise TypeError(f'{filename} is not a json file, or is malformed')
+        raise TypeError(f'{filename} is not a yaml file, or is malformed')
 
 
-def _yload(filename):
+def _load_yaml(filename):
     with open(filename, encoding='utf-8') as f:
-        return yaml.load(f)
+        return yaml.safe_load(f)
 
 
 def change(filename, fn, newfilename=None):
     '''Run function `fn` on entire object in filename'''
     newfilename = newfilename or filename
-    obj = jload(filename)
+    obj = load_json(filename)
     fn(obj)
-    save(obj, newfilename)
+    save_json(obj, newfilename)
 
 
 def update(filename, fn, newfilename=None):
@@ -94,15 +100,15 @@ def update(filename, fn, newfilename=None):
     Run function `fn` on each element `elt` of an object `obj` in `filename`
     '''
     newfilename = newfilename or filename
-    obj = jload(filename)
+    obj = load_json(filename)
     for elt in obj:
         fn(elt)
-    save(obj, newfilename)
+    save_json(obj, newfilename)
 
 
 def updates(filename, fn, newfilename=None):
     newfilename = newfilename or filename
-    saves(fn(loads(filename)), newfilename)
+    save_string(fn(load_string(filename)), newfilename)
 
 
 def open_source():

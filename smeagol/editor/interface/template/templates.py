@@ -27,14 +27,14 @@ class Templates:
     def _load(self, filename):
         if not filename:
             return None
-        template = fs.load(filename)
-        # try:
-        return self._open(template)
-        # except (AttributeError, KeyError, TypeError) as e:
-        #     raise e.__class__(f"Template file {filename} of wrong structure")
+        template = fs.load_yaml(filename)
+        try:
+            return self._open(template)
+        except (AttributeError, KeyError, TypeError) as e:
+            raise e.__class__(f"Template file {filename} of wrong structure")
     
     def _open(self, template):
         # tk()
         text = '\n'.join(template['text'])
-        tagger = widgets.Styles(template.get('styles', {}))
+        tagger = template.get('styles', {})
         return Template(text, tagger, self)

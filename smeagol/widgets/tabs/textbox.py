@@ -34,6 +34,7 @@ class Textbox(tk.Text):
         self.language.set(self.translator.fullname)
         self.styles = styles or Styles()
         self.add_commands()
+        self.insert('lkdasfj')
 
     def grid(self, *args, **kwargs):
         super().grid(*args, **kwargs)

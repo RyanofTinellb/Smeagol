@@ -10,14 +10,36 @@ from smeagol.widgets import styles
 
 
 class Editor(Manager):
-    def __init__(self, parent=None, filename=None):
+    def __init__(self, parent=None, filenames=None):
         super().__init__(parent)
-        if filename:
-            self.tabs.open_site(filename)
+        if filenames:
+            self.open_site(filenames)
+
+    def open_site(self, filename):
+        self.tabs.open_site(filename)
 
     @property
     def interfaces(self):
         return self.tabs.interfaces
+
+    def new_tab(self, event=None):
+        self.tabs.new()
+        return 'break'
+
+    def reopen_tab(self, event=None):
+        self.tabs.reopen()
+        return 'break'
+
+    def close_tab(self, event):
+        self.tabs.close(event)
+        return 'break'
+    
+    def change_tab(self, event):
+        self.tabs.change()
+        self.update_displays()
+        self.change_language()
+        self.set_headings(self.entry)
+        return 'break'
 
     def __getattr__(self, attr):
         match attr:
@@ -97,10 +119,6 @@ class Editor(Manager):
     def reset_entry(self, event=None):
         with utils.ignored(AttributeError):
             self.set_headings(self.entry)
-
-    def open_interface(self, interface, first_tab=False):
-        for entry in interface.entries:
-            self.open_tab(entry, first_tab)
 
     def save_site(self, filename=''):
         try:
@@ -229,7 +247,7 @@ class Editor(Manager):
             ]),
         ]
 
-    @property
+    # @property
     def textbox_commands(self):
         return [
             ('<Control-r>', self.refresh_random),
