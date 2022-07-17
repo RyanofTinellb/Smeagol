@@ -24,7 +24,7 @@ class Tabs(ttk.Notebook):
     def title(self):
         return self.current.interface.site.root.name
     
-    def open_site(self, filename=''):
+    def open_site(self, filenames=None):
         try:
             self.interface = self.interfaces[filename]
         except AttributeError:  # filename is a list

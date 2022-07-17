@@ -15,8 +15,10 @@ class Editor(Manager):
         if filenames:
             self.open_site(filenames)
 
-    def open_site(self, filename):
-        self.tabs.open_site(filename)
+    def open_site(self, event=None):
+        filename = fs.open_smeagol()
+        filenames = [filename]
+        self.tabs.open_site(filenames)
 
     @property
     def interfaces(self):
