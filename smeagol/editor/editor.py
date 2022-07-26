@@ -13,12 +13,15 @@ class Editor(Manager):
     def __init__(self, parent=None, filenames=None):
         super().__init__(parent)
         if filenames:
-            self.open_site(filenames)
+            self.open_sites(filenames)
 
-    def open_site(self, event=None):
-        filename = fs.open_smeagol()
-        filenames = [filename]
-        self.tabs.open_site(filenames)
+    def open_sites(self, filenames=None):
+        if filenames is None:
+            filenames = [fs.open_smeagol()]
+        self.tabs.open_sites(filenames)
+    
+    def open_site(self):
+        self.tabs.open_site(fs.open_smeagol())
 
     @property
     def interfaces(self):
@@ -33,10 +36,11 @@ class Editor(Manager):
         return 'break'
 
     def close_tab(self, event):
-        self.tabs.close(event)
+        tab = f'@{event.x},{event.y}'
+        self.tabs.close(tab)
         return 'break'
     
-    def change_tab(self, event):
+    def change_tab(self):
         self.tabs.change()
         self.update_displays()
         self.change_language()

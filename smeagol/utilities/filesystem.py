@@ -119,7 +119,7 @@ def open_source():
 
 
 def open_smeagol():
-    options = dict(filetypes=[('Sméagol File', '*.smg'), ('Source Data File', '*.src')],
+    options = dict(filetypes=[('Sméagol File', '*.smg')],
                    title='Open Site',
                    defaultextension='.smg')
     return fd.askopenfilename(**options)

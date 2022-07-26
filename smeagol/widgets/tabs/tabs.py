@@ -14,7 +14,7 @@ class Tabs(ttk.Notebook):
         self.interfaces = Interfaces()
         self.closed = []
         self.textbox_commands = textbox_commands
-        self.new(self.interfaces.blank)
+        self.new()
     
     @property
     def current(self):
@@ -24,41 +24,34 @@ class Tabs(ttk.Notebook):
     def title(self):
         return self.current.interface.site.root.name
     
-    def open_site(self, filenames=None):
-        try:
-            self.interface = self.interfaces[filename]
-        except AttributeError:  # filename is a list
-            self.interface = self.open_sites(filename)
+    def open_sites(self, filenames=None):
+        if not filenames:
+            self.open_blank()
+            return
+        for i, filename in enumerate(filenames):
+            self.open_site(filename, i)
 
-    def open_sites(self, filenames):
-        first_tab = True
-        for filename in filenames:
-            interface = self.interfaces[filename]
-            self.open_interface(interface, first_tab)
-            self.current.textbox.styles = interface.styles
-            first_tab = False
-        return interface
+    def open_site(self, filename, new_tab=True):
+        interface = self.interfaces[filename]
+        for i, entry in enumerate(interface.entries):
+            # only open in same tab for first entry of first filename
+            self.open_entry(interface, entry, new_tab + i)
     
-    def open_interface(self, interface, first_tab=False):
-        for entry in interface.entries:
-            self.open(entry, first_tab)
-    
-    def new(self, interface=None):
-        interface = interface or self.current.interface
-        Tab(self, interface, self.textbox_commands)
-    
-    def open(self, entry, first_tab=False):
-        if not first_tab:
+    def open_entry(self, interface, entry, new_tab):
+        if new_tab:
             self.new()
+        self.current.interface = interface
+        self.current.entry = entry
+    
+    def new(self):
+        Tab(self, self.textbox_commands)
 
-    def change(self, event=None):
+    def change(self, *_):
         self.current.textbox.set_styles()
 
-    def close(self, event):
-        print(self.index('end'), len(self.closed))
+    def close(self, tab):
         if self.index('end') - len(self.closed) <= 1:
             return
-        tab = f'@{event.x},{event.y}'
         try:
             self._close(tab)
         except tk.TclError:

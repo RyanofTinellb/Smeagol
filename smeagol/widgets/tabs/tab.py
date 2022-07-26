@@ -5,24 +5,17 @@ from .textbox import Textbox
 
 
 class Tab(tk.Frame):
-    def __init__(self, parent, interface, textbox_commands, entry=None):
+    def __init__(self, parent, commands):
         super().__init__(parent)
         self.notebook = parent
         self.notebook.add(self)
         self.notebook.select(self)
-        self.interface = interface
-        self.textbox_commands = textbox_commands
-        self.textbox = self._textbox
-        self.entry = entry or self.interface.site.root
+        self.textbox = self._textbox(commands)
 
-    @property
-    def _textbox(self):
-        styles = self.interface.styles
-        translator = self.interface.translator
-        textbox = Textbox(self, styles, translator)
+    def _textbox(self, commands):
+        textbox = Textbox(self)
         textbox.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
-        textbox.insert('frhgsrs')
-        utils.bind_all(textbox, self.textbox_commands())
+        utils.bind_all(textbox, commands())
         return textbox
     
     @property
@@ -32,9 +25,17 @@ class Tab(tk.Frame):
     @entry.setter
     def entry(self, entry):
         self._entry = entry
-        self.textbox.styles = self.interface.styles
-        self.textbox.text = self.entry_text
         self.name = self.entry.name
+    
+    @property
+    def interface(self):
+        return self._interface
+    
+    @interface.setter
+    def interface(self, interface):
+        self._interface = interface
+        self.textbox.translator = interface.translator
+        self.textbox.styles = interface.styles
     
     @property
     def entry_text(self):
@@ -56,5 +57,3 @@ class Tab(tk.Frame):
     def name(self, name):
         self._name = name
         self.notebook.tab(self, text=name)
-    
-

@@ -10,6 +10,14 @@ from smeagol.utilities import utils, filesystem as fs
     $ editor.py c:/path/to/directory
         opens every site within the directory
 '''
+def main():
+    utils.clear_screen()
+    try:
+        path = sys.argv[1]
+        filenames = get_filenames(path)
+    except IndexError:  # no command line arguments
+        filenames = []
+    Editor(filenames=filenames).mainloop()
 
 
 def get_filenames(path):
@@ -17,11 +25,5 @@ def get_filenames(path):
         return fs.findbytype(path, '.smg')
     return [path]
 
-
-utils.clear_screen()
-try:
-    path = sys.argv[1]
-    filenames = get_filenames(path)
-except IndexError:  # no command line arguments
-    filenames = []
-Editor(filenames=filenames).mainloop()
+if __name__ == '__main__':
+    main()

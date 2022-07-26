@@ -24,17 +24,32 @@ BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
 
 
 class Textbox(tk.Text):
-    def __init__(self, parent=None, styles=None, translator=None):
+    def __init__(self, parent=None):
         super().__init__(parent, height=1, width=1, wrap=tk.WORD,
                          undo=True)
         self.displays = dict(wordcount=tk.StringVar(), randomwords=tk.StringVar(),
                          style=tk.StringVar(), language=tk.StringVar())
-        self.translator = translator or conversion.Translator()
-        self.languages = self.translator.languages
-        self.language.set(self.translator.fullname)
-        self.styles = styles or Styles()
         self.add_commands()
-        self.insert('lkdasfj')
+    
+    @property
+    def translator(self):
+        return self._translator
+    
+    @translator.setter
+    def translator(self, translator):
+        self._translator = translator
+        self.languages = translator.languages
+        self.language.set(translator.fullname)
+    
+    @property
+    def styles(self):
+        with utils.ignored(AttributeError):
+            return self._styles
+    
+    @styles.setter
+    def styles(self, styles):
+        self._styles = styles
+        self.set_styles()
 
     def grid(self, *args, **kwargs):
         super().grid(*args, **kwargs)
@@ -61,9 +76,6 @@ class Textbox(tk.Text):
         match attr:
             case 'text':
                 return self._paste(borders=ALL, text=value)
-            case 'styles':
-                super().__setattr__(attr, value)
-                self.set_styles()
             case 'current_style':
                 with utils.ignored(AttributeError):
                     value = '\n'.join([v for v in value if v != 'sel'])
@@ -74,6 +86,8 @@ class Textbox(tk.Text):
         self.tag_remove(styles, tk.INSERT)
 
     def set_styles(self):
+        if self.styles is None:
+            return
         self.current_style = ''
         with utils.ignored(KeyError):
             self.set_default_style()
