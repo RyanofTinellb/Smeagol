@@ -26,6 +26,7 @@ class Tab(tk.Frame):
     def entry(self, entry):
         self._entry = entry
         self.name = self.entry.name
+        self.textbox.text = self.entry_text
     
     @property
     def interface(self):

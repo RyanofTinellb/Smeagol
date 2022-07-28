@@ -8,7 +8,7 @@ class English:
         self.name = 'English'
         self.words = set()
         for filename in filenames:
-            self.collate(fs.load(filename), self.words)
+            self.collate(fs.load_yaml(filename), self.words)
         self.words = list(self.words)
 
     def collate(self, page, words):

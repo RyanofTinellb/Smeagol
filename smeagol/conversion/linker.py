@@ -58,7 +58,7 @@ class Linker:
 class Glossary:
     def __init__(self, filename, wordlist=None, translator=None):
         self.adder = {'Glossary': filename}
-        self.glossary = fs.load(filename)
+        self.glossary = fs.load_yaml(filename)
         self.tooltip = ('<span class="tooltip">'
                         '<small-caps>{0}</small-caps>'
                         '<span class="tooltip-text">{1}</span>'
@@ -137,7 +137,7 @@ class ExternalDictionary:
         return '<{0}>{1}:{2}</{0}>'.format(tag, tr.encode(lang), link)
 
     def wordlist_setup(self):
-        wordlist = fs.load(self.wordlist_file)
+        wordlist = fs.load_yaml(self.wordlist_file)
         self.wordlist = [word['t'] for word in wordlist]
 
     def refresh(self, text=''):
@@ -204,7 +204,7 @@ class InternalDictionary:
 class ExternalGrammar:
     def __init__(self, filename, wordlist=None, translator=None):
         self.adder = {'ExternalGrammar': filename}
-        self.replacements = fs.load(filename)
+        self.replacements = fs.load_yaml(filename)
         self.url = self.replacements['url']
         self.language = None
         self.filename = filename
