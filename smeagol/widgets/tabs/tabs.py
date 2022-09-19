@@ -42,6 +42,12 @@ class Tabs(ttk.Notebook):
             self.new()
         self.current.interface = interface
         self.current.entry = entry
+
+    def save_entry(self):
+        entry = self.current.entry
+        interface = self.current.interface
+        text = self.current.text
+        interface.save_entry(entry, text)
     
     def new(self):
         Tab(self, self.textbox_commands)

@@ -65,7 +65,7 @@ class Textbox(tk.Text):
                 if language := self.language.get():
                     return language[:2]
             case 'font':
-                return self.styles['default'].Font
+                return self.styles['default'].create_font()
             case default:
                 try:
                     return self.displays[attr]

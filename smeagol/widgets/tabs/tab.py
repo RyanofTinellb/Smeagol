@@ -15,7 +15,7 @@ class Tab(tk.Frame):
     def _textbox(self, commands):
         textbox = Textbox(self)
         textbox.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
-        utils.bind_all(textbox, commands())
+        utils.bind_all(textbox, commands)
         return textbox
     
     @property

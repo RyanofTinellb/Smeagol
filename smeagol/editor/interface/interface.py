@@ -26,7 +26,7 @@ class Interface:
         match attr:
             case 'site_info':
                 return self.config.setdefault('site', {})
-            case 'tabs':
+            case '_entries':
                 return self.config.setdefault('entries', [[]])
             case default:
                 try:
@@ -46,7 +46,7 @@ class Interface:
 
     @property
     def entries(self):
-        return [self.find_entry(e) for e in self.tabs]
+        return [self.find_entry(e) for e in self._entries]
 
     def load_config(self, filename):
         try:
@@ -92,7 +92,7 @@ class Interface:
         return Site(fs.load_yaml(self.assets.source))
 
     def save_site(self):
-        fs.save(self.site.tree, self.assets.source)
+        fs.save_yaml(self.site.tree, self.assets.source)
 
     def find_entry(self, headings):
         entry = self.site.root
@@ -112,9 +112,16 @@ class Interface:
     def change_language(self, language):
         self.translator.select(language)
         self.randomwords.select(language)
+    
+    def save_entry(self, entry, text):
+        entry.text = text
+        self.save_site()
 
+    '''
     def save_page(self, text, entry):
-        ''' text is formatted'''
+        #  text is formatted
+        self.update_entry(text, entry)
+
         entry.text = self._save(text)
         self.save_config()
         self.save_site()
@@ -122,14 +129,7 @@ class Interface:
         html = self.templates.main.html
         filename = os.path.join(self.locations.directory, entry.link)
         fs.saves(html, filename)
-        fs.saves(self.templates.sections['contents'].output,
-                 'c:/users/ryan/desktop/prac page.txt')
-        # Save wholepage
-
-    def _save(self, text):
-        text = self.markdown.to_markup(text)
-        text = self.styles.show_tags(text)
-        return text
+        # Save wholepage'''
 
     def close_servers(self):
         fs.close_servers()

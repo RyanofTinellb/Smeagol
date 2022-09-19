@@ -152,3 +152,17 @@ def page_initial(name, markdown=None):
 def bind_all(obj, commands):
     for command in commands:
         obj.bind(*command)
+
+
+def reorder(lst, obj):
+    '''reorder a dictionary's key based on a given list'''
+    if isinstance(obj, list):
+        for o in obj:
+            reorder(lst, o)
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            reorder(lst, v)
+        for itm in lst:
+            with ignored(KeyError):
+                t = obj.pop(itm)
+                obj[itm] = t

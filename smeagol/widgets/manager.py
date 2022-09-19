@@ -16,7 +16,7 @@ class Manager(tk.Frame):
     def create_layout(self):
         top = self.winfo_toplevel()
         self.set_window_size(top)
-        top['menu'] = self.menu
+        top['menu'] = self.menu()
         self.textframe().pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
         self.sidebar.pack(side=tk.LEFT)
         self.pack()
@@ -28,7 +28,6 @@ class Manager(tk.Frame):
         h_pos = 0
         top.geometry(f'{w}x{h}+{w_pos}+{h_pos}')
     
-    @property
     def menu(self):
         menubar = tk.Menu(self.parent)
         for submenu in self.menu_commands:

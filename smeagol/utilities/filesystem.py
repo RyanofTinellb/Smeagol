@@ -40,7 +40,7 @@ def save_string(string, filename):
 def save_yaml(obj, filename):
     makedirs(filename)
     with open(filename, 'w', encoding='utf-8') as f:
-        yaml.dump(obj, f)
+        yaml.dump(obj, f, sort_keys=False)
 
 
 def jsonify(obj):

@@ -22,6 +22,8 @@ class Editor(Manager):
     
     def open_site(self):
         self.tabs.open_site(fs.open_smeagol())
+    
+
 
     @property
     def interfaces(self):
@@ -53,6 +55,8 @@ class Editor(Manager):
                 return self.tabs.current
             case 'textbox':
                 return self.tab.textbox
+            case 'interface':
+                return self.tab.interface
             case 'entry':
                 return self.tab.entry
             case 'status':
@@ -126,17 +130,17 @@ class Editor(Manager):
         with utils.ignored(AttributeError):
             self.set_headings(self.entry)
 
-    def save_site(self, filename=''):
-        try:
-            self.interface.save()
-        except IOError:
-            self.save_site_as()
+    # def save_site(self, filename=''):
+    #     try:
+    #         self.interface.save()
+    #     except IOError:
+    #         self.save_site_as()
 
-    def save_site_as(self, filename=''):
-        filename = filename or fs.save_smeagol()
-        if filename:
-            self.interface.filename = filename
-            self.save_site()
+    # def save_site_as(self, filename=''):
+    #     filename = filename or fs.save_smeagol()
+    #     if filename:
+    #         self.interface.filename = filename
+    #         self.save_site()
 
     def set_headings(self, entry):
         self.headings.headings = [e.name for e in entry.lineage][1:]
@@ -151,9 +155,14 @@ class Editor(Manager):
             self.reset_entry()
 
     def save_page(self, event=None):
-        self.interface.save_page(self.textbox.formatted_text, self.entry)
-        self.interface.save_site()
+        self.tabs.save_entry()
         return 'break'
+    
+    def save_site(self, event=None):
+        self.tabs.save_site()
+    
+    def save_site_as(self, event=None):
+        self.tabs.save_site_as()
 
     def refresh_random(self, event=None):
         if r := self.interface.randomwords:
@@ -253,7 +262,7 @@ class Editor(Manager):
             ]),
         ]
 
-    # @property
+    @property
     def textbox_commands(self):
         return [
             ('<Control-r>', self.refresh_random),

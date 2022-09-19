@@ -7,6 +7,7 @@ class Frame(tk.Frame):
     def __init__(self, parent, bounds):
         super().__init__(parent)
         self.min, self.max = bounds
+        self.min = min(self.min, 1)
         self._headings = []
 
     @property
