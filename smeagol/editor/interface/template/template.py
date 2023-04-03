@@ -4,10 +4,14 @@ from smeagol.conversion.api import Tagger
 
 
 class Template(Tagger):
-    def __init__(self, text, tags, templates):
-        super().__init__(tags)
-        self.text = text
+    def __init__(self, filename, templates):
+        template = templates.load(filename)
+        self.text = template.get('text', [])
+        tagger = template.get('styles', [])
+        super().__init__(tagger)
+
         self.templates = templates
+        self.filename = filename
         self.starting = self.ending = False
         self.pipe = ''
         self.blocks = []
@@ -15,7 +19,7 @@ class Template(Tagger):
 
     @property
     def separator(self):
-        return self.blocks[-1]
+        return self.blocks[-1] if self.blocks else ''
 
     def replace_tags(self, text):
         return ''.join([self._replace(line, index) for index, line in enumerate(text)])
@@ -58,14 +62,13 @@ class Template(Tagger):
         self.blocks = values.get('blocks', [])
         self.pipe = values.get('pipe', '')
 
-
     def _tag(self, tag):
-        fn=self._tagoff if tag.startswith('/') else self._tagon
+        fn = self._tagoff if tag.startswith('/') else self._tagon
         return fn(self.tags[tag.removeprefix('/')])
 
     def _tagon(self, tag):
         if tag.template:
-            self.replace=True
+            self.replace = True
             return ''
         elif self.starting and not tag.block:
             return self._separator_start(tag.start)
@@ -73,25 +76,25 @@ class Template(Tagger):
             self.blocks.append(tag.separator)
         return f'{tag.start}'
 
-    def _separator_start(self, text = ''):
-        self.starting=False
-        separator=f'<{self.separator}>' if self.separator else ''
+    def _separator_start(self, text=''):
+        self.starting = False
+        separator = f'<{self.separator}>' if self.separator else ''
         return f'{separator}{text}'
 
     def _tagoff(self, tag):
         if tag.template:
-            self.replace=False
+            self.replace = False
         if self.ending and tag.block:
             return self._separator_end(tag.end)
         if tag.block:
             self.blocks.pop()
         return f'{tag.end}'
 
-    def _separator_end(self, text = '\n'):
-        self.ending=False
-        separator=f'</{self.separator}>' if self.separator else ''
+    def _separator_end(self, text='\n'):
+        self.ending = False
+        separator = f'</{self.separator}>' if self.separator else ''
         return f'{separator}{text}'
 
-    def html(self, current = None):
+    def html(self, current=None):
         self.current = current
         return self.replace_tags(self.text)

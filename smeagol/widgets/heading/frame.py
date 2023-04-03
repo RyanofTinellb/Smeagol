@@ -16,6 +16,7 @@ class Frame(tk.Frame):
 
     @headings.setter
     def headings(self, entries):
+        self.add_heading()
         entries = [x for x in zip_longest(entries, self._headings)]
         for entry, heading in entries:
             if heading is None:

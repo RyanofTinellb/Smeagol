@@ -32,7 +32,7 @@ class SearchTemplateFileNotFound(SiteFileError):
     '''Raised when Site cannot find .html file'''
 
 
-class Search404TemplateFileNotFound(SiteFileError):
+class Page404TemplateFileNotFound(SiteFileError):
     '''Raised when Site cannot find .html file'''
 
 

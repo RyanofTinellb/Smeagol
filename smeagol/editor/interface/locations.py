@@ -10,6 +10,6 @@ class Locations(SubsetDict):
         return (
             'directory',
             'search',
-            'search404',
+            'page404',
             'wholepage'
         )

@@ -1,12 +1,12 @@
 import tkinter as tk
 from tkinter import simpledialog as sd
 
-from ..utilities import errors
-from ..utilities import filesystem as fs
-from ..utilities import utils
-from ..widgets.manager import Manager
-from ..widgets import window
+from smeagol.utilities import errors
+from smeagol.utilities import filesystem as fs
+from smeagol.utilities import utils
 from smeagol.widgets import styles
+from smeagol.widgets.manager import Manager
+from smeagol.widgets.window import api as window
 
 
 class Editor(Manager):
@@ -214,13 +214,9 @@ class Editor(Manager):
     def template_edit(self, event=None):
         top = tk.Toplevel(self)
         templates = self.interface.templates
-        window.Templates(top, self.interface.templates).grid()
+        window.Templates(top, templates).grid()
         self.wait_window(top)
-        for template in templates.values():
-            if template.edited:
-                template.edited = False
-                self.new_tab(interface=template)
-
+        
     def edit_styles(self, event=None):
         top = tk.Toplevel()
         window = styles.Window(top, self.interface.styles)

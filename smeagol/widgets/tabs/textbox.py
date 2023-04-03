@@ -338,6 +338,7 @@ class Textbox(tk.Text):
                 try:
                     styles.remove(value)
                 except ValueError:
+                    print(f"Unable to find closing tag for <{styles.pop()}>")
                     return True
 
     def delete_line(self, event=None):

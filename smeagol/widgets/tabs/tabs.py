@@ -33,7 +33,7 @@ class Tabs(ttk.Notebook):
 
     def open_site(self, filename, new_tab=True):
         interface = self.interfaces[filename]
-        for i, entry in enumerate(interface.entries):
+        for i, entry in enumerate(interface.entries()):
             # only open in same tab for first entry of first filename
             self.open_entry(interface, entry, new_tab + i)
     

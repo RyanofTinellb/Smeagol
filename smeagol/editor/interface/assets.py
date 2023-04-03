@@ -1,4 +1,4 @@
-from ...utilities.api import SubsetDict
+from smeagol.utilities.api import SubsetDict
 
 class Assets(SubsetDict):
     def __init__(self, assets=None):

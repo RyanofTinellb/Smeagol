@@ -1,16 +1,15 @@
-from ...errors import MarkdownFileNotFound
-from ...conversion.markdown import Markdown
+from smeagol.utilities.errors import MarkdownFileNotFound
 import tkinter as tk
 import tkinter.messagebox as mb
 import tkinter.filedialog as fd
 from tkinter.font import Font
 
 
-class MarkdownWindow(tk.Frame):
+class Markdown(tk.Frame):
     def __init__(self, parent=None, markdown=None):
         super().__init__(parent)
         self.parent.title('Editing Markdown')
-        markdown = markdown or Markdown()
+        markdown = markdown
         self.original = markdown
         self.markdown = markdown.copy()
         self.font = Font(family="Calibri", size=14)

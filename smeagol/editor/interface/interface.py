@@ -9,15 +9,15 @@ from ...utilities import errors
 from ...widgets.styles.styles import Styles
 from .assets import Assets
 from .locations import Locations
-from .template import templates
-
+from .templates import Templates
 
 class Interface:
-    def __init__(self, filename='', server=True):
+    def __init__(self, filename='', server=True, template_store=None):
         self.filename = filename
         config = self.load_config(filename) if filename else {}
         self.setup(config)
         self.site = self.open_site()
+        self.template_store = template_store or {}
         if server:
             self.port = fs.start_server(
                 port=41809, directory=self.locations.directory)
@@ -44,7 +44,6 @@ class Interface:
                     self.config['styles'] = dict(value.items())
         super().__setattr__(attr, value)
 
-    @property
     def entries(self):
         return [self.find_entry(e) for e in self._entries]
 
@@ -76,6 +75,7 @@ class Interface:
         self.config = config
         self.assets = Assets(config.get('assets', {}))
         self.locations = Locations(config.get('locations', {}))
+        self.templates = Templates(config.get('templates', {}))
         self.styles = self.open_styles(config.get('styles', ''))
         self.language = config.get('language', '')
         self.translator = conversion.Translator(self.language)
@@ -83,7 +83,6 @@ class Interface:
         self.linker = conversion.Linker(config.get('links', {}))
         samples = self.assets.samples
         self.randomwords = utilities.RandomWords(self.language, samples)
-        self.templates = templates.Templates(config.get('templates', {}))
 
     def open_styles(self, styles):
         return Styles(fs.load_yaml(styles))
@@ -113,9 +112,9 @@ class Interface:
         self.translator.select(language)
         self.randomwords.select(language)
     
-    def save_entry(self, entry, text):
-        entry.text = text
-        self.save_site()
+    # def save_entry(self, entry, text):
+    #     entry.text = text
+    #     self.save_site()
 
     '''
     def save_page(self, text, entry):
@@ -130,6 +129,12 @@ class Interface:
         filename = os.path.join(self.locations.directory, entry.link)
         fs.saves(html, filename)
         # Save wholepage'''
+    
+    def save_entry(self, entry):
+        self.templates.set_data(entry, self.styles)
+        html = self.templates.main.html()
+        filename = os.path.join(self.locations.directory, entry.link)
+        fs.save_string(html, filename)
 
     def close_servers(self):
         fs.close_servers()

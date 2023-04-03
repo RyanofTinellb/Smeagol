@@ -40,7 +40,7 @@ def save_string(string, filename):
 def save_yaml(obj, filename):
     makedirs(filename)
     with open(filename, 'w', encoding='utf-8') as f:
-        yaml.dump(obj, f, sort_keys=False)
+        yaml.dump(obj, f, sort_keys=False, allow_unicode=True)
 
 
 def jsonify(obj):
@@ -76,10 +76,7 @@ def load_string(filename):
 def load_yaml(filename):
     if not filename:
         return {}
-    try:
-        return _load_yaml(filename)
-    except TypeError:
-        raise TypeError(f'{filename} is not a yaml file, or is malformed')
+    return _load_yaml(filename)
 
 
 def _load_yaml(filename):
@@ -174,6 +171,7 @@ def start_server(port, directory=None, page404=''):
             servers.append(server)
             Handler.error_message_format = page404
             Thread(target=server.serve_forever).start()
+            print(f'Serving {directory} on port {port}')
             return port
         except socket.error:
             port += 1

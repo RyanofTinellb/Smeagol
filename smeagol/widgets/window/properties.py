@@ -1,10 +1,10 @@
 import json
 import tkinter as tk
 import tkinter.filedialog as fd
-from smeagol import utils
-from smeagol.defaults import default
+from smeagol.utilities import utils
+from smeagol.utilities.defaults import default
 
-class PropertiesWindow(tk.Toplevel):
+class Properties(tk.Toplevel):
     def __init__(self, properties, parent=None):
         super().__init__(parent)
         self.properties = properties
