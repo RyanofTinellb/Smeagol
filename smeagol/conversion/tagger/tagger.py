@@ -20,7 +20,8 @@ class Tagger:
 
     '''Show Tags: transform a Tkinter dump into a list of strings'''
 
-    def show_tags(self, text):
+    def show_tags(self, text: list[tuple]) -> list[str]:
+        print(text)
         self.open_tags = []
         self.to_open = []
         return self._show(text).splitlines()
