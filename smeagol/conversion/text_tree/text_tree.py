@@ -1,16 +1,20 @@
-class TextDump:
+from smeagol.conversion.text_tree.node import Node
+
+class TextTree:
     'To replace "Tagger.show_tags()"'
     def __init__(self, text: list[tuple]):
         self._state:str = None
-        self.open_tags:list[list[list]] = []
+        self.current_node = Node()
+        self.open_tags:list[list[Node]] = []
         self.new_opening_tags()
         self.closing_tags = []
-        self.contents = self._contents(text)
+        for elt in text:
+            self._retag(*elt)
         if self._state == 'tagoff':
             self.rationalise()
     
-    def _contents(self, text):
-        return [self._retag(*elt) for elt in text]
+    def __str__(self):
+        return ''.join([str(elt) for elt in self.current_node])
         
     def new_opening_tags(self):
         self.opening_tags: list = []
@@ -20,26 +24,26 @@ class TextDump:
         self.update_state(key)
         match key:
             case 'tagon':
-                return self._tagon(value)
+                self._tagon(value)
             case 'text':
-                return self._text(value)
+                self._text(value)
             case 'tagoff':
-                return self._tagoff(value)
-            case other:
-                return [other, value] 
+                self._tagoff(value)
+            case _:
+                pass
 
     def _tagon(self, name: str) -> None:
-        tag = ['tagon', name]
+        tag = Node(self.current_node, name)
+        self.current_node += tag
+        self.current_node = tag
         self.opening_tags.append(tag)
-        return tag
 
     def _tagoff(self, name: str) -> None:
-        tag = ['tagoff', name]
-        self.closing_tags.append(tag)
-        return tag
+        self.closing_tags.append(name)
+        self.current_node = self.current_node.parent
 
     def _text(self, text: str) -> None:
-        return ['text', text]
+        self.current_node += text
     
     def update_state(self, new_state: str) -> None:
         if new_state not in ['tagon', 'tagoff', 'text']:
@@ -54,26 +58,13 @@ class TextDump:
     
     def rationalise(self):
         while True:
-            print(self.open_tags)
-            print(self.opening_tags)
-            print(self.closing_tags)
-            print()
             try:
                 tag = self.closing_tags.pop(0)
             except IndexError:
                 break
-            self.rename(self.opening_tags[-1], tag, self.choose_precedence())
-            self.remove_last_opener()
-    
-    def choose_precedence(self):
-        return len(self.opening_tags) > (len(self.closing_tags) + 1)
-    
-    def rename(self, opener, closer, precedence):
-        if precedence:
-            closer[1] = opener[1]
-            return
-        opener[1] = closer[1]
-        return
+            if len(self.opening_tags) >= (len(self.closing_tags) + 1):
+                self.opening_tags[-1].name = tag
+                self.remove_last_opener()
     
     def remove_last_opener(self):
         try:
