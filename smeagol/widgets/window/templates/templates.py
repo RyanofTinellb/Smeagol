@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import simpledialog as sd
-from .row import Row
+
 from .buttons import Buttons
+from .row import Row
+
 
 class Templates(tk.Frame):
     '''Templates Window'''

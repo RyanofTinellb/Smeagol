@@ -1,5 +1,6 @@
 import random
 
+
 class HighLulani:
     def __init__(self):
         self.name = 'High Lulani'

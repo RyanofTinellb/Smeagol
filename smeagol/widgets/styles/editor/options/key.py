@@ -1,6 +1,7 @@
 import re
 import tkinter as tk
 
+
 class Key(tk.Frame):
     def __init__(self, parent, style):
         super().__init__(parent)

@@ -1,5 +1,5 @@
-from ..utilities.errors import MarkdownFileNotFound
 from ..utilities import utils
+from ..utilities.errors import MarkdownFileNotFound
 
 
 class Markdown:

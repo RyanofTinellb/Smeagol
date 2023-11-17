@@ -1,6 +1,7 @@
+from .demoticlulani import DemoticLulani
 from .english import English
 from .highlulani import HighLulani
-from .demoticlulani import DemoticLulani
+
 
 class Words:
     def __init__(self, language='', samples=''):

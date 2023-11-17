@@ -1,5 +1,6 @@
 import re
 from itertools import cycle
+
 from smeagol.conversion.api import Tagger
 
 

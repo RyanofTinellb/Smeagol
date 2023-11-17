@@ -1,6 +1,8 @@
 import sys
+
 from smeagol.editor.api import Editor
-from smeagol.utilities import utils, filesystem as fs
+from smeagol.utilities import filesystem as fs
+from smeagol.utilities import utils
 
 '''
     $ editor.py

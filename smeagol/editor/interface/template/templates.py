@@ -1,6 +1,8 @@
 import tkinter as tk
-from smeagol.utilities import filesystem as fs
+
 from smeagol.conversion import api as conversion
+from smeagol.utilities import filesystem as fs
+
 from .template import Template
 
 

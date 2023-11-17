@@ -3,8 +3,9 @@ import tkinter.messagebox as mb
 import tkinter.simpledialog as sd
 import tkinter.ttk as ttk
 
+from .editor import DefaultEditor, FullEditor
 from .interface import Interface
-from .editor import FullEditor, DefaultEditor
+
 
 class Window(tk.Frame):
     def __init__(self, parent=None, styles=None):

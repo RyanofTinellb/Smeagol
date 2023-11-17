@@ -1,10 +1,12 @@
 import functools
+from itertools import cycle
 import os
 import re
 import tkinter as tk
 from contextlib import contextmanager
 from datetime import datetime as dt
 from threading import Thread
+from typing import Any
 
 
 @contextmanager
@@ -21,8 +23,9 @@ def timeit(function):
         oldtime = dt.now()
         value = function(*args, **kwargs)
         newtime = dt.now()
-        print(('Done: ' + str(newtime - oldtime)))
+        print(("Done: " + str(newtime - oldtime)))
         return value
+
     return wrapper
 
 
@@ -32,13 +35,20 @@ def asynca(function):
         thread = Thread(target=function, args=args, kwargs=kwargs)
         thread.start()
         return thread
+
     return async_function
 
 
 def compose(*functions):
     def compose2(f, g):
         return lambda x: f(g(x))
+
     return functools.reduce(compose2, functions, lambda x: x)
+
+
+def apply_functions_alternately(functions: list, obj: Any):
+    for f, x in zip(cycle(functions), obj):
+        f(x)
 
 
 def setnonzero(obj, attr, value):
@@ -61,7 +71,7 @@ def display_attrs(obj):
 
 
 def clear_screen():
-    os.system('cls')
+    os.system("cls")
 
 
 def increment(lst, by):
@@ -70,7 +80,7 @@ def increment(lst, by):
 
 
 def stringify(obj, indent=0):
-    output = ''
+    output = ""
     if isinstance(obj, dict):
         for k, v in obj.items():
             output += f'{indent * "-"}{k} - {stringify(v, indent+2)}'
@@ -83,7 +93,7 @@ def stringify(obj, indent=0):
 
 
 def buyCaps(word):
-    return re.sub(r'[$](.)', _buy, word).replace('.', '&nbsp;')
+    return re.sub(r"[$](.)", _buy, word).replace(".", "&nbsp;")
 
 
 def _buy(regex):
@@ -91,13 +101,13 @@ def _buy(regex):
 
 
 def sellCaps(word):
-    return re.sub(r'(.)', _sell, word.replace(' ', '.'))
+    return re.sub(r"(.)", _sell, word.replace(" ", "."))
 
 
 def _sell(regex):
     letter = regex.group(1)
     if letter != letter.lower():
-        return '$' + letter.lower()
+        return "$" + letter.lower()
     else:
         return letter
 
@@ -123,11 +133,11 @@ def Tk_compare(tb, first, op, second):
 
 
 def remove_text(item, text):
-    return change_text(item, '', text)
+    return change_text(item, "", text)
 
 
 def un_url(text, markdown=None):
-    text = text.replace(' ', '.')
+    text = text.replace(" ", ".")
     if markdown:
         text = markdown.to_markup(text)
     return sellCaps(text)
@@ -136,17 +146,17 @@ def un_url(text, markdown=None):
 def urlform(text):
     name = text.lower()
     # remove tags, text within tags, and spaces
-    name = re.sub(r'(<(div|ipa).*?\2>)|<.*?>| ', '', name)
+    name = re.sub(r"(<(div|ipa).*?\2>)|<.*?>| ", "", name)
     return name
 
 
 def page_initial(name, markdown=None):
-    '''Returns the first letter of a word, i.e.: the folder of the Dictionary
-        in which that word would appear
-        @error: IndexError if the text only contains punctuation'''
+    """Returns the first letter of a word, i.e.: the folder of the Dictionary
+    in which that word would appear
+    @error: IndexError if the text only contains punctuation"""
     if markdown:
         name = markdown.to_markdown(name)
-    return re.findall(r'\w', name)[0]
+    return re.findall(r"\w", name)[0]
 
 
 def bind_all(obj, commands):
@@ -155,7 +165,7 @@ def bind_all(obj, commands):
 
 
 def reorder(lst, obj):
-    '''reorder a dictionary's key based on a given list'''
+    """reorder a dictionary's key based on a given list"""
     if isinstance(obj, list):
         for o in obj:
             reorder(lst, o)

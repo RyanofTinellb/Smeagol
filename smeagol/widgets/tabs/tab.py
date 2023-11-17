@@ -1,6 +1,7 @@
 import tkinter as tk
 
 from smeagol.utilities import utils
+
 from .textbox import Textbox
 
 

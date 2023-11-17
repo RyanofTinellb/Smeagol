@@ -1,5 +1,6 @@
 from tkinter import ttk
 
+
 class Units(ttk.LabelFrame):
     def __init__(self, parent, style):
         super().__init__(parent, text='units')

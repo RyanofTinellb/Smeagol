@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 
+from smeagol.editor.interface.interfaces import Interfaces
 from smeagol.utilities import utils
 from smeagol.widgets.tabs.tab import Tab
-from smeagol.editor.interface.interfaces import Interfaces
 
 
 class Tabs(ttk.Notebook):

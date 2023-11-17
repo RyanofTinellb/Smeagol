@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+
 from smeagol.conversion import api as conversion
 from smeagol.utilities import utils
 from smeagol.widgets.api import HeadingFrame, Tabs

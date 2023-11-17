@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from . import options, sample, font, paragraph
+from . import font, options, paragraph, sample
 from .colour import Colour as ColourFrame
 
 

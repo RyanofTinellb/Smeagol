@@ -1,6 +1,7 @@
 import tkinter as tk
-from .leftovers import Leftovers
+
 from .direction import Direction
+from .leftovers import Leftovers
 from .units import Units
 
 

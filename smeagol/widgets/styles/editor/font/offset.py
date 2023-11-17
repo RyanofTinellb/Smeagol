@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
+
 class Offset(ttk.LabelFrame):
     def __init__(self, parent, style):
         super().__init__(parent, text='offset')

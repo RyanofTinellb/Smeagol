@@ -1,9 +1,10 @@
 import re
 import tkinter as tk
 from tkinter.font import Font
+
 from ...conversion.tagger.tag import Tag
-from ...utilities.defaults import default
 from ...utilities import errors
+from ...utilities.defaults import default
 
 '''
 properties:

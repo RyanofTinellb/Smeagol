@@ -1,8 +1,10 @@
 import json
 import tkinter as tk
 import tkinter.filedialog as fd
+
 from smeagol.utilities import utils
 from smeagol.utilities.defaults import default
+
 
 class Properties(tk.Toplevel):
     def __init__(self, properties, parent=None):

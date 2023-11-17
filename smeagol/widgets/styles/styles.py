@@ -1,8 +1,8 @@
 import json
 
+from ...conversion import api as conversion
 from ...utilities import utils
 from .style import Style
-from ...conversion import api as conversion
 
 
 class Styles(conversion.Tagger):

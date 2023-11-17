@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter import simpledialog as sd
 
+
 def title(string):
     if string:
         return string.title()

@@ -3,13 +3,14 @@ import os
 from ...conversion import api as conversion
 from ...site.site import Site
 from ...utilities import api as utilities
+from ...utilities import errors
 from ...utilities import filesystem as fs
 from ...utilities import utils
-from ...utilities import errors
 from ...widgets.styles.styles import Styles
 from .assets import Assets
 from .locations import Locations
 from .templates import Templates
+
 
 class Interface:
     def __init__(self, filename='', server=True, template_store=None):

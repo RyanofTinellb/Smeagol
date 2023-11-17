@@ -1,7 +1,10 @@
 import re
 from itertools import chain
+
+from ..utilities import filesystem as fs
+from ..utilities import utils
 from .translator import Translator
-from ..utilities import filesystem as fs, utils
+
 
 class Linker:
     def __init__(self, link_adders=None, wordlist=None, translator=None):

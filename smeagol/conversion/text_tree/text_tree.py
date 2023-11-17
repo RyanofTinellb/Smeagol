@@ -1,76 +1,57 @@
-from smeagol.conversion.text_tree.node import Node
+import re
 
-class TextTree:
-    'To replace "Tagger.show_tags()"'
-    def __init__(self, text: list[tuple]):
-        self._state:str = None
-        self.current_node = Node()
-        self.open_tags:list[list[Node]] = []
-        self.new_opening_tags()
-        self.closing_tags = []
+from smeagol.conversion.text_tree.tags import Tags
+from smeagol.utilities import utils
+
+
+class TextTree(Tags):
+    def __init__(self, text):
+        super().__init__()
+        try:
+            self.process_strings(text)
+        except TypeError:
+            self.process_tuples(text)
+        if self.state == 'tagoff':
+            self.rationalise()
+
+    def __str__(self):
+        return str(self.root)
+    
+    def pprint(self):
+        self.root.pprint()
+    
+    def process_tuples(self, text: list[tuple]):
+        self.retag_tuples(text)
+
+    def retag_tuples(self, text):
         for elt in text:
             self._retag(*elt)
-        if self._state == 'tagoff':
-            self.rationalise()
-    
-    def __str__(self):
-        return ''.join([str(elt) for elt in self.current_node])
-        
-    def new_opening_tags(self):
-        self.opening_tags: list = []
-        self.open_tags.append(self.opening_tags)
+
+    def process_strings(self, text: list[str]):
+        for line in text:
+            self._retag_line(line)
+
+    def _retag_line(self, line):
+        line = re.split("[<>]", line)
+        utils.apply_functions_alternately([self._text, self._tag], line)
+
+    def _text(self, text):
+        self._retag("text", text)
+
+    def _tag(self, tag):
+        status = "off" if tag.startswith("/") else "on"
+        self._retag(f"tag{status}", tag.removeprefix("/"))
 
     def _retag(self, key: str, value: str, _=None) -> None:
+        if not value:
+            return
         self.update_state(key)
         match key:
-            case 'tagon':
-                self._tagon(value)
-            case 'text':
-                self._text(value)
-            case 'tagoff':
-                self._tagoff(value)
+            case "tagon":
+                self.tagon(value)
+            case "text":
+                self.text(value)
+            case "tagoff":
+                self.tagoff(value)
             case _:
                 pass
-
-    def _tagon(self, name: str) -> None:
-        tag = Node(self.current_node, name)
-        self.current_node += tag
-        self.current_node = tag
-        self.opening_tags.append(tag)
-
-    def _tagoff(self, name: str) -> None:
-        self.closing_tags.append(name)
-        self.current_node = self.current_node.parent
-
-    def _text(self, text: str) -> None:
-        self.current_node += text
-    
-    def update_state(self, new_state: str) -> None:
-        if new_state not in ['tagon', 'tagoff', 'text']:
-            return
-        if new_state == self._state:
-            return
-        if self._state == 'tagoff':
-            self.rationalise()
-        if new_state == 'tagon':
-            self.new_opening_tags()
-        self._state = new_state
-    
-    def rationalise(self):
-        while True:
-            try:
-                tag = self.closing_tags.pop(0)
-            except IndexError:
-                break
-            if len(self.opening_tags) >= (len(self.closing_tags) + 1):
-                self.opening_tags[-1].name = tag
-                self.remove_last_opener()
-    
-    def remove_last_opener(self):
-        try:
-            self.opening_tags.pop()
-        except IndexError:
-            self.open_tags.pop()
-            self.opening_tags = self.open_tags[-1]
-
-

@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
+
 from .justify import Justify
 from .spinner import Spinner
+
 
 class Leftovers(tk.Frame):
     def __init__(self, parent, style):

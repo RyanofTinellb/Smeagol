@@ -1,4 +1,4 @@
-from ...utilities import utils, errors
+from ...utilities import errors, utils
 
 '''
 properties:

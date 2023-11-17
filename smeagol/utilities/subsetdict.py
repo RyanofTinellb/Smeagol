@@ -1,5 +1,5 @@
-from smeagol.utilities import errors
-from smeagol.utilities import utils
+from smeagol.utilities import errors, utils
+
 
 class SubsetDict:
     def __init__(self, values=None):

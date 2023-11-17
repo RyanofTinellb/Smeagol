@@ -21,7 +21,6 @@ class Tagger:
     '''Show Tags: transform a Tkinter dump into a list of strings'''
 
     def show_tags(self, text: list[tuple]) -> list[str]:
-        print(text)
         self.open_tags = []
         self.to_open = []
         return self._show(text).splitlines()
@@ -80,4 +79,4 @@ class Tagger:
 
     def _tag(self, tag):
         status = 'off' if tag.startswith('/') else 'on'
-        return (f'tag{status}', tag.replace('/', ''))
+        return (f'tag{status}', tag.removeprefix('/'))

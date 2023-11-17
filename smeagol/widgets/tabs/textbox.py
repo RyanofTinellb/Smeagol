@@ -1,8 +1,9 @@
-import re
 import json
+import re
 import tkinter as tk
-from smeagol.utilities import utils
+
 from smeagol.conversion import api as conversion
+from smeagol.utilities import utils
 from smeagol.widgets.api import Styles
 
 START = '1.0'

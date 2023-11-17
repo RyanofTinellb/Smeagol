@@ -1,6 +1,8 @@
 import random
+
 from ...conversion import api as conversion
 from .highlulani import HighLulani
+
 
 class DemoticLulani:
     def __init__(self):

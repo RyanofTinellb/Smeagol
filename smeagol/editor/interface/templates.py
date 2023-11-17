@@ -1,5 +1,6 @@
 from smeagol.utilities.api import SubsetDict
 
+
 class Templates(SubsetDict):
     def __init__(self, templates=None):
         super().__init__(templates)

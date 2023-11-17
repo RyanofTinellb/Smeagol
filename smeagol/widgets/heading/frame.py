@@ -1,6 +1,7 @@
-from .heading import Heading
-from itertools import zip_longest
 import tkinter as tk
+from itertools import zip_longest
+
+from .heading import Heading
 
 
 class Frame(tk.Frame):

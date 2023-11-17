@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 
-from .key import Key
 from .block import Block
+from .key import Key
 from .tags import Tags
 
 

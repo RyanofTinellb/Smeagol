@@ -1,8 +1,9 @@
-from smeagol.utilities.errors import MarkdownFileNotFound
 import tkinter as tk
-import tkinter.messagebox as mb
 import tkinter.filedialog as fd
+import tkinter.messagebox as mb
 from tkinter.font import Font
+
+from smeagol.utilities.errors import MarkdownFileNotFound
 
 
 class Markdown(tk.Frame):
