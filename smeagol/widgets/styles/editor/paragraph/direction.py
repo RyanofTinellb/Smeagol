@@ -9,7 +9,7 @@ class Direction(ttk.LabelFrame):
         self.style = style
         for var, row, column in self.spinners:
             Spinner(self, style, var).grid(row=row, column=column)
-    
+
     @property
     def options(self):
         return dict(

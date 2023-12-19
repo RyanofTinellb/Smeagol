@@ -14,7 +14,7 @@ class Entry(Node):
 
     def __hash__(self):
         return hash(tuple(self.location))
-    
+
     def __getattr__(self, attr):
         match attr:
             case 'name' | 'script' | 'id':
@@ -34,22 +34,22 @@ class Entry(Node):
                 self._conditional_set(attr, value)
             case default:
                 super().__setattr__(attr, value)
-    
+
     def _conditional_set(self, attr, value):
         if not value:
             return self.find.pop(attr, None)
         self.find[attr] = value
-    
+
     @property
     def text(self):
         return self.find.get('text', [])
-    
+
     @text.setter
     def text(self, value):
         with utils.ignored(AttributeError):
             value = [line for line in value.splitlines() if line]
         self.find['text'] = value
-    
+
     @property
     def date(self):
         try:
@@ -57,7 +57,7 @@ class Entry(Node):
             return dt.strptime(date, '%Y-%m-%d')
         except (ValueError, KeyError):
             return dt.now()
-    
+
     @date.setter
     def date(self, value):
         try:
@@ -67,10 +67,10 @@ class Entry(Node):
 
     def remove_script(self):
         self.find.pop('script', None)
-    
+
     def replace(self, old, new):
         self.text = '\n'.join(self.text).replace(old, new)
-    
+
     def regex_replace(self, pattern, repl):
         self.text = re.sub(pattern, repl, '\n'.join(self.text))
 
@@ -86,7 +86,7 @@ class Entry(Node):
         if self.location is None:
             return 'index'
         return utils.urlform(self.name)
-    
+
     @property
     def analysis(self):
         wordlist = {}
@@ -144,7 +144,7 @@ class Entry(Node):
             return self.name == other.name
         except AttributeError:
             return self == self.new(other.location)
-        
+
     @property
     def list(self):
         if self.is_root:
@@ -199,14 +199,14 @@ class Entry(Node):
     @property
     def title(self):
         return utils.remove_text(r'[\[<].*?[\]>]', [utils.buyCaps(self.name)])[0]
-    
+
     def heading(self, name, level=1):
         return f'<h{level}>{name}</h{level}>'
 
     @property
     def title_heading(self):
         return self.heading(utils.buyCaps(self.name))
-    
+
     @property
     def wholepage_heading(self):
         return self.heading(utils.buyCaps(self.name), self.level)
@@ -233,12 +233,12 @@ class Entry(Node):
         else:
             titles = [self.title, self.matriarch.title, story_name]
         return ' &lt; '.join(titles)
-        
+
     @property
     def main_contents(self):
         text = '\n'.join(self.text)
         return f'<div class="main-contents">{text}</div>'
-    
+
     @property
     def wholepage_contents(self):
         return f'<div class="main-contents">{self.text}</div>'

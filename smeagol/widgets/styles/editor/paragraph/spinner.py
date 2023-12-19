@@ -7,14 +7,14 @@ class Spinner(ttk.Spinbox):
         self.unit = self.style.unit
         self.var = var
         super().__init__(parent, **self.options)
-    
+
     def settle(self):
         self.config(**self.options)
 
     @property
     def decimals(self):
         return self.unit.get()[0] in 'ci'
-    
+
     @property
     def rounding(self):
         return float if self.decimals else int

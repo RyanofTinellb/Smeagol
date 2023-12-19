@@ -25,7 +25,7 @@ class Templates(tk.Frame):
         buttons.grid(row=row+1, column=0, sticky=tk.E)
         self.frames[0].entry.focus_set()
         self.return_value = None
-    
+
     def create_rows(self, items, row=0, optional=False):
         for name, item in items:
             if isinstance(item, str):
@@ -37,16 +37,16 @@ class Templates(tk.Frame):
     def append(self, name, filename, row, optional=False):
         self.frames.append(self._new(name, filename, row, optional))
         return row + 1
-    
+
     def _new(self, name, filename, row, optional=True):
         return Row(self.main_frame, name, filename, optional, self, row=row)
-    
+
     @property
     def _main_frame(self):
         frame = tk.Frame(self)
         frame.parent = frame.master
         return frame
-    
+
     @property
     def parent(self):
         return self.master
@@ -63,7 +63,7 @@ class Templates(tk.Frame):
         self.templates.update(self.copy)
         self.parent.destroy()
         return 'break'
-    
+
     def get(self):
         return self.templates
 
@@ -83,6 +83,6 @@ class Templates(tk.Frame):
 
     def add(self, event=None):
         self.append().open()
-    
+
     def remove(self, frame):
         self.frames.remove(frame)

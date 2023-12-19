@@ -8,14 +8,14 @@ class Offset(ttk.LabelFrame):
         self.style = style
         for row, attr in enumerate(self.attrs):
             self.radio(attr).grid(row=row, column=0, sticky='w')
-    
+
     @property
     def attrs(self):
         return 'superscript', 'baseline', 'subscript'
-    
+
     def radio(self, attr):
         return tk.Radiobutton(self, **self.radio_options(attr))
-    
+
     def radio_options(self, attr):
         return dict(
             text=attr,

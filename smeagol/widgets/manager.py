@@ -8,12 +8,14 @@ from smeagol.widgets.api import HeadingFrame, Tabs
 
 class Manager(tk.Frame):
     '''Manages widgets for Editor'''
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.tabs = None
         self.parent = self.master
         self.create_layout()
         self.parent.protocol('WM_DELETE_WINDOW', self.quit)
-    
+
     def create_layout(self):
         top = self.winfo_toplevel()
         self.set_window_size(top)
@@ -21,14 +23,14 @@ class Manager(tk.Frame):
         self.textframe().pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
         self.sidebar.pack(side=tk.LEFT)
         self.pack()
-    
+
     def set_window_size(self, top):
         top.state('normal')
         w = w_pos = int(top.winfo_screenwidth() / 2)
         h = top.winfo_screenheight() - 50
         h_pos = 0
         top.geometry(f'{w}x{h}+{w_pos}+{h_pos}')
-    
+
     def menu(self):
         menubar = tk.Menu(self.parent)
         for submenu in self.menu_commands:
@@ -48,11 +50,11 @@ class Manager(tk.Frame):
             submenu.add_command(label=label, command=command,
                                 underline=underline)
             submenu.bind(f'<KeyPress-{keypress}>', command)
-    
+
     # @property
     def textframe(self):
         frame = tk.Frame(self.parent)
-        options = dict(side=tk.TOP, expand=True, fill=tk.BOTH)
+        options = {"side": tk.TOP, "expand": True, "fill": tk.BOTH}
         self.tabs = Tabs(frame, self.textbox_commands)
         self.tabs.pack(**options)
         return frame
@@ -71,12 +73,12 @@ class Manager(tk.Frame):
             display.grid(row=row, column=0)
         tk.Label(frame, height=1000).grid(row=row+1, column=0)
         return frame
-    
+
     def headings_frame(self, parent):
         frame = HeadingFrame(parent, bounds=(1, 10))
         frame.commands = self.heading_commands
         return frame
-    
+
     def language_display(self, parent):
         translator = conversion.Translator()
         languages = [f'{code}: {lang().name}'
@@ -89,12 +91,12 @@ class Manager(tk.Frame):
         menu.state(['readonly'])
         utils.bind_all(menu, self.language_commands)
         return menu
-    
+
     def random_words_display(self, parent):
         label = tk.Label(parent, font=('Arial', 14))
         utils.bind_all(label, self.random_commands)
         return label
-    
+
     def update_displays(self):
         for name, display in self.displays.items():
             display.config(textvariable=self.status[name])
@@ -102,7 +104,7 @@ class Manager(tk.Frame):
     def quit(self):
         self.parent.withdraw()
         self.parent.quit()
-    
+
     @property
     def menu_commands(self):
         return [
@@ -110,19 +112,23 @@ class Manager(tk.Frame):
                 ('E_xit', self.quit)
             ])
         ]
-    
+
     @property
     def tabs_commands(self):
         return []
-    
+
     @property
     def heading_commands(self):
         return []
-    
+
     @property
     def language_commands(self):
         return []
 
     @property
     def random_commands(self):
+        return []
+
+    @property
+    def textbox_commands(self):
         return []

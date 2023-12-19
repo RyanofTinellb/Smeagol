@@ -17,13 +17,13 @@ class Frame(ttk.LabelFrame):
     @property
     def family_box(self):
         return ttk.Combobox(self, **self.family_options)
-    
+
     @property
     def family_options(self):
         return dict(
             width=20, textvariable=self.style.font,
             values=sorted([''] + [f for f in families() if not f.startswith('@')]))
-        
+
     @property
     def size_box(self):
         return ttk.Spinbox(self, **self.size_options)

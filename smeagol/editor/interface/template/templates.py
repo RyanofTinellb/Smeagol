@@ -19,7 +19,7 @@ class Templates:
     @property
     def items(self):
         return self.templates.items
-    
+
     @property
     def templates(self):
         return dict(main=self.main,
@@ -27,17 +27,17 @@ class Templates:
                     page404=self.page404,
                     wholepage=self.wholepage,
                     **self.sections)
-    
+
     def set_data(self, entry, styles):
         template = dict(text=entry.text, tagger=styles)
         self.sections['contents'] = self._open(template)
-    
+
     def __getitem__(self, key):
         return self.sections[key]
-    
+
     def _new(self, name):
         return self._open(self.filenames.get(name, ''))
-    
+
     def _open(self, filename):
         return Template(filename, self)
 

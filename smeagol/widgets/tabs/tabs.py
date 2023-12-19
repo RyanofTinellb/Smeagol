@@ -8,6 +8,7 @@ from smeagol.widgets.tabs.tab import Tab
 
 class Tabs(ttk.Notebook):
     '''Keeps track of tabs and assigns Interfaces to them'''
+
     def __init__(self, parent, textbox_commands):
         super().__init__(parent)
         utils.bind_all(self, self.commands)
@@ -15,7 +16,7 @@ class Tabs(ttk.Notebook):
         self.closed = []
         self.textbox_commands = textbox_commands
         self.new()
-    
+
     @property
     def current(self):
         return self.nametowidget(self.select())
@@ -23,7 +24,7 @@ class Tabs(ttk.Notebook):
     @property
     def title(self):
         return self.current.interface.site.root.name
-    
+
     def open_sites(self, filenames=None):
         if not filenames:
             self.open_blank()
@@ -36,7 +37,7 @@ class Tabs(ttk.Notebook):
         for i, entry in enumerate(interface.entries()):
             # only open in same tab for first entry of first filename
             self.open_entry(interface, entry, new_tab + i)
-    
+
     def open_entry(self, interface, entry, new_tab):
         if new_tab:
             self.new()
@@ -48,7 +49,7 @@ class Tabs(ttk.Notebook):
         interface = self.current.interface
         text = self.current.text
         interface.save_entry(entry, text)
-    
+
     def new(self):
         Tab(self, self.textbox_commands)
 
@@ -62,22 +63,21 @@ class Tabs(ttk.Notebook):
             self._close(tab)
         except tk.TclError:
             self._close(self.select())
-    
+
     def _close(self, tab):
         self.hide(tab)
         self.closed += [tab]
 
-    def reopen(self, event=None):
+    def reopen(self, _event=None):
         with utils.ignored(IndexError):
             tab = self.closed.pop()
             self.add(tab)
             self.select(tab)
         return 'break'
-    
+
     @property
     def commands(self):
         return [
             ('<<NotebookTabChanged>>', self.change),
             ('<Button-2>', self.close)
         ]
-

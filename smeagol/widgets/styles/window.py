@@ -19,7 +19,7 @@ class Window(tk.Frame):
                                    columnspan=2, padx=10, pady=5)
         self.window_buttons(self).grid(row=4, column=5, padx=10, sticky='e')
         self.select_style()
-    
+
     @property
     def parent(self):
         return self.master
@@ -87,19 +87,19 @@ class Window(tk.Frame):
         self.styles[self.current.get()] = editor.style
         self.select_style()
         self.parent.deiconify()
-    
+
     @property
     def style(self):
         return self.styles[self.current.get()]
-    
+
     @property
     def style_name(self):
         return self.current.get()
-    
+
     @style_name.setter
     def style_name(self, value):
         self.current.set(value)
-    
+
     @property
     def _editor(self):
         return DefaultEditor if self.style.name == 'default' else FullEditor

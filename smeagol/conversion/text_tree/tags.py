@@ -3,6 +3,7 @@ from .node import Node
 
 class Tags:
     def __init__(self):
+        self._current = None
         self.state: str = None
         self.root = Node()
         self.open_tags = []
@@ -11,13 +12,10 @@ class Tags:
     @property
     def opening_tags(self):
         return self.open_tags[-1]
-    
+
     @property
     def current(self):
-        try:
-            return self._current
-        except AttributeError:
-            return self.root
+        return self._current or self.root
 
     def update_state(self, state: str) -> None:
         if state not in ['tagon', 'tagoff', 'text']:

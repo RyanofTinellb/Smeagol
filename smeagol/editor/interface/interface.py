@@ -112,7 +112,7 @@ class Interface:
     def change_language(self, language):
         self.translator.select(language)
         self.randomwords.select(language)
-    
+
     # def save_entry(self, entry, text):
     #     entry.text = text
     #     self.save_site()
@@ -130,7 +130,7 @@ class Interface:
         filename = os.path.join(self.locations.directory, entry.link)
         fs.saves(html, filename)
         # Save wholepage'''
-    
+
     def save_entry(self, entry):
         self.templates.set_data(entry, self.styles)
         html = self.templates.main.html()

@@ -13,12 +13,12 @@ class Interface:
             var.trace_add('write', self.changed)
             setattr(self, attr, var)
         self.state = self.make_var(self._state, attr)
-    
+
     def __getattr__(self, attr):
         if attr in {'_font', 'paragraph', 'name', 'items', 'copy'}:
             return getattr(self.style, attr)
         return getattr(super(), attr)
-    
+
     @property
     def _state(self):
         return '' if self.style.block else 'disabled'
@@ -32,4 +32,4 @@ class Interface:
         except KeyError:
             type_ = value.__class__.__name__
             raise TypeError(f'Value must be int, float, str or bool, not {type_}')
-    
+

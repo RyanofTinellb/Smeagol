@@ -10,10 +10,10 @@ class Colour(ttk.LabelFrame):
         for col, (attr, var) in enumerate(self.selectors):
             self.Label(attr).grid(row=0, column=2*col)
             self.Button(attr, var).grid(row=0, column=2*col+1)
-        
+
     def Label(self, attr):
         return ttk.Label(self, text=attr, padding=(15, 0, 5, 0))
-    
+
     def Button(self, attr, var):
         button = tk.Button(self, background=var.get(), width=2)
         button.config(command=lambda *_: self.change_colour(button, attr, var))

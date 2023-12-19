@@ -1,7 +1,7 @@
 import random
 
-from ...conversion import api as conversion
-from .highlulani import HighLulani
+from smeagol.utilities.random.highlulani import HighLulani
+from smeagol.conversion import api as conversion
 
 
 class DemoticLulani:
@@ -9,7 +9,7 @@ class DemoticLulani:
         self.name = 'Demotic Lulani'
         self.lulani = HighLulani()
         self.demotic = conversion.HighToDemoticLulani()
-        
+
     @property
     def word(self):
         return self.demotic.evolve(self._word)[-1]

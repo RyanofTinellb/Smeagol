@@ -1,6 +1,4 @@
-from ...utilities import errors, utils
-
-'''
+"""
 properties:
     name (str)
     start (str): the opening tag <tag>.
@@ -16,12 +14,13 @@ properties:
     key (str): the keyboard shortcut used in the Sméagol editor for this tag,
             not including the `CTRL-` key.
         e.g.: 'f' -> `CTRL-f`.
-'''
+"""
+
+from ...utilities import errors, utils
 
 
 class Tag:
-    def __init__(self, rank=0, tags=None, **_):
-        self.rank = rank
+    def __init__(self, tags=None, **_):
         self.options = tags or {}
 
     def __getattr__(self, attr):
@@ -32,21 +31,21 @@ class Tag:
 
     def default(self, attr):
         match attr:
-            case 'start':
-                return f'<{self.name}>'
-            case 'end':
-                return f'</{self.name}>'
-            case 'block' | 'hyperlink' | 'template':
+            case "start":
+                return f"<{self.name}>"
+            case "end":
+                return f"</{self.name}>"
+            case "block" | "hyperlink" | "template":
                 return False
-            case 'pipe' | 'separator' | 'key':
-                return ''
-            case 'language':
-                return '%l'
-            case default:
+            case "pipe" | "separator" | "key":
+                return ""
+            case "language":
+                return "%l"
+            case _default:
                 try:
                     return super().__getattr__(attr)
-                except AttributeError:
-                    raise errors.throw_error(AttributeError, self, attr)
+                except AttributeError as e:
+                    raise errors.throw_error(AttributeError, self, attr) from e
 
     def __setattr__(self, attr, value):
         if attr in self.attrs:
@@ -57,6 +56,13 @@ class Tag:
     @property
     def attrs(self):
         return {
-            'hyperlink', 'language', 'template', 'block', 'separator',
-            'name', 'start', 'end', 'pipe'
+            "hyperlink",
+            "language",
+            "template",
+            "block",
+            "separator",
+            "name",
+            "start",
+            "end",
+            "pipe",
         }

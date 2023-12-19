@@ -28,7 +28,7 @@ class Markdown(tk.Frame):
         tk.Label(self, padx=10).grid(row=0, column=2*columns)
         self.buttons_frame(self).grid(row=rows, column=columns+1, sticky='e')
         self.move()
-    
+
     @property
     def parent(self):
         return self.master
@@ -109,7 +109,7 @@ class Entry(tk.Entry):
         self.bind('<Prior>', parent.up)
         self.bind('<Next>', parent.down)
         self.bind('<MouseWheel>', parent.shift)
-        
+
         def handler(*args, parent=parent, name=name):
             parent.entry[name] = self.get()
 

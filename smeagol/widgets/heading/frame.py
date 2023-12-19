@@ -43,10 +43,10 @@ class Frame(tk.Frame):
             heading.destroy()
             self._headings.remove(heading)
             return True
-        
+
     def select_last(self):
         self._headings[-1].focus_set()
-        
+
     @property
     def commands(self):
         return self._commands

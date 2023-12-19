@@ -37,7 +37,7 @@ class Site:
     def replace_all(self, old, new):
         for entry in self:
             entry.replace(old, new)
-        
+
     def regex_replace_all(self, pattern, repl):
         for entry in self:
             entry.regex_replace(pattern, repl)

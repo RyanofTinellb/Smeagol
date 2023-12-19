@@ -44,7 +44,7 @@ class Node:
             return type(self)(self.tree, location[:])
         except TypeError:
             return type(self)(self.tree, None)
-    
+
     @property
     def find(self):
         return self._find()

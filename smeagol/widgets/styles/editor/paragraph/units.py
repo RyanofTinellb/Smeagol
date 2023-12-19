@@ -10,14 +10,14 @@ class Units(ttk.LabelFrame):
     @property
     def Selector(self):
         return ttk.Combobox(self, **self.selector_options)
-    
+
     @property
     def selector_options(self):
         return dict(
             state=self.style.state.get() or 'readonly',
             textvariable=self.style.unit,
             values=self.units)
-    
+
     @property
     def units(self):
         return 'points', 'millimetres', 'centimetres', 'inches'

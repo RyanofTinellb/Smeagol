@@ -1,8 +1,9 @@
 import tkinter as tk
 
 from smeagol.utilities import utils
+from smeagol.conversion import api as conversion
 
-from .textbox import Textbox
+from smeagol.widgets.textbox.textbox import Textbox
 
 
 class Tab(tk.Frame):
@@ -18,43 +19,41 @@ class Tab(tk.Frame):
         textbox.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
         utils.bind_all(textbox, commands)
         return textbox
-    
+
     @property
     def entry(self):
         return self._entry
-    
+
     @entry.setter
     def entry(self, entry):
         self._entry = entry
         self.name = self.entry.name
         self.textbox.text = self.entry_text
-    
+
     @property
     def interface(self):
         return self._interface
-    
+
     @interface.setter
     def interface(self, interface):
         self._interface = interface
         self.textbox.translator = interface.translator
         self.textbox.styles = interface.styles
-    
+
     @property
     def entry_text(self):
         text = self._entry.text
-        hidden_tags = self.interface.styles.hide_tags
-        return hidden_tags(text)
-    
+        return conversion.TextTree(text)
+
     @property
     def text(self):
         text = self.textbox.formatted_text
-        show_tags = self.interface.styles.show_tags
-        return show_tags(text)
-    
+        return conversion.TextTree(text)
+
     @property
     def name(self):
         return self._name
-    
+
     @name.setter
     def name(self, name):
         self._name = name

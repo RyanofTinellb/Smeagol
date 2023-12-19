@@ -25,7 +25,7 @@ class English:
             word = self._word
             tries -= 1
         return word
-    
+
     @property
     def _word(self):
         return self._clean(random.choice(self.words)) if self.words else ''

@@ -14,12 +14,15 @@ class TextTree(Tags):
         if self.state == 'tagoff':
             self.rationalise()
 
+    def __iter__(self):
+        return iter(self.root)
+
     def __str__(self):
         return str(self.root)
-    
+
     def pprint(self):
         self.root.pprint()
-    
+
     def process_tuples(self, text: list[tuple]):
         self.retag_tuples(text)
 
@@ -34,6 +37,7 @@ class TextTree(Tags):
     def _retag_line(self, line):
         line = re.split("[<>]", line)
         utils.apply_functions_alternately([self._text, self._tag], line)
+        self._text('\n')
 
     def _text(self, text):
         self._retag("text", text)

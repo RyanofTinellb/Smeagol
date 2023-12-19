@@ -13,7 +13,7 @@ class Leftovers(tk.Frame):
             Spinner(self, style, var).grid(row=row, column=1)
         self.set_labels()
         Justify(self, style).grid(row=2, column=1)
-    
+
     def set_labels(self):
         labels = 'indent', 'line spacing', 'justification'
         for row, name in enumerate(labels):
@@ -21,7 +21,7 @@ class Leftovers(tk.Frame):
 
     def Label(self, name, row):
         return ttk.Label(self, text=name, padding=(5, 0))
-    
+
     @property
     def vars(self):
         return self.style.indent, self.style.line_spacing

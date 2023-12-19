@@ -1,26 +1,23 @@
-import json
-
-from ...conversion import api as conversion
-from ...utilities import utils
 from .style import Style
 
 
-class Styles(conversion.Tagger):
+def get_name(style):
+    return style.get('tags').get('name')
+
+
+class Styles:
     def __init__(self, styles):
         self.default = None
-        super().__init__(styles)
+        self.styles = {get_name(style): self.create_style(style)
+                       for style in styles}
+        self.active_tags = set()
 
-    
-    def create_tag(self, rank=0, tag=None):
-        tag = tag or {}
+    def create_style(self, style=None):
+        style = style or {}
         if self.default:
-            return Style(rank, **tag, defaults=self.default)
-        self.default = Style(rank, **tag)
+            return Style(**style, defaults=self.default)
+        self.default = Style(**style)
         return self.default
-    
-    @property
-    def styles(self):
-        return self.tags
 
     def __contains__(self, item):
         return item in self.styles
@@ -29,8 +26,8 @@ class Styles(conversion.Tagger):
         return iter(self.styles.values())
 
     def __getitem__(self, name):
-        if '-' in name:
-            name, language = name.split('-')
+        if "-" in name:
+            name, _language = name.split("-")
         return self.styles[name]
 
     def __setitem__(self, name, value):
@@ -66,10 +63,19 @@ class Styles(conversion.Tagger):
         try:
             self.styles.setdefault(style.name, style)
         except AttributeError:
-            style = style.split('-')
+            style = style.split("-")
             name = style[0]
             language = len(style) > 1
-            style = Style(name=style[0], language=language, start=f'<{name}>', end=f'</{name}>')
+            style = Style(
+                [
+                    {
+                        "name": style[0],
+                        "language": language,
+                        "start": f"<{name}>",
+                        "end": f"</{name}>",
+                    }
+                ]
+            )
             self.styles.setdefault(name, style)
         return style
 

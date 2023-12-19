@@ -11,19 +11,19 @@ class Markdown:
         except (TypeError, AttributeError):
             self.replacements = arg
             self.filename = ''
-    
+
     def __getitem__(self, index):
         return self.replacements[index]
-    
+
     def __iadd__(self, item):
         self.replacements.append(item)
         return self
-    
+
     @property
     def non_blank(self):
         # returns the non-blank entries from the Markdown Window
         return [r for r in self if r['markdown']]
-    
+
     def copy(self):
         if self.filename:
             return __class__(self.filename)
@@ -38,7 +38,7 @@ class Markdown:
             except FileNotFoundError:
                 raise MarkdownFileNotFound
             self.filename = filename
-    
+
     def save(self, filename=''):
         self.filename = filename or self.filename
         try:

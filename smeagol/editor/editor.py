@@ -19,21 +19,19 @@ class Editor(Manager):
         if filenames is None:
             filenames = [fs.open_smeagol()]
         self.tabs.open_sites(filenames)
-    
+
     def open_site(self):
         self.tabs.open_site(fs.open_smeagol())
-    
-
 
     @property
     def interfaces(self):
         return self.tabs.interfaces
 
-    def new_tab(self, event=None):
+    def new_tab(self, _event=None):
         self.tabs.new()
         return 'break'
 
-    def reopen_tab(self, event=None):
+    def reopen_tab(self, _event=None):
         self.tabs.reopen()
         return 'break'
 
@@ -41,7 +39,7 @@ class Editor(Manager):
         tab = f'@{event.x},{event.y}'
         self.tabs.close(tab)
         return 'break'
-    
+
     def change_tab(self):
         self.tabs.change()
         self.update_displays()
@@ -50,24 +48,26 @@ class Editor(Manager):
         return 'break'
 
     def __getattr__(self, attr):
+        print(attr)
         match attr:
             case 'tab':
-                return self.tabs.current
+                value = self.tabs.current
             case 'textbox':
-                return self.tab.textbox
+                value = self.tab.textbox
             case 'interface':
-                return self.tab.interface
+                value = self.tab.interface
             case 'entry':
-                return self.tab.entry
+                value = self.tab.entry
             case 'status':
-                return self.textbox.displays
+                value = self.textbox.displays
             case 'closed_tabs':
-                return self.tabs.closed
-            case default:
+                value = self.tabs.closed
+            case _default:
                 try:
                     return super().__getattr__(attr)
-                except AttributeError:
-                    raise errors.throw_error(AttributeError, self, attr)
+                except AttributeError as e:
+                    raise errors.throw_error(AttributeError, self, attr) from e
+        return value
 
     def __setattr__(self, attr, value):
         match attr:
@@ -77,10 +77,10 @@ class Editor(Manager):
                 self.tab.interface = value
             case 'entry':
                 self.tab.entry = value
-            case default:
+            case _default:
                 super().__setattr__(attr, value)
 
-    def change_language(self, event=None):
+    def change_language(self, _event=None):
         language = self.status['language'].get()
         self.interface.change_language(language)
         return 'break'
@@ -117,7 +117,7 @@ class Editor(Manager):
             self.textbox.focus_set()
             self.textbox.see(tk.INSERT)
 
-    def open_entry_in_browser(self, event=None):
+    def open_entry_in_browser(self, _event=None):
         self.interface.open_entry_in_browser(self.entry)
         return 'break'
 
@@ -126,7 +126,7 @@ class Editor(Manager):
         self.entry = entry
         self.title = self.interface.site.root.name
 
-    def reset_entry(self, event=None):
+    def reset_entry(self, _event=None):
         with utils.ignored(AttributeError):
             self.set_headings(self.entry)
 
@@ -145,7 +145,7 @@ class Editor(Manager):
     def set_headings(self, entry):
         self.headings.headings = [e.name for e in entry.lineage][1:]
 
-    def rename_page(self, event=None):
+    def rename_page(self, _event=None):
         name = self.entry.name
         name = sd.askstring(
             'Page Name', f'What is the new name of "{name}"?')
@@ -154,22 +154,22 @@ class Editor(Manager):
             self.tab.name = name
             self.reset_entry()
 
-    def save_page(self, event=None):
+    def save_page(self, _event=None):
         self.tabs.save_entry()
         return 'break'
-    
-    def save_site(self, event=None):
+
+    def save_site(self, _event=None):
         self.tabs.save_site()
-    
-    def save_site_as(self, event=None):
+
+    def save_site_as(self, _event=None):
         self.tabs.save_site_as()
 
-    def refresh_random(self, event=None):
+    def refresh_random(self, _event=None):
         if r := self.interface.randomwords:
             self.status['randomwords'].set('\n'.join(r.words(15)))
         return 'break'
 
-    def clear_random(self, event=None):
+    def clear_random(self, _event=None):
         self.status['randomwords'].set('')
         return 'break'
 
@@ -197,27 +197,27 @@ class Editor(Manager):
         textbox.tag_add(tk.SEL, *borders)
         return textbox.get(*borders)
 
-    def markdown_clear(self, event=None):
+    def markdown_clear(self, _event=None):
         text = self.interface.markdown.to_markup(self.textbox.text)
         self.textbox.replace(text)
 
-    def markdown_apply(self, event=None):
+    def markdown_apply(self, _event=None):
         text = self.interface.markdown.to_markdown(self.textbox.text)
         self.textbox.replace(text)
 
-    def markdown_edit(self, event=None):
+    def markdown_edit(self, _event=None):
         top = tk.Toplevel(self)
         editor = window.MarkdownWindow(top, self.interface.markdown)
         self.wait_window(top)
         self.interface.markdown = editor.markdown
 
-    def template_edit(self, event=None):
+    def template_edit(self, _event=None):
         top = tk.Toplevel(self)
         templates = self.interface.templates
         window.Templates(top, templates).grid()
         self.wait_window(top)
-        
-    def edit_styles(self, event=None):
+
+    def edit_styles(self, _event=None):
         top = tk.Toplevel()
         window = styles.Window(top, self.interface.styles)
         window.grid()
@@ -238,52 +238,3 @@ class Editor(Manager):
         print('Closing Servers...')
         fs.close_servers()
         print('Servers closed. Enjoy the rest of your day.')
-
-    @property
-    def menu_commands(self):
-        return [
-            ('Site', [
-                ('Open', self.open_site),
-                ('Save', self.save_site),
-                ('Save _As', self.save_site_as),
-            ]),
-            ('Page', [
-                ('Rename', self.rename_page),
-                ('Open in Browser', self.open_entry_in_browser),
-            ]),
-            ('Edit', [
-                ('Styles', self.edit_styles),
-                ('Markdown', self.markdown_edit),
-                ('Templates', self.template_edit),
-            ]),
-        ]
-
-    @property
-    def textbox_commands(self):
-        return [
-            ('<Control-r>', self.refresh_random),
-            ('<Control-s>', self.save_page),
-            ('<Control-t>', self.new_tab),
-            ('<Control-T>', self.reopen_tab),
-            ('<Control-w>', self.close_tab),
-            ('<Enter>', self.reset_entry),
-        ]
-
-    @property
-    def heading_commands(self):
-        return [
-            ('<Prior>', self.previous_entry),
-            ('<Next>', self.next_entry),
-            ('<Return>', self.load_entry),
-        ]
-
-    @property
-    def language_commands(self):
-        return [('<<ComboboxSelected>>', self.change_language)]
-
-    @property
-    def random_commands(self):
-        return [
-            ('<Button-1>', self.refresh_random),
-            ('<Button-3>', self.clear_random),
-        ]

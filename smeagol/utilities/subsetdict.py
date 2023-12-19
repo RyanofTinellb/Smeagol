@@ -7,17 +7,17 @@ class SubsetDict:
 
     def __iter__(self):
         return ((attr, getattr(self, attr)) for attr in self._valid_attrs)
-    
+
     def __str__(self):
         return str(self.values)
-    
+
     def copy(self):
         return type(self)(self.values.copy())
-    
+
     def update(self, updates):
         for attr in self._valid_attrs:
             self.values[attr] = getattr(updates, attr)
-    
+
     def __getattr__(self, attr):
         if not self._valid(attr):
             raise errors.attribute_error(self)
@@ -32,10 +32,10 @@ class SubsetDict:
             if not self._valid(attr):
                 raise errors.attribute_error(self)
             utils.setnonzero(self.values, attr, value)
-    
+
     def _valid(self, attr):
         return attr in self._valid_attrs
-    
+
     @property
     def _valid_attrs(self):
         pass

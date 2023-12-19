@@ -1,16 +1,12 @@
 import re
 from itertools import cycle
+from smeagol.widgets.styles.styles import Styles
 
-from smeagol.conversion.api import Tagger
-
-
-class Template(Tagger):
+class Template:
     def __init__(self, filename, templates):
         template = templates.load(filename)
         self.text = template.get('text', [])
-        tagger = template.get('styles', [])
-        super().__init__(tagger)
-
+        self.styles = Styles({})
         self.templates = templates
         self.filename = filename
         self.starting = self.ending = False
@@ -65,15 +61,15 @@ class Template(Tagger):
 
     def _tag(self, tag):
         fn = self._tagoff if tag.startswith('/') else self._tagon
-        return fn(self.tags[tag.removeprefix('/')])
+        return fn(self.styles[tag.removeprefix('/')])
 
     def _tagon(self, tag):
         if tag.template:
             self.replace = True
             return ''
-        elif self.starting and not tag.block:
+        if self.starting and not tag.block:
             return self._separator_start(tag.start)
-        elif tag.block:
+        if tag.block:
             self.blocks.append(tag.separator)
         return f'{tag.start}'
 

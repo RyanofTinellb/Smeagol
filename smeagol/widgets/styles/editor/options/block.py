@@ -11,7 +11,7 @@ class Block(tk.Frame):
     @property
     def Box(self):
         return tk.Entry(self, **self.box_options)
-    
+
     @property
     def box_options(self):
         return dict(

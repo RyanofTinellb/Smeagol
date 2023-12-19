@@ -23,11 +23,11 @@ class Words:
         except (AttributeError, KeyError):
             converter, *args = next(iter(self.languages.values()))
         return converter(*args)
-    
+
     @property
     def name(self):
         return self.converter.name
-    
+
     def words(self, num):
         words = [self.converter.word for x in range(num)] 
         return [word for word in words if word]
