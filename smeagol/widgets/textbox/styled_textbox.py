@@ -1,11 +1,49 @@
 import tkinter as tk
+from smeagol.utilities import utils
+from smeagol.widgets.textbox.base_textbox import BaseTextbox
+
+SELECTION = "sel.first", "sel.last"
 
 
-class StyledTextbox(tk.Text):
-    def __init__(self, parent=None):
+class StyledTextbox(BaseTextbox):
+    def __init__(self, parent=None, styles=None, languages=None):
         super().__init__(parent, height=1, width=1, wrap=tk.WORD, undo=True)
+        self.styles = styles
+        self.languages = languages or {}
         self.displays = {"style": tk.StringVar(),
                          "language": tk.StringVar()}
+
+    def __getattr__(self, attr):
+        match attr:
+            case "language_code":
+                if language := self.language.get():
+                    return language[:2]
+            case "font":
+                return self.styles["default"].create_font()
+            case _:
+                try:
+                    return self.displays[attr]
+                except KeyError:
+                    return getattr(super(), attr)
+
+    def modify_fontsize(self, size):
+        self.font.config(size=size)
+        self.config(font=self.font)
+        for name, _, style in self.styles:
+            self.tag_config(name, **style)
+
+    def change_fontsize(self, event):
+        sign = 1 if event.delta > 0 else -1
+        size = self.font.actual(option="size") + sign
+        self.modify_fontsize(size)
+        return "break"
+
+    def reset_fontsize(self, _event=None):
+        self.modify_fontsize(18)
+        return "break"
+
+    def get_styles(self, _event=None):
+        self.styles.update(self.tag_names(tk.INSERT))
 
     def clear_style(self, styles):
         self.tag_remove(styles, tk.INSERT)
@@ -54,4 +92,4 @@ class StyledTextbox(tk.Text):
 
     def update_styles(self):
         self.set_styles()
-        self.add_commands()
+        # self.add_commands()

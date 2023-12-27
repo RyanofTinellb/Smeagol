@@ -9,9 +9,27 @@ SELECTION = "sel.first", "sel.last"
 NO_SELECTION = INSERT, INSERT
 START = "1.0"
 END = "end-1c"
+USER_MARK = "usermark"
 
 
 class ClipboardTextbox(StyledTextbox):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def overwrite(self, text, start=START, end=END):
+        self.delete(start, end)
+        self.write(text, start)
+
+    def write(self, text="", position=INSERT, tags=None):
+        tags = tags or self.styles.current
+        super().insert(position, text, tags)
+
+    def remove(self, start=START, end=END):
+        super().delete(start, end)
+
+    def clear(self):
+        self.remove()
+
     def formatted_get(self, start=START, end=END):
         return super().dump(start, end)
 
@@ -111,9 +129,14 @@ class ClipboardTextbox(StyledTextbox):
     def _insert_leaf(self, leaf: str | Node):
         try:
             self.styles.activate(leaf.name)
-            self._insert_children(leaf)
+            self._insert_children(leaf.children)
+            self.styles.deactivate(leaf.name)
         except AttributeError:
             self.write(leaf)
+
+    def _insert_children(self, children):
+        for child in children:
+            self._insert_leaf(child)
 
     def _insert(self, key, value, _=0):
         match key:
@@ -122,16 +145,16 @@ class ClipboardTextbox(StyledTextbox):
                     self.mark_set(USER_MARK, INSERT)
                     self.mark_gravity(USER_MARK, tk.LEFT)
             case "tagon":
-                self.current_style.append(value)
+                self.styles.activate(value)
             case "text":
                 self.write(value)
             case "tagoff":
                 try:
-                    self.current_style.remove(value)
+                    self.styles.deactivate(value)
                 except ValueError:
                     print(
                         f"Unable to find closing tag for <{
-                            self.current_style.pop()}>"
+                            self.styles.current.final}>"
                     )
                     return True
         return False

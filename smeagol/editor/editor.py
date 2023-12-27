@@ -48,7 +48,6 @@ class Editor(Manager):
         return 'break'
 
     def __getattr__(self, attr):
-        print(attr)
         match attr:
             case 'tab':
                 value = self.tabs.current

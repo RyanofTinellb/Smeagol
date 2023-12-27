@@ -23,12 +23,12 @@ def save_json(obj, filename):
         _save_json(obj, filename)
     except TypeError as e:
         save_string(str(obj), f := f'{filename}!error.txt')
-        raise TypeError(str(e), f)
+        raise TypeError(str(e), f) from e
 
 
 def _save_json(obj, filename):
     with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(obj, filename, ensure_ascii=False, indent=2)
+        json.dump(obj, f, ensure_ascii=False, indent=2)
 
 
 def save_string(string, filename):
@@ -57,8 +57,8 @@ def load_json(filename):
         return {}
     try:
         return _load_json(filename)
-    except TypeError:
-        raise TypeError(f'{filename} is not a json file, or is malformed')
+    except TypeError as e:
+        raise TypeError(f'{filename} is not a json file, or is malformed') from e
 
 
 def _load_json(filename):

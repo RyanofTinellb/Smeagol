@@ -1,7 +1,6 @@
 import re
 import tkinter as tk
 
-from smeagol.utilities import utils
 from smeagol.widgets.textbox.clipboard_textbox import ClipboardTextbox
 
 START = "1.0"
@@ -17,7 +16,7 @@ NEXT_LINE = "insert linestart +1l"
 SELECTION = "sel.first", "sel.last"
 SEL_LINE = "sel.first linestart", "sel.last lineend+1c"
 NO_SELECTION = INSERT, INSERT
-USER_MARK = "usermark"
+USER_MARK = 'usermark'
 
 BRACKETS = {"[": "]", "<": ">", "{": "}", '"': '"', "(": ")"}
 
@@ -27,7 +26,9 @@ class Textbox(ClipboardTextbox):
         super().__init__(parent)
         self.displays.update({
             "style": tk.StringVar(),
-            "language": tk.StringVar()})
+            "language": tk.StringVar(),
+            "wordcount": tk.IntVar()})
+        self.add_commands(self.commands)
 
     @property
     def translator(self):
@@ -39,10 +40,6 @@ class Textbox(ClipboardTextbox):
         self.languages = translator.languages
         self.language.set(translator.fullname)
 
-    def grid(self, *args, **kwargs):
-        super().grid(*args, **kwargs)
-        return self
-
     def __getattr__(self, attr):
         match attr:
             case "text":
@@ -50,8 +47,6 @@ class Textbox(ClipboardTextbox):
             case "language_code":
                 if language := self.language.get():
                     return language[:2]
-            case "font":
-                return self.styles["default"].create_font()
             case _:
                 try:
                     return self.displays[attr]
@@ -64,46 +59,20 @@ class Textbox(ClipboardTextbox):
                 return self._paste(borders=ALL, text=value)
         super().__setattr__(attr, value)
 
-    def add_commands(self):
-        for keys, command in self.commands:
+    def add_commands(self, commands):
+        for keys, command in commands:
             if isinstance(keys, str):
                 self.bind(keys, command)
             else:
                 for key in keys:
                     self.bind(key, command)
 
-    @property
-    def formatted_text(self):
-        return self.formatted_get()
-
-    def read(self, start=START, end=END):
-        return super().get(start, end)
-
-    def get_char(self, position=INSERT):
-        return super().get(position)
-
-    def formatted_get(self, start=START, end=END):
-        return super().dump(start, end)
-
     def reset(self):
         self.edit_modified(False)
         self.styles.current = ""
 
-    def overwrite(self, text, start=START, end=END):
-        self.delete(start, end)
-        self.write(text, start)
-
-    def write(self, text="", position=INSERT, tags=None):
-        tags = tags or self.styles.active_tags
-        super().insert(position, text, tags)
-
-    def remove(self, start=START, end=END):
-        super().delete(start, end)
-
-    def clear(self):
-        self.remove()
-
-    def key_released(self, _):
+    def _key_released(self, _event=None):
+        self.get_styles()
         self.update_wordcount()
 
     def update_wordcount(self):
@@ -111,30 +80,13 @@ class Textbox(ClipboardTextbox):
         wordcount = text.count(" ") + text.count("\n") - text.count("|")
         self.displays["wordcount"].set(wordcount)
 
-    def modify_fontsize(self, size):
-        self.font.config(size=size)
-        self.config(font=self.font)
-        for name, _, style in self.styles:
-            self.tag_config(name, **style)
-
-    def change_fontsize(self, event):
-        sign = 1 if event.delta > 0 else -1
-        size = self.font.actual(option="size") + sign
-        self.modify_fontsize(size)
-        return "break"
-
-    def reset_fontsize(self, _event=None):
-        self.modify_fontsize(18)
-        return "break"
-
     def indent(self, _event=None):
         spaces = re.match(r"^ *", self.get(*CURRLINE)).group(0)
         self.write("\n" + spaces)
         return "break"
 
     def move_mark(self, mark, dist):
-        sign = "+" if dist >= 0 else "-"
-        dist = abs(dist)
+        sign = '+' if dist >= 0 else ''
         self.mark_set(INSERT, mark)
         self.mark_set(mark, f"{mark}{sign}{dist}c")
 
@@ -153,11 +105,12 @@ class Textbox(ClipboardTextbox):
                     self.write(key, tk.SEL)
                 except tk.TclError:
                     self.write(key)
-            return "break"
+            return 'break'
         elif keysym == "Return":
             spaces = re.sub(r"( *).*", r"\1", self.get(*CURRLINE))
             self.insert(spaces, INSERT)
-            return "break"
+            return 'break'
+        return None
 
     def match_brackets(self, key):
         if key in BRACKETS:
@@ -230,8 +183,8 @@ class Textbox(ClipboardTextbox):
         return [
             ("<Control-MouseWheel>", self.change_fontsize),
             ("<Return>", self.indent),
-            # ('<KeyPress>', self.insert_characters),
-            (("<KeyRelease>", "<ButtonRelease>"), self.key_released),
+            ('<KeyPress>', self.insert_characters),
+            (("<KeyRelease>", "<ButtonRelease>"), self._key_released),
             (("<Tab>", "<Control-]>"), self.insert_tabs),
             (("<Shift-Tab>", "<Control-[>"), self.remove_tabs),
             ("<Control-0>", self.reset_fontsize),
@@ -243,4 +196,5 @@ class Textbox(ClipboardTextbox):
             ("<Control-BackSpace>", self.backspace_word),
             ("<Control-Delete>", self.delete_word),
             (("<Control-Up>", "<Control-Down>"), self.move_line),
+            ('<ButtonRelease>', self.get_styles)
         ]

@@ -10,7 +10,11 @@ class Styles:
         self.default = None
         self.styles = {get_name(style): self.create_style(style)
                        for style in styles}
-        self.active_tags = set()
+        self._current = set()
+
+    @property
+    def current(self):
+        return list(self._current)
 
     def create_style(self, style=None):
         style = style or {}
@@ -56,9 +60,6 @@ class Styles:
     def _items(self):
         return {n: s.style for n, s in self.styles.items()}
 
-    def update(self, styles):
-        self.styles = styles.styles
-
     def add(self, style):
         try:
             self.styles.setdefault(style.name, style)
@@ -84,3 +85,17 @@ class Styles:
             del self.styles[style]
         except KeyError:
             self.styles = {n: s for n, s in self.styles.items() if s != style}
+
+    def activate(self, style):
+        self._current.add(style)
+
+    def deactivate(self, style):
+        self._current.discard(style)
+
+    def clear(self):
+        self._current.clear()
+
+    def update(self, styles):
+        self.clear()
+        for style in styles:
+            self.activate(style)
