@@ -1,9 +1,9 @@
-from .node import Node
+from smeagol.conversion.text_tree.node import Node
 
 
 class Tags:
     def __init__(self):
-        self._current = None
+        self.current = None
         self.state: str = None
         self.root = Node()
         self.open_tags = []
@@ -16,6 +16,10 @@ class Tags:
     @property
     def current(self):
         return self._current or self.root
+
+    @current.setter
+    def current(self, value):
+        self._current = value
 
     def update_state(self, state: str) -> None:
         if state not in ['tagon', 'tagoff', 'text']:
@@ -47,21 +51,19 @@ class Tags:
                 self.remove_last_opener()
 
     def remove_last_opener(self):
-        try:
-            self.opening_tags.pop()
-        except IndexError:
+        self.opening_tags.pop()
+        if not self.opening_tags:
             self.open_tags.pop()
-            self.opening_tags = self.open_tags[-1]
 
     def tagon(self, name: str):
         tag = self.new(name)
         self.current.add(tag)
         self.opening_tags.append(tag)
-        self._current = tag
+        self.current = tag
 
     def tagoff(self, name: str) -> None:
         self.closing_tags.append(name)
-        self._current = self.current.parent
+        self.current = self.current.parent
 
     def text(self, text: str):
         self.current.add(text)

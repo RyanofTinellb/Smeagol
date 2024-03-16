@@ -38,7 +38,6 @@ def asynca(function):
 
     return async_function
 
-
 def compose(*functions):
     def compose2(f, g):
         return lambda x: f(g(x))
@@ -46,7 +45,7 @@ def compose(*functions):
     return functools.reduce(compose2, functions, lambda x: x)
 
 
-def apply_functions_alternately(functions: list, obj: Any):
+def alternate(functions: list, obj: Any):
     for f, x in zip(cycle(functions), obj):
         f(x)
 
@@ -55,12 +54,14 @@ def setnonzero(obj, attr, value):
     if not value:
         return obj.pop(attr, None)
     obj[attr] = value
+    return None
 
 
 def setnotequal(obj, attr, value, default):
     if value == default:
         return obj.pop(attr, None)
     obj[attr] = value
+    return None
 
 
 def display_attrs(obj):
@@ -84,32 +85,12 @@ def stringify(obj, indent=0):
     if isinstance(obj, dict):
         for k, v in obj.items():
             output += f'{indent * "-"}{k} - {stringify(v, indent+2)}'
-    elif isinstance(obj, list) or isinstance(obj, tuple):
+    elif isinstance(obj, (list, tuple)):
         for v in obj:
             output += f'{indent * "-"}{stringify(v, indent+2)}'
     else:
         output += f'{indent * "-"}{obj}'
     return output
-
-
-def buyCaps(word):
-    return re.sub(r"[$](.)", _buy, word).replace(".", "&nbsp;")
-
-
-def _buy(regex):
-    return regex.group(1).capitalize()
-
-
-def sellCaps(word):
-    return re.sub(r"(.)", _sell, word.replace(" ", "."))
-
-
-def _sell(regex):
-    letter = regex.group(1)
-    if letter != letter.lower():
-        return "$" + letter.lower()
-    else:
-        return letter
 
 
 def change_text(item, replacement, text):
@@ -125,22 +106,8 @@ tk.LAST = tk.END
 tk.ALL = (tk.FIRST, tk.LAST)
 
 
-def Tk_compare(tb, first, op, second):
-    try:
-        return tb.compare(first, op, second)
-    except tk.TclError:
-        return tb.compare(tk.INSERT, op, second)
-
-
 def remove_text(item, text):
     return change_text(item, "", text)
-
-
-def un_url(text, markdown=None):
-    text = text.replace(" ", ".")
-    if markdown:
-        text = markdown.to_markup(text)
-    return sellCaps(text)
 
 
 def urlform(text):

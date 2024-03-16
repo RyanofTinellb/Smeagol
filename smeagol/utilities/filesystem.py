@@ -177,7 +177,7 @@ def start_server(port, directory=None, page404=''):
             port += 1
 
 
-def open_in_browser(port, link):
+def open_in_browser(port, link=''):
     web.open_new_tab(os.path.join(f'http://localhost:{port}', link))
 
 

@@ -2,6 +2,9 @@ import tkinter as tk
 from smeagol.utilities import utils
 from smeagol.widgets.textbox.base_textbox import BaseTextbox
 
+from smeagol.conversion.text_tree.text_tree import TextTree
+
+
 SELECTION = "sel.first", "sel.last"
 
 
@@ -20,11 +23,15 @@ class StyledTextbox(BaseTextbox):
                     return language[:2]
             case "font":
                 return self.styles["default"].create_font()
-            case _:
+            case _default:
                 try:
                     return self.displays[attr]
                 except KeyError:
                     return getattr(super(), attr)
+
+    @property
+    def text(self):
+        return TextTree(self.formatted_text)
 
     def modify_fontsize(self, size):
         self.font.config(size=size)
@@ -43,6 +50,8 @@ class StyledTextbox(BaseTextbox):
         return "break"
 
     def get_styles(self, _event=None):
+        if not self.styles:
+            return
         self.styles.update(self.tag_names(tk.INSERT))
 
     def clear_style(self, styles):
@@ -57,7 +66,9 @@ class StyledTextbox(BaseTextbox):
             self._set_style(style)
 
     def set_default_style(self):
-        if default := self.styles.default:
+        if not self.styles:
+            return
+        if default := self.styles['default']:
             self.config(**default.textbox_settings)
 
     def _set_style(self, style):

@@ -42,7 +42,7 @@ class Textbox(ClipboardTextbox):
 
     def __getattr__(self, attr):
         match attr:
-            case "text":
+            case "plaintext":
                 return self.read()
             case "language_code":
                 if language := self.language.get():
@@ -76,7 +76,7 @@ class Textbox(ClipboardTextbox):
         self.update_wordcount()
 
     def update_wordcount(self):
-        text = self.text
+        text = self.plaintext
         wordcount = text.count(" ") + text.count("\n") - text.count("|")
         self.displays["wordcount"].set(wordcount)
 

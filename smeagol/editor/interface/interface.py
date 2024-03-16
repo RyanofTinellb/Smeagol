@@ -29,11 +29,11 @@ class Interface:
                 return self.config.setdefault('site', {})
             case '_entries':
                 return self.config.setdefault('entries', [[]])
-            case default:
+            case _default:
                 try:
                     return super().__getattr__(attr)
-                except AttributeError:
-                    raise errors.attribute_error(self, attr)
+                except AttributeError as e:
+                    raise errors.throw_error(e, self, attr) from e
 
     def __setattr__(self, attr, value):
         match attr:
@@ -63,7 +63,7 @@ class Interface:
 
     @staticmethod
     def _create_config(filename):
-        return dict(assets=dict(source=filename))
+        return {'assets': {'source': filename}}
 
     def save(self):  # alias for use by (e.g.) Editor
         self.save_config()
@@ -84,7 +84,7 @@ class Interface:
         self.linker = conversion.Linker(config.get('links', {}))
         samples = self.assets.samples
         self.randomwords = utilities.RandomWords(self.language, samples)
-
+    
     def open_styles(self, styles):
         return Styles(fs.load_yaml(styles))
 
@@ -113,23 +113,18 @@ class Interface:
         self.translator.select(language)
         self.randomwords.select(language)
 
-    # def save_entry(self, entry, text):
-    #     entry.text = text
+    # def save_page(self, text, entry):
+    #     #  text is formatted
+    #     self.update_entry(text, entry)
+
+    #     entry.text = self._save(text)
+    #     self.save_config()
     #     self.save_site()
-
-    '''
-    def save_page(self, text, entry):
-        #  text is formatted
-        self.update_entry(text, entry)
-
-        entry.text = self._save(text)
-        self.save_config()
-        self.save_site()
-        self.templates.set_data(entry, self.styles)
-        html = self.templates.main.html
-        filename = os.path.join(self.locations.directory, entry.link)
-        fs.saves(html, filename)
-        # Save wholepage'''
+    #     self.templates.set_data(entry, self.styles)
+    #     html = self.templates.main.html
+    #     filename = os.path.join(self.locations.directory, entry.link)
+    #     fs.saves(html, filename)
+    #     # Save wholepage
 
     def save_entry(self, entry):
         self.templates.set_data(entry, self.styles)

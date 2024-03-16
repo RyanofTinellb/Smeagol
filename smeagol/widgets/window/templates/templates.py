@@ -54,7 +54,6 @@ class Templates(tk.Frame):
     def done(self, event=None):
         for frame in self.frames:
             frame.get()
-            print(frame.name, frame.filename)
             setattr(self.templates, frame.name, frame.filename)
         self.parent.destroy()
         return 'break'

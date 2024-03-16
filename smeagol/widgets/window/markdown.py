@@ -10,7 +10,6 @@ class Markdown(tk.Frame):
     def __init__(self, parent=None, markdown=None):
         super().__init__(parent)
         self.parent.title('Editing Markdown')
-        markdown = markdown
         self.original = markdown
         self.markdown = markdown.copy()
         self.font = Font(family="Calibri", size=14)

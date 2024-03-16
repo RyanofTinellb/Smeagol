@@ -4,7 +4,7 @@ from . import font, options, paragraph, sample
 from .colour import Colour as ColourFrame
 
 
-class FullEditor(tk.Frame):
+class Full(tk.Frame):
     def __init__(self, parent, style):
         super().__init__(parent)
         self.parent.title(f'"{style.name.capitalize()}" Style')

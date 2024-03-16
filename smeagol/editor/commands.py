@@ -17,17 +17,6 @@ def menu(obj):
     ]
 
 
-def textbox(obj):
-    return [
-        ('<Control-r>', obj.refresh_random),
-        ('<Control-s>', obj.save_page),
-        ('<Control-t>', obj.new_tab),
-        ('<Control-T>', obj.reopen_tab),
-        ('<Control-w>', obj.close_tab),
-        ('<Enter>', obj.reset_entry),
-    ]
-
-
 def heading(obj):
     return [
         ('<Prior>', obj.previous_entry),

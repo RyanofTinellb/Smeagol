@@ -1,4 +1,4 @@
-# pylint: disable=unused-import
+# pylint: disable=unused-import, E0402
 
 from .evolve import HighToDemoticLulani
 from .linker import Linker

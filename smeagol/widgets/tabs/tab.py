@@ -1,24 +1,45 @@
 import tkinter as tk
 
 from smeagol.utilities import utils
-from smeagol.conversion import api as conversion
 
 from smeagol.widgets.textbox.textbox import Textbox
 
 
 class Tab(tk.Frame):
-    def __init__(self, parent, commands):
+    def __init__(self, parent, commands: list[tuple]):
         super().__init__(parent)
         self.notebook = parent
         self.notebook.add(self)
         self.notebook.select(self)
-        self.textbox = self._textbox(commands)
+        self.commands = self._commands + commands
+        self.textbox = self._textbox()
 
-    def _textbox(self, commands):
+    def _textbox(self):
         textbox = Textbox(self)
         textbox.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
-        utils.bind_all(textbox, commands)
+        utils.bind_all(textbox, self.commands)
         return textbox
+
+    @property
+    def _commands(self):
+        return [
+            ('<Control-s>', self.save_entry)
+        ]
+
+    def save_entry(self, _event=None):
+        self.update_entry()
+        self.save_src()
+        # self.save_html()
+        return 'break'
+
+    def update_entry(self):
+        self.entry.text = self.textbox.text
+
+    def save_src(self):
+        self.interface.save_site()
+
+    def save_html(self):
+        self.interface.save_html()
 
     @property
     def entry(self):
@@ -42,13 +63,7 @@ class Tab(tk.Frame):
 
     @property
     def entry_text(self):
-        text = self._entry.text
-        return conversion.TextTree(text)
-
-    @property
-    def text(self):
-        text = self.textbox.formatted_text
-        return conversion.TextTree(text)
+        return self._entry.text
 
     @property
     def name(self):

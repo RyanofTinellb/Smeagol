@@ -1,3 +1,4 @@
+from typing import Optional
 import tkinter as tk
 import json
 from smeagol.utilities.types import TextTree, Node
@@ -20,8 +21,9 @@ class ClipboardTextbox(StyledTextbox):
         self.delete(start, end)
         self.write(text, start)
 
-    def write(self, text="", position=INSERT, tags=None):
-        tags = tags or self.styles.current
+    def write(self, text="", position=INSERT, tags: Optional[list] = None):
+        current = self.styles.current if self.styles else ''
+        tags = tags or current
         super().insert(position, text, tags)
 
     def remove(self, start=START, end=END):
@@ -151,10 +153,7 @@ class ClipboardTextbox(StyledTextbox):
             case "tagoff":
                 try:
                     self.styles.deactivate(value)
-                except ValueError:
-                    print(
-                        f"Unable to find closing tag for <{
-                            self.styles.current.final}>"
-                    )
-                    return True
+                except ValueError as e:
+                    raise ValueError(f"Unable to find closing tag for <{
+                                     self.styles.current.final}>") from e
         return False

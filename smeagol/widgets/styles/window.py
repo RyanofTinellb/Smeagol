@@ -1,9 +1,9 @@
 import tkinter as tk
 import tkinter.messagebox as mb
 import tkinter.simpledialog as sd
-import tkinter.ttk as ttk
+from tkinter import ttk
 
-from .editor import DefaultEditor, FullEditor
+from smeagol.widgets.styles import editor
 from .interface import Interface
 
 
@@ -41,7 +41,7 @@ class Window(tk.Frame):
         self.current = box
         return box
 
-    def select_style(self, event=None):
+    def select_style(self, _event=None):
         style = self.styles[self.current.get()]
         state = 'disabled' if style.name == 'default' else 'normal'
         self.delete_btn.config(state=state)
@@ -66,7 +66,7 @@ class Window(tk.Frame):
         self._sample = box
         return box
 
-    def rename(self, event=None):
+    def rename(self, _event=None):
         style = self.current.get()
         name = sd.askstring(
             'Style Name', f'What is the new name of "{style}"?')
@@ -78,7 +78,7 @@ class Window(tk.Frame):
             self.current.set(name)
             self.select_style()
 
-    def edit(self, event=None):
+    def edit(self, _event=None):
         top = tk.Toplevel()
         editor = self._editor(top, style=Interface(self.style))
         editor.grid()
@@ -87,6 +87,9 @@ class Window(tk.Frame):
         self.styles[self.current.get()] = editor.style
         self.select_style()
         self.parent.deiconify()
+
+    def _editor(self):
+        return editor.Default if self.name == 'default' else editor.Full
 
     @property
     def style(self):
@@ -104,7 +107,7 @@ class Window(tk.Frame):
     def _editor(self):
         return DefaultEditor if self.style.name == 'default' else FullEditor
 
-    def add(self, event=None):
+    def add(self, _event=None):
         name = sd.askstring('Style Name', 'What is the name of the new style?')
         if name and name not in self.styles:
             self.styles.add(name)
@@ -113,8 +116,9 @@ class Window(tk.Frame):
             self.select_style()
             self.edit()
 
-    def delete(self, event=None):
-        message = f'Are you sure you wish to delete the style "{self.style_name}"?'
+    def delete(self, _event=None):
+        message = f'Are you sure you wish to delete the style "{
+            self.style_name}"?'
         if mb.askyesno('Delete', message):
             self.styles.remove(self.style_name)
             self.current.config(values=self.styles.names)

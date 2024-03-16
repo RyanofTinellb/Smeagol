@@ -1,5 +1,5 @@
 from ..utilities import utils
-from .entry import Entry
+from .page import Page
 
 
 class Site:
@@ -20,14 +20,14 @@ class Site:
                 return
 
     def __getitem__(self, name):
-        entry = Entry(self.tree, [])
+        entry = Page(self.tree, [])
         count = 0
         try:
             while entry.name != name != count:
                 entry = entry.successor
                 count += 1
-        except IndexError:
-            raise (KeyError if type(name) in (list, str) else IndexError)(name)
+        except IndexError as e:
+            raise (KeyError if type(name) in (list, str) else IndexError)(name) from e
         return entry
 
     @property

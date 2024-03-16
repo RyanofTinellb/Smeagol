@@ -1,8 +1,8 @@
 from . import colour, font, options, sample
-from .full import FullEditor
+from .full import Full
 
 
-class DefaultEditor(FullEditor):
+class Default(Full):
     @property # @override
     def frames(self):
         return (

@@ -1,9 +1,6 @@
-import tkinter as tk
-
-from smeagol.conversion import api as conversion
 from smeagol.utilities import filesystem as fs
 
-from .template import Template
+from smeagol.editor.interface.template import Template
 
 
 class Templates:
@@ -14,7 +11,8 @@ class Templates:
         self.page404 = self._new('page404')
         self.wholepage = self._new('wholepage')
         sections = self.filenames.get('sections', {})
-        self.sections = {section: self._load(filename) for section, filename in sections.items()}
+        self.sections = {section: self.load(
+            filename) for section, filename in sections.items()}
 
     @property
     def items(self):
@@ -22,14 +20,14 @@ class Templates:
 
     @property
     def templates(self):
-        return dict(main=self.main,
-                    search=self.search,
-                    page404=self.page404,
-                    wholepage=self.wholepage,
-                    **self.sections)
+        return {'main': self.main,
+                'search': self.search,
+                'page404': self.page404,
+                'wholepage': self.wholepage,
+                **self.sections}
 
     def set_data(self, entry, styles):
-        template = dict(text=entry.text, tagger=styles)
+        template = {'text': entry.text, 'tagger': styles}
         self.sections['contents'] = self._open(template)
 
     def __getitem__(self, key):
@@ -45,4 +43,3 @@ class Templates:
         if not filename:
             return None
         return fs.load_yaml(filename)
-        

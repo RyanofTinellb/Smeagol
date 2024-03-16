@@ -1,16 +1,18 @@
 import re
 from datetime import datetime as dt
 
-from ..utilities import utils
-from .node import Node
+from smeagol.utilities import utils
+from smeagol.site.node import Node
+from smeagol.conversion.text_tree.text_tree import TextTree
 
 
 class Entry(Node):
-    def __init__(self, tree=None, location=None):
-        super().__init__(tree, location)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._texttree = None
 
     def __str__(self):
-        return '\n'.join(self.text)
+        return '\n'.join(self._text)
 
     def __hash__(self):
         return hash(tuple(self.location))
@@ -21,34 +23,48 @@ class Entry(Node):
                 return self.find.get(attr, '')
             case 'position':
                 return self.find.get(attr, '1.0')
-            case default:
+            case _default:
                 try:
                     return super().__getattr__(attr)
-                except AttributeError:
+                except AttributeError as e:
                     name = self.__class__.__name__
-                    raise AttributeError(f"'{name}' object has no attribute '{attr}'")
+                    raise AttributeError(
+                        f"'{name}' object has no attribute '{attr}'") from e
 
     def __setattr__(self, attr, value):
         match attr:
             case 'name' | 'position' | 'script' | 'id':
                 self._conditional_set(attr, value)
-            case default:
+            case _default:
                 super().__setattr__(attr, value)
 
     def _conditional_set(self, attr, value):
         if not value:
             return self.find.pop(attr, None)
         self.find[attr] = value
+        return None
+
+    @property
+    def _text(self):
+        return self.find.get('text', [])
 
     @property
     def text(self):
-        return self.find.get('text', [])
+        if not self._texttree:
+            self._texttree = TextTree(self._text)
+        return self._texttree
 
     @text.setter
     def text(self, value):
+        self.texttree, text = self._texts(value)
         with utils.ignored(AttributeError):
-            value = [line for line in value.splitlines() if line]
-        self.find['text'] = value
+            text = [line for line in text.splitlines() if line]
+        self.find['text'] = text
+
+    def _texts(self, value):
+        if isinstance(value, TextTree):
+            return value, str(value)
+        return TextTree(value), value
 
     @property
     def date(self):
@@ -64,6 +80,7 @@ class Entry(Node):
             date = dt.strftime(value, '%Y-%m-%d')
         except (ValueError, KeyError):
             date = dt.strftime(dt.today(), '%Y-%m-%d')
+        self.find['date'] = date
 
     def remove_script(self):
         self.find.pop('script', None)
@@ -74,69 +91,20 @@ class Entry(Node):
     def regex_replace(self, pattern, repl):
         self.text = re.sub(pattern, repl, '\n'.join(self.text))
 
-    @property
-    def link(self):
-        link = self.folder
-        url = self.url if not self.has_children else 'index'
-        hyperlink = f'{link}/{url}' if link else url
-        return hyperlink + '.html'
-
-    @property
-    def url(self):
-        if self.location is None:
-            return 'index'
-        return utils.urlform(self.name)
-
-    @property
-    def analysis(self):
-        wordlist = {}
-        content = [str(self)]
-        # remove tags, and items between some tags
-        utils.change_text(
-            r'\[\d\]|<(ipa|high-lulani|span).*?</\1>|<.*?>|^\d\]', ' ', content)
-        # remove heading markers from tables
-        utils.remove_text(r'\|\w*', content)
-        # change punctuation to paragraph marks, so that splitlines works
-        utils.change_text(r'[!?.|]', '\n', content)
-        # change punctuation to space
-        utils.change_text(r'[_()]', ' ', content)
-        # remove spaces at the beginnings and end of lines,
-        #    duplicate spaces and end-lines
-        utils.remove_text(r'(?<=\n) +| +(?=[\n ])|^ +| +$|\n+(?=\n)|[,:]', content)
-        # remove duplicate end-lines, and tags in square brackets
-        utils.remove_text(r'\n+(?=\n)|\[.*?\]', content)
-        content = utils.buyCaps(content[0])
-        lines = content.splitlines()
-        content = [content.lower()]
-        utils.change_text(r'&.*?;', ' ', content)
-        # change punctuation, and tags in square brackets, into spaces
-        utils.change_text(r'\'\"|\[.*?\]|[!?`\"/{}\\;-]|\'($| )|\d', ' ', content)
-        # make glottal stops lower case where appropriate
-        utils.change_text(r"(?<=[ \n])''", "'", content)
-        for number, line in enumerate(content[0].splitlines()):
-            for word in line.split():
-                try:
-                    if wordlist[word][-1] != number:
-                        wordlist[word].append(number)
-                except KeyError:
-                    wordlist[word] = [number]
-        return dict(words=wordlist,
-                    sentences=lines)
-
     def __getitem__(self, entry):
         if entry == '':
             return self
         count = 0
         try:
             page = self.eldest_daughter
-        except AttributeError:
-            raise KeyError(f'{self.name} has no children')
+        except AttributeError as e:
+            raise KeyError(f'{self.name} has no children') from e
         try:
             while entry not in (page.name, page.id) and entry != count:
                 page = page.next()
                 count += 1
-        except (IndexError, StopIteration):
-            raise KeyError(entry)
+        except (IndexError, StopIteration) as e:
+            raise KeyError(entry) from e
         return page
 
     def __eq__(self,  other):
@@ -149,9 +117,7 @@ class Entry(Node):
     def list(self):
         if self.is_root:
             return []
-
-        def name(x): return x.name
-        return list(map(name, self.lineage))[1:]
+        return [x.name for x in self.lineage][1:]
 
     @property
     def folder(self):
@@ -163,7 +129,6 @@ class Entry(Node):
             yield ancestor.url
         if not self.is_root and not self.is_leaf:
             yield self.url
-        return
 
     def hyperlink(self, destination, template='{0}', anchors=True):
         try:
@@ -192,24 +157,24 @@ class Entry(Node):
             urls[-1] = 'index'
         down = '/'.join(urls)
         address = (up * '../') + down + '.html'
-        destination = template.format(utils.buyCaps(destination.name))
+        destination = template.format(destination.name)
         link = f'<a href="{address}">{destination}</a>'
         return address, link
 
     @property
     def title(self):
-        return utils.remove_text(r'[\[<].*?[\]>]', [utils.buyCaps(self.name)])[0]
+        return utils.remove_text(r'[\[<].*?[\]>]', [self.name])[0]
 
     def heading(self, name, level=1):
         return f'<h{level}>{name}</h{level}>'
 
     @property
     def title_heading(self):
-        return self.heading(utils.buyCaps(self.name))
+        return self.heading(self.name)
 
     @property
     def wholepage_heading(self):
-        return self.heading(utils.buyCaps(self.name), self.level)
+        return self.heading(self.name, self.level)
 
     @property
     def wholepage(self):
@@ -220,38 +185,19 @@ class Entry(Node):
         titles = [self.title, self.matriarch.title]
         if self.level < 2:
             return self.title
-        elif self.ancestor(2).name == 'Sample Texts':
+        if self.ancestor(2).name == 'Sample Texts':
             return '{0} - Sample Text in {1}'.format(*titles)
-        else:
-            return '{1} {0}'.format(*titles)
+        return '{1} {0}'.format(*titles)
 
     def story_title(self, story_name):
+        return ' &lt; '.join(self._story_title(story_name))
+
+    def _story_title(self, story_name):
         if not self.level:
-            titles = [story_name]
-        elif self.level == 1:
-            titles = [self.title, story_name]
-        else:
-            titles = [self.title, self.matriarch.title, story_name]
-        return ' &lt; '.join(titles)
-
-    @property
-    def main_contents(self):
-        text = '\n'.join(self.text)
-        return f'<div class="main-contents">{text}</div>'
-
-    @property
-    def wholepage_contents(self):
-        return f'<div class="main-contents">{self.text}</div>'
-
-    def stylesheets(self, sheets):
-        links = sheets.split(' ')
-        links = [self.hyperlink(link, anchors=False) for link in links]
-        template = '<link rel="stylesheet" type="text/css" href="{0}">'
-        return '\n'.join([template.format(link) for link in links])
-
-    def icon(self, icon):
-        icon = self.hyperlink(icon, anchors=False)
-        return f'<link rel="icon" type="image/png" href="{icon}">'
+            return [story_name]
+        if self.level == 1:
+            return [self.title, story_name]
+        return [self.title, self.matriarch.title, story_name]
 
     @property
     def toc(self):
@@ -262,93 +208,3 @@ class Entry(Node):
         return ('<div class="toc">\n'
                 f'{links}\n'
                 '</div>')
-
-    @property
-    def links(self):
-        return ('<label>\n'
-                '  <input type="checkbox" class="menu">\n'
-                '  <ul>\n'
-                '    <li{0}>{2}</li>\n'
-                '    <div class="javascript">\n'
-                '      <form id="search">\n'
-                '        <li class="search">\n'
-                '          <input type="text" name="term">\n'
-                '          <button type="submit">Search</button>\n'
-                '        </li>\n'
-                '      </form>\n'
-                '    </div>\n'
-                '   <div class="links{1}">'
-                '  {{0}}'
-                '   </div>'
-                '</ul></label>').format(
-                    ' class="normal"' if self.is_root else '',
-                    '-root' if self.is_root else '',
-                    self.hyperlink(self.root))
-
-    @property
-    def elder_links(self):
-        return self.links.format(self.matriarch_links)
-
-    @property
-    def family_links(self):
-        link_array = ''
-        level = 0
-        for relative in self.family:
-            old_level = level
-            level = relative.level
-            if level > old_level:
-                link_array += f'<ul class="level-{str(level)}">'
-            elif level < old_level:
-                link_array += (old_level - level) * '</ul>\n'
-            if relative == self:
-                link_array += f'<li class="normal">{self.name}</li>\n'
-            else:
-                link_array += f'<li>{self.hyperlink(relative)}</li>\n'
-        link_array += (level) * '</ul>\n'
-        return self.links.format(link_array)
-
-    @property
-    def matriarch_links(self):
-        links = '\n'.join(map(self._link, self.matriarchs))
-        return f'<ul>\n{links}\n</ul>'
-
-    def _link(self, other):
-        other = self.new(other.location)
-        if self == other:
-            return f'<li class="normal">{self.hyperlink(other)}</li>'
-        else:
-            return f'<li>{self.hyperlink(other)}</li>'
-
-    @property
-    def nav_footer(self):
-        try:
-            previous = self.hyperlink(self.predecessor, '&larr; Previous page')
-        except IndexError:
-            previous = ('<a href="http://www.tinellb.com">'
-                        '&uarr; Go to Main Page</a>')
-        try:
-            next = self.hyperlink(self.successor, 'Next page &rarr;')
-        except IndexError:
-            if self.is_root:
-                next = ''
-            else:
-                next = self.hyperlink(self.root, 'Return to Menu &uarr;')
-        links = '\n'.join([f'<div>\n{x}\n</div>\n' for x in (previous, next)])
-        return f'<div class="nav-footer">{links}</div>'
-
-    def copyright(self, template):
-        datestring = dt.strftime
-        date = self.date
-        if 4 <= date.day <= 20 or 24 <= date.day <= 30:
-            suffix = 'th'
-        else:
-            suffix = ('th', 'st', 'nd', 'rd')[date.day % 10]
-        template = template.replace('%t', suffix)
-        return datestring(date, template)
-
-    @property
-    def scripts(self):
-        if self.script:
-            return f'<script>\n{self.script}\n</script>'
-        else:
-            return ''

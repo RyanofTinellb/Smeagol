@@ -16,7 +16,7 @@ properties:
         e.g.: 'f' -> `CTRL-f`.
 """
 
-from ...utilities import errors, utils
+from smeagol.utilities import errors, utils
 
 
 class Tag:

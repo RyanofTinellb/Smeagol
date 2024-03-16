@@ -61,6 +61,7 @@ class Manager(tk.Frame):
 
     @property
     def sidebar(self):
+        row = 1
         frame = tk.Frame(self.parent)
         self.headings = self.headings_frame(frame)
         self.headings.grid(row=0, column=0)
@@ -69,7 +70,7 @@ class Manager(tk.Frame):
             style=tk.Label(frame, font=('Arial', 12)),
             language=self.language_display(frame),
             randomwords=self.random_words_display(frame))
-        for row, display in enumerate(self.displays.values(), start=1):
+        for row, display in enumerate(self.displays.values(), start=row):
             display.grid(row=row, column=0)
         tk.Label(frame, height=1000).grid(row=row+1, column=0)
         return frame

@@ -23,30 +23,6 @@ class Editor(Manager):
     def open_site(self):
         self.tabs.open_site(fs.open_smeagol())
 
-    @property
-    def interfaces(self):
-        return self.tabs.interfaces
-
-    def new_tab(self, _event=None):
-        self.tabs.new()
-        return 'break'
-
-    def reopen_tab(self, _event=None):
-        self.tabs.reopen()
-        return 'break'
-
-    def close_tab(self, event):
-        tab = f'@{event.x},{event.y}'
-        self.tabs.close(tab)
-        return 'break'
-
-    def change_tab(self):
-        self.tabs.change()
-        self.update_displays()
-        self.change_language()
-        self.set_headings(self.entry)
-        return 'break'
-
     def __getattr__(self, attr):
         match attr:
             case 'tab':
@@ -120,10 +96,10 @@ class Editor(Manager):
         self.interface.open_entry_in_browser(self.entry)
         return 'break'
 
-    def open_entry(self, entry):
-        self.set_headings(entry)
-        self.entry = entry
-        self.title = self.interface.site.root.name
+    # def open_entry(self, entry):
+    #     self.set_headings(entry)
+    #     self.entry = entry
+    #     self.title = self.interface.site.root.name
 
     def reset_entry(self, _event=None):
         with utils.ignored(AttributeError):
@@ -156,12 +132,6 @@ class Editor(Manager):
     def save_page(self, _event=None):
         self.tabs.save_entry()
         return 'break'
-
-    def save_site(self, _event=None):
-        self.tabs.save_site()
-
-    def save_site_as(self, _event=None):
-        self.tabs.save_site_as()
 
     def refresh_random(self, _event=None):
         if r := self.interface.randomwords:
@@ -206,7 +176,7 @@ class Editor(Manager):
 
     def markdown_edit(self, _event=None):
         top = tk.Toplevel(self)
-        editor = window.MarkdownWindow(top, self.interface.markdown)
+        editor = window.Markdown(top, self.interface.markdown)
         self.wait_window(top)
         self.interface.markdown = editor.markdown
 
@@ -218,9 +188,9 @@ class Editor(Manager):
 
     def edit_styles(self, _event=None):
         top = tk.Toplevel()
-        window = styles.Window(top, self.interface.styles)
-        window.grid()
-        top.protocol('WM_DELETE_WINDOW', window.cancel)
+        styles_window = styles.window.Window(top, self.interface.styles)
+        styles_window.grid()
+        top.protocol('WM_DELETE_WINDOW', styles_window.cancel)
         top.title(f'{self.interface.site.name} Styles')
         self.wait_window(top)
         self.textbox.update_styles()
@@ -233,7 +203,7 @@ class Editor(Manager):
 
     def quit(self):
         super().quit()
-        self.interfaces.save_all()
+        self.tabs.save_all()
         print('Closing Servers...')
         fs.close_servers()
         print('Servers closed. Enjoy the rest of your day.')
