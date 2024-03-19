@@ -3,8 +3,9 @@ from .page import Page
 
 
 class Site:
-    def __init__(self, tree=None):
-        self.tree = tree or {}
+    def __init__(self, directory, entries):
+        self.directory = directory
+        self.entries = entries
 
     def __iter__(self):
         return self.iterator

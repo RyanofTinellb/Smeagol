@@ -6,6 +6,7 @@ import webbrowser as web
 from http.server import SimpleHTTPRequestHandler
 from socketserver import TCPServer as Server
 from threading import Thread
+from typing import Optional
 
 import yaml
 from smeagol.utilities.defaults import default
@@ -87,20 +88,20 @@ def _load_yaml(filename):
 def change(filename, fn, newfilename=None):
     '''Run function `fn` on entire object in filename'''
     newfilename = newfilename or filename
-    obj = load_json(filename)
+    obj = load_yaml(filename)
     fn(obj)
-    save_json(obj, newfilename)
+    save_yaml(obj, newfilename)
 
 
-def update(filename, fn, newfilename=None):
+def update(filename: str, fn: callable, newfilename: Optional[str]=None):
     '''
     Run function `fn` on each element `elt` of an object `obj` in `filename`
     '''
     newfilename = newfilename or filename
-    obj = load_json(filename)
+    obj = load_yaml(filename)
     for elt in obj:
         fn(elt)
-    save_json(obj, newfilename)
+    save_yaml(obj, newfilename)
 
 
 def updates(filename, fn, newfilename=None):
@@ -129,12 +130,12 @@ def save_smeagol():
     return fd.asksaveasfilename(**options)
 
 
-def walk(root, condition):
+def walk(root: str, condition: callable):
     return [os.path.join(root, filename) for root, _, files in os.walk(root)
             for filename in files if condition(filename)]
 
 
-def findbytype(root, ext):
+def find_by_type(root: str, ext: str):
     return walk(root, isfiletype(ext))
 
 
@@ -147,6 +148,8 @@ def extension(filename):
 
 
 def isfiletype(ext):
+    if not ext.startswith('.'):
+        ext = '.' + ext
     def _isfiletype(filename, ext=ext):
         return extension(filename) == ext
     return _isfiletype

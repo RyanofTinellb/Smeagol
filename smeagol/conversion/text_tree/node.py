@@ -1,8 +1,8 @@
 from typing import Self
 
-
+# -------------------------------------- ↑ refactored ↑ ---------------------------------------------------- #
 class Node:
-    def __init__(self, parent: Self = None, name: str = '') -> None:
+    def __init__(self, parent: Self=None, name: str='') -> None:
         self.parent = parent
         self.name = name
         self.children = []

@@ -34,7 +34,7 @@ def other():
 
 def get_filenames(path):
     if fs.isfolder(path):
-        return fs.findbytype(path, '.smg')
+        return fs.find_by_type(path, '.smg')
     return [path]
 
 
