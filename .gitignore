@@ -6,6 +6,10 @@ __pycache__/
 *.exe
 *.pyc
 
+# Useless tests
+run_tests.py
+tests/
+
 # Visual Studio Code
 .vscode/
 

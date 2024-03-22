@@ -2,13 +2,6 @@ from smeagol.widgets.tabs.base_tabs import BaseTabs
 
 
 class EntryTabs(BaseTabs):
-    def open_entry(self, interface, entry, new_tab):
-        # pylint: disable=W0201
-        if new_tab:
-            self.new()
-        self.current.interface = interface
-        self.current.entry = entry
-
     # def save_entry(self):
     #     entry = self.current.entry
     #     interface = self.current.interface
@@ -34,3 +27,10 @@ class EntryTabs(BaseTabs):
         for i, entry in enumerate(interface.entries()):
             # only open in same tab for first entry of first filename
             self.open_entry(interface, entry, new_tab + i)
+
+    def open_entry(self, interface, entry, new_tab):
+        # pylint: disable=W0201
+        if new_tab:
+            self.new()
+        self.current.interface = interface
+        self.current.entry = entry

@@ -1,15 +1,15 @@
 import os
 
-from ...conversion import api as conversion
-from ...site.site import Site
-from ...utilities import api as utilities
-from ...utilities import errors
-from ...utilities import filesystem as fs
-from ...utilities import utils
-from ...widgets.styles.styles import Styles
-from .assets import Assets
-from .locations import Locations
-from .templates import Templates
+from smeagol.conversion import api as conversion
+from smeagol.site.site import Site
+from smeagol.utilities import api as utilities
+from smeagol.utilities import errors
+from smeagol.utilities import filesystem as fs
+from smeagol.utilities import utils
+from smeagol.widgets.styles.styles import Styles
+from smeagol.editor.interface.assets import Assets
+from smeagol.editor.interface.locations import Locations
+from smeagol.editor.interface.templates import Templates
 
 
 class Interface:
@@ -84,7 +84,7 @@ class Interface:
         self.linker = conversion.Linker(config.get('links', {}))
         samples = self.assets.samples
         self.randomwords = utilities.RandomWords(self.language, samples)
-    
+
     def open_styles(self, styles):
         return Styles(fs.load_yaml(styles))
 
@@ -92,18 +92,10 @@ class Interface:
         return Site(fs.load_yaml(self.assets.source))
 
     def save_site(self):
-        fs.save_yaml(self.site.tree, self.assets.source)
+        fs.save_yaml(self.site.data, self.assets.source)
 
     def find_entry(self, headings):
-        entry = self.site.root
-        if not headings:
-            return entry
-        for heading in headings:
-            try:
-                entry = entry[heading]
-            except (KeyError, IndexError):
-                break
-        return entry
+        return self.site[headings]
 
     def open_entry_in_browser(self, entry):
         fs.open_in_browser(self.port, entry.link)
