@@ -75,10 +75,6 @@ class StyledTextbox(BaseTextbox):
         name = style.name
         key = style.key
         self.tag_config(name, **style.paragraph)
-        if style.language:
-            for language in self.languages:
-                language = language[:2]
-                self.tag_config(f"{name}-{language}", **style.paragraph)
         if key:
             self.bind(f"<Control-{key}>", self.style_changer(name, style))
 

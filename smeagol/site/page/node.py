@@ -2,6 +2,7 @@ from itertools import chain
 from smeagol.site.directory import Directory
 from smeagol.site.entries import Entries
 
+# pylint: disable=R0904
 
 class Node:
     def __init__(self, directory=None, entries=None, names=None):
@@ -12,7 +13,7 @@ class Node:
     @property
     def name(self):
         return self.names[-1]
-    
+
     @property
     def location(self):
         location = []
@@ -23,12 +24,12 @@ class Node:
             obj = obj[index]
         return location
 
-    @staticmethod
-    def _index(obj, name):
+    def _index(self, obj, name):
         for i, elt in enumerate(obj):
             if elt[0] == name:
                 return i
-        raise IndexError
+        clsname = self.__class__.__name__
+        raise IndexError(f'{clsname} has no item {name}')
 
     @property
     def data(self):

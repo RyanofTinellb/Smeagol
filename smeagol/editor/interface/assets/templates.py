@@ -13,6 +13,7 @@ class Templates(SubsetDict):
 
     def __setattr__(self, attr, value):
         # Warning: getattr and setattr are asymetrical.
+        # pylint: disable=W0201, E0203
         try:
             super().__setattr__(attr, value)
         except AttributeError:

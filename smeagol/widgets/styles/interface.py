@@ -5,6 +5,7 @@ types = {int: tk.IntVar,
          str: tk.StringVar,
          bool: tk.BooleanVar}
 
+
 class Interface:
     def __init__(self, style):
         self.style = style
@@ -29,7 +30,7 @@ class Interface:
     def make_var(self, value, attr):
         try:
             return types[type(value)](value=value, name=attr)
-        except KeyError:
+        except KeyError as e:
             type_ = value.__class__.__name__
-            raise TypeError(f'Value must be int, float, str or bool, not {type_}')
-
+            raise TypeError(
+                f'Value must be int, float, str or bool, not {type_}') from e

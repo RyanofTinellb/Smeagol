@@ -1,8 +1,8 @@
 from typing import Self
 
-# -------------------------------------- ↑ refactored ↑ ---------------------------------------------------- #
+
 class Node:
-    def __init__(self, parent: Self=None, name: str='') -> None:
+    def __init__(self, parent: Self = None, name: str = '') -> None:
         self.parent = parent
         self.name = name
         self.children = []
@@ -27,6 +27,9 @@ class Node:
 
     def __iter__(self):
         return iter(self.children)
+
+    def __getitem__(self, key):
+        return self.children[key]
 
     def __str__(self):
         return f'{self.open_tag}{self.middle_text}{self.close_tag}'

@@ -1,4 +1,4 @@
-from smeagol.utilities import errors, utils
+from smeagol.utilities import utils
 
 
 class SubsetDict:
@@ -20,18 +20,21 @@ class SubsetDict:
 
     def __getattr__(self, attr):
         if not self._valid(attr):
-            raise errors.attribute_error(self)
+            name = type(self).__name__
+            raise AttributeError(f"'{name}' object has no attribute '{attr}'")
         try:
             return self.values[attr]
         except KeyError:
             return ''
 
     def __setattr__(self, attr, value):
-            if attr == 'values':
-                return super().__setattr__('values', value or {})
-            if not self._valid(attr):
-                raise errors.attribute_error(self)
-            utils.setnonzero(self.values, attr, value)
+        if attr == 'values':
+            return super().__setattr__('values', value or {})
+        if not self._valid(attr):
+            name = type(self).__name__
+            raise AttributeError(f"'{name}' object has no attribute '{attr}'")
+        utils.setnonzero(self.values, attr, value)
+        return None
 
     def _valid(self, attr):
         return attr in self._valid_attrs

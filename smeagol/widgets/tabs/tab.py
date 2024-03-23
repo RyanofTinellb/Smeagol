@@ -27,19 +27,10 @@ class Tab(tk.Frame):
         ]
 
     def save_entry(self, _event=None):
-        self.update_entry()
-        self.save_src()
-        # self.save_html()
-        return 'break'
-
-    def update_entry(self):
         self.entry.text = self.textbox.text
-
-    def save_src(self):
         self.interface.save_site()
-
-    def save_html(self):
-        self.interface.save_html()
+        self.interface.save_entry(self.entry)
+        return 'break'
 
     @property
     def entry(self):

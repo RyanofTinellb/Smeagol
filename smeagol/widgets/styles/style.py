@@ -18,9 +18,8 @@ properties:
 
 from tkinter.font import Font
 
-from .tag import Tag
-from ...utilities import errors
-from ...utilities.defaults import default
+from smeagol.widgets.styles.tag import Tag
+from smeagol.utilities.defaults import default
 
 DEFAULTS = default.style
 
@@ -39,7 +38,7 @@ class Style(Tag):
         try:
             return self.props.get(attr, self.defaults[attr])
         except KeyError as e:
-            raise errors.throw_error(KeyError, self, attr) from e
+            raise KeyError(f"'{type(self).__name__}' object has no item '{attr}'") from e
 
     def get(self, attr, default_value):
         try:
@@ -68,22 +67,22 @@ class Style(Tag):
 
     @property
     def paragraph(self):
-        return dict(
-            justify=self._justify,
-            offset=self._offset,
+        return {
+            'justify': self._justify,
+            'offset': self._offset,
             **self.textbox_settings,
             **self._border,
             **self._units(self._margins),
-        )
+        }
 
     @property
     def textbox_settings(self):
-        return dict(
-            font=self.create_font(),
-            foreground=self["colour"],
-            background=self["background"],
+        return {
+            'font': self.create_font(),
+            'foreground': self["colour"],
+            'background': self["background"],
             **self._units(self._spacing),
-        )
+        }
 
     def create_font(self):
         try:
@@ -93,19 +92,19 @@ class Style(Tag):
 
     @property
     def _margins(self):
-        return dict(
-            lmargin1=self["left"] + self["indent"],
-            lmargin2=self["left"],
-            rmargin=self["right"],
-        )
+        return {
+            "lmargin1": self["left"] + self["indent"],
+            "lmargin2": self["left"],
+            "rmargin": self["right"],
+        }
 
     @property
     def _spacing(self):
-        return dict(
-            spacing1=self["top"],
-            spacing2=self["line_spacing"],
-            spacing3=self["bottom"],
-        )
+        return {
+            "spacing1": self["top"],
+            "spacing2": self["line_spacing"],
+            "spacing3": self["bottom"],
+        }
 
     def _units(self, obj):
         return {k: self._unit(v) for k, v in obj.items()}

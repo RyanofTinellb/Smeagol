@@ -1,8 +1,4 @@
-import os.path
-
-from ...utilities import filesystem as fs
-from ...utilities import utils
-from .interface import Interface
+from smeagol.editor.interface.interface import Interface
 
 
 class Interfaces:

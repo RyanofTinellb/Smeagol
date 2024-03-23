@@ -2,12 +2,6 @@ from smeagol.widgets.tabs.base_tabs import BaseTabs
 
 
 class EntryTabs(BaseTabs):
-    # def save_entry(self):
-    #     entry = self.current.entry
-    #     interface = self.current.interface
-    #     text = self.current.text
-    #     interface.save_entry(entry, text)
-
     def save_all(self):
         pass
 

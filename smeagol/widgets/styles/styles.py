@@ -1,4 +1,4 @@
-from .style import Style
+from smeagol.widgets.styles.style import Style
 
 
 def get_name(style):
@@ -32,7 +32,11 @@ class Styles:
     def __getitem__(self, name):
         if "-" in name:
             name, _language = name.split("-")
-        return self.styles[name]
+        try:
+            return self.styles[name]
+        except KeyError:
+            self.styles[name] = Style({'name': name})
+            return self.styles[name]
 
     def __setitem__(self, name, value):
         self.styles[name] = value
@@ -87,9 +91,13 @@ class Styles:
             self.styles = {n: s for n, s in self.styles.items() if s != style}
 
     def activate(self, style):
+        if '-' in style:
+            style, _lang = style.split('-')
         self._current.add(style)
 
     def deactivate(self, style):
+        if '-' in style:
+            style, _lang = style.split('-')
         self._current.discard(style)
 
     def clear(self):

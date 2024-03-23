@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import simpledialog as sd
 
-from smeagol.utilities import errors
 from smeagol.utilities import filesystem as fs
 from smeagol.utilities import utils
 from smeagol.widgets import styles
@@ -41,7 +40,8 @@ class Editor(Manager):
                 try:
                     return super().__getattr__(attr)
                 except AttributeError as e:
-                    raise errors.throw_error(AttributeError, self, attr) from e
+                    name = type(self).__name__
+                    raise AttributeError(f"'{name}' object has no attribute '{attr}'") from e
         return value
 
     def __setattr__(self, attr, value):
@@ -84,6 +84,7 @@ class Editor(Manager):
         return 'break'
 
     def load_entry(self, event):
+        # pylint: disable=W0201
         self.entry = self._entry(event.widget.level)
         try:
             self.set_headings(self.entry.eldest_daughter)

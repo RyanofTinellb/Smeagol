@@ -3,13 +3,11 @@ import os
 from smeagol.conversion import api as conversion
 from smeagol.site.site import Site
 from smeagol.utilities import api as utilities
-from smeagol.utilities import errors
 from smeagol.utilities import filesystem as fs
 from smeagol.utilities import utils
 from smeagol.widgets.styles.styles import Styles
-from smeagol.editor.interface.assets import Assets
-from smeagol.editor.interface.locations import Locations
-from smeagol.editor.interface.templates import Templates
+from smeagol.editor.interface import assets
+from smeagol.editor.interface.templates.template_store import TemplateStore
 
 
 class Interface:
@@ -18,7 +16,7 @@ class Interface:
         config = self.load_config(filename) if filename else {}
         self.setup(config)
         self.site = self.open_site()
-        self.template_store = template_store or {}
+        self.template_store = template_store or TemplateStore(self.templates)
         if server:
             self.port = fs.start_server(
                 port=41809, directory=self.locations.directory)
@@ -33,7 +31,9 @@ class Interface:
                 try:
                     return super().__getattr__(attr)
                 except AttributeError as e:
-                    raise errors.throw_error(e, self, attr) from e
+                    name = type(self).__name__
+                    raise AttributeError(
+                        f"'{name}' object has no attribute '{attr}'") from e
 
     def __setattr__(self, attr, value):
         match attr:
@@ -74,9 +74,9 @@ class Interface:
 
     def setup(self, config):
         self.config = config
-        self.assets = Assets(config.get('assets', {}))
-        self.locations = Locations(config.get('locations', {}))
-        self.templates = Templates(config.get('templates', {}))
+        self.assets = assets.Assets(config.get('assets', {}))
+        self.locations = assets.Locations(config.get('locations', {}))
+        self.templates = assets.Templates(config.get('templates', {}))
         self.styles = self.open_styles(config.get('styles', ''))
         self.language = config.get('language', '')
         self.translator = conversion.Translator(self.language)
@@ -105,24 +105,12 @@ class Interface:
         self.translator.select(language)
         self.randomwords.select(language)
 
-    # def save_page(self, text, entry):
-    #     #  text is formatted
-    #     self.update_entry(text, entry)
-
-    #     entry.text = self._save(text)
-    #     self.save_config()
-    #     self.save_site()
-    #     self.templates.set_data(entry, self.styles)
-    #     html = self.templates.main.html
-    #     filename = os.path.join(self.locations.directory, entry.link)
-    #     fs.saves(html, filename)
-    #     # Save wholepage
-
     def save_entry(self, entry):
-        self.templates.set_data(entry, self.styles)
-        html = self.templates.main.html()
+        self.template_store.set_data(entry, self.styles)
+        html = self.template_store.main.html
         filename = os.path.join(self.locations.directory, entry.link)
-        fs.save_string(html, filename)
+        print('lolly', html, filename)
+        # fs.save_string(html, filename)
 
     def close_servers(self):
         fs.close_servers()

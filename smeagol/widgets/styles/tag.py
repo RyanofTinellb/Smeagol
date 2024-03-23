@@ -16,7 +16,7 @@ properties:
         e.g.: 'f' -> `CTRL-f`.
 """
 
-from smeagol.utilities import errors, utils
+from smeagol.utilities import utils
 
 
 class Tag:
@@ -45,7 +45,8 @@ class Tag:
                 try:
                     return super().__getattr__(attr)
                 except AttributeError as e:
-                    raise errors.throw_error(AttributeError, self, attr) from e
+                    raise AttributeError(
+                        f"'{type(self).__name__}' object has no attribute '{attr}'") from e
 
     def __setattr__(self, attr, value):
         if attr in self.attrs:

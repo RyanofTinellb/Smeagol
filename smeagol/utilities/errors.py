@@ -43,7 +43,3 @@ class MarkdownError(BaseException):
 
 class MarkdownFileNotFound(MarkdownError, FileNotFound):
     '''Raised when Markdown cannot find .mkd file'''
-
-def throw_error(err, obj, attr):
-    name = obj.__class__.__name__
-    return err(f"'{name}' object has no attribute '{attr}'")

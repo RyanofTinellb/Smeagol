@@ -43,10 +43,10 @@ class Page(Entry):
 
     @property
     def link(self):
-        link = self.folder
-        url = self.url if not self.has_children else 'index'
-        hyperlink = f'{link}/{url}' if link else url
-        return hyperlink + '.html'
+        link = '/'.join(self.names[1:])
+        if not self.is_leaf:
+            link += '/index'
+        return link + '.html'
 
     @property
     def url(self):
