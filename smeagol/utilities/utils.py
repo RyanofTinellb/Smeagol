@@ -38,6 +38,7 @@ def asynca(function):
 
     return async_function
 
+
 def compose(*functions):
     def compose2(f, g):
         return lambda x: f(g(x))
@@ -55,6 +56,10 @@ def setnonzero(obj, attr, value):
         return obj.pop(attr, None)
     obj[attr] = value
     return None
+
+
+def filter_nonzero(obj):
+    return dict(filter(lambda k: k[1], obj.items()))
 
 
 def setnotequal(obj, attr, value, default):

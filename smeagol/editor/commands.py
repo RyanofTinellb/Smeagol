@@ -17,14 +17,6 @@ def menu(obj):
     ]
 
 
-def heading(obj):
-    return [
-        ('<Prior>', obj.previous_entry),
-        ('<Next>', obj.next_entry),
-        ('<Return>', obj.load_entry),
-    ]
-
-
 def language(obj):
     return [('<<ComboboxSelected>>', obj.change_language)]
 

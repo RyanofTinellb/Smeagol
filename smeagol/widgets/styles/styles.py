@@ -19,7 +19,7 @@ class Styles:
     def create_style(self, style=None):
         style = style or {}
         if self.default:
-            return Style(**style, defaults=self.default)
+            return Style(**style)
         self.default = Style(**style)
         return self.default
 

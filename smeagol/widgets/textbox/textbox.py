@@ -25,8 +25,6 @@ class Textbox(ClipboardTextbox):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.displays.update({
-            "style": tk.StringVar(),
-            "language": tk.StringVar(),
             "wordcount": tk.IntVar()})
         self.add_commands(self.commands)
 

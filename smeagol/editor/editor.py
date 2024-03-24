@@ -7,6 +7,7 @@ from smeagol.widgets import styles
 from smeagol.widgets.manager import Manager
 from smeagol.widgets.window import api as window
 
+# pylint: disable=R0904
 
 class Editor(Manager):
     def __init__(self, parent=None, filenames=None):
@@ -18,6 +19,7 @@ class Editor(Manager):
         if filenames is None:
             filenames = [fs.open_smeagol()]
         self.tabs.open_sites(filenames)
+        self.displays['style'].config(textvariable=self.tabs.thing)
 
     def open_site(self):
         self.tabs.open_site(fs.open_smeagol())
@@ -32,8 +34,6 @@ class Editor(Manager):
                 value = self.tab.interface
             case 'entry':
                 value = self.tab.entry
-            case 'status':
-                value = self.textbox.displays
             case 'closed_tabs':
                 value = self.tabs.closed
             case _default:
@@ -67,31 +67,31 @@ class Editor(Manager):
     def _entry(self, level):
         return self.interface.find_entry(self.headings.headings[:level+1])
 
-    def previous_entry(self, event):
-        entry = self._entry(event.widget.level)
-        with utils.ignored(IndexError):
-            self.set_headings(entry.previous_sister)
-        return 'break'
+    # def previous_entry(self, event):
+    #     entry = self._entry(event.widget.level)
+    #     with utils.ignored(IndexError):
+    #         self.set_headings(entry.previous_sister)
+    #     return 'break'
 
-    def next_entry(self, event):
-        entry = self._entry(event.widget.level)
-        try:
-            entry = entry.next_sister
-        except IndexError:
-            with utils.ignored(IndexError):
-                entry = entry.eldest_daughter
-        self.set_headings(entry)
-        return 'break'
+    # def next_entry(self, event):
+    #     entry = self._entry(event.widget.level)
+    #     try:
+    #         entry = entry.next_sister
+    #     except IndexError:
+    #         with utils.ignored(IndexError):
+    #             entry = entry.eldest_daughter
+    #     self.set_headings(entry)
+    #     return 'break'
 
-    def load_entry(self, event):
-        # pylint: disable=W0201
-        self.entry = self._entry(event.widget.level)
-        try:
-            self.set_headings(self.entry.eldest_daughter)
-            self.headings.select_last()
-        except IndexError:
-            self.textbox.focus_set()
-            self.textbox.see(tk.INSERT)
+    # def load_entry(self, event):
+    #     # pylint: disable=W0201
+    #     self.entry = self._entry(event.widget.level)
+    #     try:
+    #         self.set_headings(self.entry.eldest_daughter)
+    #         self.headings.select_last()
+    #     except IndexError:
+    #         self.textbox.focus_set()
+    #         self.textbox.see(tk.INSERT)
 
     def open_entry_in_browser(self, _event=None):
         self.interface.open_entry_in_browser(self.entry)

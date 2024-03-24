@@ -16,12 +16,24 @@ class Manager(tk.Frame):
         self.create_layout()
         self.parent.protocol('WM_DELETE_WINDOW', self.quit)
 
+    def __getattr__(self, attr):
+        match attr:
+            case 'status':
+                return self.textbox.displays
+            case _default:
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError as e:
+                    name = type(self).__name__
+                    raise AttributeError(
+                        f"'{name}' object has no attribute '{attr}'") from e
+
     def create_layout(self):
         top = self.winfo_toplevel()
         self.set_window_size(top)
         top['menu'] = self.menu()
         self.textframe().pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
-        self.sidebar.pack(side=tk.LEFT)
+        self.sidebar().pack(side=tk.LEFT)
         self.pack()
 
     def set_window_size(self, top):
@@ -59,17 +71,17 @@ class Manager(tk.Frame):
         self.tabs.pack(**options)
         return frame
 
-    @property
+    # @property
     def sidebar(self):
         row = 1
         frame = tk.Frame(self.parent)
         self.headings = self.headings_frame(frame)
         self.headings.grid(row=0, column=0)
-        self.displays = dict(
-            wordcount=tk.Label(frame, font=('Arial', 14), width=20),
-            style=tk.Label(frame, font=('Arial', 12)),
-            language=self.language_display(frame),
-            randomwords=self.random_words_display(frame))
+        self.displays = {
+            'wordcount': tk.Label(frame, font=('Arial', 14), width=20),
+            'style': tk.Label(frame, font=('Arial', 12)),
+            'language': self.language_display(frame),
+            'randomwords': self.random_words_display(frame)}
         for row, display in enumerate(self.displays.values(), start=row):
             display.grid(row=row, column=0)
         tk.Label(frame, height=1000).grid(row=row+1, column=0)
@@ -77,7 +89,6 @@ class Manager(tk.Frame):
 
     def headings_frame(self, parent):
         frame = HeadingFrame(parent, bounds=(1, 10))
-        frame.commands = self.heading_commands
         return frame
 
     def language_display(self, parent):

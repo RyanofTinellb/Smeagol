@@ -53,6 +53,8 @@ class StyledTextbox(BaseTextbox):
         if not self.styles:
             return
         self.styles.update(self.tag_names(tk.INSERT))
+        current = self.styles.current if self.styles else ''
+        self.style.set(current)
 
     def clear_style(self, styles):
         self.tag_remove(styles, tk.INSERT)

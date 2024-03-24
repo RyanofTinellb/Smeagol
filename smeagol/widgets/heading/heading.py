@@ -17,4 +17,3 @@ class Heading(tk.Entry):
     def grid(self, *args, **kwargs):
         super().grid(*args, **kwargs)
         return self
-

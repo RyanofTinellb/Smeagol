@@ -48,7 +48,7 @@ class Tags:
                 break
             if len(self.opening_tags) >= (len(self.closing_tags) + 1):
                 self.opening_tags[-1].name = tag
-                self.remove_last_opener()
+            self.remove_last_opener()
 
     def remove_last_opener(self):
         self.opening_tags.pop()

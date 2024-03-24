@@ -28,3 +28,8 @@ class EntryTabs(BaseTabs):
             self.new()
         self.current.interface = interface
         self.current.entry = entry
+        self.current.textbox.update_styles()
+
+    @property
+    def thing(self):
+        return self.current.textbox.style
