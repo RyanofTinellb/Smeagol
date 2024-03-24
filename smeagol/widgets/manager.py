@@ -1,17 +1,15 @@
 import tkinter as tk
-from tkinter import ttk
 
-from smeagol.conversion import api as conversion
-from smeagol.utilities import utils
-from smeagol.widgets.api import HeadingFrame, Tabs
+from smeagol.widgets.api import Tabs
+from smeagol.widgets.sidebar import Sidebar
 
 
 class Manager(tk.Frame):
     '''Manages widgets for Editor'''
 
     def __init__(self, parent=None):
-        super().__init__(parent)
         self.tabs = None
+        super().__init__(parent)
         self.parent = self.master
         self.create_layout()
         self.parent.protocol('WM_DELETE_WINDOW', self.quit)
@@ -32,8 +30,8 @@ class Manager(tk.Frame):
         top = self.winfo_toplevel()
         self.set_window_size(top)
         top['menu'] = self.menu()
+        self.sidebar = Sidebar(self).pack(side=tk.LEFT)
         self.textframe().pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
-        self.sidebar().pack(side=tk.LEFT)
         self.pack()
 
     def set_window_size(self, top):
@@ -67,51 +65,9 @@ class Manager(tk.Frame):
     def textframe(self):
         frame = tk.Frame(self.parent)
         options = {"side": tk.TOP, "expand": True, "fill": tk.BOTH}
-        self.tabs = Tabs(frame, self.textbox_commands)
+        self.tabs = Tabs(frame, self.textbox_commands, self.sidebar, self.parent.title)
         self.tabs.pack(**options)
         return frame
-
-    # @property
-    def sidebar(self):
-        row = 1
-        frame = tk.Frame(self.parent)
-        self.headings = self.headings_frame(frame)
-        self.headings.grid(row=0, column=0)
-        self.displays = {
-            'wordcount': tk.Label(frame, font=('Arial', 14), width=20),
-            'style': tk.Label(frame, font=('Arial', 12)),
-            'language': self.language_display(frame),
-            'randomwords': self.random_words_display(frame)}
-        for row, display in enumerate(self.displays.values(), start=row):
-            display.grid(row=row, column=0)
-        tk.Label(frame, height=1000).grid(row=row+1, column=0)
-        return frame
-
-    def headings_frame(self, parent):
-        frame = HeadingFrame(parent, bounds=(1, 10))
-        return frame
-
-    def language_display(self, parent):
-        translator = conversion.Translator()
-        languages = [f'{code}: {lang().name}'
-                     for code, lang in translator.languages.items()]
-        menu = ttk.Combobox(parent,
-                            values=languages,
-                            height=2000,
-                            width=25,
-                            justify=tk.CENTER)
-        menu.state(['readonly'])
-        utils.bind_all(menu, self.language_commands)
-        return menu
-
-    def random_words_display(self, parent):
-        label = tk.Label(parent, font=('Arial', 14))
-        utils.bind_all(label, self.random_commands)
-        return label
-
-    def update_displays(self):
-        for name, display in self.displays.items():
-            display.config(textvariable=self.status[name])
 
     def quit(self):
         self.parent.withdraw()

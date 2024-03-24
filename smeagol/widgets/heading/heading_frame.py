@@ -4,7 +4,7 @@ from itertools import zip_longest
 from smeagol.widgets.heading.heading import Heading
 
 
-class Frame(tk.Frame):
+class HeadingFrame(tk.Frame):
     def __init__(self, parent, bounds):
         super().__init__(parent)
         self.min, self.max = bounds

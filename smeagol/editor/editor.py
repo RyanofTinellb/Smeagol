@@ -19,7 +19,6 @@ class Editor(Manager):
         if filenames is None:
             filenames = [fs.open_smeagol()]
         self.tabs.open_sites(filenames)
-        self.displays['style'].config(textvariable=self.tabs.thing)
 
     def open_site(self):
         self.tabs.open_site(fs.open_smeagol())
