@@ -18,3 +18,7 @@ class TemplateStore:
 
 class Page:
     pass
+
+
+class Sidebar:
+    pass

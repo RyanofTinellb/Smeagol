@@ -63,35 +63,6 @@ class Editor(Manager):
         self.textbox.mark_set(tk.INSERT, position)
         self.textbox.see(tk.INSERT)
 
-    def _entry(self, level):
-        return self.interface.find_entry(self.headings.headings[:level+1])
-
-    # def previous_entry(self, event):
-    #     entry = self._entry(event.widget.level)
-    #     with utils.ignored(IndexError):
-    #         self.set_headings(entry.previous_sister)
-    #     return 'break'
-
-    # def next_entry(self, event):
-    #     entry = self._entry(event.widget.level)
-    #     try:
-    #         entry = entry.next_sister
-    #     except IndexError:
-    #         with utils.ignored(IndexError):
-    #             entry = entry.eldest_daughter
-    #     self.set_headings(entry)
-    #     return 'break'
-
-    # def load_entry(self, event):
-    #     # pylint: disable=W0201
-    #     self.entry = self._entry(event.widget.level)
-    #     try:
-    #         self.set_headings(self.entry.eldest_daughter)
-    #         self.headings.select_last()
-    #     except IndexError:
-    #         self.textbox.focus_set()
-    #         self.textbox.see(tk.INSERT)
-
     def open_entry_in_browser(self, _event=None):
         self.interface.open_entry_in_browser(self.entry)
         return 'break'
@@ -128,10 +99,6 @@ class Editor(Manager):
             self.entry.name = name
             self.tab.name = name
             self.reset_entry()
-
-    def save_page(self, _event=None):
-        self.tabs.save_entry()
-        return 'break'
 
     def refresh_random(self, _event=None):
         if r := self.interface.randomwords:

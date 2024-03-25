@@ -3,6 +3,7 @@ from tkinter import Variable
 from tkinter import ttk
 from typing import Optional
 
+
 from smeagol.conversion import api as conversion
 from smeagol.utilities.utils import ignored
 from smeagol.widgets.heading.heading_frame import HeadingFrame
@@ -11,7 +12,7 @@ from smeagol.widgets.heading.heading_frame import HeadingFrame
 class Sidebar(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        self._headings_frame = self.headings_frame(self)
+        self.headings_frame = self.create_headings(self)
         self.displays = {
             'wordcount': tk.Label(self, font=('Arial', 14), width=20),
             'style': tk.Label(self, font=('Arial', 12)),
@@ -23,12 +24,12 @@ class Sidebar(tk.Frame):
 
     @property
     def headings(self):
-        return self._headings_frame.headings
+        return self.headings_frame.headings
 
     @headings.setter
     def headings(self, names):
-        self._headings_frame.headings = names
-
+        self.headings_frame.headings = names
+    
     def update(self, displays: Optional[dict[Variable]] = None):
         for name, obj in self.displays.items():
             with ignored(KeyError):
@@ -39,7 +40,7 @@ class Sidebar(tk.Frame):
         super().pack(*args, **kwargs)
         return self
 
-    def headings_frame(self, parent):
+    def create_headings(self, parent):
         frame = HeadingFrame(parent, bounds=(1, 10))
         frame.grid(row=0, column=0)
         return frame

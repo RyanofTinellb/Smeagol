@@ -3,13 +3,14 @@ from tkinter import ttk
 
 from smeagol.editor.interface.interfaces import Interfaces
 from smeagol.utilities import utils
+from smeagol.utilities.types import Sidebar
 from smeagol.widgets.tabs.tab import Tab
 
 
 class BaseTabs(ttk.Notebook):
     '''Keeps track of tabs and assigns Interfaces to them'''
 
-    def __init__(self, parent, textbox_commands, displays, title):
+    def __init__(self, parent, textbox_commands, displays: Sidebar, title):
         super().__init__(parent)
         self.displays = displays
         self.change_title = title

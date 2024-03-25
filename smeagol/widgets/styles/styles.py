@@ -2,7 +2,7 @@ from smeagol.widgets.styles.style import Style
 
 
 def get_name(style):
-    return style.get('tags').get('name')
+    return style.get('tags', {}).get('name')
 
 
 class Styles:
