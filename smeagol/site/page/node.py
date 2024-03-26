@@ -3,11 +3,12 @@ from typing import Self
 
 from smeagol.site.directory import Directory
 from smeagol.site.entries import Entries
+from smeagol.utilities.utils import ignored
 
 
 class Node:
     def __init__(self, directory=None, entries=None, names=None):
-        self.directory = Directory(directory)
+        self.directory = Directory(directory, names)
         self.entries = Entries(entries)
         self.names = names or [self.directory.name or self.entries.name]
 
@@ -31,9 +32,14 @@ class Node:
         obj = self.directory
         names = [obj.name]
         for place in location:
-            obj = obj[place]
-            names.append(obj.name)
+            names.append(self._locate(obj, place))
         return type(self)(self.directory, self.entries, names)
+
+    def _locate(self, obj, place):
+        try:
+            return obj[place]
+        except TypeError as e:
+            raise KeyError(f'{obj.name} has no child {place}') from e
 
     @property
     def data(self):
@@ -45,14 +51,11 @@ class Node:
     def __repr__(self):
         return f'Node: names = {self.names}'
 
-    def new(self, names: list[str] = None) -> Self:
-        if names is None:
-            names = self.names
-        try:
-            return type(self)(self.directory, self.entries, names[:])
-        except TypeError:
-            print('orange')
-            return type(self)(self.directory, self.entries, None)
+    def new(self, values: list[str] | list[int] = None) -> Self:
+        values = values or self.names
+        with ignored(TypeError):
+            values = self.directory[values].names[:-1]
+        return type(self)(self.directory, self.entries, values[:])
 
     def append(self, child):
         # pylint: disable=E0203, W0201
@@ -86,6 +89,9 @@ class Node:
             return self.next_sister
         except IndexError:
             return self.new(self.location[:-1]).next(_seen_children=True)
+
+    def __getitem__(self, values: list[str] | list[int]):
+        return self.new(values)
 
     def __getattr__(self, attr):
         match attr:

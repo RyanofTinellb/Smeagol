@@ -89,7 +89,7 @@ class Interface:
         return Styles(fs.load_yaml(styles))
 
     def open_site(self):
-        return Site(fs.load_yaml(self.assets.source))
+        return Site(**fs.load_yaml(self.assets.source))
 
     def save_site(self):
         fs.save_yaml(self.site.data, self.assets.source)

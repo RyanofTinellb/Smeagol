@@ -2,16 +2,10 @@ from smeagol.site.page.page import Page
 from smeagol.utilities import utils
 
 
-class Site:
-    def __init__(self, data=None):
-        self.data = data or {}
-
+class Site(Page):
     @property
     def root(self):
-        return Page(**self.data)
-
-    def __getitem__(self, names):
-        return Page(**self.data, names=names)
+        return self
 
     # def __iter__(self):
     #     return self.iterator
@@ -70,7 +64,7 @@ class Site:
                     words[word].update(locations)
                 except KeyError:
                     words[word] = locations
-        return dict(terms=words,
-                    sentences=sentences,
-                    urls=urls,
-                    names=names)
+        return {'terms': words,
+                    'sentences': sentences,
+                    'urls': urls,
+                    'names': names}

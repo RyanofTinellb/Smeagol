@@ -91,28 +91,6 @@ class Entry(Node):
     def regex_replace(self, pattern, repl):
         self.text = re.sub(pattern, repl, '\n'.join(self.text))
 
-    def __getitem__(self, entry):
-        if entry == '':
-            return self
-        count = 0
-        try:
-            page = self.eldest_daughter
-        except AttributeError as e:
-            raise KeyError(f'{self.name} has no children') from e
-        try:
-            while entry not in (page.name, page.id) and entry != count:
-                page = page.next()
-                count += 1
-        except (IndexError, StopIteration) as e:
-            raise KeyError(entry) from e
-        return page
-
-    def __eq__(self,  other):
-        try:
-            return self.name == other.name
-        except AttributeError:
-            return self == self.new(other.location)
-
     @property
     def list(self):
         if self.is_root:
