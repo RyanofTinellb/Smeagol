@@ -19,7 +19,7 @@ class Styles:
     def create_style(self, style=None):
         style = style or {}
         if self.default:
-            return Style(**style)
+            return Style(**style, default=self.default)
         self.default = Style(**style)
         return self.default
 
@@ -41,28 +41,27 @@ class Styles:
     def __setitem__(self, name, value):
         self.styles[name] = value
 
-    def copy(self):
-        return Styles(self)
-
-    @property
-    def names(self):
-        return list(self.keys())
-
-    @property
-    def keys(self):
-        return self.styles.keys
-
-    @property
-    def values(self):
-        return self._items.values
-
-    @property
-    def items(self):
-        return self._items.items
-
-    @property
-    def _items(self):
-        return {n: s.style for n, s in self.styles.items()}
+    def __getattr__(self, attr):
+        match attr:
+            case 'copy':
+                value = type(self)(self)
+            case 'names':
+                value = list(self.keys())
+            case 'keys':
+                value = self.styles.keys
+            case 'values':
+                value = self._items.values
+            case 'items':
+                value = self._items.items
+            case '_items':
+                value = {n: s.style for n, s in self.styles.items()}
+            case _not_found:
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError as e:
+                    raise AttributeError(
+                        f'{type(self).__name__} object has no attribute {attr}') from e
+        return value
 
     def add(self, style):
         try:

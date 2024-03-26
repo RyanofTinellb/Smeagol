@@ -27,26 +27,23 @@ class Tabs(BaseTabs):
             # only open in same tab for first entry of first filename
             self.open_entry(interface, entry, new_tab + i)
 
-    def open_entry(self, interface, entry, new_tab):
+    def open_entry(self, interface=None, entry=None, new_tab=False):
         # pylint: disable=W0201
         if new_tab:
             self.new()
-        self.current.interface = interface
-        self.current.entry = entry
+        self.current.interface = interface or self.interface
+        self.current.entry = entry or entry
         self.update_displays()
-
-    def _entry(self, level):
-        return self.current.interface.find_entry(self.displays.headings[:level+1])
 
     def previous_entry(self, event):
         print('giraffe')
-        entry = self._entry(event.widget.level)
+        entry = (event.widget.level)
         with utils.ignored(IndexError):
             self.displays.headings = entry.previous_sister.names
         return 'break'
 
     def next_entry(self, event):
-        entry = self._entry(event.widget.level)
+        entry = (event.widget.level)
         try:
             entry = entry.next_sister
         except IndexError:
@@ -56,11 +53,9 @@ class Tabs(BaseTabs):
         return 'break'
 
     def load_entry(self, event):
-        # pylint: disable=W0201
-        self.entry = self._entry(event.widget.level)
         try:
-            self.displays.headings = self.entry.eldest_daughter
-            self.displays.headings.select_last()
+            self.open_entry(entry=self.entry.new(
+                self.displays.headings[:event.widget.level + 1]))
         except IndexError:
             self.textbox.focus_set()
             self.textbox.see('insert')

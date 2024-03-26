@@ -150,7 +150,7 @@ class Entry(Node):
         if self.related_to(destination):
             up = self.level - destination.level
         else:
-            up = self.distance(destination)
+            up = self._distance(destination)
         up -= int(self.is_leaf)
         urls = [entry.url for entry in destination.unique_lineage(self)]
         if destination.has_children:

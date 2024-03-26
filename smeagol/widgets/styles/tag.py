@@ -21,15 +21,18 @@ from smeagol.utilities import utils
 
 class Tag:
     def __init__(self, tags=None, **_):
-        self.options = tags or {}
+        self.tags = tags or {}
 
     def __getattr__(self, attr):
         try:
-            return self.options[attr]
+            return self.tags[attr]
         except KeyError:
-            return self.default(attr)
+            try:
+                return self.defaults(attr)
+            except AttributeError as e:
+                raise AttributeError(f'{type(self).__name__} object has no attribute {attr}') from e
 
-    def default(self, attr):
+    def defaults(self, attr):
         match attr:
             case "start":
                 return f"<{self.name}>"
@@ -50,7 +53,7 @@ class Tag:
 
     def __setattr__(self, attr, value):
         if attr in self.attrs:
-            utils.setnonzero(self.options, attr, value)
+            utils.setnonzero(self.tags, attr, value)
             return
         super().__setattr__(attr, value)
 

@@ -1,5 +1,5 @@
-from smeagol.utilities import utils
 from smeagol.site.page.page import Page
+from smeagol.utilities import utils
 
 
 class Site:

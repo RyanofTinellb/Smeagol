@@ -44,6 +44,10 @@ class BaseTabs(ttk.Notebook):
         return self.current.textbox
 
     @property
+    def interface(self):
+        return self.current.interface
+
+    @property
     def entry(self):
         return self.current.entry
 

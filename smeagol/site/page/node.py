@@ -1,18 +1,15 @@
 from itertools import chain
+from typing import Self
+
 from smeagol.site.directory import Directory
 from smeagol.site.entries import Entries
 
-# pylint: disable=R0904
 
 class Node:
     def __init__(self, directory=None, entries=None, names=None):
         self.directory = Directory(directory)
         self.entries = Entries(entries)
         self.names = names or [self.directory.name or self.entries.name]
-
-    @property
-    def name(self):
-        return self.names[-1]
 
     @property
     def location(self):
@@ -28,8 +25,15 @@ class Node:
         for i, elt in enumerate(obj):
             if elt[0] == name:
                 return i
-        clsname = self.__class__.__name__
-        raise IndexError(f'{clsname} has no item {name}')
+        raise IndexError(f'{obj.name} has no item {name}')
+
+    def _find(self, location: list[int]) -> Self:
+        obj = self.directory
+        names = [obj.name]
+        for place in location:
+            obj = obj[place]
+            names.append(obj.name)
+        return type(self)(self.directory, self.entries, names)
 
     @property
     def data(self):
@@ -41,40 +45,13 @@ class Node:
     def __repr__(self):
         return f'Node: names = {self.names}'
 
-    def __hash__(self):
-        return hash(tuple(self.location))
-
-    def __eq__(self, other):
-        return self.location == other.location
-
-    def __lt__(self, other):
-        return self.location < other.location
-
-    def __gt__(self, other):
-        return self.location > other.location
-
-    def __ge__(self, other):
-        return self.location >= other.location
-
-    def __le__(self, other):
-        return self.location <= other.location
-
-    def __ne__(self, other):
-        return self.location != other.location
-
-    def __len__(self):
-        return len(self.location)
-
-    @property
-    def level(self):
-        return len(self)
-
-    def new(self, location=None):
-        if location is None:
-            location = self.location
+    def new(self, names: list[str] = None) -> Self:
+        if names is None:
+            names = self.names
         try:
-            return type(self)(self.directory, self.entries, self.names[:])
+            return type(self)(self.directory, self.entries, names[:])
         except TypeError:
+            print('orange')
             return type(self)(self.directory, self.entries, None)
 
     def append(self, child):
@@ -87,61 +64,18 @@ class Node:
 
     def delete(self):
         sisters = self.parent.children
-        index = sisters.index(self.find)
+        index = sisters.index(self._find)
         sisters.pop(index)
 
     def sister(self, index):
         if not self.location:  # at the root node
             raise IndexError('No such sister')
-        location = self.location[:]
+        location = self.location[:-1]
         children = self.new(location[:-1]).children
         if len(children) > location[-1] + index >= 0:
             location[-1] += index
             return self.new(location)
         raise IndexError('No such sister')
-
-    @property
-    def previous_sister(self):
-        return self.sister(-1)
-
-    @property
-    def next_sister(self):
-        return self.sister(1)
-
-    def __getattr__(self, attr):
-        match attr:
-            case 'children':
-                return self.data.get('children', [])
-            case _default:
-                try:
-                    return super().__getattr__(attr)
-                except AttributeError as e:
-                    name = self.__class__.__name__
-                    raise AttributeError(
-                        f"'{name}' object has no attribute '{attr}'") from e
-
-    def __setattr__(self, attr, value):
-        match attr:
-            case 'children':
-                self.data['children'] = value
-            case _default:
-                super().__setattr__(attr, value)
-
-    @property
-    def num_children(self):
-        return len(self.children)
-
-    @property
-    def has_children(self):
-        return self.num_children > 0
-
-    @property
-    def is_leaf(self):
-        return not self.has_children
-
-    @property
-    def is_root(self):
-        return len(self.location) == 0
 
     def next(self, _seen_children=False):
         if not _seen_children and self.has_children:
@@ -153,13 +87,48 @@ class Node:
         except IndexError:
             return self.new(self.location[:-1]).next(_seen_children=True)
 
-    @property
-    def successor(self):
-        return self.next()
+    def __getattr__(self, attr):
+        match attr:
+            case 'name':
+                value = self.names[-1]
+            case 'level':
+                value = len(self.location)
+            case 'previous_sister':
+                value = self.sister(-1)
+            case 'next_sister':
+                value = self.sister(1)
+            case 'children':
+                value = [self.new(self.names + [child])
+                         for child in self.directory[self.location].children]
+            case 'num_children':
+                value = len(self.children)
+            case 'has_children':
+                value = self.num_children > 0
+            case 'is_leaf':
+                value = not self.has_children
+            case 'is_root':
+                value = self.level == 1
+            case 'successor':
+                value = self.next()
+            case 'predecessor':
+                value = self.previous()
+            case 'root':
+                value = self.new([])
+            case 'parent':
+                value = self.new(self.location[:-1])
+            case 'matriarch':
+                value = self.ancestor(1)
+            case _default:
+                try:
+                    value = super().__getattr__(attr)
+                except AttributeError as e:
+                    name = self.__class__.__name__
+                    raise AttributeError(
+                        f"'{name}' object has no attribute '{attr}'") from e
+        return value
 
-    @property
-    def predecessor(self):
-        return self.previous()
+    def ancestor(self, level):
+        return self.new(self.location[:level])
 
     def previous(self):
         try:
@@ -183,7 +152,7 @@ class Node:
     def youngest_descendant(self):
         return self._youngest_descendant()
 
-    def distance(self, destination):
+    def _distance(self, destination):
         source, destination = [x.location for x in (self, destination)]
         try:
             dist = [i != j for i, j in
@@ -201,17 +170,6 @@ class Node:
 
     def related_to(self, other):
         return self.descendant_of(other) or self.ancestor_of(other)
-
-    @property
-    def root(self):
-        return self.new([])
-
-    @property
-    def parent(self):
-        return self.new(self.location[:-1])
-
-    def ancestor(self, level):
-        return self.new(self.location[:level])
 
     @property
     def ancestors(self):
@@ -234,10 +192,6 @@ class Node:
             yield ancestor
         if self.has_children:
             yield self.new(None)
-
-    @property
-    def matriarch(self):
-        return self.ancestor(1)
 
     @property
     def matriarchs(self):

@@ -17,19 +17,25 @@ properties:
 """
 
 from tkinter.font import Font
+from typing import Self
 
-from smeagol.widgets.styles.tag import Tag
 from smeagol.utilities import utils
+from smeagol.widgets.styles.tag import Tag
 
 
 class Style(Tag):
-    def __init__(self, tags: dict = None, props: dict = None):
+    def __init__(self, tags: dict = None, props: dict = None, default: Self = None):
         super().__init__(tags)
         self.props = props or {}
+        self.default = default
+
+    @property
+    def style(self):
+        return {'props': self.props, 'tags': self.tags}
 
     @property
     def default_size(self):
-        return self.defaults.get("props", {}).get("size", 18)
+        return self.default.get("props", {}).get("size", 18)
 
     def __getitem__(self, attr):
         try:

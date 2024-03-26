@@ -13,7 +13,7 @@ class Entries:
         return self.entries
 
     def __getitem__(self, name):
-        return type(self)(self.entries['children'][name])
+        return type(self)(self.children[name])
 
     def __setitem__(self, name, value):
         self.entries[name] = value
@@ -22,7 +22,11 @@ class Entries:
         return self.entries.get(attr, default)
 
     @property
+    def children(self):
+        return self.entries['children']
+
+    @property
     def name(self):
-        for child in self.entries['children']:
+        for child in self.children:
             return child
         return ''
