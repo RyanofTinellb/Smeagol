@@ -33,6 +33,7 @@ class BaseTabs(ttk.Notebook):
             ('<Control-t>', self.create),
             ('<Control-T>', self.reopen),
             ('<Control-w>', self.close),
+            ('<Enter>', self.update_displays)
         ])
 
     @property
@@ -97,7 +98,7 @@ class BaseTabs(ttk.Notebook):
             self.select(tab)
         self.update_displays()
 
-    def update_displays(self):
+    def update_displays(self, _event=None):
         self.textbox.set_styles()
         self.textbox.update_styles()
         self.displays.update(self.textbox.displays)

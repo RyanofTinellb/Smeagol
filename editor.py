@@ -25,7 +25,7 @@ def main():
 def other():
     utils.clear_screen()
     try:
-        path = 'c:/users/ryan/tinellbianlanguages/dictionary'
+        path = 'c:/users/ryan/tinellbianlanguages/grammar'
         filenames = get_filenames(path)
     except IndexError:  # no command line arguments
         filenames = []
@@ -39,5 +39,5 @@ def get_filenames(path):
 
 
 if __name__ == '__main__':
-    main()
-    # other()
+    # main()
+    other()

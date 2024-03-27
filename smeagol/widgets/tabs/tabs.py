@@ -59,6 +59,9 @@ class Tabs(BaseTabs):
         except IndexError:
             self.textbox.focus_set()
             self.textbox.see('insert')
+        heading = self.displays.add_heading()
+        if heading:
+            heading.focus_set()
 
     @property
     def headings_commands(self):

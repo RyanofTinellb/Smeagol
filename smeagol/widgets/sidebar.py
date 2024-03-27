@@ -29,7 +29,7 @@ class Sidebar(tk.Frame):
     @headings.setter
     def headings(self, names):
         self.headings_frame.headings = names
-    
+
     def update(self, displays: Optional[dict[Variable]] = None):
         for name, obj in self.displays.items():
             with ignored(KeyError):
@@ -60,3 +60,6 @@ class Sidebar(tk.Frame):
     def random_words_display(self, parent):
         label = tk.Label(parent, font=('Arial', 14))
         return label
+
+    def add_heading(self):
+        return self.headings_frame.add_heading()

@@ -92,7 +92,8 @@ class Styles:
     def activate(self, style):
         if '-' in style:
             style, _lang = style.split('-')
-        self._current.add(style)
+        if style != 'sel':
+            self._current.add(style)
 
     def deactivate(self, style):
         if '-' in style:

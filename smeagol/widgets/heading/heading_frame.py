@@ -1,5 +1,4 @@
 import tkinter as tk
-from itertools import zip_longest
 
 from smeagol.widgets.heading.heading import Heading
 
@@ -29,31 +28,29 @@ class HeadingFrame(tk.Frame):
 
     @headings.setter
     def headings(self, names):
-        self.add_heading()
-        for name, heading in zip_longest(names, self._headings):
-            if heading is None:
-                self.add_heading(name)
-            elif name is None:
-                success = self.remove_heading(heading)
-                if not success:
-                    heading.set()
-            else:
-                heading.set(name)
+        while len(self._headings) > len(names):
+            success = self.remove_heading()
+            if not success:
+                break
+        while len(self._headings) < len(names):
+            success = self.add_heading()
+            if not success:
+                break
+        for name, heading in zip(names, self._headings):
+            heading.set(name)
 
-    def add_heading(self, entry=None):
+    def add_heading(self):
         if (i := len(self._headings)) < self.max:
             heading = Heading(i, self)
             heading.bind_commands(self._commands)
             self._headings.append(heading.grid())
-            if entry is not None:
-                heading.set(entry)
-            return True
-        return False
+            return heading
+        return None
 
-    def remove_heading(self, heading):
+    def remove_heading(self):
         if len(self._headings) > self.min:
+            heading = self._headings.pop()
             heading.destroy()
-            self._headings.remove(heading)
             return True
         return False
 
