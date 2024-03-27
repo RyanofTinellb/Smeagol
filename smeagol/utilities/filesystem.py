@@ -170,7 +170,7 @@ def start_server(port, directory=None, page404=''):
     page404 = page404 or default.page404
     while True:
         try:
-            server = Server(("", port), Handler)
+            server = Server(('', port), Handler)
             servers.append(server)
             Handler.error_message_format = page404
             Thread(target=server.serve_forever).start()

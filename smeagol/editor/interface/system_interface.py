@@ -1,0 +1,79 @@
+import os
+
+from smeagol.editor.interface import assets
+from smeagol.editor.interface.templates.template_store import TemplateStore
+from smeagol.site.site import Site
+from smeagol.utilities import filesystem as fs
+from smeagol.widgets.styles.styles import Styles
+
+
+class SystemInterface:
+    def __init__(self, filename='', server=True, template_store=None):
+        self.filename = filename
+        config = self.load_config(filename) if filename else {}
+        self.setup(config)
+        self.site = self.open_site()
+        self.template_store = template_store or TemplateStore(self.templates)
+        if server:
+            self.port = fs.start_server(
+                port=41809, directory=self.locations.directory)
+
+    def __getattr__(self, attr):
+        match attr:
+            case 'site_info':
+                return self.config.setdefault('site', {})
+            case '_entries':
+                return self.config.setdefault('entries', [[]])
+            case 'assets' | 'locations' | 'templates':
+                return getattr(assets, attr.title())(self.config.get(attr, {}))
+            case _default:
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError as e:
+                    name = type(self).__name__
+                    raise AttributeError(
+                        f"'{name}' object has no attribute '{attr}'") from e
+
+    def load_config(self, filename):
+        try:
+            return self._load_config_file(filename)
+        except AttributeError:
+            return self._create_config(filename)
+
+    def setup(self, config):
+        self.config = config
+        self.styles = self.open_styles(config.get('styles', ''))
+
+    def open_site(self):
+        return Site(**fs.load_yaml(self.assets.source))
+
+    @staticmethod
+    def _load_config_file(filename):
+        if filename.endswith('.smg'):
+            return fs.load_yaml(filename)
+        raise AttributeError('File type is Sméagol Source File. '
+                             'Creating Sméagol Configuration File...')
+
+    def save_config(self):
+        if self.filename:
+            fs.save_yaml(self.config, self.filename)
+
+    def open_styles(self, styles):
+        return Styles(fs.load_yaml(styles))
+
+    def save_site(self):
+        fs.save_yaml(self.site.data, self.assets.source)
+
+    def open_entry_in_browser(self, entry):
+        fs.open_in_browser(self.port, entry.link)
+        return 'break'
+
+    def save_entry(self, entry):
+        self.template_store.set_data(entry, self.styles)
+        html = self.template_store.main.html
+        filename = os.path.join(self.locations.directory, entry.link)
+        print('lolly', html, filename)
+        # fs.save_string(html, filename)
+
+    def close_servers(self):
+        fs.close_servers()
