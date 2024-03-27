@@ -29,6 +29,8 @@ class Style(Tag):
         super().__init__(tags)
         self.props = props or {}
         self.default_style = default_style or {}
+        if self._is_default:
+            self._unchanged = self.props.copy()
 
     @property
     def style(self):
@@ -40,6 +42,9 @@ class Style(Tag):
         except KeyError as e:
             raise KeyError(
                 f"'{type(self).__name__}' object has no item '{attr}'") from e
+
+    def __setitem__(self, attr, value):
+        self.props.setdefault(attr, value)
 
     def get(self, attr, default_value):
         match attr:
@@ -144,7 +149,19 @@ class Style(Tag):
 
     @property
     def default_size(self):
-        return self.default_style.get('props', {}).get('size', default.font['size'])
+        if self._is_default:
+            return self.props.get('size', default.font['size'])
+        return self.default_style.default_size
+
+    @default_size.setter
+    def default_size(self, value):
+        if self._is_default:
+            self.props['size'] = value
+        else:
+            self.default_style.default_size = value
+
+    def reset_size(self):
+        self.default_size = self._unchanged['size']
 
     @property
     def default_font(self):

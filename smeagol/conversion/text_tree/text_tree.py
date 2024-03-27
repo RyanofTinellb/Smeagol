@@ -35,27 +35,27 @@ class TextTree(Tags):
             self._retag_line(line)
 
     def _retag_line(self, line):
-        line = re.split("[<>]", line)
+        line = re.split('[<>]', line)
         utils.alternate([self._text, self._tag], line)
         self._text('\n')
 
     def _text(self, text):
-        self._retag("text", text)
+        self._retag('text', text)
 
     def _tag(self, tag):
-        status = "off" if tag.startswith("/") else "on"
-        self._retag(f"tag{status}", tag.removeprefix("/"))
+        status = 'off' if tag.startswith('/') else 'on'
+        self._retag(f'tag{status}', tag.removeprefix('/'))
 
     def _retag(self, key: str, value: str, _index=None) -> None:
         if not value:
             return
         self.update_state(key)
         match key:
-            case "tagon":
+            case 'tagon':
                 self.tagon(value)
-            case "text":
+            case 'text':
                 self.text(value)
-            case "tagoff":
+            case 'tagoff':
                 self.tagoff(value)
             case _:
                 pass

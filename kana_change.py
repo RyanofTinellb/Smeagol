@@ -1,6 +1,6 @@
 from smeagol.utilities import filesystem as fs
 
-FILE = 'c:/users/ryan/tinellbianlanguages/dictionary/data/data.src'
+FILE = 'c:/users/ryan/tinellbianlanguages/grammar/data/data.src'
 NEW_FILE = 'c:/users/ryan/onedrive/desktop/data.src'
 
 text = fs.load_string(FILE)
@@ -81,4 +81,4 @@ KANA = {'ア': 'あ',
 
 TEXT = ''.join([KANA.get(k, k) for k in text])
 
-fs.save_string(TEXT, NEW_FILE)
+fs.save_string(TEXT,　NEW_FILE)

@@ -115,3 +115,9 @@ class Styles:
         self.clear()
         for style in styles:
             self.activate(style)
+
+    def modify_fontsize(self, amount):
+        self.default.default_size += amount
+
+    def reset_fontsize(self):
+        self.default.reset_size()

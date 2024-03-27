@@ -33,20 +33,18 @@ class StyledTextbox(BaseTextbox):
     def text(self):
         return TextTree(self.formatted_text)
 
-    def modify_fontsize(self, size):
-        self.font.config(size=size)
-        self.config(font=self.font)
-        for name, _, style in self.styles:
-            self.tag_config(name, **style)
-
-    def change_fontsize(self, event):
+    def modify_fontsize(self, event):
         sign = 1 if event.delta > 0 else -1
-        size = self.font.actual(option="size") + sign
-        self.modify_fontsize(size)
+        self._modify_fontsize(sign)
+        self.set_styles()
         return "break"
 
+    def _modify_fontsize(self, amount):
+        self.styles.modify_fontsize(amount)
+
     def reset_fontsize(self, _event=None):
-        self.modify_fontsize(18)
+        self.styles.reset_fontsize()
+        self.set_styles()
         return "break"
 
     def get_styles(self, _event=None):
@@ -57,7 +55,7 @@ class StyledTextbox(BaseTextbox):
 
     def update_style(self):
         current = self.styles.current if self.styles else ''
-        self.style.set(current)
+        self.style.set('\n'.join(current))
 
     def clear_style(self, styles):
         self.tag_remove(styles, tk.INSERT)

@@ -46,4 +46,4 @@ class Node:
         except AttributeError:
             if child == '\n':
                 return
-            print(' ' * lvl + '"' + child + '"')
+            print(' ' * lvl + f'"{child}"')
