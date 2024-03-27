@@ -1,29 +1,15 @@
 import json
+from dataclasses import dataclass
+
+# pylint: disable=C0103
 
 
+@dataclass
 class default:
-    style = dict(
-        font='Calibri',
-        size=12,
-        bold=False,
-        italics=False,
-        underline=False,
-        strikethrough=False,
-        colour='black',
-        offset='baseline',
-        border=False,
-        unit='cm',
-        background='white',
-        justify='left',
-        indent=0.0,
-        line_spacing=0.0,
-        left=0.0,
-        right=0.0,
-        top=0.0,
-        bottom=0.0
-        )
+    font = {'font': 'Calibri',
+             'size': 12}
 
-    markdown=[
+    markdown = [
         {
             "markup": "á",
             "markdown": "(a",

@@ -37,13 +37,13 @@ class Tabs(BaseTabs):
 
     def previous_entry(self, event):
         print('giraffe')
-        entry = (event.widget.level)
+        entry = event.widget.level
         with utils.ignored(IndexError):
             self.displays.headings = entry.previous_sister.names
         return 'break'
 
     def next_entry(self, event):
-        entry = (event.widget.level)
+        entry = event.widget.level
         try:
             entry = entry.next_sister
         except IndexError:

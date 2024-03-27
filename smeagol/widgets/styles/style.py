@@ -21,21 +21,18 @@ from typing import Self
 
 from smeagol.utilities import utils
 from smeagol.widgets.styles.tag import Tag
+from smeagol.utilities.defaults import default
 
 
 class Style(Tag):
-    def __init__(self, tags: dict = None, props: dict = None, default: Self = None):
+    def __init__(self, tags: dict = None, props: dict = None, default_style: Self = None):
         super().__init__(tags)
         self.props = props or {}
-        self.default = default
+        self.default_style = default_style or {}
 
     @property
     def style(self):
         return {'props': self.props, 'tags': self.tags}
-
-    @property
-    def default_size(self):
-        return self.default.get("props", {}).get("size", 18)
 
     def __getitem__(self, attr):
         try:
@@ -45,15 +42,26 @@ class Style(Tag):
                 f"'{type(self).__name__}' object has no item '{attr}'") from e
 
     def get(self, attr, default_value):
-        try:
-            return self.props[attr]
-        except KeyError:
-            return default_value
+        match attr:
+            case 'props' | 'tags':
+                return self.style[attr]
+            case _else:
+                try:
+                    return self.props[attr]
+                except KeyError:
+                    return default_value
+
+    @property
+    def has_font(self):
+        for attr in ('font', 'size', 'bold', 'italics', 'underline', 'strikeout'):
+            with utils.ignored(KeyError):
+                return self.props[attr]
+        return None
 
     @property
     def font(self):
         return utils.filter_nonzero({
-            'family': self['font'],
+            'family': self._family,
             'size': self._size,
             'weight': self._bold,
             'slant': self._italics,
@@ -127,20 +135,35 @@ class Style(Tag):
 
     @property
     def _justify(self):
-        justify = self['justify']
+        justify = self['justification']
         return 'center' if justify == 'centre' else justify
 
     @property
+    def _is_default(self):
+        return self.name == 'default'
+
+    @property
+    def default_size(self):
+        return self.default_style.get('props', {}).get('size', default.font['size'])
+
+    @property
+    def default_font(self):
+        return self.default_style.get('props', {}).get('font', default.font['font'])
+
+    @property
     def _size(self):
-        size = self['size']
-        if not size:
-            return None
+        size = self['size'] or 0
         offset = self['offset']
-        if isinstance(size, str):
+        if not self._is_default:
             size = max(int(size) + self.default_size, 1)
-        if not offset or offset.endswith('script'):
+        if offset and offset.endswith('script'):
             return size * 2 // 3
-        return size
+        return size if self.has_font else 0
+
+    @property
+    def _family(self):
+        family = self['font'] or self.default_font
+        return family if self.has_font else ''
 
     @property
     def _offset(self):

@@ -30,7 +30,7 @@ class BaseTabs(ttk.Notebook):
     @property
     def _textbox_commands(self):
         return ([
-            ('<Control-t>', self.new),
+            ('<Control-t>', self.create),
             ('<Control-T>', self.reopen),
             ('<Control-w>', self.close),
         ])
@@ -47,12 +47,28 @@ class BaseTabs(ttk.Notebook):
     def interface(self):
         return self.current.interface
 
+    @interface.setter
+    def interface(self, interface):
+        self.current.interface = interface
+
     @property
     def entry(self):
         return self.current.entry
 
+    @entry.setter
+    def entry(self, entry):
+        self.current.entry = entry
+
     def new(self, _event=None):
         Tab(self, self.textbox_commands)
+        self.update_displays()
+        return 'break'
+
+    def create(self, _event=None):
+        interface = self.interface
+        self.new()
+        self.interface = interface
+        self.entry = interface.site
         self.update_displays()
         return 'break'
 

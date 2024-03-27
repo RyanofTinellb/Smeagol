@@ -53,6 +53,9 @@ class StyledTextbox(BaseTextbox):
         if not self.styles:
             return
         self.styles.update(self.tag_names(tk.INSERT))
+        self.update_styles()
+
+    def update_style(self):
         current = self.styles.current if self.styles else ''
         self.style.set(current)
 
@@ -78,15 +81,15 @@ class StyledTextbox(BaseTextbox):
         key = style.key
         self.tag_config(name, **style.paragraph)
         if key:
-            self.bind(f"<Control-{key}>", self.style_changer(name, style))
+            self.bind(f"<Control-{key}>", self.style_changer(name))
 
-    def style_changer(self, name, style):
+    def style_changer(self, name):
         def command(_=None, name=name):
-            if style.language and (code := self.language_code):
-                name += f"-{code}"
             self.styles.toggle(name)
-            return "break"
-
+            with utils.ignored(tk.TclError):
+                (self.tag_add if self.styles.on(name)
+                 else self.tag_remove)(name, *SELECTION)
+            return 'break'
         return command
 
     def _add_style(self, name):

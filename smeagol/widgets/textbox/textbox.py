@@ -69,9 +69,13 @@ class Textbox(ClipboardTextbox):
         self.edit_modified(False)
         self.styles.current = ""
 
-    def _key_released(self, _event=None):
-        self.get_styles()
+    def _key_released(self, event=None):
+        if (event.keysym in ['Prior', 'Next', 'Left', 'Right', 'Down', 'Up'] or
+                int(event.type) == 5):
+            self.get_styles()
         self.update_wordcount()
+        # print('sdfsdf')
+        self.update_style()
 
     def update_wordcount(self):
         text = self.plaintext
@@ -193,6 +197,5 @@ class Textbox(ClipboardTextbox):
             ("<Control-x>", self.cut_text),
             ("<Control-BackSpace>", self.backspace_word),
             ("<Control-Delete>", self.delete_word),
-            (("<Control-Up>", "<Control-Down>"), self.move_line),
-            ('<ButtonRelease>', self.get_styles)
+            (("<Control-Up>", "<Control-Down>"), self.move_line)
         ]

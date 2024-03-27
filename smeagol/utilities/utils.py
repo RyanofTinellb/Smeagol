@@ -25,7 +25,6 @@ def timeit(function):
         newtime = dt.now()
         print(("Done: " + str(newtime - oldtime)))
         return value
-
     return wrapper
 
 
@@ -35,16 +34,16 @@ def asynca(function):
         thread = Thread(target=function, args=args, kwargs=kwargs)
         thread.start()
         return thread
-
     return async_function
 
 
 def compose(*functions):
     def compose2(f, g):
         return lambda x: f(g(x))
-
     return functools.reduce(compose2, functions, lambda x: x)
 
+def clamp(number, lower, upper):
+    return max(lower, min(upper, number))
 
 def alternate(functions: list, obj: Any):
     for f, x in zip(cycle(functions), obj):

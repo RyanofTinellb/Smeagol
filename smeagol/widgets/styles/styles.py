@@ -19,7 +19,7 @@ class Styles:
     def create_style(self, style=None):
         style = style or {}
         if self.default:
-            return Style(**style, default=self.default)
+            return Style(**style, default_style=self.default)
         self.default = Style(**style)
         return self.default
 
@@ -73,10 +73,10 @@ class Styles:
             style = Style(
                 [
                     {
-                        "name": style[0],
-                        "language": language,
-                        "start": f"<{name}>",
-                        "end": f"</{name}>",
+                        'name': style[0],
+                        'language': language,
+                        'start': f"<{name}>",
+                        'end': f"</{name}>",
                     }
                 ]
             )
@@ -98,6 +98,15 @@ class Styles:
         if '-' in style:
             style, _lang = style.split('-')
         self._current.discard(style)
+
+    def toggle(self, style):
+        if '-' in style:
+            style, _lang = style.split('-')
+        fn = self.deactivate if self.on(style) else self.activate
+        fn(style)
+
+    def on(self, style):
+        return style in self._current
 
     def clear(self):
         self._current.clear()
