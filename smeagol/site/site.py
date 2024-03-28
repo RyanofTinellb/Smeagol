@@ -65,6 +65,6 @@ class Site(Page):
                 except KeyError:
                     words[word] = locations
         return {'terms': words,
-                    'sentences': sentences,
-                    'urls': urls,
-                    'names': names}
+                'sentences': sentences,
+                'urls': urls,
+                'names': names}

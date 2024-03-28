@@ -44,8 +44,12 @@ class SystemInterface:
         self.config = config
         self.styles = self.open_styles(config.get('styles', ''))
 
+    def open_styles(self, styles):
+        return Styles(fs.load_yaml(styles))
+
     def open_site(self):
-        return Site(**fs.load_yaml(self.assets.source))
+        self._site_data = fs.load_yaml(self.assets.source)
+        return Site(**self._site_data)
 
     @staticmethod
     def _load_config_file(filename):
@@ -58,11 +62,8 @@ class SystemInterface:
         if self.filename:
             fs.save_yaml(self.config, self.filename)
 
-    def open_styles(self, styles):
-        return Styles(fs.load_yaml(styles))
-
     def save_site(self):
-        fs.save_yaml(self.site.data, self.assets.source)
+        fs.save_yaml(self._site_data, self.assets.source)
 
     def open_entry_in_browser(self, entry):
         fs.open_in_browser(self.port, entry.link)

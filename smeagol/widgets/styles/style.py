@@ -172,7 +172,7 @@ class Style(Tag):
         size = self['size'] or 0
         offset = self['offset']
         if not self._is_default:
-            size = max(int(size) + self.default_size, 1)
+            size = max(int(size * self.default_size / 100), 1)
         if offset and offset.endswith('script'):
             return size * 2 // 3
         return size if self.has_font else 0

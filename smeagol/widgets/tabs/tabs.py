@@ -43,7 +43,7 @@ class Tabs(BaseTabs):
         return 'break'
 
     def next_entry(self, event):
-        entry = event.widget.level
+        entry = self.entry[self.displays.headings[:event.widget.level + 1]]
         try:
             entry = entry.next_sister
         except IndexError:

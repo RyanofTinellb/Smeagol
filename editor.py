@@ -24,11 +24,8 @@ def main():
 
 def other():
     utils.clear_screen()
-    try:
-        path = 'c:/users/ryan/tinellbianlanguages/grammar'
-        filenames = get_filenames(path)
-    except IndexError:  # no command line arguments
-        filenames = []
+    path = 'c:/users/ryan/tinellbianlanguages/encyclopedia'
+    filenames = get_filenames(path)
     Editor(filenames=filenames).mainloop()
 
 

@@ -28,8 +28,8 @@ class Tab(tk.Frame):
 
     def save_entry(self, _event=None):
         self.entry.text = self.textbox.text
-        # self.interface.save_site()
-        self.interface.save_entry(self.entry)
+        self.interface.save_site()
+        # self.interface.save_entry(self.entry)
         return 'break'
 
     @property

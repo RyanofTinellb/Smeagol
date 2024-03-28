@@ -35,7 +35,7 @@ class Node:
             names.append(self._locate(obj, place))
         return type(self)(self.directory, self.entries, names)
 
-    def _locate(self, obj, place):
+    def _locate(self, obj: Directory, place: int):
         try:
             return obj[place]
         except TypeError as e:
@@ -52,9 +52,9 @@ class Node:
         return f'Node: names = {self.names}'
 
     def new(self, values: list[str] | list[int] = None) -> Self:
-        values = values or self.names
+        values = values or []
         with ignored(TypeError):
-            values = self.directory[values].names[:-1]
+            values = self.directory[values].names
         return type(self)(self.directory, self.entries, values[:])
 
     def append(self, child):
@@ -71,9 +71,9 @@ class Node:
         sisters.pop(index)
 
     def sister(self, index):
-        if not self.location:  # at the root node
+        location = self.location
+        if not location:  # at the root node
             raise IndexError('No such sister')
-        location = self.location[:-1]
         children = self.new(location[:-1]).children
         if len(children) > location[-1] + index >= 0:
             location[-1] += index

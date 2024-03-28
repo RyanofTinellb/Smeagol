@@ -54,8 +54,11 @@ class Textbox(ClipboardTextbox):
     def __setattr__(self, attr, value):
         match attr:
             case 'text':
-                return self._paste(borders=ALL, text=value)
-        super().__setattr__(attr, value)
+                self.reset()
+                self._paste(borders=ALL, text=value)
+                self.update()
+            case _default:
+                super().__setattr__(attr, value)
 
     def add_commands(self, commands):
         for keys, command in commands:
@@ -67,7 +70,11 @@ class Textbox(ClipboardTextbox):
 
     def reset(self):
         self.edit_modified(False)
-        self.styles.current = ''
+        self.styles.clear()
+
+    def update(self):
+        self.update_wordcount()
+        self.update_style()
 
     def _key_released(self, event=None):
         if (event.keysym in ['Prior', 'Next', 'Left', 'Right', 'Down', 'Up'] or

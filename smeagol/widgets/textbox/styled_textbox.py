@@ -79,7 +79,7 @@ class StyledTextbox(BaseTextbox):
         key = style.key
         self.tag_config(name, **style.paragraph)
         if key:
-            self.bind(f"<Control-{key}>", self.style_changer(name))
+            self.bind(f'<Control-{key}>', self.style_changer(name))
 
     def style_changer(self, name):
         def command(_=None, name=name):
