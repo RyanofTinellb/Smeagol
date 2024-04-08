@@ -22,3 +22,6 @@ class Page:
 
 class Sidebar:
     pass
+
+class Entry:
+    pass

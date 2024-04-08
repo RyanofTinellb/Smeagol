@@ -30,7 +30,8 @@ class Tag:
             try:
                 return self.defaults(attr)
             except AttributeError as e:
-                raise AttributeError(f'{type(self).__name__} object has no attribute {attr}') from e
+                raise AttributeError(f'{type(self).__name__} {
+                                     self.name} has no attribute {attr}') from e
 
     def defaults(self, attr):
         match attr:

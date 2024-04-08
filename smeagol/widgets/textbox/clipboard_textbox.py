@@ -14,8 +14,6 @@ USER_MARK = "usermark"
 
 
 class ClipboardTextbox(StyledTextbox):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def overwrite(self, text, start=START, end=END):
         self.delete(start, end)

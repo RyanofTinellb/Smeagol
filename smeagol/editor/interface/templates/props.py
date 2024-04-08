@@ -11,3 +11,13 @@ class Props:
     @property
     def separator(self):
         return self.blocks[-1] if self.blocks else ''
+
+    @property
+    def start(self):
+        sep = self.separator
+        return f'<{sep}>' if sep else ''
+
+    @property
+    def end(self):
+        sep = self.separator
+        return f'</{sep}>' if sep else ''

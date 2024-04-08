@@ -1,6 +1,6 @@
 from typing import Optional, Self
 
-from smeagol.utilities.utils import ignored
+from smeagol.utilities import utils
 
 
 def name(obj):
@@ -12,7 +12,7 @@ class Directory:
                         names: list[str] = None,
                         subdirectory: bool = False):
         self.directory = directory or []
-        with ignored(AttributeError):
+        with utils.ignored(AttributeError):
             self.directory = self.directory.directory
         self.names = names or []
         if subdirectory:
@@ -27,10 +27,7 @@ class Directory:
         return self.subdirectory(self.directory[value])
 
     def find(self, values: list[int]) -> list[str]:
-        obj = self
-        for value in values:
-            obj = obj[value]
-        return obj.names
+        return utils.recurse(self, values).names
 
     def new(self, names=None):
         names = names or self.names
@@ -55,5 +52,5 @@ class Directory:
 
     @property
     def name(self) -> str:
-        with ignored(IndexError):
+        with utils.ignored(IndexError):
             return self.directory[0]

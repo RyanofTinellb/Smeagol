@@ -35,7 +35,7 @@ class Node:
         return f'{self.open_tag}{self.middle_text}{self.close_tag}'
 
     def pprint(self, lvl=0):
-        print(' ' * lvl + self.name)
+        print(' ' * lvl + self.name.replace('\n', '\\n'))
         for child in self.children:
             self._pprint(child, lvl+2)
 
@@ -44,6 +44,5 @@ class Node:
         try:
             child.pprint(lvl)
         except AttributeError:
-            if child == '\n':
-                return
-            print(' ' * lvl + f'"{child}"')
+            text = child.replace('\n', '\\n')
+            print(' ' * lvl + f'"{text}"')

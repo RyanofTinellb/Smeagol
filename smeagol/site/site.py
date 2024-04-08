@@ -7,43 +7,6 @@ class Site(Page):
     def root(self):
         return self
 
-    # def __iter__(self):
-    #     return self.iterator
-
-    # @property
-    # def iterator(self):
-    #     node = self.root
-    #     while True:
-    #         yield node
-    #         try:
-    #             node = node.next()
-    #         except IndexError:
-    #             return
-
-    # def __getitem__(self, name):
-    #     entry = Page(self.tree, [])
-    #     count = 0
-    #     try:
-    #         while entry.name != name != count:
-    #             entry = entry.successor
-    #             count += 1
-    #     except IndexError as e:
-    #         raise (KeyError if type(name) in (list, str)
-    #                else IndexError)(name) from e
-    #     return entry
-
-    # @property
-    # def root(self):
-    #     return self[0]
-
-    # def replace_all(self, old, new):
-    #     for entry in self:
-    #         entry.replace(old, new)
-
-    # def regex_replace_all(self, pattern, repl):
-    #     for entry in self:
-    #         entry.regex_replace(pattern, repl)
-
     @property
     def analysis(self):
         words = {}

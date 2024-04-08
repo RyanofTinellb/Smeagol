@@ -5,11 +5,13 @@ from smeagol.editor.interface.templates.template_store import TemplateStore
 from smeagol.site.site import Site
 from smeagol.utilities import filesystem as fs
 from smeagol.widgets.styles.styles import Styles
+from smeagol.utilities.types import Entry
 
 
 class SystemInterface:
     def __init__(self, filename='', server=True, template_store=None):
         self.filename = filename
+        self.styles = None
         config = self.load_config(filename) if filename else {}
         self.setup(config)
         self.site = self.open_site()
@@ -42,10 +44,32 @@ class SystemInterface:
 
     def setup(self, config):
         self.config = config
-        self.styles = self.open_styles(config.get('styles', ''))
+        self.open_styles()
 
-    def open_styles(self, styles):
-        return Styles(fs.load_yaml(styles))
+    @property
+    def entries(self) -> list[Entry]:
+        entries = [self.find_entry(e) for e in self._entries]
+        return entries or [self.site]
+
+    @entries.setter
+    def entries(self, entries: list[Entry]):
+        self.config['entries'] = [entry.names for entry in entries]
+
+    def find_entry(self, headings):
+        return self.site[headings]
+
+    def add_entry(self, entry: Entry) -> None:
+        names = entry.names
+        if names not in self._entries:
+            self._entries.append(names)
+
+    def remove_entry(self, entry: Entry) -> None:
+        names = entry.names
+        self._entries.remove(names)
+
+    def open_styles(self):
+        styles = self.config.get('styles', '')
+        self.styles = Styles(fs.load_yaml(styles))
 
     def open_site(self):
         self._site_data = fs.load_yaml(self.assets.source)
@@ -72,9 +96,10 @@ class SystemInterface:
     def save_entry(self, entry):
         self.template_store.set_data(entry, self.styles)
         html = self.template_store.main.html
-        filename = os.path.join(self.locations.directory, entry.link)
-        print('lolly', html, filename)
-        # fs.save_string(html, filename)
+        filename = os.path.join(
+            self.locations.directory, *entry.link) + '.html'
+        print('Saving', filename)
+        fs.save_string(html, filename)
 
     def close_servers(self):
         fs.close_servers()

@@ -4,6 +4,7 @@ from smeagol.utilities import utils
 
 from smeagol.widgets.textbox.textbox import Textbox
 
+# pylint: disable=R0902
 
 class Tab(tk.Frame):
     def __init__(self, parent, commands: list[tuple]):
@@ -13,6 +14,7 @@ class Tab(tk.Frame):
         self.notebook.select(self)
         self.commands = self._commands + commands
         self.textbox = self._textbox()
+        self.is_open = True
 
     def _textbox(self):
         textbox = Textbox(self)
@@ -29,7 +31,7 @@ class Tab(tk.Frame):
     def save_entry(self, _event=None):
         self.entry.text = self.textbox.text
         self.interface.save_site()
-        # self.interface.save_entry(self.entry)
+        self.interface.save_entry(self.entry)
         return 'break'
 
     @property
@@ -40,7 +42,7 @@ class Tab(tk.Frame):
     def entry(self, entry):
         self._entry = entry
         self.name = self.entry.name
-        self.textbox.text = self.entry_text
+        self.textbox.text = self._entry.text
 
     @property
     def interface(self):
@@ -53,10 +55,6 @@ class Tab(tk.Frame):
         self.textbox.styles = interface.styles
 
     @property
-    def entry_text(self):
-        return self._entry.text
-
-    @property
     def name(self):
         return self._name
 
@@ -64,3 +62,9 @@ class Tab(tk.Frame):
     def name(self, name):
         self._name = name
         self.notebook.tab(self, text=name)
+
+    def open(self):
+        self.is_open = True
+
+    def close(self):
+        self.is_open = False

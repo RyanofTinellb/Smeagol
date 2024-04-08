@@ -15,6 +15,6 @@ class Styling(tk.Frame):
             ('bold', self.style.bold),
             ('italics', self.style.italics),
             ('underline', self.style.underline),
-            ('strikethrough', self.style.strikethrough),
+            ('strikeout', self.style.strikeout),
             ('border', self.style.border)
         )

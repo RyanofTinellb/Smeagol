@@ -30,7 +30,7 @@ class Styles:
         return iter(self.styles.values())
 
     def __getitem__(self, name):
-        if "-" in name:
+        if name and "-" in name:
             name, _language = name.split("-")
         try:
             return self.styles[name]

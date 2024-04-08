@@ -33,8 +33,14 @@ class BaseTabs(ttk.Notebook):
             ('<Control-t>', self.create),
             ('<Control-T>', self.reopen),
             ('<Control-w>', self.close),
-            ('<Enter>', self.update_displays)
+            ('<Enter>', self.update_displays),
+            ('<Control-Alt-R>', self.reset_styles)
         ])
+
+    def reset_styles(self, _event=None):
+        self.interface.open_styles()
+        self.textbox.styles = self.interface.styles
+        self.textbox.set_styles()
 
     @property
     def current(self):
@@ -77,23 +83,28 @@ class BaseTabs(ttk.Notebook):
         self.update_displays()
 
     def close(self, event):
-        tab = event.widget
-        if self.index('end') - len(self.closed) <= 1:
-            return None
         try:
-            self._close(tab)
+            current = self.select()
+            self.select(self.index(f'@{event.x},{event.y}'))
+            source = None if current == self.select() else current
         except tk.TclError:
-            self._close(self.select())
+            source = None
+        if self.index('end') - len(self.closed) <= 1:
+            return 'break'
+        self._close(self.select())
+        self.select(source)
         self.update_displays()
         return 'break'
 
     def _close(self, tab):
+        self.nametowidget(tab).close()
         self.hide(tab)
         self.closed += [tab]
 
     def reopen(self, _event=None):
         with utils.ignored(IndexError):
             tab = self.closed.pop()
+            self.nametowidget(tab).open()
             self.add(tab)
             self.select(tab)
         self.update_displays()

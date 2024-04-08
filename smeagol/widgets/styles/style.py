@@ -71,7 +71,7 @@ class Style(Tag):
             'weight': self._bold,
             'slant': self._italics,
             'underline': self['underline'],
-            'overstrike': self['strikethrough'],
+            'overstrike': self['strikeout'],
         })
 
     @property
@@ -151,7 +151,10 @@ class Style(Tag):
     def default_size(self):
         if self._is_default:
             return self.props.get('size', default.font['size'])
-        return self.default_style.default_size
+        try:
+            return self.default_style.default_size
+        except AttributeError:
+            return self.props.get('size', default.font['size'])
 
     @default_size.setter
     def default_size(self, value):
@@ -169,7 +172,7 @@ class Style(Tag):
 
     @property
     def _size(self):
-        size = self['size'] or 0
+        size = self['size'] or 100
         offset = self['offset']
         if not self._is_default:
             size = max(int(size * self.default_size / 100), 1)

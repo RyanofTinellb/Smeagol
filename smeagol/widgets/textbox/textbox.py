@@ -18,7 +18,7 @@ SEL_LINE = 'sel.first linestart', 'sel.last lineend+1c'
 NO_SELECTION = INSERT, INSERT
 USER_MARK = 'usermark'
 
-BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')'}
+BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')', '‘': '’', '“': '”'}
 
 
 class Textbox(ClipboardTextbox):
@@ -77,7 +77,7 @@ class Textbox(ClipboardTextbox):
         self.update_style()
 
     def _key_released(self, event=None):
-        if (event.keysym in ['Prior', 'Next', 'Left', 'Right', 'Down', 'Up'] or
+        if (event.keysym in ['Prior', 'Next', 'Left', 'Right', 'Down', 'Up', 'Home', 'End'] or
                 int(event.type) == 5):
             self.get_styles()
         self.update_wordcount()
@@ -123,10 +123,10 @@ class Textbox(ClipboardTextbox):
     def match_brackets(self, key):
         if key in BRACKETS:
             try:
-                self.write(key, tk.SEL_FIRST, tags=self.current_style)
-                self.write(BRACKETS[key], tk.SEL_LAST, tags=self.current_style)
+                self.write(key, tk.SEL_FIRST)
+                self.write(BRACKETS[key], tk.SEL_LAST)
             except tk.TclError:
-                self.write(key + BRACKETS[key], tags=self.current_style)
+                self.write(key + BRACKETS[key])
                 self.move_mark(INSERT, -1)
             return True
         return False

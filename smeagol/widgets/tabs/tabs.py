@@ -8,7 +8,13 @@ class Tabs(BaseTabs):
         self.displays.headings_frame.commands = self.headings_commands
 
     def save_all(self):
-        pass
+        tabs = utils.groupby(
+            [self.nametowidget(tab) for tab in self.tabs()],
+            lambda name: self.nametowidget(name).interface.filename)
+        for interface, tab_group in tabs:
+            self.interfaces[interface].entries = [
+                tab.entry for tab in tab_group if tab.is_open]
+        self.interfaces.save_all()
 
     @property
     def headings(self):
@@ -23,17 +29,24 @@ class Tabs(BaseTabs):
 
     def open_site(self, filename, new_tab=True):
         interface = self.interfaces[filename]
-        for i, entry in enumerate(interface.entries()):
-            # only open in same tab for first entry of first filename
-            self.open_entry(interface, entry, new_tab + i)
+        for i, entry in enumerate(interface.entries):
+            self._open_site(interface, entry, new_tab + i, filename)
+
+    def _open_site(self, interface, entry, new_tab, filename):
+        # only open in same tab for first entry of first filename
+        try:
+            self.open_entry(interface, entry, new_tab)
+        except TypeError as e:
+            raise TypeError(f'Unable to load from {filename}') from e
 
     def open_entry(self, interface=None, entry=None, new_tab=False):
         # pylint: disable=W0201
         if new_tab:
             self.new()
         self.current.interface = interface or self.interface
-        self.current.entry = entry or entry
+        self.current.entry = entry
         self.update_displays()
+        self.interface.add_entry(entry)
 
     def previous_entry(self, event):
         print('giraffe')

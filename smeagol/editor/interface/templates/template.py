@@ -1,7 +1,6 @@
-from smeagol.editor.interface.templates.props import Props
 from smeagol.utilities.types import TextTree, Styles, TemplateStore
 
-# pylint: disable=R0903
+# # pylint: disable=R0903
 
 
 class Template:
@@ -9,25 +8,31 @@ class Template:
         self.text = text
         self.styles = styles
         self.templates = templates
-        self.props = Props()
 
     @property
     def html(self):
-        return self._html(self.text)
+        return ''.join([self._html(elt) for elt in self.text])
 
-    def _html(self, obj):
+    def _html(self, obj, sep=''):
         if isinstance(obj, str):
-            return obj
-        text = ''.join([self._html(elt) for elt in obj])
+            return self.stringify(obj)
+        style = self.styles[obj.name]
+        sep = style.separator or sep
+        text = ''.join([self._html(elt, style.separator) for elt in obj])
         try:
-            return self.get_text(obj, text)
+            value = self.get_text(obj, text)
         except AttributeError:
-            return text
+            value = text
+        return value
 
     def get_text(self, obj, text):
-        name = obj.name
-        style = self.styles[name]
+        if not obj.name:
+            return text
+        style = self.styles[obj.name]
         if style.template:
             template = obj[0]
             return self.templates[template].html
         return f'{style.start}{text}{style.end}'
+
+    def stringify(self, text: str):
+        return text

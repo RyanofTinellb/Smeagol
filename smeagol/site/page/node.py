@@ -11,9 +11,10 @@ class Node:
         self.directory = Directory(directory, names)
         self.entries = Entries(entries)
         self.names = names or [self.directory.name or self.entries.name]
+        self._data = None
 
     @property
-    def location(self):
+    def location(self) -> list[int]:
         location = []
         obj = self.directory
         for name in self.names[1:]:
@@ -42,11 +43,10 @@ class Node:
             raise KeyError(f'{obj.name} has no child {place}') from e
 
     @property
-    def data(self):
-        obj = self.entries
-        for name in self.names:
-            obj = obj[name]
-        return obj
+    def data(self) -> dict:
+        if not self._data:
+            self._data = self.entries[self.names]
+        return self._data
 
     def __repr__(self):
         return f'Node: names = {self.names}'
@@ -106,8 +106,10 @@ class Node:
             case 'children':
                 value = [self.new(self.names + [child])
                          for child in self.directory[self.location].children]
+            case 'kids':
+                value = self._data.children
             case 'num_children':
-                value = len(self.children)
+                value = len(self.kids)
             case 'has_children':
                 value = self.num_children > 0
             case 'is_leaf':
@@ -124,6 +126,8 @@ class Node:
                 value = self.new(self.location[:-1])
             case 'matriarch':
                 value = self.ancestor(1)
+            case 'youngest_descendant':
+                value = self._youngest_descendant()
             case _default:
                 try:
                     value = super().__getattr__(attr)
@@ -153,10 +157,6 @@ class Node:
             location = node.location[:] + [children - 1]
             return self._youngest_descendant(self.new(location))
         return node
-
-    @property
-    def youngest_descendant(self):
-        return self._youngest_descendant()
 
     def _distance(self, destination):
         source, destination = [x.location for x in (self, destination)]

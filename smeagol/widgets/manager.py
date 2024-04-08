@@ -31,7 +31,7 @@ class Manager(tk.Frame):
         self.set_window_size(top)
         top['menu'] = self.menu()
         self.sidebar = Sidebar(self).pack(side=tk.LEFT)
-        self.textframe().pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
+        self.textframe.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
         self.pack()
 
     def set_window_size(self, top):
@@ -61,7 +61,7 @@ class Manager(tk.Frame):
                                 underline=underline)
             submenu.bind(f'<KeyPress-{keypress}>', command)
 
-    # @property
+    @property
     def textframe(self):
         frame = tk.Frame(self.parent)
         options = {"side": tk.TOP, "expand": True, "fill": tk.BOTH}

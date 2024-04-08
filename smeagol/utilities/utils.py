@@ -1,5 +1,5 @@
 import functools
-from itertools import cycle
+import itertools
 import os
 import re
 import tkinter as tk
@@ -42,11 +42,13 @@ def compose(*functions):
         return lambda x: f(g(x))
     return functools.reduce(compose2, functions, lambda x: x)
 
+
 def clamp(number, lower, upper):
     return max(lower, min(upper, number))
 
+
 def alternate(functions: list, obj: Any):
-    for f, x in zip(cycle(functions), obj):
+    for f, x in zip(itertools.cycle(functions), obj):
         f(x)
 
 
@@ -82,6 +84,17 @@ def clear_screen():
 def increment(lst, by):
     lst = [x + by for x in lst]
     return lst
+
+
+def recurse(obj, names):
+    for name in names:
+        obj = obj[name]
+    return obj
+
+
+def groupby(obj, fn):
+    obj = sorted(obj, key=fn)
+    return itertools.groupby(obj, fn)
 
 
 def stringify(obj, indent=0):

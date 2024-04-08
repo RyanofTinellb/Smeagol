@@ -43,10 +43,10 @@ class Page(Entry):
 
     @property
     def link(self):
-        link = '/'.join(self.names[1:])
+        names = [name.lower().replace(' ', '') for name in self.names[1:]]
         if not self.is_leaf:
-            link += '/index'
-        return link + '.html'
+            names += ['index']
+        return names
 
     @property
     def url(self):

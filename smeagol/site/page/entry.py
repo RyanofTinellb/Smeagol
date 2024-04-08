@@ -56,7 +56,7 @@ class Entry(Node):
 
     @text.setter
     def text(self, value):
-        self.texttree, text = self._texts(value)
+        self._texttree, text = self._texts(value)
         with utils.ignored(AttributeError):
             text = [line for line in text.splitlines() if line]
         self.data['text'] = text
