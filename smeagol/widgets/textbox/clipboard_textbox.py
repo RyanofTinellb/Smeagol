@@ -30,9 +30,6 @@ class ClipboardTextbox(StyledTextbox):
     def clear(self):
         self.remove()
 
-    def formatted_get(self, start=START, end=END):
-        return super().dump(start, end)
-
     def select_all(self, _event=None):
         self.select()
         return "break"

@@ -22,4 +22,5 @@ class BaseTextbox(Text):
         return super().get(position)
 
     def formatted_get(self, start=START, end=END):
-        return super().dump(start, end)
+        return [t for t in super().dump(start, end)
+                if t[1] != 'sel' and t[0] != 'mark']

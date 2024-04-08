@@ -24,7 +24,7 @@ def main():
 
 def other():
     utils.clear_screen()
-    path = 'c:/users/ryan/tinellbianlanguages/encyclopedia'
+    path = 'c:/users/ryan/tinellbianlanguages/dictionary'
     filenames = get_filenames(path)
     Editor(filenames=filenames).mainloop()
 
@@ -36,5 +36,5 @@ def get_filenames(path):
 
 
 if __name__ == '__main__':
-    main()
-    # other()
+    # main()
+    other()
