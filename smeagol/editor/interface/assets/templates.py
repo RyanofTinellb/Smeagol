@@ -2,9 +2,6 @@ from smeagol.utilities.api import SubsetDict
 
 
 class Templates(SubsetDict):
-    def __init__(self, templates=None):
-        super().__init__(templates)
-
     def __getattr__(self, attr):
         value = super().__getattr__(attr)
         if attr == 'sections':

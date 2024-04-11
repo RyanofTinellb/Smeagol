@@ -103,3 +103,6 @@ class SystemInterface:
 
     def close_servers(self):
         fs.close_servers()
+    
+    def reopen_template_store(self):
+        self.template_store = TemplateStore(self.templates)

@@ -1,23 +1,26 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from smeagol.utilities.types import Style
 
 
 @dataclass
 class Props:
     starting: bool = False
-    ending: bool = False
     pipe: str = ''
-    blocks: list[str] = field(default_factory=list)
-
-    @property
-    def separator(self):
-        return self.blocks[-1] if self.blocks else ''
+    separator: str = ''
 
     @property
     def start(self):
         sep = self.separator
-        return f'<{sep}>' if sep else ''
+        sep = f'<{sep}>' if sep and self.starting else ''
+        if sep:
+            self.starting = False
+        return sep
+
 
     @property
     def end(self):
         sep = self.separator
-        return f'</{sep}>' if sep else ''
+        sep = f'</{sep}>' if sep and not self.starting else ''
+        if sep:
+            self.starting = True
+        return sep

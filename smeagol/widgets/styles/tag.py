@@ -11,6 +11,7 @@ properties:
         e.g.: ' lang="x-tlb-%l"'
     hyperlink (bool): whether text with this tag should be replaced with a hyperlink.
     template (bool): whether text with this tag refers to a template.
+    table (bool): whether text with this tag should be passed through the table formatter.
     key (str): the keyboard shortcut used in the Sméagol editor for this tag,
             not including the `CTRL-` key.
         e.g.: 'f' -> `CTRL-f`.
@@ -30,21 +31,21 @@ class Tag:
             try:
                 return self.defaults(attr)
             except AttributeError as e:
-                raise AttributeError(f'{type(self).__name__} {
-                                     self.name} has no attribute {attr}') from e
+                raise AttributeError(f"{type(self).__name__}"
+                                     "'{self.name}' has no attribute '{attr}'") from e
 
     def defaults(self, attr):
         match attr:
-            case "start":
-                return f"<{self.name}>"
-            case "end":
-                return f"</{self.name}>"
-            case "block" | "hyperlink" | "template":
+            case 'start':
+                return f'<{self.name}>'
+            case 'end':
+                return f'</{self.name}>'
+            case 'block' | 'hyperlink' | 'template' | 'table':
                 return False
-            case "pipe" | "separator" | "key":
-                return ""
-            case "language":
-                return "%l"
+            case 'pipe' | 'separator' | 'key':
+                return ''
+            case 'language':
+                return '%l'
             case _default:
                 try:
                     return super().__getattr__(attr)
@@ -61,13 +62,14 @@ class Tag:
     @property
     def attrs(self):
         return {
-            "hyperlink",
-            "language",
-            "template",
-            "block",
-            "separator",
-            "name",
-            "start",
-            "end",
-            "pipe",
+            'hyperlink',
+            'language',
+            'template',
+            'block',
+            'separator',
+            'name',
+            'start',
+            'end',
+            'pipe',
+            'table'
         }

@@ -59,7 +59,8 @@ def load_json(filename):
     try:
         return _load_json(filename)
     except TypeError as e:
-        raise TypeError(f'{filename} is not a json file, or is malformed') from e
+        raise TypeError(
+            f'{filename} is not a json file, or is malformed') from e
 
 
 def _load_json(filename):
@@ -93,7 +94,7 @@ def change(filename, fn, newfilename=None):
     save_yaml(obj, newfilename)
 
 
-def update(filename: str, fn: callable, newfilename: Optional[str]=None):
+def update(filename: str, fn: callable, newfilename: Optional[str] = None):
     '''
     Run function `fn` on each element `elt` of an object `obj` in `filename`
     '''
@@ -150,6 +151,7 @@ def extension(filename):
 def isfiletype(ext):
     if not ext.startswith('.'):
         ext = '.' + ext
+
     def _isfiletype(filename, ext=ext):
         return extension(filename) == ext
     return _isfiletype

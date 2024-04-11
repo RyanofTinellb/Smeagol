@@ -34,13 +34,20 @@ class BaseTabs(ttk.Notebook):
             ('<Control-T>', self.reopen),
             ('<Control-w>', self.close),
             ('<Enter>', self.update_displays),
-            ('<Control-Alt-R>', self.reset_styles)
+            ('<Control-Alt-R>', self.reload_from_files)
         ])
+
+    def reload_from_files(self, _event=None):
+        self.reset_styles()
+        self.reset_templates()
 
     def reset_styles(self, _event=None):
         self.interface.open_styles()
         self.textbox.styles = self.interface.styles
         self.textbox.set_styles()
+
+    def reset_templates(self, _event=None):
+        self.interface.reopen_template_store()
 
     @property
     def current(self):

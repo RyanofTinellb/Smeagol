@@ -11,6 +11,9 @@ class TextTree:
 class Styles:
     pass
 
+class Style:
+    pass
+
 
 class TemplateStore:
     pass
