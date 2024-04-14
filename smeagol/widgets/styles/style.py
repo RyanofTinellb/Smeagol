@@ -25,8 +25,8 @@ from smeagol.utilities.defaults import default
 
 
 class Style(Tag):
-    def __init__(self, tags: dict = None, props: dict = None, default_style: Self = None):
-        super().__init__(tags)
+    def __init__(self, name, tags: dict = None, props: dict = None, default_style: Self = None):
+        super().__init__(name, tags)
         self.props = props or {}
         self.default_style = default_style or {}
         if self._is_default:
@@ -136,7 +136,7 @@ class Style(Tag):
     def _border(self):
         if self['border']:
             return {'relief': 'ridge', 'borderwidth': 4}
-        return {'relief': 'flat'}
+        return {}
 
     @property
     def _justify(self):

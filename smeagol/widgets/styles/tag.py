@@ -1,27 +1,57 @@
 """
 properties:
-    name (str)
-    start (str): the opening tag <tag>.
-    end (str): the closing tag </tag>.
-    block (bool): whether the element is block-level (True) or inline (False).
+    open (str): the opening tag <tag>.
+    close (str): the closing tag </tag>.
+    start (str): the tag placed at the start of a line <p>
+    end (str): the tag placed at the end of a line </p>
     pipe (str): what to replace the pipe "|" character with within an element marked with this tag.
-    separator (str): the tag name to be placed at the beginning and end of each line.
-        e.g.: 'p' in '<p>This is a line</p>'.
     language (str): a template where '%l' will be replaced with the appropriate language code.
         e.g.: ' lang="x-tlb-%l"'
-    hyperlink (bool): whether text with this tag should be replaced with a hyperlink.
-    template (bool): whether text with this tag refers to a template.
-    table (bool): whether text with this tag should be passed through the table formatter.
     key (str): the keyboard shortcut used in the Sméagol editor for this tag,
             not including the `CTRL-` key.
         e.g.: 'f' -> `CTRL-f`.
+
+types:
+    default:
+        only contains styling information.
+    inline:
+                ++ Will start line tags (if appropriate) before opening. ++
+        <<unspecified>> -- eg: <i>blah</i> -- this is the default tag type: "type" is left empty
+            open: <name>
+            close: </name>
+        complete -- eg: <!doctype html>
+            open: '<name '
+            close: '>'
+        span -- eg: <span class="ipa">
+            open: <span class="name">
+            close: </span>
+    block-level:
+                ++ Will end line tags before closing. ++
+        block -- eg: <html>\n\n</html> -- typically uses starts and ends to surround lines
+            open: <name>
+            close: </name>
+        line -- eg: <title>stuff</title> -- does not surround lines with tags
+            open: <name>
+            close: </name>
+            start: ' '
+            end: ' '
+        div -- eg: <div class="flex">
+            open: <div class="name">
+            close: </div>
+    replacement:
+        table -- eg: <table>Entire Table</table> -- uses Markdown formatting (or similar)
+        data -- eg: <entry_data>name</entry_data> -- child is passed to entry to get information
+        template -- eg: <template>contents</template> -- child is passed to Template Store
+        link == eg: <internal-link>data, stylesheets, style.css</internal-link>
+                                    -- child and entry are passed to Linker to get information
 """
 
 from smeagol.utilities import utils
 
 
 class Tag:
-    def __init__(self, tags=None, **_):
+    def __init__(self, name, tags=None, **_):
+        self.name = name
         self.tags = tags or {}
 
     def __getattr__(self, attr):
@@ -36,22 +66,50 @@ class Tag:
 
     def defaults(self, attr):
         match attr:
-            case 'start':
-                return f'<{self.name}>'
-            case 'end':
-                return f'</{self.name}>'
-            case 'block' | 'hyperlink' | 'template' | 'table':
-                return False
-            case 'pipe' | 'separator' | 'key':
+            case 'type' | 'key' | 'language' | 'pipe':
                 return ''
-            case 'language':
-                return '%l'
+            case 'block':
+                return self.type in {'block', 'line', 'div'}
+            case 'open':
+                return self._open
+            case 'close':
+                return self._close
+            case 'start' | 'end':
+                return self._line_tag
             case _default:
                 try:
                     return super().__getattr__(attr)
                 except AttributeError as e:
                     raise AttributeError(
                         f"'{type(self).__name__}' object has no attribute '{attr}'") from e
+
+    @property
+    def _open(self):
+        match self.type:
+            case 'complete':
+                return f'<{self.name} '
+            case 'span':
+                return f'<span class="{self.name}">'
+            case 'div':
+                return f'<div class="{self.name}">'
+            case _other:
+                return f'<{self.name}>'
+
+    @property
+    def _close(self):
+        match self.type:
+            case 'complete':
+                return '>'
+            case 'span':
+                return '</span>'
+            case 'div':
+                return '</div>'
+            case _other:
+                return f'</{self.name}>'
+
+    @property
+    def _line_tag(self):
+        return ' ' if self.type in ('line', 'heading') else ''
 
     def __setattr__(self, attr, value):
         if attr in self.attrs:
@@ -62,14 +120,7 @@ class Tag:
     @property
     def attrs(self):
         return {
-            'hyperlink',
-            'language',
-            'template',
-            'block',
-            'separator',
-            'name',
-            'start',
-            'end',
-            'pipe',
-            'table'
+            'type', 'key', 'language', 'block',
+            'open', 'close', 'start', 'end',
+            'pipe'
         }

@@ -46,9 +46,15 @@ class Tags:
                 tag = self.closing_tags.pop(0)
             except IndexError:
                 break
-            if len(self.opening_tags) >= (len(self.closing_tags) + 1):
+            if self._should_rationalise:
                 self.opening_tags[-1].name = tag
             self.remove_last_opener()
+
+    @property
+    def _should_rationalise(self):
+        # TODO: modify this based on a tag's ranks to prevent
+        # <wordlist><block> and <block><wordlist> from being confused.
+        return len(self.opening_tags) >= (len(self.closing_tags) + 1)
 
     def remove_last_opener(self):
         self.opening_tags.pop()

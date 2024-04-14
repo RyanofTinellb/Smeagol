@@ -1,54 +1,107 @@
-from smeagol.utilities.types import TextTree, Styles, TemplateStore
+from dataclasses import dataclass
+from typing import Self
 
-# # pylint: disable=R0903
+from smeagol.utilities.types import Styles, TemplateStore, Node, Tag, TextTree
+
+# pylint: disable=R0903
+
+
+@dataclass
+class Components:
+    start: str = ''
+    pipe: str = ''
+    end: str = ''
+
+    def new(self, tag: Tag) -> Self:
+        return type(self)(
+            tag.start or self.start,
+            tag.pipe,
+            tag.end or self.end
+        )
 
 
 class Template:
-    def __init__(self, text: TextTree, styles: Styles, templates: TemplateStore):
+    def __init__(self, text: TextTree, styles: Styles,
+                 templates: TemplateStore, components: Components = None):
         self.text = text
         self.styles = styles
         self.templates = templates
-        self.props = self.templates.props
+        self.started = self.templates.started
+        self.components = components or Components()
 
     @property
     def html(self):
-        return ''.join([self._html(elt) for elt in self.text])
+        return ''.join([self._html(elt, self.components) for elt in self.text])
 
-    def _html(self, obj):
+    def _html(self, obj, components=None, tag=None):
+        components = components or Components()
         if isinstance(obj, str):
-            return self.string(obj)
-        self.props.style = style = self.styles[obj.name]
-        self.props.pipe = self.props.pipe or style.pipe
-        if style.block:
-            return self.block(obj)
-        if style.template:
-            return self.template(obj)
-        # if style.table:
-        #     return self.table(obj)
-        return self.span(obj)
+            return self.string(obj, components)
+        tag = self.styles[obj.name]
+        components = components.new(tag)
+        return self.types(tag.type)(obj, components, tag)
 
-    def block(self, obj):
-        style = self.props.style
-        self.props.separator = style.separator or self.props.separator
-        text = ''.join([self._html(elt) for elt in obj])
-        end = self.props.end # .replace('>', '>!block!')
-        return f'{style.start}{text}{end}{style.end}'
+    def types(self, type_):
+        match type_:
+            case 'block' | 'line' | 'div':
+                function = self.block
+            case 'table':
+                function = self.table
+            case 'data':
+                function = self.data
+            case 'template':
+                function = self.template
+            case 'heading':
+                function = self.heading
+            case 'link':
+                function = self.link
+            case _other:
+                function = self.span
+        return function
 
-    def span(self, obj):
-        start = self.props.start # .replace('>', '>!span!')
-        style = self.props.style
-        text = ''.join([self._html(elt) for elt in obj])
-        end = self.props.end # .replace('>', '>!span!')
-        return f'{start}{style.start}{text}{style.end}{end}'
+    def block(self, obj: Node, components: Components, tag: Tag):
+        end = ''
+        text = ''.join([self._html(elt, components, tag) for elt in obj])
+        if self.started:
+            end = self.started.tag # + '!block!'
+            self.started.update()
+        return f'{tag.open}{text}{end}{tag.close}'
 
-    def template(self, obj):
-        template = obj[0]
-        return self.templates[template].html
+    def span(self, obj: Node, components: Components, tag: Tag):
+        start = ''
+        if not self.started:
+            start = components.start # + '!span!'
+            self.started.update(components.end)
+        text = ''.join([self._html(elt, components, tag) for elt in obj])
+        return f'{start}{tag.open}{text}{tag.close}'
 
-    def string(self, text: str):
-        start = self.props.start # .replace('>', '>!string!')
-        text = text.replace('|', self.props.pipe)
-        if text.endswith('\n') and not self.props.starting:
-            end = self.props.end # .replace('>', '>!string!')
-            text = text.removesuffix('\n') + end + '\n'
-        return f'{start}{text}'
+    def template(self, obj: Node, components: Components, *_args):
+        template = self.templates[obj[0]]
+        template.components = components
+        return template.html
+
+    def heading(self, *args):
+        return self.block(*args)
+
+    def table(self, obj: Node, *_args):
+        return str(obj[0])
+
+    def data(self, obj: Node, *_args):
+        return str(obj[0])
+
+    def link(self, obj: Node, *_args):
+        return str(obj[0])
+
+    def string(self, text: str, components: Components):
+        start = end = para = ''
+        if not self.started:
+            start = components.start # + '!string!'
+            self.started.update(components.end)
+        text = text.replace('|', components.pipe)
+        if text.endswith('\n') and self.started:
+            end = self.started.tag # + '!string!'
+            self.started.update()
+            text, para = text.removesuffix('\n'), '\n'
+        if start and end and not text:
+            return ''
+        return f'{start}{text}{end}{para}'

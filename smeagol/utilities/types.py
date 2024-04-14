@@ -3,6 +3,9 @@
 class Node:
     pass
 
+class Tag:
+    pass
+
 
 class TextTree:
     pass

@@ -1,26 +1,22 @@
 from smeagol.widgets.styles.style import Style
 
 
-def get_name(style):
-    return style.get('tags', {}).get('name')
-
-
 class Styles:
     def __init__(self, styles):
         self.default = None
-        self.styles = {get_name(style): self.create_style(style)
-                       for style in styles}
         self._current = set()
+        self.styles = {name: self.create_style(name, style)
+                       for name, style in styles.items()}
 
     @property
     def current(self):
         return list(self._current)
 
-    def create_style(self, style=None):
+    def create_style(self, name='', style=None):
         style = style or {}
         if self.default:
-            return Style(**style, default_style=self.default)
-        self.default = Style(**style)
+            return Style(name, **style, default_style=self.default)
+        self.default = Style(name, **style)
         return self.default
 
     def __contains__(self, item):
@@ -30,12 +26,13 @@ class Styles:
         return iter(self.styles.values())
 
     def __getitem__(self, name):
-        if name and "-" in name:
-            name, _language = name.split("-")
+        if name and '+' in name:
+            name, _language = name.split('+')
         try:
             return self.styles[name]
         except KeyError:
-            self.styles[name] = Style({'name': name})
+            print(f'utilising this for {name}')
+            self.styles[name] = Style(name, default_style=self.default)
             return self.styles[name]
 
     def __setitem__(self, name, value):
@@ -64,47 +61,33 @@ class Styles:
         return value
 
     def add(self, style):
+        ''' used by styles editor '''
         try:
             self.styles.setdefault(style.name, style)
         except AttributeError:
-            style = style.split("-")
+            print(f'using this for {style}')
+            style = style.split('+')
             name = style[0]
-            language = len(style) > 1
-            style = Style(
-                [
-                    {
-                        'name': style[0],
-                        'language': language,
-                        'start': f"<{name}>",
-                        'end': f"</{name}>",
-                    }
-                ]
-            )
+            style = Style(name)
             self.styles.setdefault(name, style)
         return style
 
     def remove(self, style):
+        ''' used by styles editor '''
         try:
             del self.styles[style]
         except KeyError:
             self.styles = {n: s for n, s in self.styles.items() if s != style}
 
     def activate(self, style):
-        if '-' in style:
-            style, _lang = style.split('-')
         if style != 'sel':
             self._current.add(style)
 
     def deactivate(self, style):
-        if '-' in style:
-            style, _lang = style.split('-')
         self._current.discard(style)
 
     def toggle(self, style):
-        if '-' in style:
-            style, _lang = style.split('-')
-        fn = self.deactivate if self.on(style) else self.activate
-        fn(style)
+        (self.deactivate if self.on(style) else self.activate)(style)
 
     def on(self, style):
         return style in self._current

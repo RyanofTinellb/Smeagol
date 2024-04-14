@@ -1,6 +1,6 @@
 from smeagol.conversion.text_tree.text_tree import TextTree
 from smeagol.editor.interface.assets.templates import Templates
-from smeagol.editor.interface.templates.props import Props
+from smeagol.editor.interface.templates.flag import Flag
 from smeagol.editor.interface.templates.template import Template
 from smeagol.utilities import filesystem as fs
 from smeagol.utilities.types import Page
@@ -9,7 +9,7 @@ from smeagol.widgets.styles.styles import Styles
 
 class TemplateStore:
     def __init__(self, templates: Templates = None):
-        self.props = Props()
+        self.started = Flag()
         templates = templates or Templates()
         self.main = self._load(templates.main)
         self.search = self._load(templates.search)
