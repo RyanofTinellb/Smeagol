@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import socket
 import tkinter.filedialog as fd
 import webbrowser as web
@@ -164,12 +165,13 @@ def isfolder(filename):
 servers = []
 
 
-def start_server(port, directory=None, page404=''):
+def start_server(port=None, directory=None, page404=''):
     class Handler(SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=directory, **kwargs)
 
     page404 = page404 or default.page404
+    port = port or random.randint(20000, 60000)
     while True:
         try:
             server = Server(('', port), Handler)

@@ -1,6 +1,7 @@
 import tkinter as tk
 from smeagol.utilities import utils
 from smeagol.widgets.textbox.base_textbox import BaseTextbox
+from smeagol.utilities.types import Styles
 
 from smeagol.conversion.text_tree.text_tree import TextTree
 
@@ -9,7 +10,7 @@ SELECTION = "sel.first", "sel.last"
 
 
 class StyledTextbox(BaseTextbox):
-    def __init__(self, parent=None, styles=None, languages=None):
+    def __init__(self, parent=None, styles: Styles =None, languages=None):
         super().__init__(parent, height=1, width=1, wrap=tk.WORD, undo=True)
         self.styles = styles
         self.languages = languages or {}
@@ -31,7 +32,7 @@ class StyledTextbox(BaseTextbox):
 
     @property
     def text(self):
-        return TextTree(self.formatted_text)
+        return TextTree(self.formatted_text, self.styles.ranks)
 
     def modify_fontsize(self, event):
         sign = 1 if event.delta > 0 else -1

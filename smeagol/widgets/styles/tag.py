@@ -35,6 +35,13 @@ types:
             close: </name>
             start: ' '
             end: ' '
+        heading -- eg: <h2>stuff</h2> -- does not surround lines with tags,
+                                        increases heading level if necessary
+            open: <name+d>
+            close: </name+d>
+            start: ' '
+            end: ' '
+
         div -- eg: <div class="flex">
             open: <div class="name">
             close: </div>
@@ -42,7 +49,7 @@ types:
         table -- eg: <table>Entire Table</table> -- uses Markdown formatting (or similar)
         data -- eg: <entry_data>name</entry_data> -- child is passed to entry to get information
         template -- eg: <template>contents</template> -- child is passed to Template Store
-        link == eg: <internal-link>data, stylesheets, style.css</internal-link>
+        link -- eg: <internal-link>data, stylesheets, style.css</internal-link>
                                     -- child and entry are passed to Linker to get information
 """
 
@@ -67,21 +74,24 @@ class Tag:
     def defaults(self, attr):
         match attr:
             case 'type' | 'key' | 'language' | 'pipe':
-                return ''
+                value = ''
             case 'block':
-                return self.type in {'block', 'line', 'div'}
+                value = self.type in {'block', 'line', 'div', 'heading'}
             case 'open':
-                return self._open
+                value = self._open
             case 'close':
-                return self._close
+                value = self._close
             case 'start' | 'end':
-                return self._line_tag
+                value = self._line_tag
+            case 'rank':
+                value = 100 if self.block else 0
             case _default:
                 try:
-                    return super().__getattr__(attr)
+                    value = super().__getattr__(attr)
                 except AttributeError as e:
                     raise AttributeError(
                         f"'{type(self).__name__}' object has no attribute '{attr}'") from e
+        return value
 
     @property
     def _open(self):

@@ -5,8 +5,8 @@ from smeagol.utilities import utils
 
 
 class TextTree(Tags):
-    def __init__(self, text):
-        super().__init__()
+    def __init__(self, text, ranks=None):
+        super().__init__(ranks)
         try:
             self.process_strings(text)
         except TypeError:

@@ -7,6 +7,7 @@ class Styles:
         self._current = set()
         self.styles = {name: self.create_style(name, style)
                        for name, style in styles.items()}
+        self.ranks = {name: style.rank for name, style in self.styles.items()}
 
     @property
     def current(self):
@@ -16,6 +17,7 @@ class Styles:
         style = style or {}
         if self.default:
             return Style(name, **style, default_style=self.default)
+        # if style.get('tags', {}).get('type') == 'default':
         self.default = Style(name, **style)
         return self.default
 

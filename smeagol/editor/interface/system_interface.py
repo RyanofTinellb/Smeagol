@@ -18,7 +18,7 @@ class SystemInterface:
         self.template_store = template_store or TemplateStore(self.templates)
         if server:
             self.port = fs.start_server(
-                port=41809, directory=self.locations.directory)
+                port=self.port, directory=self.locations.directory)
 
     def __getattr__(self, attr):
         match attr:
@@ -35,6 +35,14 @@ class SystemInterface:
                     name = type(self).__name__
                     raise AttributeError(
                         f"'{name}' object has no attribute '{attr}'") from e
+
+    @property
+    def port(self):
+        return self.config.get('port')
+
+    @port.setter
+    def port(self, value):
+        self.config['port'] = value
 
     def load_config(self, filename):
         try:
@@ -69,7 +77,11 @@ class SystemInterface:
 
     def open_styles(self):
         styles = self.config.get('styles', '')
-        self.styles = Styles(fs.load_yaml(styles))
+        try:
+            self.styles = Styles(fs.load_yaml(styles))
+        except AttributeError as e:
+            raise AttributeError(f'{styles} is badly formatted. '
+                                 'Please make a note of it.') from e
 
     def open_site(self):
         self._site_data = fs.load_yaml(self.assets.source)
@@ -103,6 +115,6 @@ class SystemInterface:
 
     def close_servers(self):
         fs.close_servers()
-    
+
     def reopen_template_store(self):
         self.template_store = TemplateStore(self.templates)

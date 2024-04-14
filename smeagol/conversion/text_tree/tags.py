@@ -1,8 +1,10 @@
 from smeagol.conversion.text_tree.node import Node
+from smeagol.utilities import utils
 
 
 class Tags:
-    def __init__(self):
+    def __init__(self, ranks=None):
+        self.rank = ranks or {}
         self.current = None
         self.state: str = None
         self.root = Node()
@@ -41,20 +43,16 @@ class Tags:
         return Node(self.current, name)
 
     def rationalise(self):
+        if len(self.opening_tags) == len(self.closing_tags):
+            self.closing_tags.sort(key=lambda t: self.rank.get(t, 0))
         while True:
             try:
                 tag = self.closing_tags.pop(0)
             except IndexError:
                 break
-            if self._should_rationalise:
+            if len(self.opening_tags) >= (len(self.closing_tags) + 1):
                 self.opening_tags[-1].name = tag
             self.remove_last_opener()
-
-    @property
-    def _should_rationalise(self):
-        # TODO: modify this based on a tag's ranks to prevent
-        # <wordlist><block> and <block><wordlist> from being confused.
-        return len(self.opening_tags) >= (len(self.closing_tags) + 1)
 
     def remove_last_opener(self):
         self.opening_tags.pop()
