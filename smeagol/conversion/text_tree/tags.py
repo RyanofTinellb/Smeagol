@@ -1,5 +1,4 @@
 from smeagol.conversion.text_tree.node import Node
-from smeagol.utilities import utils
 
 
 class Tags:
@@ -45,19 +44,26 @@ class Tags:
     def rationalise(self):
         if len(self.opening_tags) == len(self.closing_tags):
             self.closing_tags.sort(key=lambda t: self.rank.get(t, 0))
-        while True:
+        while self.closing_tags:
+            tag = self._rational_tag
+            self.rename_opener(tag)
             try:
-                tag = self.closing_tags.pop(0)
-            except IndexError:
-                break
-            if len(self.opening_tags) >= (len(self.closing_tags) + 1):
-                self.opening_tags[-1].name = tag
-            else:
-                self.closing_tags.insert(0, tag)
-                self.closing_tags.remove(self.opening_tags[-1].name)
-            self.remove_last_opener()
+                self.closing_tags.remove(tag)
+            except ValueError as e:
+                raise ValueError(f'{tag} not found in {self.closing_tags} '
+                                 '/ {self.open_tags}') from e
+            self.remove_opener()
 
-    def remove_last_opener(self):
+    @property
+    def _rational_tag(self):
+        if len(self.opening_tags) >= len(self.closing_tags):
+            return self.closing_tags[0]
+        return self.opening_tags[-1].name
+
+    def rename_opener(self, name):
+        self.opening_tags[-1].name = name
+
+    def remove_opener(self):
         self.opening_tags.pop()
         if not self.opening_tags:
             self.open_tags.pop()

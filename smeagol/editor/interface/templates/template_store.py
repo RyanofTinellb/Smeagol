@@ -1,5 +1,3 @@
-import os
-
 from smeagol.conversion.text_tree.text_tree import TextTree
 from smeagol.editor.interface.assets.templates import Templates
 from smeagol.editor.interface.templates.flag import Flag
@@ -53,5 +51,9 @@ class TemplateStore:
         except AttributeError as e:
             raise AttributeError(f'{filename} is badly formatted. '
                                  'Please make a note of it.') from e
-        text = TextTree(template.get('text', []), styles.ranks)
+        try:
+            text = TextTree(template.get('text', []), styles.ranks)
+        except ValueError as e:
+            raise ValueError(f'{filename} is badly formatted. '
+                                 'Please make a note of it.') from e        
         return Template(text, styles, self)
