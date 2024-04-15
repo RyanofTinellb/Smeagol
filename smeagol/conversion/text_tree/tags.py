@@ -52,6 +52,9 @@ class Tags:
                 break
             if len(self.opening_tags) >= (len(self.closing_tags) + 1):
                 self.opening_tags[-1].name = tag
+            else:
+                self.closing_tags.insert(0, tag)
+                self.closing_tags.remove(self.opening_tags[-1].name)
             self.remove_last_opener()
 
     def remove_last_opener(self):

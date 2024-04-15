@@ -6,6 +6,7 @@ from smeagol.widgets.textbox.textbox import Textbox
 
 # pylint: disable=R0902
 
+
 class Tab(tk.Frame):
     def __init__(self, parent, commands: list[tuple]):
         super().__init__(parent)
