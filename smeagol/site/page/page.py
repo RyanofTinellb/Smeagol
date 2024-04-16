@@ -101,24 +101,6 @@ class Page(Entry):
         return self.links.format(self.matriarch_links)
 
     @property
-    def family_links(self):
-        link_array = ''
-        level = 0
-        for relative in self.family:
-            old_level = level
-            level = relative.level
-            if level > old_level:
-                link_array += f'<ul class="level-{str(level)}">'
-            elif level < old_level:
-                link_array += (old_level - level) * '</ul>\n'
-            if relative == self:
-                link_array += f'<li class="normal">{self.name}</li>\n'
-            else:
-                link_array += f'<li>{self.hyperlink(relative)}</li>\n'
-        link_array += (level) * '</ul>\n'
-        return self.links.format(link_array)
-
-    @property
     def matriarch_links(self):
         links = '\n'.join(map(self._link, self.matriarchs))
         return f'<ul>\n{links}\n</ul>'

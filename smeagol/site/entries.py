@@ -1,12 +1,22 @@
-from typing import Self
+from typing import Self, Optional
 from smeagol.utilities import utils
 
 
 class Entries:
-    def __init__(self, entries: dict[dict] | Self):
-        self.entries = entries or {}
+    def __init__(self, entries: Optional[dict[dict]] | Self):
+        self.entries = entries
         with utils.ignored(AttributeError):
             self.entries = self.entries.entries
+
+    def __iter__(self):
+        return self._rec(self.entries)
+
+    def _rec(self, item, names=None):
+        names = names or ()
+        with utils.ignored(AttributeError):
+            for name, elt in item.get('children', {}).items():
+                yield ([*names, name])
+                yield from self._rec(elt, (*names, name))
 
     @property
     def root(self):

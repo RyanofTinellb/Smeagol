@@ -167,16 +167,6 @@ class Node:
         except ValueError:
             return min(list(map(len, [source, destination])))
 
-    def descendant_of(self, other):
-        tail = self.location[:other.level]
-        return other == self.new(tail)
-
-    def ancestor_of(self, other):
-        return other.descendant_of(self)
-
-    def related_to(self, other):
-        return self.descendant_of(other) or self.ancestor_of(other)
-
     @property
     def ancestors(self):
         for i in range(self.level - 1):
@@ -254,10 +244,4 @@ class Node:
     def reunion(*groups):
         relatives = sorted(set(chain(*groups)), key=lambda n: n.location)
         for relative in relatives:
-            yield relative
-
-    @property
-    def family(self):
-        for relative in self.reunion(
-                self.descendants, self.aunts, self.sisters):
             yield relative

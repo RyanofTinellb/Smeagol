@@ -3,6 +3,14 @@ from smeagol.utilities import utils
 
 
 class Site(Page):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.current = self.root
+
+    def __iter__(self):
+        for names in self.entries:
+            yield self.new(names)
+
     @property
     def root(self):
         return self
