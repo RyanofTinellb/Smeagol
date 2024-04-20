@@ -44,6 +44,17 @@ class SystemInterface:
     def port(self, value):
         self.config['port'] = value
 
+    def load_from_config(self, attr, default_obj=None):
+        return fs.load_yaml(self.config.get(attr, ''), default_obj)
+
+    def create_from_config(self, obj: type, attr: str, default_obj=None) -> object:
+        try:
+            return obj(self.load_from_config(attr, default_obj))
+        except AttributeError as e:
+            filename = self.config.get(attr, '')
+            raise AttributeError(f'{filename} is badly formatted. '
+                                 'Please make a note of it.') from e
+
     def load_config(self, filename):
         try:
             return self._load_config_file(filename)
@@ -76,12 +87,7 @@ class SystemInterface:
         self._entries.remove(names)
 
     def open_styles(self):
-        styles = self.config.get('styles', '')
-        try:
-            self.styles = Styles(fs.load_yaml(styles))
-        except AttributeError as e:
-            raise AttributeError(f'{styles} is badly formatted. '
-                                 'Please make a note of it.') from e
+        self.styles = self.create_from_config(Styles, 'styles')
 
     def open_site(self):
         self._site_data = fs.load_yaml(self.assets.source)

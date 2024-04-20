@@ -18,7 +18,8 @@ SEL_LINE = 'sel.first linestart', 'sel.last lineend+1c'
 NO_SELECTION = INSERT, INSERT
 USER_MARK = 'usermark'
 
-BRACKETS = {'[': ']', '<': '>', '{': '}', '"': '"', '(': ')', '‘': '’', '“': '”'}
+BRACKETS = {'[': ']', '<': '>', '{': '}',
+            '"': '"', '(': ')', '‘': '’', '“': '”'}
 
 
 class Textbox(ClipboardTextbox):
@@ -28,35 +29,22 @@ class Textbox(ClipboardTextbox):
             'wordcount': tk.IntVar()})
         self.add_commands(self.commands)
 
-    @property
-    def translator(self):
-        return self._translator
-
-    @translator.setter
-    def translator(self, translator):
-        self._translator = translator
-        self.languages = translator.languages
-        self.language.set(translator.fullname)
-
     def __getattr__(self, attr):
         match attr:
             case 'plaintext':
                 return self.read()
-            case 'language_code':
-                if language := self.language.get():
-                    return language[:2]
-            case _:
+            case _other:
                 try:
                     return self.displays[attr]
                 except KeyError:
-                    return getattr(super(), attr)
+                    return super().__getattr__(attr)
 
     def __setattr__(self, attr, value):
         match attr:
             case 'text':
                 self.reset()
                 self._paste(borders=ALL, text=value)
-                self.update()
+                self.update_displays()
             case _default:
                 super().__setattr__(attr, value)
 
@@ -72,16 +60,15 @@ class Textbox(ClipboardTextbox):
         self.edit_modified(False)
         self.styles.clear()
 
-    def update(self):
+    def update_displays(self):
         self.update_wordcount()
-        self.update_style()
+        self.update_style_display()
 
     def _key_released(self, event=None):
         if (event.keysym in ['Prior', 'Next', 'Left', 'Right', 'Down', 'Up', 'Home', 'End'] or
-                int(event.type) == 5):
-            self.get_styles()
-        self.update_wordcount()
-        self.update_style()
+                event.type == tk.EventType.ButtonRelease):
+            self.get_styles_from_cursor()
+        self.update_displays()
 
     def update_wordcount(self):
         text = self.plaintext

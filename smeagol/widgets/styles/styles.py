@@ -1,9 +1,11 @@
 from smeagol.widgets.styles.style import Style
+from smeagol.utilities import utils
 
 
 class Styles:
     def __init__(self, styles):
         self.default = None
+        self.language_code = None
         self._current = set()
         self.styles = {name: self.create_style(name, style)
                        for name, style in styles.items()}
@@ -28,8 +30,8 @@ class Styles:
         return iter(self.styles.values())
 
     def __getitem__(self, name):
-        if name and '+' in name:
-            name, _language = name.split('+')
+        if name and '@' in name:
+            name, _language = name.split('@')
         try:
             return self.styles[name]
         except KeyError:
@@ -68,7 +70,7 @@ class Styles:
             self.styles.setdefault(style.name, style)
         except AttributeError:
             print(f'using this for {style}')
-            style = style.split('+')
+            style = style.split('@')
             name = style[0]
             style = Style(name)
             self.styles.setdefault(name, style)
@@ -82,8 +84,11 @@ class Styles:
             self.styles = {n: s for n, s in self.styles.items() if s != style}
 
     def activate(self, style):
-        if style != 'sel':
-            self._current.add(style)
+        if style == 'sel':
+            return
+        with utils.ignored(IndexError):
+            self.language_code = style.split('@')[1]
+        self._current.add(style)
 
     def deactivate(self, style):
         self._current.discard(style)

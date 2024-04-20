@@ -160,7 +160,7 @@ class Editor(Manager):
         top.protocol('WM_DELETE_WINDOW', styles_window.cancel)
         top.title(f'{self.interface.site.name} Styles')
         self.wait_window(top)
-        self.textbox.update_styles()
+        self.textbox.configure_tags()
         self.interface.config['styles'] = dict(self.interface.styles.items())
 
     def show_window(self):

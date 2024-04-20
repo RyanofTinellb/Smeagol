@@ -6,6 +6,7 @@ class Tabs(BaseTabs):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.displays.headings_frame.commands = self.headings_commands
+        self.displays.language_selector.commands = self.language_commands
 
     def save_all(self):
         tabs = utils.groupby(
@@ -76,10 +77,20 @@ class Tabs(BaseTabs):
         if heading:
             heading.focus_set()
 
+    def update_language(self, _event=None):
+        self.interface.styles.language_code = self.displays.language_selector.get()
+        self.textbox.focus_set()
+
     @property
     def headings_commands(self):
         return [
             ('<Prior>', self.previous_entry),
             ('<Next>', self.next_entry),
             ('<Return>', self.load_entry),
+        ]
+
+    @property
+    def language_commands(self):
+        return [
+            ('<<ComboboxSelected>>', self.update_language)
         ]

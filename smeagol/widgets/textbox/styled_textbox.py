@@ -8,22 +8,27 @@ from smeagol.conversion.text_tree.text_tree import TextTree
 
 SELECTION = "sel.first", "sel.last"
 
+def style_names(styles: list[str]):
+    return [style_name(style) for style in styles]
+
+def style_name(style: str):
+    if style and '@' in style:
+        style, _language = style.split('@')
+    return style
+
 
 class StyledTextbox(BaseTextbox):
-    def __init__(self, parent=None, styles: Styles =None, languages=None):
+    def __init__(self, parent=None, styles: Styles = None, languages: dict = None):
         super().__init__(parent, height=1, width=1, wrap=tk.WORD, undo=True)
         self.styles = styles
         self.languages = languages or {}
-        self.displays = {"style": tk.StringVar(),
-                         "language": tk.StringVar()}
+        self.displays = {'style': tk.StringVar(),
+                         'language_code': tk.StringVar()}
 
     def __getattr__(self, attr):
         match attr:
-            case "language_code":
-                if language := self.language.get():
-                    return language[:2]
-            case "font":
-                return self.styles["default"].create_font()
+            case 'font':
+                return self.styles['default'].create_font()
             case _default:
                 try:
                     return self.displays[attr]
@@ -37,53 +42,58 @@ class StyledTextbox(BaseTextbox):
     def modify_fontsize(self, event):
         sign = 1 if event.delta > 0 else -1
         self._modify_fontsize(sign)
-        self.set_styles()
-        return "break"
+        self.configure_tags()
+        return 'break'
 
     def _modify_fontsize(self, amount):
         self.styles.modify_fontsize(amount)
 
     def reset_fontsize(self, _event=None):
         self.styles.reset_fontsize()
-        self.set_styles()
-        return "break"
+        self.configure_tags()
+        return 'break'
 
-    def get_styles(self, _event=None):
+    def get_styles_from_cursor(self, _event=None):
         if not self.styles:
             return
         self.styles.update(self.tag_names(tk.INSERT))
-        self.update_styles()
+        self.configure_tags()
 
-    def update_style(self):
-        current = self.styles.current if self.styles else ''
+    def update_style_display(self):
+        current = style_names(self.styles.current) if self.styles else ''
         self.style.set('\n'.join(current))
+        self.language_code.set(self.styles.language_code)
 
-    def clear_style(self, styles):
-        self.tag_remove(styles, tk.INSERT)
-
-    def set_styles(self):
+    def configure_tags(self):
         if self.styles is None:
             return
         with utils.ignored(KeyError):
-            self.set_default_style()
+            self._configure_default_style()
         for style in self.styles:
-            self._set_style(style)
+            self._configure_tag(style)
 
-    def set_default_style(self):
+    def _configure_default_style(self):
         if not self.styles:
             return
         if default := self.styles['default']:
             self.config(**default.textbox_settings)
 
-    def _set_style(self, style):
-        name = style.name
-        key = style.key
-        self.tag_config(name, **style.paragraph)
-        if key:
-            self.bind(f'<Control-{key}>', self.style_changer(name))
+    def _configure_tag(self, style):
+        self.tag_config(style.name, **style.paragraph)
+        if style.language:
+            self._configure_language_tags(style)
+        if (key := style.key):
+            self.bind(f'<Control-{key}>',
+                      self.style_changer(style.name, style.language))
 
-    def style_changer(self, name):
-        def command(_=None, name=name):
+    def _configure_language_tags(self, style):
+        for code in self.languages:
+            self.tag_config(f'{style.name}@{code}', **style.paragraph)
+
+    def style_changer(self, name: str, language: bool):
+        def command(_event=None, name=name, language=language):
+            code = self.styles.language_code if language else ''
+            name = f'{name}@{code}'
             self.styles.toggle(name)
             with utils.ignored(tk.TclError):
                 (self.tag_add if self.styles.on(name)
@@ -100,7 +110,3 @@ class StyledTextbox(BaseTextbox):
         self.styles.deactivate(name)
         with utils.ignored(tk.TclError):
             self.tag_remove(name, *SELECTION)
-
-    def update_styles(self):
-        self.set_styles()
-        # self.add_commands()

@@ -42,17 +42,23 @@ class Tags:
         return Node(self.current, name)
 
     def rationalise(self):
+        while self.closing_tags:
+            self._rationalise()
+
+    def _rationalise(self):
+        self.sort_closers()
+        tag = self._rational_tag
+        self.rename_opener(tag)
+        try:
+            self.closing_tags.remove(tag)
+        except ValueError as e:
+            raise ValueError(f'{tag} not found in {self.closing_tags} '
+                             f'/ {self.open_tags}') from e
+        self.remove_opener()
+
+    def sort_closers(self):
         if len(self.opening_tags) == len(self.closing_tags):
             self.closing_tags.sort(key=lambda t: self.rank.get(t, 0))
-        while self.closing_tags:
-            tag = self._rational_tag
-            self.rename_opener(tag)
-            try:
-                self.closing_tags.remove(tag)
-            except ValueError as e:
-                raise ValueError(f'{tag} not found in {self.closing_tags} '
-                                 '/ {self.open_tags}') from e
-            self.remove_opener()
 
     @property
     def _rational_tag(self):

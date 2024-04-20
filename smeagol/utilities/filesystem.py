@@ -76,15 +76,23 @@ def load_string(filename):
         return f.read()
 
 
-def load_yaml(filename):
+def load_yaml(filename, default_obj=None):
     if not filename:
-        return {}
+        return default_obj or {}
     return _load_yaml(filename)
 
 
 def _load_yaml(filename):
     with open(filename, encoding='utf-8') as f:
-        return yaml.safe_load(f)
+        return _safe_load_yaml(f, filename)
+
+
+def _safe_load_yaml(file, filename):
+    try:
+        return yaml.safe_load(file)
+    except (TypeError, AttributeError, ValueError) as e:
+        raise type(e)(
+            f'{filename} is not a yml file, or is malformed') from e
 
 
 def change(filename, fn, newfilename=None):

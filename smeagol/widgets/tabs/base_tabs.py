@@ -38,15 +38,15 @@ class BaseTabs(ttk.Notebook):
         ])
 
     def reload_from_files(self, _event=None):
-        self.reset_styles()
-        self.reset_templates()
+        self.reload_styles()
+        self.reload_templates()
 
-    def reset_styles(self, _event=None):
+    def reload_styles(self, _event=None):
         self.interface.open_styles()
         self.textbox.styles = self.interface.styles
-        self.textbox.set_styles()
+        self.textbox.configure_tags()
 
-    def reset_templates(self, _event=None):
+    def reload_templates(self, _event=None):
         self.interface.reopen_template_store()
 
     @property
@@ -117,8 +117,8 @@ class BaseTabs(ttk.Notebook):
         self.update_displays()
 
     def update_displays(self, _event=None):
-        self.textbox.set_styles()
-        self.textbox.update_styles()
+        self.textbox.configure_tags()
+        self.displays.languages = self.textbox.languages
         self.displays.update(self.textbox.displays)
         with utils.ignored(AttributeError):
             self.displays.headings = self.entry.names

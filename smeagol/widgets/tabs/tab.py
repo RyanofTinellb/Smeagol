@@ -54,6 +54,7 @@ class Tab(tk.Frame):
         self._interface = interface
         self.textbox.translator = interface.translator
         self.textbox.styles = interface.styles
+        self.textbox.languages = interface.languages
 
     @property
     def name(self):
