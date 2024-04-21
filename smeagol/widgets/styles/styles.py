@@ -30,14 +30,17 @@ class Styles:
         return iter(self.styles.values())
 
     def __getitem__(self, name):
+        language = ''
         if name and '@' in name:
-            name, _language = name.split('@')
+            name, language = name.split('@')
         try:
-            return self.styles[name]
+            style = self.styles[name]
         except KeyError:
             print(f'utilising this for {name}')
             self.styles[name] = Style(name, default_style=self.default)
-            return self.styles[name]
+            style = self.styles[name]
+        style.open = style.open.replace('@', language)
+        return style
 
     def __setitem__(self, name, value):
         self.styles[name] = value

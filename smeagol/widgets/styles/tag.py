@@ -95,15 +95,16 @@ class Tag:
 
     @property
     def _open(self):
+        lang = ' lang="@"' if self.language else ''
         match self.type:
             case 'complete':
-                return f'<{self.name} '
+                return f'<{self.name}{lang} '
             case 'span':
-                return f'<span class="{self.name}">'
+                return f'<span class="{self.name}"{lang}>'
             case 'div':
-                return f'<div class="{self.name}">'
+                return f'<div class="{self.name}"{lang}>'
             case _other:
-                return f'<{self.name}>'
+                return f'<{self.name}{lang}>'
 
     @property
     def _close(self):
