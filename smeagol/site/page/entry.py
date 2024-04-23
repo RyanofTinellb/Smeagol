@@ -139,10 +139,6 @@ class Entry(Node):
         link = f'<a href="{address}">{destination}</a>'
         return address, link
 
-    @property
-    def title(self):
-        return utils.remove_text(r'[\[<].*?[\]>]', [self.name])[0]
-
     def heading(self, name, level=1):
         return f'<h{level}>{name}</h{level}>'
 

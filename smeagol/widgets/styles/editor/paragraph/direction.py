@@ -1,6 +1,6 @@
 from tkinter import ttk
 
-from .spinner import Spinner
+from smeagol.widgets.styles.editor.paragraph.spinner import Spinner
 
 
 class Direction(ttk.LabelFrame):

@@ -11,12 +11,14 @@ class Components:
     start: str = ''
     pipe: str = ''
     end: str = ''
+    wholepage: bool = False
 
     def new(self, tag: Tag) -> Self:
         return type(self)(
             tag.start or self.start,
             tag.pipe,
-            tag.end or self.end
+            tag.end or self.end,
+            self.wholepage
         )
 
 
@@ -80,16 +82,22 @@ class Template:
         template.components = components
         return template.html
 
-    def heading(self, *args):
-        return self.block(*args)
+    def heading(self, obj: Node, components: Components, tag: Tag):
+        level = components.wholepage and self.templates.page.level
+        tag = tag.incremented_copy(level)
+        return self.block(obj, components, tag)
 
     def table(self, obj: Node, *_args):
         return str(obj[0])
 
     def data(self, obj: Node, components: Components, *_tag):
-        if obj[0] == 'contents':
-            return self.contents(components)
-        return str(obj[0])
+        match obj[0]:
+            case 'contents':
+                return self.contents(components)
+            case 'name':
+                return self.templates.page.name
+            case _other:
+                return str(obj[0])
 
     def contents(self, components: Components):
         text = self.templates.page.text

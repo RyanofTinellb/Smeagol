@@ -21,11 +21,11 @@ class Spinner(ttk.Spinbox):
 
     @property
     def options(self):
-        return dict(
-            width=5,
-            format='%.1f' if self.decimals else '',
-            from_=self.rounding(0),
-            to=self.rounding(40),
-            increment=0.1 if self.decimals else 1,
-            textvariable=self.var,
-            state=self.style.state.get() or 'normal')
+        return {
+            'width': 5,
+            'format': '%.1f' if self.decimals else '',
+            'from_': self.rounding(0),
+            'to': self.rounding(40),
+            'increment': 0.1 if self.decimals else 1,
+            'textvariable': self.var,
+            'state': self.style.state.get() or 'normal'}

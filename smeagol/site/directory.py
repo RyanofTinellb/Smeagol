@@ -9,8 +9,8 @@ def name(obj):
 
 class Directory:
     def __init__(self, directory: Optional[list[list] | Self],
-                        names: list[str] = None,
-                        subdirectory: bool = False):
+                 names: list[str] = None,
+                 subdirectory: bool = False):
         self.directory = directory or []
         with utils.ignored(AttributeError):
             self.directory = self.directory.directory
@@ -19,7 +19,13 @@ class Directory:
             self.names.append(self.name)
 
     def __iter__(self):
-        return iter(self.directory)
+        return self._rec(self.directory)
+
+    def _rec(self, obj, names=None):
+        names = *(names or ()), obj[0]
+        yield names
+        for elt in obj[1:]:
+            yield from self._rec(elt, names)
 
     def __getitem__(self, value: int | list[int]) -> Self:
         if isinstance(value, list):

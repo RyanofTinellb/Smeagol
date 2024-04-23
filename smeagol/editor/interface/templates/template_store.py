@@ -16,8 +16,10 @@ class TemplateStore:
 
     def __getattr__(self, attr):
         match attr:
-            case 'main' | 'search' | 'page404' | 'wholepage':
+            case 'main' | 'search' | 'page404':
                 return self._cached(attr)
+            case 'wholepage':
+                return self._cached(attr, wholepage=True)
             case 'sections':
                 return self._cache['sections']
             case _default:
@@ -28,11 +30,12 @@ class TemplateStore:
                     raise AttributeError(
                         f"'{name}' object has no attribute '{attr}'") from e
 
-    def _cached(self, attr):
+    def _cached(self, attr, wholepage=False):
         try:
             return self._cache[attr]
         except KeyError:
             template = self._load(getattr(self._filenames, attr))
+            template.components.wholepage = wholepage
             return self._cache.setdefault(attr, template)
 
     def _load(self, filename):

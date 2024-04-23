@@ -51,15 +51,39 @@ types:
         template -- eg: <template>copyright</template> -- child is passed to Template Store
         link -- eg: <internal-link>data, stylesheets, style.css</internal-link>
                                     -- child and entry are passed to Linker to get information
+        repeat -- eg: <repeat><data>contents</data></repeat> -- used for wholepages, repeats children
+                                            once for each entry
 """
+import re
 
 from smeagol.utilities import utils
+
+
+def increment_opener(string, level):
+    def inc(match, level=level):
+        level += int(match.group(1))
+        return f'6 class="h{level}"' if level > 6 else str(level)
+    return re.sub(r'(\d)', inc, string)
+
+
+def increment_closer(string, level):
+    def inc(match, level=level):
+        level += int(match.group(1))
+        return str(min(6, level))
+    return re.sub(r'(\d)', inc, string)
 
 
 class Tag:
     def __init__(self, name, tags=None, **_):
         self.name = name
         self.tags = tags or {}
+
+    def incremented_copy(self, level):
+        open_ = increment_opener(self.open, level)
+        close = increment_closer(self.close, level)
+        tags = self.tags.copy()
+        tags.update({'open': open_, 'close': close})
+        return type(self)(self.name, tags)
 
     def __getattr__(self, attr):
         try:
@@ -73,7 +97,7 @@ class Tag:
 
     def defaults(self, attr):
         match attr:
-            case 'type' | 'key' | 'language' | 'pipe':
+            case 'type' | 'key' | 'language' | 'pipe' | 'repeat':
                 value = ''
             case 'block':
                 value = self.type in {'block', 'line', 'div', 'heading'}
@@ -133,5 +157,5 @@ class Tag:
         return {
             'type', 'key', 'language', 'block',
             'open', 'close', 'start', 'end',
-            'pipe'
+            'pipe', 'repeat'
         }
