@@ -10,50 +10,51 @@ from smeagol.widgets.styles.styles import Styles
 class TemplateStore:
     def __init__(self, templates: Templates = None):
         self.started = Flag()
-        templates = templates or Templates()
-        self.main = self._load(templates.main)
-        self.search = self._load(templates.search)
-        self.page404 = self._load(templates.page404)
-        self.wholepage = self._load(templates.wholepage)
-        sections = templates.sections
-        self.sections = {section: self._load(
-            filename) for section, filename in sections.items()}
+        self.page = self.styles = None
+        self._filenames = templates or Templates()
+        self._cache = {'sections': {}}
+
+    def __getattr__(self, attr):
+        match attr:
+            case 'main' | 'search' | 'page404' | 'wholepage':
+                return self._cached(attr)
+            case 'sections':
+                return self._cache['sections']
+            case _default:
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError as e:
+                    name = type(self).__name__
+                    raise AttributeError(
+                        f"'{name}' object has no attribute '{attr}'") from e
+
+    def _cached(self, attr):
+        try:
+            return self._cache[attr]
+        except KeyError:
+            template = self._load(getattr(self._filenames, attr))
+            return self._cache.setdefault(attr, template)
+
+    def _load(self, filename):
+        template = fs.load_yaml(filename)
+        styles = Styles(template.get('styles', {}))
+        text = TextTree(template.get('text', []), styles.ranks)
+        return Template(text, styles, self)
+
+    def __getitem__(self, key):
+        try:
+            return self.sections[key]
+        except KeyError:
+            template = self._load(self._filenames.sections[key])
+            return self.sections.setdefault(key, template)
+
+    def __setitem__(self, key, value):
+        self.sections[key] = value
 
     @property
     def items(self):
         return self.templates.items
 
-    @property
-    def templates(self):
-        return {'main': self.main,
-                'search': self.search,
-                'page404': self.page404,
-                'wholepage': self.wholepage,
-                **self.sections}
-
     def set_data(self, page: Page, styles: Styles):
-        self.sections['contents'] = Template(page.text, styles, self)
-
-    def __getitem__(self, key):
-        try:
-            return self.sections[key]
-        except KeyError as e:
-            name = type(self).__name__
-            raise KeyError(f'{name} object has no item {key}') from e
-
-    def __setitem__(self, key, value):
-        self.sections[key] = value
-
-    def _load(self, filename):
-        template = fs.load_yaml(filename)
-        try:
-            styles = Styles(template.get('styles', {}))
-        except AttributeError as e:
-            raise AttributeError(f'{filename} is badly formatted. '
-                                 'Please make a note of it.') from e
-        try:
-            text = TextTree(template.get('text', []), styles.ranks)
-        except ValueError as e:
-            raise ValueError(f'{filename} is badly formatted. '
-                                 'Please make a note of it.') from e        
-        return Template(text, styles, self)
+        self.page = page
+        self.styles = styles

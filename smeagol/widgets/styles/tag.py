@@ -48,7 +48,7 @@ types:
     replacement:
         table -- eg: <table>Entire Table</table> -- uses Markdown formatting (or similar)
         data -- eg: <entry_data>name</entry_data> -- child is passed to entry to get information
-        template -- eg: <template>contents</template> -- child is passed to Template Store
+        template -- eg: <template>copyright</template> -- child is passed to Template Store
         link -- eg: <internal-link>data, stylesheets, style.css</internal-link>
                                     -- child and entry are passed to Linker to get information
 """

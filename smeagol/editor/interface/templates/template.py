@@ -63,14 +63,14 @@ class Template:
         end = ''
         text = ''.join([self._html(elt, components, tag) for elt in obj])
         if self.started:
-            end = self.started.tag # + '!block!'
+            end = self.started.tag  # + '!block!'
             self.started.update()
         return f'{tag.open}{text}{end}{tag.close}'
 
     def span(self, obj: Node, components: Components, tag: Tag):
         start = ''
         if not self.started:
-            start = components.start # + '!span!'
+            start = components.start  # + '!span!'
             self.started.update(components.end)
         text = ''.join([self._html(elt, components, tag) for elt in obj])
         return f'{start}{tag.open}{text}{tag.close}'
@@ -86,8 +86,16 @@ class Template:
     def table(self, obj: Node, *_args):
         return str(obj[0])
 
-    def data(self, obj: Node, *_args):
+    def data(self, obj: Node, components: Components, *_tag):
+        if obj[0] == 'contents':
+            return self.contents(components)
         return str(obj[0])
+
+    def contents(self, components: Components):
+        text = self.templates.page.text
+        styles = self.templates.styles
+        template = type(self)(text, styles, self.templates, components)
+        return template.html
 
     def link(self, obj: Node, *_args):
         return str(obj[0])
@@ -95,11 +103,11 @@ class Template:
     def string(self, text: str, components: Components):
         start = end = para = ''
         if not self.started:
-            start = components.start # + '!string!'
+            start = components.start  # + '!string!'
             self.started.update(components.end)
         text = text.replace('|', components.pipe)
         if text.endswith('\n') and self.started:
-            end = self.started.tag # + '!string!'
+            end = self.started.tag  # + '!string!'
             self.started.update()
             text, para = text.removesuffix('\n'), '\n'
         if start and end and not text:
