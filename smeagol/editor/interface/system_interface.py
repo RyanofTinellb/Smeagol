@@ -111,13 +111,23 @@ class SystemInterface:
         fs.open_in_browser(self.port, entry.url)
         return 'break'
 
+    def save_entries(self, root):
+        total = len(root)
+        percent = each = 5
+        for i, entry in enumerate(root):
+            if 100*i/total >= percent:
+                yield percent
+                percent += each
+            self.save_entry(entry)
+        yield percent
+
     def save_entry(self, entry):
         self.template_store.set_data(entry, self.styles)
         html = self.template_store.main.html
         filename = os.path.join(
             self.locations.directory, *entry.link) + '.html'
         fs.save_string(html, filename)
-        print(f'Saving {filename}')
+        return filename
 
     def close_servers(self):
         fs.close_servers()

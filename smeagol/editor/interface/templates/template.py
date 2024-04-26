@@ -117,7 +117,6 @@ class Template:
         if self.started:
             end = self.started.tag  # + '!table!'
             self.started.update()
-        print('milot', text)
         text = cells(text.replace('//', '<br>') + end)
         return f'{tag.open}{text}{tag.close}'
 

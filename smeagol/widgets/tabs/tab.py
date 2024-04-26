@@ -26,14 +26,20 @@ class Tab(tk.Frame):
     @property
     def _commands(self):
         return [
-            ('<Control-s>', self.save_entry)
+            ('<Control-s>', self.save_entry),
+            ('<Control-S>', self.save_entries)
         ]
 
     def save_entry(self, _event=None):
         self.entry.text = self.textbox.text
         self.interface.save_site()
-        self.interface.save_entry(self.entry)
+        filename = self.interface.save_entry(self.entry)
+        print(f'Saving {filename}')
         return 'break'
+
+    def save_entries(self, _event=None):
+        for percentage in self.interface.save_entries(self.entry.root):
+            print(f'{percentage}% complete')
 
     @property
     def entry(self):
