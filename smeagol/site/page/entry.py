@@ -139,21 +139,6 @@ class Entry(Node):
         link = f'<a href="{address}">{destination}</a>'
         return address, link
 
-    def heading(self, name, level=1):
-        return f'<h{level}>{name}</h{level}>'
-
-    @property
-    def title_heading(self):
-        return self.heading(self.name)
-
-    @property
-    def wholepage_heading(self):
-        return self.heading(self.name, self.level)
-
-    @property
-    def wholepage(self):
-        return f'{self.wholepage_heading} {self.wholepage_contents}<p></p>'
-
     @property
     def category_title(self):
         titles = [self.title, self.matriarch.title]

@@ -47,17 +47,19 @@ class Page(Entry):
             names += ['index']
         return names
 
+    def link_to(self, other):
+        with utils.ignored(AttributeError):
+            other = other.link
+        link = self.link
+        if link == other:
+            return ''
+        utils.remove_common_prefix(link, other)
+        other[-1], ext = utils.try_split(other[-1], '.', 'html')
+        return (len(link)-1) * '../' + '/'.join(other) + '.' + ext
+
     @property
     def url(self):
-        if self.location is None:
-            return 'index'
-        return utils.urlform(self.name)
-
-    def _link(self, other):
-        other = self.new(other.location)
-        if self == other:
-            return f'<li class="normal">{self.hyperlink(other)}</li>'
-        return f'<li>{self.hyperlink(other)}</li>'
+        return '/'.join(self.link) + '.html'
 
     @property
     def name(self):

@@ -11,6 +11,14 @@ class Site(Page):
         for names in self.entries:
             yield self.new(names)
 
+    def __len__(self):
+        return sum(1 for page in self)
+
+    @property
+    def hierarchy(self):
+        for names in self.directory:
+            yield self.new(names)
+
     @property
     def root(self):
         return self

@@ -30,16 +30,13 @@ class Styles:
         return iter(self.styles.values())
 
     def __getitem__(self, name):
-        language = ''
-        if name and '@' in name:
-            name, language = name.split('@')
+        name, language = utils.try_split(name, '@', '')
         try:
             style = self.styles[name]
         except KeyError:
-            print(f'utilising this for {name}')
             self.styles[name] = Style(name, default_style=self.default)
             style = self.styles[name]
-        style.open = style.open.replace('@', language)
+        style.language_code = language
         return style
 
     def __setitem__(self, name, value):
@@ -73,8 +70,7 @@ class Styles:
             self.styles.setdefault(style.name, style)
         except AttributeError:
             print(f'using this for {style}')
-            style = style.split('@')
-            name = style[0]
+            name, _ = utils.try_split(style, '@')
             style = Style(name)
             self.styles.setdefault(name, style)
         return style
@@ -90,7 +86,7 @@ class Styles:
         if style == 'sel':
             return
         with utils.ignored(IndexError):
-            self.language_code = style.split('@')[1]
+            self.language_code = utils.try_split(style, '@')[1] or self.language_code
         self._current.add(style)
 
     def deactivate(self, style):

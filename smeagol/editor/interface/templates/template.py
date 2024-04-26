@@ -1,7 +1,9 @@
+import re
 from dataclasses import dataclass
 from typing import Self
 
-from smeagol.utilities.types import Styles, TemplateStore, Node, Tag, TextTree
+from smeagol.utilities import utils
+from smeagol.utilities.types import Node, Styles, Tag, TemplateStore, TextTree
 
 # pylint: disable=R0903
 
@@ -20,6 +22,26 @@ class Components:
             tag.end or self.end,
             self.wholepage
         )
+
+
+def cells(text):
+    segments = text.split('|')
+    final = len(segments) - 1
+    return ''.join([cell(s, i, final) for i, s in enumerate(segments)])
+
+
+def cell(text, index, final):
+    if not index or index == final or '\n' in text:
+        return text
+    text = text.removesuffix(' ')
+    config, text = utils.try_split(text, ' ')
+    spans = ''
+    if (m := re.search(r'r(\d)', config)):
+        spans += f' rowspan="{m.group(1)}"'
+    if (m := re.search(r'c(\d)', config)):
+        spans += f' colspan="{m.group(1)}"'
+    d = 'h' if config and config[0] == 'h' else 'd'
+    return f'<t{d}{spans}>{text}</t{d}>'
 
 
 class Template:
@@ -78,7 +100,8 @@ class Template:
         return f'{start}{tag.open}{text}{tag.close}'
 
     def template(self, obj: Node, components: Components, *_args):
-        template = self.templates[obj[0]]
+        name = obj[0]
+        template = self.templates[name]
         template.components = components
         return template.html
 
@@ -87,8 +110,16 @@ class Template:
         tag = tag.incremented_copy(level)
         return self.block(obj, components, tag)
 
-    def table(self, obj: Node, *_args):
-        return str(obj[0])
+    def table(self, obj: Node, components: Components, tag: Tag):
+        end = ''
+        components = Components('<tr>|', '|', '|</tr>', components.wholepage)
+        text = ''.join([self._html(elt, components, tag) for elt in obj])
+        if self.started:
+            end = self.started.tag  # + '!table!'
+            self.started.update()
+        print('milot', text)
+        text = cells(text.replace('//', '<br>') + end)
+        return f'{tag.open}{text}{tag.close}'
 
     def data(self, obj: Node, components: Components, *_tag):
         match obj[0]:
@@ -106,7 +137,7 @@ class Template:
         return template.html
 
     def link(self, obj: Node, *_args):
-        return str(obj[0])
+        return self.templates.page.link_to(obj[0].split('/'))
 
     def string(self, text: str, components: Components):
         start = end = para = ''
@@ -119,5 +150,5 @@ class Template:
             self.started.update()
             text, para = text.removesuffix('\n'), '\n'
         if start and end and not text:
-            return ''
+            return para
         return f'{start}{text}{end}{para}'

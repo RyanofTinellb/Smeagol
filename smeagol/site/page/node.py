@@ -107,7 +107,7 @@ class Node:
                 value = [self.new(self.names + [child])
                          for child in self.directory[self.location].children]
             case 'kids':
-                value = self._data.children
+                value = self.data.children
             case 'num_children':
                 value = len(self.kids)
             case 'has_children':

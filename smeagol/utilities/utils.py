@@ -122,17 +122,22 @@ tk.FIRST = 0
 tk.LAST = tk.END
 tk.ALL = (tk.FIRST, tk.LAST)
 
+def try_split(obj, sep=None, default='', maxsplit=1):
+    with ignored(ValueError):
+        obj, default = obj.split(sep, maxsplit)
+    return obj, default
 
 def remove_text(item, text):
     return change_text(item, "", text)
 
-
-def urlform(text):
-    name = text.lower()
-    # remove tags, text within tags, and spaces
-    name = re.sub(r"(<(div|ipa).*?\2>)|<.*?>| ", "", name)
-    return name
-
+def remove_common_prefix(*lists):
+    uniques = [len(set(elts)) for elts in zip(*lists)]
+    try:
+        index = next(i for i, item in enumerate(uniques) if item > 1)
+    except StopIteration:
+        index = min((len(lst) for lst in lists))
+    for lst in lists:
+        del lst[:index]
 
 def page_initial(name, markdown=None):
     """Returns the first letter of a word, i.e.: the folder of the Dictionary

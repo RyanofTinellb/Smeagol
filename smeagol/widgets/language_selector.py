@@ -12,7 +12,6 @@ class LanguageSelector(ttk.Combobox):
         super().__init__(parent, height=2000, width=25,
                          justify=tk.CENTER, textvariable=self.name)
         self.state(['readonly'])
-        self.update = True
 
     @property
     def commands(self):
@@ -43,25 +42,22 @@ class LanguageSelector(ttk.Combobox):
             self.name.set(values[0])
 
     def update_name(self, *_args):
-        if not self.update or not self.names:
+        if not self.names:
             return
-        self.update = False
-        name = self.names[self.code.get()]
-        if name != self.name.get():
-            self.name.set(name)
-        self.update = True
+        name = self.names[code] if (code := self.code.get()) else ''
+        if not name or name == self.name.get():
+            return
+        self.name.set(name)
 
     def update_code(self, *_args):
-        if not self.update:
+        code = self.codes[name] if (name := self.name.get()) else ''
+        if not code or code == self.code.get():
             return
-        self.update = False
-        code = self.codes[self.name.get()]
-        if code != self.code.get():
-            self.code.set(code)
-        self.update = True
+        self.code.set(code)
 
     def config(self, *args, **kwargs):
         self.code: tk.StringVar = kwargs.pop('textvariable', None) or self.code
+        self.code.set('')
         with utils.ignored(AttributeError):
             self.code.trace_add('write', self.update_name)
         super().config(*args, **kwargs)

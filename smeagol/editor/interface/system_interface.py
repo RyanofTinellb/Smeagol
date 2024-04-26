@@ -108,7 +108,7 @@ class SystemInterface:
         fs.save_yaml(self._site_data, self.assets.source)
 
     def open_entry_in_browser(self, entry):
-        fs.open_in_browser(self.port, entry.link)
+        fs.open_in_browser(self.port, entry.url)
         return 'break'
 
     def save_entry(self, entry):
@@ -116,8 +116,8 @@ class SystemInterface:
         html = self.template_store.main.html
         filename = os.path.join(
             self.locations.directory, *entry.link) + '.html'
-        print('Saving', filename)
         fs.save_string(html, filename)
+        print(f'Saving {filename}')
 
     def close_servers(self):
         fs.close_servers()

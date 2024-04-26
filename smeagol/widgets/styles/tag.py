@@ -51,8 +51,8 @@ types:
         template -- eg: <template>copyright</template> -- child is passed to Template Store
         link -- eg: <internal-link>data, stylesheets, style.css</internal-link>
                                     -- child and entry are passed to Linker to get information
-        repeat -- eg: <repeat><data>contents</data></repeat> -- used for wholepages, repeats children
-                                            once for each entry
+        repeat -- eg: <repeat><data>contents</data></repeat> -- used for wholepages,
+                                        repeats children once for each entry
 """
 import re
 
@@ -77,6 +77,7 @@ class Tag:
     def __init__(self, name, tags=None, **_):
         self.name = name
         self.tags = tags or {}
+        self.language_code = ''
 
     def incremented_copy(self, level):
         open_ = increment_opener(self.open, level)
@@ -97,16 +98,21 @@ class Tag:
 
     def defaults(self, attr):
         match attr:
-            case 'type' | 'key' | 'language' | 'pipe' | 'repeat':
+            case 'type' | 'key' | 'language' | 'repeat':
                 value = ''
+            case 'pipe':
+                value = '|'
             case 'block':
-                value = self.type in {'block', 'line', 'div', 'heading'}
+                value = self.type in {
+                    'block', 'line', 'div', 'heading', 'table'}
             case 'open':
                 value = self._open
             case 'close':
                 value = self._close
             case 'start' | 'end':
-                value = self._line_tag
+                value = self._line_end
+            case 'end':
+                value = self._end
             case 'rank':
                 value = 100 if self.block else 0
             case _default:
@@ -119,7 +125,8 @@ class Tag:
 
     @property
     def _open(self):
-        lang = ' lang="@"' if self.language else ''
+        lang = (f' lang="{self.language_code}"'
+                if self.language and self.language_code else '')
         match self.type:
             case 'complete':
                 return f'<{self.name}{lang} '
@@ -143,7 +150,7 @@ class Tag:
                 return f'</{self.name}>'
 
     @property
-    def _line_tag(self):
+    def _line_end(self):
         return ' ' if self.type in ('line', 'heading') else ''
 
     def __setattr__(self, attr, value):
