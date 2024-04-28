@@ -12,6 +12,7 @@ class BaseTabs(ttk.Notebook):
 
     def __init__(self, parent, textbox_commands, displays: Sidebar, title):
         super().__init__(parent)
+        self.styles_menu = None
         self.displays = displays
         self.change_title = title
         utils.bind_all(self, self.commands)
@@ -117,7 +118,7 @@ class BaseTabs(ttk.Notebook):
         self.update_displays()
 
     def update_displays(self, _event=None):
-        self.textbox.configure_tags()
+        self.textbox.configure_tags(self.styles_menu)
         self.displays.languages = self.textbox.languages
         self.displays.update(self.textbox.displays)
         with utils.ignored(AttributeError):

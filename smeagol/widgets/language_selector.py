@@ -44,7 +44,8 @@ class LanguageSelector(ttk.Combobox):
     def update_name(self, *_args):
         if not self.names:
             return
-        name = self.names[code] if (code := self.code.get()) else ''
+        code = self.code.get()
+        name = self.names[code] if code and code != 'None' else ''
         if not name or name == self.name.get():
             return
         self.name.set(name)

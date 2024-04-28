@@ -20,8 +20,8 @@ from tkinter.font import Font
 from typing import Self
 
 from smeagol.utilities import utils
-from smeagol.widgets.styles.tag import Tag
 from smeagol.utilities.defaults import default
+from smeagol.widgets.styles.tag import Tag
 
 
 class Style(Tag):

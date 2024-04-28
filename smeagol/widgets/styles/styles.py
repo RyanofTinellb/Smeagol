@@ -1,5 +1,7 @@
-from smeagol.widgets.styles.style import Style
+import tkinter as tk
+
 from smeagol.utilities import utils
+from smeagol.widgets.styles.style import Style
 
 
 class Styles:
@@ -27,7 +29,7 @@ class Styles:
         return item in self.styles
 
     def __iter__(self):
-        return iter(self.styles.values())
+        return iter(sorted(self.styles.values(), key=lambda s: s.name))
 
     def __getitem__(self, name):
         name, language = utils.try_split(name, '@', '')
@@ -82,29 +84,39 @@ class Styles:
         except KeyError:
             self.styles = {n: s for n, s in self.styles.items() if s != style}
 
-    def activate(self, style):
+    def activate(self, style: str, menu_vars: list[tk.IntVar] = None):
+        menu_vars = menu_vars or {}
         if style == 'sel':
             return
-        with utils.ignored(IndexError):
-            self.language_code = utils.try_split(style, '@')[1] or self.language_code
+        name, code = utils.try_split(style, '@')
+        if code:
+            self.language_code = code
+        menu_vars.setdefault(name, tk.IntVar()).set(1)
         self._current.add(style)
 
-    def deactivate(self, style):
+    def deactivate(self, style: str,  menu_vars: list[tk.IntVar] = None):
+        menu_vars = menu_vars or {}
+        name, _code = utils.try_split(style, '@')
+        menu_vars.setdefault(name, tk.IntVar()).set(0)
         self._current.discard(style)
 
-    def toggle(self, style):
+    def toggle(self, style: str):
         (self.deactivate if self.on(style) else self.activate)(style)
 
     def on(self, style):
         return style in self._current
 
-    def clear(self):
+    def clear(self, menu_vars: list[tk.IntVar] = None):
+        menu_vars = menu_vars or {}
         self._current.clear()
+        for var in menu_vars.values():
+            var.set(0)
 
-    def update(self, styles):
-        self.clear()
+    def update(self, styles: list[str], menu_vars: list[tk.IntVar] = None):
+        menu_vars = menu_vars or {}
+        self.clear(menu_vars)
         for style in styles:
-            self.activate(style)
+            self.activate(style, menu_vars)
 
     def modify_fontsize(self, amount):
         self.default.default_size += amount

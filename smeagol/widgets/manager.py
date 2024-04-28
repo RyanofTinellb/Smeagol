@@ -11,6 +11,7 @@ class Manager(tk.Frame):
         self.tabs = None
         super().__init__(parent)
         self.parent = self.master
+        self.styles_menu = tk.Menu(self.parent, tearoff=0)
         self.create_layout()
         self.parent.protocol('WM_DELETE_WINDOW', self.quit)
 
@@ -29,7 +30,7 @@ class Manager(tk.Frame):
     def create_layout(self):
         top = self.winfo_toplevel()
         self.set_window_size(top)
-        top['menu'] = self.menu()
+        top['menu'] = self.menu
         self.sidebar = Sidebar(self).pack(side=tk.LEFT)
         self.textframe().pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
         self.pack()
@@ -41,6 +42,7 @@ class Manager(tk.Frame):
         h_pos = 0
         top.geometry(f'{w}x{h}+{w_pos}+{h_pos}')
 
+    @property
     def menu(self):
         menubar = tk.Menu(self.parent)
         for submenu in self.menu_commands:
@@ -48,13 +50,13 @@ class Manager(tk.Frame):
         return menubar
 
     def add_submenu(self, parent, menu):
+        parent.add_cascade(label='Styles', menu=self.styles_menu)
         label, options = menu
         submenu = tk.Menu(parent, tearoff=0)
         parent.add_cascade(label=label, menu=submenu)
         for option in options:
             label, command = option
-            underline = label.find('_')
-            underline = 0 if underline == -1 else underline
+            underline = max(label.find('_'), 0)
             label = label.replace('_', '')
             keypress = label[underline]
             submenu.add_command(label=label, command=command,
@@ -65,7 +67,9 @@ class Manager(tk.Frame):
     def textframe(self):
         frame = tk.Frame(self.parent)
         options = {"side": tk.TOP, "expand": True, "fill": tk.BOTH}
-        self.tabs = Tabs(frame, self.textbox_commands, self.sidebar, self.parent.title)
+        self.tabs = Tabs(frame, self.textbox_commands,
+                         self.sidebar, self.parent.title)
+        self.tabs.styles_menu = self.styles_menu
         self.tabs.pack(**options)
         return frame
 

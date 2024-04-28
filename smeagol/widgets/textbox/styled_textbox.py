@@ -8,8 +8,10 @@ from smeagol.conversion.text_tree.text_tree import TextTree
 
 SELECTION = "sel.first", "sel.last"
 
+
 def style_names(styles: list[str]):
     return [style_name(style) for style in styles]
+
 
 def style_name(style: str):
     if style and '@' in style:
@@ -21,6 +23,7 @@ class StyledTextbox(BaseTextbox):
     def __init__(self, parent=None, styles: Styles = None, languages: dict = None):
         super().__init__(parent, height=1, width=1, wrap=tk.WORD, undo=True)
         self.styles = styles
+        self.styles_menu: dict[str, tk.IntVar] = {}
         self.languages = languages or {}
         self.displays = {'style': tk.StringVar(),
                          'language_code': tk.StringVar()}
@@ -56,21 +59,32 @@ class StyledTextbox(BaseTextbox):
     def get_styles_from_cursor(self, _event=None):
         if not self.styles:
             return
-        self.styles.update(self.tag_names(tk.INSERT))
         self.configure_tags()
+        self.styles.update(self.tag_names(tk.INSERT), self.styles_menu)
 
     def update_style_display(self):
         current = style_names(self.styles.current) if self.styles else ''
         self.style.set('\n'.join(current))
         self.language_code.set(self.styles.language_code)
 
-    def configure_tags(self):
+    def configure_tags(self, menu=None):
         if self.styles is None:
             return
         with utils.ignored(KeyError):
             self._configure_default_style()
+        if menu:
+            menu.delete(0, menu.index('end'))
         for style in self.styles:
             self._configure_tag(style)
+            var = self.styles_menu.setdefault(style.name, tk.IntVar())
+            self._configure_styles_menu(menu, style, var)
+
+    def _configure_styles_menu(self, menu, style, var):
+        if not menu:
+            return
+        menu.add_checkbutton(label=style.name,
+                             variable=var,
+                             command=self.style_changer(style.name, style.language))
 
     def _configure_default_style(self):
         if not self.styles:
@@ -92,8 +106,9 @@ class StyledTextbox(BaseTextbox):
 
     def style_changer(self, name: str, language: bool):
         def command(_event=None, name=name, language=language):
-            code = self.styles.language_code if language else ''
-            name = f'{name}@{code}'
+            # self.focus_set()
+            code = f'@{self.styles.language_code}' if language else ''
+            name = f'{name}{code}'
             self.styles.toggle(name)
             with utils.ignored(tk.TclError):
                 (self.tag_add if self.styles.on(name)
