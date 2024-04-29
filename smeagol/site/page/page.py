@@ -1,5 +1,7 @@
-from smeagol.utilities import utils
+import os
+
 from smeagol.site.page.entry import Entry
+from smeagol.utilities import utils
 
 
 class Page(Entry):
@@ -59,7 +61,7 @@ class Page(Entry):
 
     @property
     def url(self):
-        return '/'.join(self.link) + '.html'
+        return os.path.join(*self.link) + '.html'
 
     @property
     def name(self):

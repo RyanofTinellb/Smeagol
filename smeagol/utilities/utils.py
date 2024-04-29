@@ -5,8 +5,10 @@ import re
 import tkinter as tk
 from contextlib import contextmanager
 from datetime import datetime as dt
+from datetime import date as Date
 from threading import Thread
-from typing import Any
+from typing import Iterable
+from dataclasses import dataclass
 
 
 @contextmanager
@@ -47,7 +49,7 @@ def clamp(number, lower, upper):
     return max(lower, min(upper, number))
 
 
-def alternate(functions: list, obj: Any):
+def alternate(functions: Iterable, obj: Iterable):
     for f, x in zip(itertools.cycle(functions), obj):
         f(x)
 
@@ -122,13 +124,16 @@ tk.FIRST = 0
 tk.LAST = tk.END
 tk.ALL = (tk.FIRST, tk.LAST)
 
+
 def try_split(obj, sep=None, default='', maxsplit=1):
     with ignored(ValueError):
         obj, default = obj.split(sep, maxsplit)
     return obj, default
 
+
 def remove_text(item, text):
     return change_text(item, "", text)
+
 
 def remove_common_prefix(*lists):
     uniques = [len(set(elts)) for elts in zip(*lists)]
@@ -138,6 +143,7 @@ def remove_common_prefix(*lists):
         index = min((len(lst) for lst in lists))
     for lst in lists:
         del lst[:index]
+
 
 def page_initial(name, markdown=None):
     """Returns the first letter of a word, i.e.: the folder of the Dictionary
@@ -165,3 +171,48 @@ def reorder(lst, obj):
             with ignored(KeyError):
                 t = obj.pop(itm)
                 obj[itm] = t
+
+
+class DateFormatter:
+    def __init__(self, date, str_format):
+        self.date = date
+        self.str_format = str_format
+        self.in_string = False
+        self.formats = {
+            'dd': '%d', 'ddd': '%a', 'dddd': '%A',
+            'mm': '%m', 'mmm': '%B', 'mmmm': '%B',
+            'yy': '%y', 'yyy': '%Y', 'yyyy': '%Y'
+        }
+
+    def __str__(self):
+        tokens = re.split(r'(\W)', self.str_format)
+        return ''.join((self._format_date(token) for token in tokens))
+
+    def ordinal_suffix(self, n):
+        return ['th', 'st', 'nd', 'rd', 'th'][min(n % 10, 4)] if n // 10 != 1 else 'th'
+
+    def _format_date(self, token):
+        if token == '"':
+            self.in_string = not self.in_string
+            return ''
+        if self.in_string:
+            return token
+        ord_suffix = token and token.endswith('r')
+        match token.removesuffix('r'):
+            case 'd':
+                value = self.date.day
+            case 'm':
+                value = self.date.month
+            case 'y':
+                value = self.date.year
+            case key:
+                try:
+                    value = self.date.strftime(self.formats[key])
+                except KeyError:
+                    return key
+        suffix = self.ordinal_suffix(value) if ord_suffix else ''
+        return f'{value}{suffix}'
+
+
+def format_date(date, str_format):
+    return str(DateFormatter(date, str_format))

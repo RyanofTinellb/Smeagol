@@ -15,19 +15,7 @@ class Node:
 
     @property
     def location(self) -> list[int]:
-        location = []
-        obj = self.directory
-        for name in self.names[1:]:
-            index = self._index(obj, name)
-            location.append(index)
-            obj = obj[index]
-        return location
-
-    def _index(self, obj, name):
-        for i, elt in enumerate(obj):
-            if elt[0] == name:
-                return i
-        raise IndexError(f'{obj.name} has no item {name}')
+        return self.directory.location(self.names)
 
     def _find(self, location: list[int]) -> Self:
         obj = self.directory

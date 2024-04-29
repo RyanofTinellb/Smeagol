@@ -3,7 +3,7 @@ from typing import Optional, Self
 from smeagol.utilities import utils
 
 
-def name(obj):
+def get_name(obj):
     return obj if isinstance(obj, str) else obj[0]
 
 
@@ -42,9 +42,34 @@ class Directory:
     def subdirectory(self, obj=None, names=None):
         return type(self)(directory=obj, names=names, subdirectory=True)
 
+    def location(self, names) -> list[int]:
+        location = []
+        obj = self.directory
+        for name in names[1:]:
+            index = self._index(obj, name)
+            location.append(index)
+            obj = obj[index]
+        return location
+
+    def add(self, names):
+        obj = self.directory
+        for name in names[1:]:
+            try:
+                index = self._index(obj, name)
+            except ValueError:
+                obj.append([name])
+                index = len(obj) - 1
+            obj = obj[index]
+
+    def _index(self, obj, name):
+        for i, elt in enumerate(obj):
+            if elt[0] == name:
+                return i
+        raise ValueError(f'{get_name(obj)} has no item {name}')
+
     @property
     def children(self) -> list[str]:
-        return [name(child) for child in self.directory[1:]]
+        return [get_name(child) for child in self.directory[1:]]
 
     def pprint(self) -> None:
         self._pprint(self.directory)

@@ -32,6 +32,7 @@ class Tab(tk.Frame):
 
     def save_entry(self, _event=None):
         self.entry.text = self.textbox.text
+        self.entry.update_date()
         self.interface.save_site()
         filename = self.interface.save_entry(self.entry)
         print(f'Saving {filename}')

@@ -19,6 +19,10 @@ class Site(Page):
         for names in self.directory:
             yield self.new(names)
 
+    def add_entry(self, page: Page):
+        self.entries.add(page.names)
+        self.directory.add(page.names)
+
     @property
     def root(self):
         return self

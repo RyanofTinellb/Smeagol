@@ -45,9 +45,13 @@ class Tabs(BaseTabs):
         if new_tab:
             self.new()
         self.current.interface = interface or self.interface
-        self.current.entry = entry
+        try:
+            self.current.entry = entry
+        except KeyError:
+            self.current.interface.add_entry_to_site(entry)
+            self.current.entry = entry
         self.update_displays()
-        self.interface.add_entry(entry)
+        self.interface.add_entry_to_config(entry)
 
     def previous_entry(self, event):
         print('giraffe')

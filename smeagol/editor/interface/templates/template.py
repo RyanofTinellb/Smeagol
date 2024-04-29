@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from datetime import datetime as dt
 from typing import Self
 
 from smeagol.utilities import utils
@@ -126,8 +127,18 @@ class Template:
                 return self.contents(components)
             case 'name':
                 return self.templates.page.name
+            case 'year':
+                return str(dt.now().year)
+            case other:
+                return self._data(other)
+
+    def _data(self, obj: str):
+        function, parameter = utils.try_split(obj, '|')
+        match function:
+            case 'date':
+                return utils.format_date(self.templates.page.date, parameter)
             case _other:
-                return str(obj[0])
+                return obj
 
     def contents(self, components: Components):
         text = self.templates.page.text

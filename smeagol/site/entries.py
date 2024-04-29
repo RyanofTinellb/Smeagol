@@ -1,5 +1,6 @@
 from typing import Self, Optional
 from smeagol.utilities import utils
+from smeagol.utilities.types import Node
 
 
 class Entries:
@@ -17,6 +18,11 @@ class Entries:
             for name, elt in item.get('children', {}).items():
                 yield ([*names, name])
                 yield from self._rec(elt, (*names, name))
+
+    def add(self, names: list[str]):
+        obj: dict = self.entries
+        for name in names:
+            obj = obj.setdefault('children', {}).setdefault(name, {})
 
     @property
     def root(self):

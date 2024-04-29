@@ -62,7 +62,7 @@ from smeagol.utilities import utils
 def increment_opener(string, level):
     def inc(match, level=level):
         level += int(match.group(1))
-        return f'6 class="h{level}"' if level > 6 else str(level)
+        return f'6 class="h{level}"' if level >= 6 else str(level)
     return re.sub(r'(\d)', inc, string)
 
 

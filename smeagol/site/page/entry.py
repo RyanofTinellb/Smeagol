@@ -68,17 +68,16 @@ class Entry(Node):
 
     @property
     def date(self):
+        date = self.data.get('date')
         try:
-            date = self.data.get('date')
             return dt.strptime(date, '%Y-%m-%d')
-        except (ValueError, KeyError, TypeError):
+        except TypeError:
             return dt.now()
 
-    @date.setter
-    def date(self, value):
+    def update_date(self, value=None):
         try:
             date = dt.strftime(value, '%Y-%m-%d')
-        except (ValueError, KeyError):
+        except (ValueError, KeyError, TypeError):
             date = dt.strftime(dt.today(), '%Y-%m-%d')
         self.data['date'] = date
 

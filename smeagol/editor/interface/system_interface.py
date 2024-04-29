@@ -77,14 +77,17 @@ class SystemInterface:
     def find_entry(self, headings):
         return self.site[headings]
 
-    def add_entry(self, entry: Entry) -> None:
+    def add_entry_to_config(self, entry: Entry) -> None:
         names = entry.names
         if names not in self._entries:
             self._entries.append(names)
 
-    def remove_entry(self, entry: Entry) -> None:
+    def remove_entry_from_config(self, entry: Entry) -> None:
         names = entry.names
         self._entries.remove(names)
+
+    def add_entry_to_site(self, entry):
+        self.site.add_entry(entry)
 
     def open_styles(self):
         self.styles = self.create_from_config(Styles, 'styles')
@@ -116,16 +119,16 @@ class SystemInterface:
         percent = each = 5
         for i, entry in enumerate(root):
             if 100*i/total >= percent:
-                yield percent
+                yield 100*i // total
                 percent += each
             self.save_entry(entry)
-        yield percent
+        yield 100
 
     def save_entry(self, entry):
         self.template_store.set_data(entry, self.styles)
         html = self.template_store.main.html
         filename = os.path.join(
-            self.locations.directory, *entry.link) + '.html'
+            self.locations.directory, entry.url)
         fs.save_string(html, filename)
         return filename
 
