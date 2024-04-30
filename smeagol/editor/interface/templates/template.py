@@ -63,28 +63,44 @@ class Template:
         if isinstance(obj, str):
             return self.string(obj, components)
         tag = self.styles[obj.name]
-        if tag.param:
-            obj[0] = self.replace_param(obj[0], tag)
+        self.replace_param(obj, tag)
         components = components.new(tag)
         return self.types(tag.type)(obj, components, tag)
 
-    def replace_param(self, text, tag):
+    def replace_param(self, obj, tag):
+        if not tag.param:
+            return
+        # print('tirusi', obj.name, tag.name, tag.language_code)
+        text = obj.first_child
+        language_code = tag.language_code if tag.language else None
         if not isinstance(text, str):
             raise ValueError(
-                f'{tag.name} must have child of type <str> not of type {type(text)}')
-        return ''.join(utils.alternate_yield([self._text, self._param],
-                                             tag.param.split('$'), text))
+                f'{obj.name} must have child of type <str> not of type {type(text)}')
+        obj.first_child = ''.join(utils.alternate_yield([self._text, self._param],
+                                                        tag.param.split('$'), text, language_code))
 
     @staticmethod
     def _text(text, *_args):
         return text
 
-    def _param(self, param, text):
+    def _param(self, param, text, language_code):
+        param, arg = utils.try_split(param, ':')
         match param:
-            case 'name':
+            case 'text':
                 return text
+            case 'lookup':
+                return self._lookup(arg, text, language_code)
             case _other:
                 raise ValueError(f'Parameter {param} does not exist')
+
+    def _lookup(self, arg, text, language_code):
+        if not language_code:
+            return self.templates.links.get(arg, {}).get(text, '')
+        item = self.templates.links.get(arg, {}).get(language_code)
+        try:
+            return item.get(text, '')
+        except AttributeError:
+            return item or ''
 
     def types(self, type_):
         match type_:
@@ -121,10 +137,13 @@ class Template:
         return f'{start}{tag.open}{text}{tag.close}'
 
     def template(self, obj: Node, components: Components, *_args):
-        name = obj[0]
+        name = obj.first_child
         template = self.templates[name]
         template.components = components
-        return template.html
+        try:
+            return template.html
+        except KeyError as e:
+            raise KeyError(f'Template {name} has no tag') from e
 
     def heading(self, obj: Node, components: Components, tag: Tag):
         level = components.wholepage and self.templates.page.level
@@ -142,7 +161,7 @@ class Template:
         return f'{tag.open}{text}{tag.close}'
 
     def data(self, obj: Node, components: Components, *_tag):
-        match obj[0]:
+        match obj.first_child:
             case 'contents':
                 return self.contents(components)
             case 'name':
@@ -164,10 +183,13 @@ class Template:
         text = self.templates.page.text
         styles = self.templates.styles
         template = type(self)(text, styles, self.templates, components)
-        return template.html
+        try:
+            return template.html
+        except KeyError as e:
+            raise KeyError(f'Text {text} has no tag') from e
 
     def link(self, obj: Node, *_args):
-        return self.templates.page.link_to(obj[0].split('/'))
+        return self.templates.page.link_to(obj.first_child.split('/'))
 
     def string(self, text: str, components: Components):
         start = end = para = ''

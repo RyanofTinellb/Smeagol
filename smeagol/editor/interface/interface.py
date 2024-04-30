@@ -15,8 +15,6 @@ class Interface(SystemInterface):
 
     def __getattr__(self, attr):
         match attr:
-            case 'links':
-                return self.config.setdefault('links', {})
             case _default:
                 try:
                     return super().__getattr__(attr)
@@ -35,13 +33,11 @@ class Interface(SystemInterface):
     def setup(self, config):
         super().setup(config)
         self.languages = self.load_from_config('languages', {})
-        self.language = config.get('language', '')
-        self.translator = conversion.Translator(self.language)
+        self.translator = conversion.Translator()
         self.markdown = self.create_from_config(
             conversion.Markdown, 'markdown')
-        self.linker = conversion.Linker(self.links)
         samples = self.assets.samples
-        self.randomwords = utilities.RandomWords(self.language, samples)
+        self.randomwords = utilities.RandomWords(samples)
 
     def change_language(self, language):
         self.translator.select(language)

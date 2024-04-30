@@ -8,10 +8,11 @@ from smeagol.widgets.styles.styles import Styles
 
 
 class TemplateStore:
-    def __init__(self, templates: Templates = None):
+    def __init__(self, templates: Templates = None, links: dict = None):
         self.started = Flag()
         self.page = self.styles = None
         self._filenames = templates or Templates()
+        self.links = links or {}
         self._cache = {'sections': {}}
 
     def __getattr__(self, attr):

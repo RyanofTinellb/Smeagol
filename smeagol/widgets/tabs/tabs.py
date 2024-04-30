@@ -41,17 +41,23 @@ class Tabs(BaseTabs):
         except TypeError as e:
             raise TypeError(f'Unable to load from {filename}') from e
 
-    def open_entry(self, interface=None, entry: Page=None, new_tab=False):
+    def open_entry(self, interface=None, entry: Page = None, new_tab=False):
         if new_tab:
             self.new()
         self.current.interface = interface or self.interface
         try:
             self.current.entry = entry
         except (KeyError, IndexError):
-            self.current.interface.add_entry_to_site(entry)
-            self.current.entry = entry
+            self.add_new(entry)
         self.update_displays()
         self.interface.add_entry_to_config(entry)
+
+    def add_new(self, entry):
+        self.current.interface.add_entry_to_site(entry)
+        try:
+            self.current.entry = entry
+        except IndexError as e:
+            raise IndexError(f'Bad formatting in {entry.name}') from e
 
     def previous_entry(self, event):
         print('giraffe')

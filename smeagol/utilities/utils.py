@@ -127,10 +127,10 @@ tk.LAST = tk.END
 tk.ALL = (tk.FIRST, tk.LAST)
 
 
-def try_split(obj, sep=None, default='', maxsplit=1):
+def try_split(string, sep=None, default='', maxsplit=1):
     with ignored(ValueError):
-        obj, default = obj.split(sep, maxsplit)
-    return obj, default
+        string, default = string.split(sep, maxsplit)
+    return string, default
 
 
 def remove_text(item, text):

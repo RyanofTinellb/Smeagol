@@ -9,13 +9,14 @@ from smeagol.utilities.types import Entry
 
 
 class SystemInterface:
-    def __init__(self, filename='', server=True, template_store=None):
+    def __init__(self, filename='', server=True):
         self.filename = filename
         self.styles = None
         config = self.load_config(filename) if filename else {}
         self.setup(config)
         self.site = self.open_site()
-        self.template_store = template_store or TemplateStore(self.templates)
+        self.links = self.open_link_files(self._links)
+        self.template_store = TemplateStore(self.templates, self.links)
         if server:
             self.port = fs.start_server(
                 port=self.port, directory=self.locations.directory)
@@ -28,6 +29,8 @@ class SystemInterface:
                 return self.config.setdefault('entries', [[]])
             case 'assets' | 'locations' | 'templates':
                 return getattr(assets, attr.title())(self.config.get(attr, {}))
+            case '_links':
+                return self.config.setdefault('links', {})
             case _default:
                 try:
                     return super().__getattr__(attr)
@@ -35,6 +38,9 @@ class SystemInterface:
                     name = type(self).__name__
                     raise AttributeError(
                         f"'{name}' object has no attribute '{attr}'") from e
+
+    def open_link_files(self, links: dict):
+        return {key: fs.load_yaml(filename) for key, filename in links.items()}
 
     @property
     def port(self):
@@ -126,7 +132,10 @@ class SystemInterface:
 
     def save_entry(self, entry):
         self.template_store.set_data(entry, self.styles)
-        html = self.template_store.main.html
+        try:
+            html = self.template_store.main.html
+        except (ValueError, IndexError) as e:
+            raise type(e)(f'Incorrect formatting in entry {entry.name}') from e
         filename = os.path.join(
             self.locations.directory, entry.url)
         fs.save_string(html, filename)
