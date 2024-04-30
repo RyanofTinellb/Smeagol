@@ -1,5 +1,6 @@
 from smeagol.utilities import utils
 from smeagol.widgets.tabs.base_tabs import BaseTabs
+from smeagol.utilities.types import Page
 
 
 class Tabs(BaseTabs):
@@ -40,14 +41,13 @@ class Tabs(BaseTabs):
         except TypeError as e:
             raise TypeError(f'Unable to load from {filename}') from e
 
-    def open_entry(self, interface=None, entry=None, new_tab=False):
-        # pylint: disable=W0201
+    def open_entry(self, interface=None, entry: Page=None, new_tab=False):
         if new_tab:
             self.new()
         self.current.interface = interface or self.interface
         try:
             self.current.entry = entry
-        except KeyError:
+        except (KeyError, IndexError):
             self.current.interface.add_entry_to_site(entry)
             self.current.entry = entry
         self.update_displays()

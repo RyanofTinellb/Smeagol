@@ -21,7 +21,8 @@ class Site(Page):
 
     def add_entry(self, page: Page):
         self.entries.add(page.names)
-        self.directory.add(page.names)
+        with utils.ignored(IndexError):
+            self.directory.add(page.names)
 
     @property
     def root(self):

@@ -20,9 +20,9 @@ class Styles:
     def create_style(self, name='', style=None):
         style = style or {}
         if self.default:
-            return Style(name, **style, default_style=self.default)
+            return Style(name, style, default_style=self.default)
         # if style.get('tags', {}).get('type') == 'default':
-        self.default = Style(name, **style)
+        self.default = Style(name, style)
         return self.default
 
     def __contains__(self, item):

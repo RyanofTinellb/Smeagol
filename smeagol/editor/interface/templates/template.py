@@ -63,8 +63,28 @@ class Template:
         if isinstance(obj, str):
             return self.string(obj, components)
         tag = self.styles[obj.name]
+        if tag.param:
+            obj[0] = self.replace_param(obj[0], tag)
         components = components.new(tag)
         return self.types(tag.type)(obj, components, tag)
+
+    def replace_param(self, text, tag):
+        if not isinstance(text, str):
+            raise ValueError(
+                f'{tag.name} must have child of type <str> not of type {type(text)}')
+        return ''.join(utils.alternate_yield([self._text, self._param],
+                                             tag.param.split('$'), text))
+
+    @staticmethod
+    def _text(text, *_args):
+        return text
+
+    def _param(self, param, text):
+        match param:
+            case 'name':
+                return text
+            case _other:
+                raise ValueError(f'Parameter {param} does not exist')
 
     def types(self, type_):
         match type_:

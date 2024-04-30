@@ -31,6 +31,9 @@ class Node:
     def __getitem__(self, key):
         return self.children[key]
 
+    def __setitem__(self, key, value):
+        self.children[key] = value
+
     def __str__(self):
         return f'{self.open_tag}{self.middle_text}{self.close_tag}'
 

@@ -1,6 +1,5 @@
 from typing import Self, Optional
 from smeagol.utilities import utils
-from smeagol.utilities.types import Node
 
 
 class Entries:

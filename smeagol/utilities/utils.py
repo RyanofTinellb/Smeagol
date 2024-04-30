@@ -5,10 +5,8 @@ import re
 import tkinter as tk
 from contextlib import contextmanager
 from datetime import datetime as dt
-from datetime import date as Date
 from threading import Thread
 from typing import Iterable
-from dataclasses import dataclass
 
 
 @contextmanager
@@ -52,6 +50,10 @@ def clamp(number, lower, upper):
 def alternate(functions: Iterable, obj: Iterable):
     for f, x in zip(itertools.cycle(functions), obj):
         f(x)
+
+def alternate_yield(functions: Iterable, obj: Iterable, *args, **kwargs):
+    for f, x in zip(itertools.cycle(functions), obj):
+        yield f(x, *args, **kwargs)
 
 
 def setnonzero(obj, attr, value):

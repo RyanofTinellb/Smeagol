@@ -25,9 +25,10 @@ from smeagol.widgets.styles.tag import Tag
 
 
 class Style(Tag):
-    def __init__(self, name, tags: dict = None, props: dict = None, default_style: Self = None):
+    def __init__(self, name, tags: dict = None, default_style: Self = None):
+        tags = tags or {}
+        self.props = tags.pop('props', {})
         super().__init__(name, tags)
-        self.props = props or {}
         self.default_style = default_style or {}
         if self._is_default:
             self._unchanged = self.props.copy()

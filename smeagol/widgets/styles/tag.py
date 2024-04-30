@@ -93,12 +93,12 @@ class Tag:
             try:
                 return self.defaults(attr)
             except AttributeError as e:
-                raise AttributeError(f"{type(self).__name__}"
-                                     "'{self.name}' has no attribute '{attr}'") from e
+                raise AttributeError(f"{type(self).__name__} "
+                                     f"'{self.name}' has no attribute '{attr}'") from e
 
     def defaults(self, attr):
         match attr:
-            case 'type' | 'key' | 'language' | 'repeat':
+            case 'type' | 'key' | 'language' | 'repeat' | 'param':
                 value = ''
             case 'pipe':
                 value = '|'
@@ -164,5 +164,5 @@ class Tag:
         return {
             'type', 'key', 'language', 'block',
             'open', 'close', 'start', 'end',
-            'pipe', 'repeat'
+            'pipe', 'repeat', 'template'
         }
