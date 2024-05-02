@@ -46,6 +46,9 @@ def compose(*functions):
 def clamp(number, lower, upper):
     return max(lower, min(upper, number))
 
+def url_form(text):
+    return text.lower().replace(' ', '')
+
 
 def alternate(functions: Iterable, obj: Iterable):
     for f, x in zip(itertools.cycle(functions), obj):
@@ -218,3 +221,16 @@ class DateFormatter:
 
 def format_date(date, str_format):
     return str(DateFormatter(date, str_format))
+
+def analyse_entry(entry):
+    wordlist = {}
+    for number, line in enumerate(entry.lines):
+        for word in re.split(r'[ ()[\]\xa0.,\-_?!。/;*\|#”‘“:=$]', line.lower()):
+            if not word:
+                continue
+            try:
+                if wordlist[word][-1] != number:
+                    wordlist[word].append(number)
+            except KeyError:
+                wordlist[word] = [number]
+    return {'words': wordlist, 'sentences': list(entry.lines)}

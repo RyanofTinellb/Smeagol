@@ -45,12 +45,12 @@ class Manager(tk.Frame):
     @property
     def menu(self):
         menubar = tk.Menu(self.parent)
+        menubar.add_cascade(label='Styles', menu=self.styles_menu)
         for submenu in self.menu_commands:
             self.add_submenu(menubar, submenu)
         return menubar
 
     def add_submenu(self, parent, menu):
-        parent.add_cascade(label='Styles', menu=self.styles_menu)
         label, options = menu
         submenu = tk.Menu(parent, tearoff=0)
         parent.add_cascade(label=label, menu=submenu)

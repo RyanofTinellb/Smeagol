@@ -119,24 +119,31 @@ def updates(filename, fn, newfilename=None):
     save_string(fn(load_string(filename)), newfilename)
 
 
+def open_template():
+    options = {'filetypes': [('Sméagol Template', '*.tpl')],
+               'title': 'Open Sméagol Template',
+               'defaultextension': '.tpl'}
+    return load_yaml(fd.askopenfilename(**options))
+
+
 def open_source():
-    options = dict(filetypes=[('Source Data File', '*.src')],
-                   title='Open Source Data File',
-                   defaultextension='.src')
+    options = {'filetypes': [('Source Data File', '*.src')],
+               'title': 'Open Source Data File',
+               'defaultextension': '.src'}
     return fd.askopenfilename(**options)
 
 
 def open_smeagol():
-    options = dict(filetypes=[('Sméagol File', '*.smg')],
-                   title='Open Site',
-                   defaultextension='.smg')
+    options = {'filetypes': [('Sméagol File', '*.smg')],
+               'title': 'Open Site',
+               'defaultextension': '.smg'}
     return fd.askopenfilename(**options)
 
 
 def save_smeagol():
-    options = dict(filetypes=[('Sméagol File', '*.smg')],
-                   title='Save Site',
-                   defaultextension='.smg')
+    options = {'filetypes': [('Sméagol File', '*.smg')],
+               'title': 'Save Site',
+               'defaultextension': '.smg'}
     return fd.asksaveasfilename(**options)
 
 

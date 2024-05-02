@@ -139,7 +139,13 @@ class SystemInterface:
         filename = os.path.join(
             self.locations.directory, entry.url)
         fs.save_string(html, filename)
+        self.save_searchfile()
         return filename
+
+    def save_searchfile(self):
+        html = self.template_store.search.html
+        filename = self.locations.search
+        fs.save_string(html, filename)
 
     def close_servers(self):
         fs.close_servers()

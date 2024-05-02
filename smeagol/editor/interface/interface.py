@@ -37,7 +37,7 @@ class Interface(SystemInterface):
         self.markdown = self.create_from_config(
             conversion.Markdown, 'markdown')
         samples = self.assets.samples
-        self.randomwords = utilities.RandomWords(samples)
+        # self.randomwords = utilities.RandomWords(samples)
 
     def change_language(self, language):
         self.translator.select(language)

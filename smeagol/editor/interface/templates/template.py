@@ -70,7 +70,6 @@ class Template:
     def replace_param(self, obj, tag):
         if not tag.param:
             return
-        # print('tirusi', obj.name, tag.name, tag.language_code)
         text = obj.first_child
         language_code = tag.language_code if tag.language else None
         if not isinstance(text, str):
@@ -84,14 +83,18 @@ class Template:
         return text
 
     def _param(self, param, text, language_code):
+        url = param.startswith('url')
+        if url:
+            param = re.search(r'url\((.*?)\)', param).group(1)
         param, arg = utils.try_split(param, ':')
         match param:
             case 'text':
-                return text
+                value = text
             case 'lookup':
-                return self._lookup(arg, text, language_code)
+                value = self._lookup(arg, text, language_code)
             case _other:
                 raise ValueError(f'Parameter {param} does not exist')
+        return utils.url_form(value) if url else value
 
     def _lookup(self, arg, text, language_code):
         if not language_code:

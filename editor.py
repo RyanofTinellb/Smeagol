@@ -15,21 +15,13 @@ from smeagol.utilities import utils
 
 def main():
     utils.clear_screen()
-    try:
-        path = sys.argv[1]
-        filenames = get_filenames(path)
-    except IndexError:  # no command line arguments
-        filenames = []
-    Editor(filenames=filenames).mainloop()
-
-def other():
-    utils.clear_screen()
-    path = 'c:/users/ryan/tinellbianlanguages/dictionary'
-    filenames = get_filenames(path)
-    Editor(filenames=filenames).mainloop()
+    filenames = None
+    with utils.ignored(IndexError):
+        filenames = open_file(sys.argv[1])
+    Editor(filenames).mainloop()
 
 
-def get_filenames(path):
+def open_file(path):
     if fs.isfolder(path):
         return fs.find_by_type(path, '.smg')
     return [path]
@@ -37,4 +29,3 @@ def get_filenames(path):
 
 if __name__ == '__main__':
     main()
-    # other()

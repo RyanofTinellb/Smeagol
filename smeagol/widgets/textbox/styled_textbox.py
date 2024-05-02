@@ -60,7 +60,7 @@ class StyledTextbox(BaseTextbox):
         if not self.styles:
             return
         self.configure_tags()
-        self.styles.update(self.tag_names(tk.INSERT), self.styles_menu)
+        self.styles.update(self.tag_names(tk.INSERT + '-1c'), self.styles_menu)
 
     def update_style_display(self):
         current = style_names(self.styles.current) if self.styles else ''

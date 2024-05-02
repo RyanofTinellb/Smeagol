@@ -1,17 +1,14 @@
 import tkinter as tk
 from tkinter import simpledialog as sd
 
-from .buttons import Buttons
-from .row import Row
+from smeagol.widgets.window.templates.buttons import Buttons
+from smeagol.widgets.window.templates.row import Row
 
 
 class Templates(tk.Frame):
     '''Templates Window'''
+
     def __init__(self, parent, templates):
-        '''
-        @param editor: function to edit template from Editor or derived class
-            thereof
-        '''
         super().__init__(parent)
         self.parent.protocol('WM_DELETE_WINDOW', self.cancel)
         self.parent.title('Templates')
@@ -51,14 +48,14 @@ class Templates(tk.Frame):
     def parent(self):
         return self.master
 
-    def done(self, event=None):
+    def done(self, _event=None):
         for frame in self.frames:
             frame.get()
             setattr(self.templates, frame.name, frame.filename)
         self.parent.destroy()
         return 'break'
 
-    def cancel(self, event=None):
+    def cancel(self, _event=None):
         self.templates.update(self.copy)
         self.parent.destroy()
         return 'break'

@@ -331,7 +331,7 @@ class default:
             "owner": "files/search",
             "textbox": true,
             "browse": {
-            "text": "Seach Page Location",
+            "text": "Search Page Location",
             "action": "save",
             "extension": ".html"
             }

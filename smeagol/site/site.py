@@ -36,10 +36,10 @@ class Site(Page):
         names = []
         for entry_number, entry in enumerate(self):
             base = len(sentences)
-            analysis = entry.analysis
+            analysis = utils.analyse_entry(entry)
             new_words = analysis['words']
             sentences += analysis['sentences']
-            urls.append(entry.link)
+            urls.append(entry.url)
             names.append(entry.name)
             for word, line_numbers in new_words.items():
                 line_numbers = utils.increment(line_numbers, by=base)
