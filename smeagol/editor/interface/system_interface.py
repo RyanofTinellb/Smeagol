@@ -140,12 +140,19 @@ class SystemInterface:
             self.locations.directory, entry.url)
         fs.save_string(html, filename)
         self.save_searchfile()
+        self.save_search_data()
         return filename
 
     def save_searchfile(self):
         html = self.template_store.search.html
         filename = self.locations.search
         fs.save_string(html, filename)
+
+    def save_search_data(self):
+        data = self.site.analysis
+        filename = self.assets.searchindex
+        print(filename)
+        fs.save_json(data, filename)
 
     def close_servers(self):
         fs.close_servers()

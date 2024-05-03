@@ -1,15 +1,15 @@
 from smeagol.conversion.text_tree.text_tree import TextTree
 from smeagol.editor.interface.assets.templates import Templates
-from smeagol.editor.interface.templates.flag import Flag
 from smeagol.editor.interface.templates.template import Template
 from smeagol.utilities import filesystem as fs
+from smeagol.utilities import utils
 from smeagol.utilities.types import Page
 from smeagol.widgets.styles.styles import Styles
 
 
 class TemplateStore:
     def __init__(self, templates: Templates = None, links: dict = None):
-        self.started = Flag()
+        self.started = utils.Flag()
         self.page = self.styles = None
         self._filenames = templates or Templates()
         self.links = links or {}

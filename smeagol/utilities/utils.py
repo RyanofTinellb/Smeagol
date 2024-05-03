@@ -4,9 +4,10 @@ import os
 import re
 import tkinter as tk
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime as dt
 from threading import Thread
-from typing import Iterable
+from typing import Iterable, Optional
 
 
 @contextmanager
@@ -221,6 +222,17 @@ class DateFormatter:
 
 def format_date(date, str_format):
     return str(DateFormatter(date, str_format))
+
+@dataclass
+class Flag:
+    tag: Optional[str] = ''
+
+    def __bool__(self):
+        return bool(self.tag)
+
+    def update(self, tag=''):
+        self.tag = tag
+
 
 def analyse_entry(entry):
     wordlist = {}
