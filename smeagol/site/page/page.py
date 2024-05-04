@@ -6,21 +6,31 @@ from smeagol.utilities import utils
 
 
 class Page(Entry):
-    @property
-    def lines(self):
-        for line in self.fulltext.splitlines():
-            yield line
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._analysis = {
+            'terms': {},
+            'lines': []
+        }
+
+    def __getattr__(self, attr):
+        match attr:
+            case 'terms' | 'lines':
+                return self._analysis[attr]
+        try:
+            return super().__getattr__(attr)
+        except AttributeError as e:
+            name = type(self).__name__
+            raise AttributeError(
+                f"'{name}' object has no attribute '{attr}'") from e
 
     @property
+    def sentences(self):
+        yield from self.fulltext().splitlines()
+
+    # @property
     def fulltext(self):
-        return ''.join(self._strings(self.text))
-
-    def _strings(self, obj):
-        if isinstance(obj, str):
-            yield obj
-        else:
-            for elt in obj:
-                yield from self._strings(elt)
+        return self.text.stringify()
 
     @property
     def link(self):
@@ -46,3 +56,17 @@ class Page(Entry):
     @property
     def name(self):
         return self.names[-1]
+
+    def analysis(self):
+        punctuation = r'[#*‘“”_= ….,?!:;。$()/[\]\xa0\|]'
+        self.terms.clear()
+        for number, line in enumerate(self.sentences):
+            self.lines.append(line)
+            for term in re.split(punctuation, line.lower()):
+                self._add_term(term, number)
+        return self._analysis
+
+    def _add_term(self, term, number):
+        if not term:
+            return
+        self.terms.setdefault(term, set()).add(number)

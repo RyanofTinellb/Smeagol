@@ -19,18 +19,18 @@ def makedirs(filename):
         os.makedirs(os.path.dirname(filename))
 
 
-def save_json(obj, filename):
+def save_json(obj, filename, indent=None):
     makedirs(filename)
     try:
-        _save_json(obj, filename)
+        _save_json(obj, filename, indent)
     except TypeError as e:
         save_string(str(obj), f := f'{filename}!error.txt')
         raise TypeError(str(e), f) from e
 
 
-def _save_json(obj, filename):
+def _save_json(obj, filename, indent=None):
     with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)
+        json.dump(obj, f, ensure_ascii=False, indent=indent)
 
 
 def save_string(string, filename):

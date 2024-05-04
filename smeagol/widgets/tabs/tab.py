@@ -35,10 +35,12 @@ class Tab(tk.Frame):
         self.entry.update_date()
         self.interface.save_site()
         filename = self.interface.save_entry(self.entry)
+        self.interface.save_special_files()
         print(f'Saving {filename}')
         return 'break'
 
     def save_entries(self, _event=None):
+        self.interface.save_special_files()
         for percentage in self.interface.save_entries(self.entry.root):
             print(f'{percentage}% complete')
 

@@ -232,17 +232,3 @@ class Flag:
 
     def update(self, tag=''):
         self.tag = tag
-
-
-def analyse_entry(entry):
-    wordlist = {}
-    for number, line in enumerate(entry.lines):
-        for word in re.split(r'[ ()[\]\xa0.,\-_?!。/;*\|#”‘“:=$]', line.lower()):
-            if not word:
-                continue
-            try:
-                if wordlist[word][-1] != number:
-                    wordlist[word].append(number)
-            except KeyError:
-                wordlist[word] = [number]
-    return {'words': wordlist, 'sentences': list(entry.lines)}

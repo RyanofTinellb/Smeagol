@@ -27,6 +27,12 @@ class TextTree(Tags):
     def pprint(self):
         self.root.pprint()
 
+    def nodes(self):
+        yield from self.root.nodes()
+
+    def stringify(self):
+        return self.root.stringify()
+
     def process_tuples(self, text: list[tuple]):
         self.retag_tuples(text)
 

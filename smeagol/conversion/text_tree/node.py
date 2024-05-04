@@ -25,6 +25,19 @@ class Node:
     def add(self, child):
         self.children.append(child)
 
+    def nodes(self):
+        for child in self.children:
+            if not isinstance(child, str):
+                yield child
+
+    def stringify(self):
+        return ''.join([self._strings(child) for child in self.children])
+
+    def _strings(self, child):
+        if isinstance(child, str):
+            return child
+        return child.stringify()
+
     def __iter__(self):
         return iter(self.children)
 

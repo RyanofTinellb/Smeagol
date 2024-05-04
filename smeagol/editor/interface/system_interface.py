@@ -29,6 +29,8 @@ class SystemInterface:
                 return self.config.setdefault('entries', [[]])
             case 'assets' | 'locations' | 'templates':
                 return getattr(assets, attr.title())(self.config.get(attr, {}))
+            case 'serialisation_format':
+                return self.config.get('serialisation format', {}).copy()
             case '_links':
                 return self.config.setdefault('links', {})
             case _default:
@@ -100,7 +102,8 @@ class SystemInterface:
 
     def open_site(self):
         self._site_data = fs.load_yaml(self.assets.source)
-        return Site(**self._site_data)
+        return Site(**self._site_data,
+                    serialisation_format=self.serialisation_format)
 
     @staticmethod
     def _load_config_file(filename):
@@ -139,9 +142,13 @@ class SystemInterface:
         filename = os.path.join(
             self.locations.directory, entry.url)
         fs.save_string(html, filename)
+        return filename
+
+    def save_special_files(self):
         self.save_searchfile()
         self.save_search_data()
-        return filename
+        if self.serialisation_format:
+            self.save_wordlist()
 
     def save_searchfile(self):
         html = self.template_store.search.html
@@ -149,9 +156,13 @@ class SystemInterface:
         fs.save_string(html, filename)
 
     def save_search_data(self):
-        data = self.site.analysis
+        data = self.site.analysis()
         filename = self.assets.searchindex
-        print(filename)
+        fs.save_json(data, filename, indent=2)
+
+    def save_wordlist(self):
+        data = self.site.serialisation()
+        filename = self.assets.wordlist
         fs.save_json(data, filename)
 
     def close_servers(self):
