@@ -194,7 +194,7 @@ def start_server(port=None, directory=None, page404=''):
             Handler.error_message_format = page404
             Thread(target=server.serve_forever).start()
             print(f'Serving {directory} on port {port}')
-            return port
+            return port, Handler
         except socket.error:
             port += 1
 

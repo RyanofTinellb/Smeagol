@@ -77,6 +77,7 @@ class Site(Page):
     def serialisation(self):
         if not self.serialisation_format:
             return []
+        self._wordlist.clear()
         for entry in self:
             self._serial['t'] = entry.name
             self._serialise(entry.text)

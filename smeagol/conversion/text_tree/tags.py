@@ -1,4 +1,5 @@
 from smeagol.conversion.text_tree.node import Node
+from smeagol.utilities import utils
 
 
 class Tags:
@@ -57,8 +58,12 @@ class Tags:
         self.remove_opener()
 
     def sort_closers(self):
-        if len(self.opening_tags) == len(self.closing_tags):
-            self.closing_tags.sort(key=lambda t: self.rank.get(t, 0))
+        if len(self.opening_tags) >= len(self.closing_tags):
+            self.closing_tags.sort(key=self._rank)
+
+    def _rank(self, tag):
+        tag, _lang = utils.try_split(tag)
+        return self.rank.get(tag, 0)
 
     @property
     def _rational_tag(self):
@@ -67,7 +72,12 @@ class Tags:
         return self.opening_tags[-1].name
 
     def rename_opener(self, name):
+        old_name = self.opening_tags[-1].name
         self.opening_tags[-1].name = name
+        for tag in self.opening_tags:
+            if tag.name == name:
+                tag.name = old_name
+                return
 
     def remove_opener(self):
         self.opening_tags.pop()

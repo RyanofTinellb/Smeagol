@@ -4,6 +4,7 @@ from smeagol.utilities import utils
 
 from smeagol.widgets.textbox.textbox import Textbox
 
+
 # pylint: disable=R0902
 
 
@@ -40,9 +41,9 @@ class Tab(tk.Frame):
         return 'break'
 
     def save_entries(self, _event=None):
-        self.interface.save_special_files()
-        for percentage in self.interface.save_entries(self.entry.root):
+        for percentage in self.interface.save_entries():
             print(f'{percentage}% complete')
+        self.interface.save_special_files()
 
     @property
     def entry(self):

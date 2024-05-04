@@ -4,8 +4,8 @@ from smeagol.editor.interface import assets
 from smeagol.editor.interface.templates.template_store import TemplateStore
 from smeagol.site.site import Site
 from smeagol.utilities import filesystem as fs
-from smeagol.widgets.styles.styles import Styles
 from smeagol.utilities.types import Entry
+from smeagol.widgets.styles.styles import Styles
 
 
 class SystemInterface:
@@ -18,7 +18,7 @@ class SystemInterface:
         self.links = self.open_link_files(self._links)
         self.template_store = TemplateStore(self.templates, self.links)
         if server:
-            self.port = fs.start_server(
+            self.port, self.handler = fs.start_server(
                 port=self.port, directory=self.locations.directory)
 
     def __getattr__(self, attr):
@@ -123,10 +123,10 @@ class SystemInterface:
         fs.open_in_browser(self.port, entry.url)
         return 'break'
 
-    def save_entries(self, root):
-        total = len(root)
+    def save_entries(self):
+        total = len(self.site)
         percent = each = 5
-        for i, entry in enumerate(root):
+        for i, entry in enumerate(self.site):
             if 100*i/total >= percent:
                 yield 100*i // total
                 percent += each
@@ -146,6 +146,7 @@ class SystemInterface:
 
     def save_special_files(self):
         self.save_searchfile()
+        self.save_search404_file()
         self.save_search_data()
         if self.serialisation_format:
             self.save_wordlist()
@@ -155,10 +156,16 @@ class SystemInterface:
         filename = self.locations.search
         fs.save_string(html, filename)
 
+    def save_search404_file(self):
+        html = self.template_store.page404.html
+        self.handler.error_message_format = html
+        filename = self.locations.page404
+        fs.save_string(html, filename)
+
     def save_search_data(self):
         data = self.site.analysis()
         filename = self.assets.searchindex
-        fs.save_json(data, filename, indent=2)
+        fs.save_json(data, filename)
 
     def save_wordlist(self):
         data = self.site.serialisation()
