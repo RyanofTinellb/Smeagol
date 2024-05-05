@@ -21,6 +21,8 @@ def style_name(style: str):
 
 class StyledTextbox(BaseTextbox):
     def __init__(self, parent=None, styles: Styles = None, languages: dict = None):
+        self.default_ime = {}
+        self.ime = {}
         super().__init__(parent, height=1, width=1, wrap=tk.WORD, undo=True)
         self.styles = styles
         self.styles_menu: dict[str, tk.IntVar] = {}
@@ -84,13 +86,14 @@ class StyledTextbox(BaseTextbox):
             return
         menu.add_checkbutton(label=style.name,
                              variable=var,
-                             command=self.style_changer(style.name, style.language))
+                             command=self.style_changer(style.name, style.language, style.ime))
 
     def _configure_default_style(self):
         if not self.styles:
             return
-        if default := self.styles['default']:
+        if (default := self.styles['default']):
             self.config(**default.textbox_settings)
+            self.default_ime = self.styles.imes.get(default.ime, {})
 
     def _configure_tag(self, style):
         self.tag_config(style.name, **style.paragraph)
@@ -98,23 +101,29 @@ class StyledTextbox(BaseTextbox):
             self._configure_language_tags(style)
         if (key := style.key):
             self.bind(f'<Control-{key}>',
-                      self.style_changer(style.name, style.language))
+                      self.style_changer(style.name, style.language, style.ime))
 
     def _configure_language_tags(self, style):
         for code in self.languages:
             self.tag_config(f'{style.name}@{code}', **style.paragraph)
 
-    def style_changer(self, name: str, language: bool):
-        def command(_event=None, name=name, language=language):
+    def style_changer(self, name: str, language: bool, ime: dict = None):
+        def command(_event=None, name=name, language=language, ime=ime):
             # self.focus_set()
-            code = f'@{self.styles.language_code}' if language else ''
-            name = f'{name}{code}'
-            self.styles.toggle(name)
+            code = f'{self.styles.language_code}' if language else ''
+            at = '@' if code else ''
+            name = f'{name}{at}{code}'
+            on = self.styles.toggle(name)
+            self._select_ime(ime, code, on)
             with utils.ignored(tk.TclError):
                 (self.tag_add if self.styles.on(name)
                  else self.tag_remove)(name, *SELECTION)
+            self.update_displays()
             return 'break'
         return command
+
+    def _select_ime(self, ime: dict, code: str, activated: bool):
+        self.ime = self.styles.imes[ime][code] if activated else self.default_ime
 
     def _add_style(self, name):
         self.styles.activate(name)

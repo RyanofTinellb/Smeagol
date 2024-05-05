@@ -19,6 +19,10 @@ class ClipboardTextbox(StyledTextbox):
         self.delete(start, end)
         self.write(text, start)
 
+    def overwrite_at_cursor(self, word, replacement):
+        self.delete(f'{INSERT}-{len(word)-1}c', INSERT)
+        self.write(replacement)
+
     def write(self, text="", position=INSERT, tags: Optional[list] = None):
         current = self.styles.current if self.styles else ''
         tags = tags or current

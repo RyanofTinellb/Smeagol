@@ -16,6 +16,7 @@ class Interfaces:
     def save_all(self):
         for interface in self.interfaces.values():
             interface.save()
+            interface.save_special_files()
 
     @property
     def blank(self):

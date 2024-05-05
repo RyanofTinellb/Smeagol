@@ -193,3 +193,7 @@ class Style(Tag):
             return None
         size = self['size'] or self.default_size
         return (size // 3) if offset == 'superscript' else (-3 * size // 2)
+
+    @property
+    def ime(self):
+        return self['ime']

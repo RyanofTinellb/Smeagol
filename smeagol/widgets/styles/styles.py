@@ -5,13 +5,14 @@ from smeagol.widgets.styles.style import Style
 
 
 class Styles:
-    def __init__(self, styles):
+    def __init__(self, styles, imes=None):
         self.default = None
         self.language_code = None
         self._current = set()
         self.styles = {name: self.create_style(name, style)
                        for name, style in styles.items()}
         self.ranks = {name: style.rank for name, style in self.styles.items()}
+        self.imes = imes or {}
 
     @property
     def current(self):
@@ -103,6 +104,7 @@ class Styles:
 
     def toggle(self, style: str):
         (self.deactivate if self.on(style) else self.activate)(style)
+        return self.on(style) # True iff style has just been activated
 
     def on(self, style):
         return style in self._current

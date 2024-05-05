@@ -28,6 +28,7 @@ class Textbox(ClipboardTextbox):
         self.displays.update({
             'wordcount': tk.IntVar()})
         self.add_commands(self.commands)
+        self._history = ''
 
     def __getattr__(self, attr):
         match attr:
@@ -64,11 +65,21 @@ class Textbox(ClipboardTextbox):
         self.update_wordcount()
         self.update_style_display()
 
-    def _key_released(self, event=None):
+    def _key_released(self, event):
         if (event.keysym in ['Prior', 'Next', 'Left', 'Right', 'Down', 'Up', 'Home', 'End'] or
                 event.type == tk.EventType.ButtonRelease):
+            self._history = ''
             self.get_styles_from_cursor()
         self.update_displays()
+
+    def input_method_editor(self, key):
+        self._history = self._history + key
+        for word, replacement in self.ime.items():
+            if self._history.endswith(word):
+                self._history = self._history.removesuffix(word) + replacement
+                self.overwrite_at_cursor(word, replacement)
+                return
+        self.write(key)
 
     def update_wordcount(self):
         text = self.plaintext
@@ -91,17 +102,19 @@ class Textbox(ClipboardTextbox):
         # code = event.keycode
         if keysym.startswith('Control_'):
             self.edit_modified(False)
-        elif keysym == 'BackSpace':
             return None
-        elif key and event.num == '??':
+        if keysym == 'BackSpace':
+            self._history = self._history[:-1]
+            return None
+        if key and event.num == '??':
             if not self.match_brackets(key):
                 try:
                     self.delete(*SELECTION)
                     self.write(key, tk.SEL)
                 except tk.TclError:
-                    self.write(key)
+                    self.input_method_editor(key)
             return 'break'
-        elif keysym == 'Return':
+        if keysym == 'Return':
             spaces = re.sub(r'( *).*', r'\1', self.get(*CURRLINE))
             self.insert(spaces, INSERT)
             return 'break'

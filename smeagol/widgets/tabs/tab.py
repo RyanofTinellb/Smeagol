@@ -36,7 +36,6 @@ class Tab(tk.Frame):
         self.entry.update_date()
         self.interface.save_site()
         filename = self.interface.save_entry(self.entry)
-        self.interface.save_special_files()
         print(f'Saving {filename}')
         return 'break'
 
@@ -62,8 +61,9 @@ class Tab(tk.Frame):
     @interface.setter
     def interface(self, interface):
         self._interface = interface
-        self.textbox.translator = interface.translator
         self.textbox.styles = interface.styles
+        self.textbox.ime = interface.styles.imes.get(
+            interface.styles['default'].ime, {})
         self.textbox.languages = interface.languages
 
     @property

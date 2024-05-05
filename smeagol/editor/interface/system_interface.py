@@ -24,22 +24,24 @@ class SystemInterface:
     def __getattr__(self, attr):
         match attr:
             case 'site_info':
-                return self.config.setdefault('site', {})
+                value = self.config.setdefault('site', {})
             case '_entries':
-                return self.config.setdefault('entries', [[]])
+                value = self.config.setdefault('entries', [[]])
             case 'assets' | 'locations' | 'templates':
-                return getattr(assets, attr.title())(self.config.get(attr, {}))
+                value = getattr(assets, attr.title())(
+                    self.config.get(attr, {}))
             case 'serialisation_format':
-                return self.config.get('serialisation format', {}).copy()
+                value = self.config.get('serialisation format', {}).copy()
             case '_links':
-                return self.config.setdefault('links', {})
+                value = self.config.setdefault('links', {})
             case _default:
                 try:
-                    return super().__getattr__(attr)
+                    value = super().__getattr__(attr)
                 except AttributeError as e:
                     name = type(self).__name__
                     raise AttributeError(
                         f"'{name}' object has no attribute '{attr}'") from e
+        return value
 
     def open_link_files(self, links: dict):
         return {key: fs.load_yaml(filename) for key, filename in links.items()}
@@ -51,17 +53,6 @@ class SystemInterface:
     @port.setter
     def port(self, value):
         self.config['port'] = value
-
-    def load_from_config(self, attr, default_obj=None):
-        return fs.load_yaml(self.config.get(attr, ''), default_obj)
-
-    def create_from_config(self, obj: type, attr: str, default_obj=None) -> object:
-        try:
-            return obj(self.load_from_config(attr, default_obj))
-        except AttributeError as e:
-            filename = self.config.get(attr, '')
-            raise AttributeError(f'{filename} is badly formatted. '
-                                 'Please make a note of it.') from e
 
     def load_config(self, filename):
         try:
@@ -98,7 +89,18 @@ class SystemInterface:
         self.site.add_entry(entry)
 
     def open_styles(self):
-        self.styles = self.create_from_config(Styles, 'styles')
+        styles = self.load_from_config('styles')
+        imes = {name: fs.load_yaml(filename)
+                for name, filename in self._imes.items()}
+        try:
+            self.styles = Styles(styles, imes)
+        except AttributeError as e:
+            filename = self.config.get('styles', '')
+            raise AttributeError(f'{filename} is badly formatted. '
+                                 'Please make a note of it.') from e
+
+    def load_from_config(self, attr, default_obj=None):
+        return fs.load_yaml(self.config.get(attr, ''), default_obj)
 
     def open_site(self):
         self._site_data = fs.load_yaml(self.assets.source)

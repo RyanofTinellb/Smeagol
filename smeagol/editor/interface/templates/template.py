@@ -75,11 +75,8 @@ class Template:
         if not isinstance(text, str):
             raise ValueError(
                 f'{obj.name} must have child of type <str> not of type {type(text)}')
-        print()
-        print('talk', obj.first_child)
         obj.first_child = ''.join(utils.alternate_yield([self._text, self._param],
                                                         tag.param.split('$'), text, language_code))
-        print('super', obj.first_child)
 
     @staticmethod
     def _text(text, *_args):

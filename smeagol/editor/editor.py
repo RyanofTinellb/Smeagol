@@ -170,7 +170,7 @@ class Editor(Manager):
 
     def quit(self):
         super().quit()
-        self.tabs.save_all()
         print('Closing Servers...')
+        self.tabs.save_all()
         fs.close_servers()
         print('Servers closed. Enjoy the rest of your day.')
