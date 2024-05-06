@@ -47,6 +47,7 @@ def compose(*functions):
 def clamp(number, lower, upper):
     return max(lower, min(upper, number))
 
+
 def url_form(text):
     return text.lower().replace(' ', '')
 
@@ -54,6 +55,7 @@ def url_form(text):
 def alternate(functions: Iterable, obj: Iterable):
     for f, x in zip(itertools.cycle(functions), obj):
         f(x)
+
 
 def alternate_yield(functions: Iterable, obj: Iterable, *args, **kwargs):
     for f, x in zip(itertools.cycle(functions), obj):
@@ -160,6 +162,14 @@ def page_initial(name, markdown=None):
     return re.findall(r"\w", name)[0]
 
 
+def sell_caps(text):
+    return re.sub(r'\$(.)', lambda match: match.group(1).upper(), text.replace('.', ' '))
+
+
+def buy_caps(text):
+    return ''.join(letter if letter.lower() == letter else f'${letter.lower()}' for letter in text)
+
+
 def bind_all(obj, commands):
     for command in commands:
         obj.bind(*command)
@@ -222,6 +232,7 @@ class DateFormatter:
 
 def format_date(date, str_format):
     return str(DateFormatter(date, str_format))
+
 
 @dataclass
 class Flag:

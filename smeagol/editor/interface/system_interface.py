@@ -174,7 +174,7 @@ class SystemInterface:
     def save_wordlist(self):
         data = self.site.serialisation()
         filename = self.assets.wordlist
-        fs.save_json(data, filename)
+        fs.save_json(data, filename, indent=2)
 
     def close_servers(self):
         fs.close_servers()

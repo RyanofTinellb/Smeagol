@@ -79,7 +79,7 @@ class Site(Page):
             return []
         self._wordlist.clear()
         for entry in self:
-            self._serial['t'] = entry.name
+            self._serial['t'] = utils.sell_caps(entry.name)
             self._serialise(entry.text)
         return self._wordlist
 
@@ -94,7 +94,7 @@ class Site(Page):
         self._serial['p'] = node.stringify()
 
     def _definition(self, node):
-        self._serial['d'] = node.stringify()
+        self._serial['d'] = utils.sell_caps(node.stringify())
         self._wordlist.append(self._serial.copy())
 
     def _serialiser(self, serial):

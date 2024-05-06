@@ -86,6 +86,9 @@ class Template:
         url = param.startswith('url')
         if url:
             param = re.search(r'url\((.*?)\)', param).group(1)
+        upper = param.startswith('upper')
+        if upper:
+            param = re.search(r'upper\((.*?)\)', param).group(1)
         param, arg = utils.try_split(param, ':')
         match param:
             case 'text':
@@ -94,7 +97,7 @@ class Template:
                 value = self._lookup(arg, text, language_code)
             case _other:
                 raise ValueError(f'Parameter {param} does not exist')
-        return utils.url_form(value) if url else value
+        return utils.url_form(value) if url else utils.sell_caps(value) if upper else value
 
     def _lookup(self, arg, text, language_code):
         if not language_code:
@@ -168,7 +171,7 @@ class Template:
             case 'contents':
                 return self.contents(components)
             case 'name':
-                return self.templates.page.name
+                return utils.sell_caps(self.templates.page.name)
             case 'year':
                 return str(dt.now().year)
             case other:
