@@ -5,11 +5,11 @@ from .highlulani import HighLulani
 
 class Words:
     def __init__(self, language='', samples=''):
-        self.languages = dict(
-                              en=(English, samples),
-                              hl=(HighLulani,),
-                              dl=(DemoticLulani,)
-                             )
+        self.languages = {
+            'en': (English, samples),
+            'x-tlb-hl': (HighLulani,),
+            'x-tlb-dl': (DemoticLulani,)
+        }
         self.select(language)
 
     def select(self, language=''):
@@ -29,7 +29,7 @@ class Words:
         return self.converter.name
 
     def words(self, num):
-        words = [self.converter.word for x in range(num)] 
+        words = [self.converter.word for x in range(num)]
         return [word for word in words if word]
 
     def __iter__(self):

@@ -5,7 +5,6 @@ from smeagol.utilities import api as utilities
 class Interface(SystemInterface):
     def __init__(self, *args, **kwargs):
         self.languages = None
-        self.language = None
         self.randomwords = None
         self.imes = None
         super().__init__(*args, **kwargs)
@@ -33,7 +32,7 @@ class Interface(SystemInterface):
         super().setup(config)
         self.languages = self.load_from_config('languages', {})
         samples = self.assets.samples
-        self.randomwords = utilities.RandomWords(samples)
+        self.randomwords = utilities.RandomWords(samples=samples)
 
     def change_language(self, language):
         self.randomwords.select(language)

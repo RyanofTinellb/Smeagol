@@ -1,7 +1,7 @@
 import tkinter as tk
 from smeagol.utilities import utils
 from smeagol.widgets.textbox.base_textbox import BaseTextbox
-from smeagol.utilities.types import Styles
+from smeagol.utilities.types import Styles, Style
 
 from smeagol.conversion.text_tree.text_tree import TextTree
 
@@ -23,6 +23,7 @@ class StyledTextbox(BaseTextbox):
     def __init__(self, parent=None, styles: Styles = None, languages: dict = None):
         self.default_ime = {}
         self.ime = {}
+        self.off_keys = {}
         super().__init__(parent, height=1, width=1, wrap=tk.WORD, undo=True)
         self.styles = styles
         self.styles_menu: dict[str, tk.IntVar] = {}
@@ -86,7 +87,7 @@ class StyledTextbox(BaseTextbox):
             return
         menu.add_checkbutton(label=style.name,
                              variable=var,
-                             command=self.style_changer(style.name, style.language, style.ime))
+                             command=self.style_changer(style))
 
     def _configure_default_style(self):
         if not self.styles:
@@ -100,15 +101,21 @@ class StyledTextbox(BaseTextbox):
         if style.language:
             self._configure_language_tags(style)
         if (key := style.key):
-            self.bind(f'<Control-{key}>',
-                      self.style_changer(style.name, style.language, style.ime))
+            self.bind(f'<Control-{key}>', self.style_changer(style))
+        if (off_key := style.off_key):
+            self.off_keys.setdefault(off_key, []).append(
+                self.style_deactivater(style))
+            self.bind(off_key, self.deactivate_styles)
 
     def _configure_language_tags(self, style):
         for code in self.languages:
             self.tag_config(f'{style.name}@{code}', **style.paragraph)
 
-    def style_changer(self, name: str, language: bool, ime: dict = None):
-        def command(_event=None, name=name, language=language, ime=ime):
+    def style_changer(self, style: Style):
+        def command(_event=None, style=style):
+            name = style.name
+            language = style.language
+            ime = style.ime
             # self.focus_set()
             code = f'{self.styles.language_code}' if language else ''
             at = '@' if code else ''
@@ -122,8 +129,34 @@ class StyledTextbox(BaseTextbox):
             return 'break'
         return command
 
+    def deactivate_styles(self, event):
+        self._deactivate_styles(event.keysym)
+        if event.keysym == 'Return':
+            self._deactivate_styles('space')
+
+    def _deactivate_styles(self, key):
+        for command in self.off_keys.get(f'<{key}>', []):
+            command()
+
+    def style_deactivater(self, style: Style):
+        def command(_event=None, style=style):
+            name = style.name
+            language = style.language
+            ime = style.ime
+            # self.focus_set()
+            code = f'{self.styles.language_code}' if language else ''
+            at = '@' if code else ''
+            name = f'{name}{at}{code}'
+            self.styles.deactivate(name)
+            self._select_ime(ime, code, False)
+            with utils.ignored(tk.TclError):
+                (self.tag_remove)(name, *SELECTION)
+            self.update_displays()
+        return command
+
     def _select_ime(self, ime: dict, code: str, activated: bool):
-        self.ime = self.styles.imes[ime][code] if activated else self.default_ime
+        self.ime = self.styles.imes.get(ime, {}).get(
+            code, {}) if activated else self.default_ime
 
     def _add_style(self, name):
         self.styles.activate(name)

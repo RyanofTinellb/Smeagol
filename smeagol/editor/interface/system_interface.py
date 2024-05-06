@@ -147,6 +147,8 @@ class SystemInterface:
         return filename
 
     def save_special_files(self):
+        if not self.template_store.page:
+            return
         self.save_searchfile()
         self.save_search404_file()
         self.save_search_data()
