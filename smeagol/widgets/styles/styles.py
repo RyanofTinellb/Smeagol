@@ -33,7 +33,7 @@ class Styles:
         return iter(sorted(self.styles.values(), key=lambda s: s.name))
 
     def __getitem__(self, name):
-        name, language = utils.try_split(name, '@', '')
+        name, language = utils.try_split(name, '@')
         try:
             style = self.styles[name]
         except KeyError:

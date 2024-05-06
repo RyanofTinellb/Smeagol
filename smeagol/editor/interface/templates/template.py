@@ -74,7 +74,7 @@ class Template:
         language_code = tag.language_code if tag.language else None
         if not isinstance(text, str):
             raise ValueError(
-                f'{obj.name} must have child of type <str> not of type {type(text)}')
+                f'{obj.name} must have child of type <str> not of Node {text.name}')
         obj.first_child = ''.join(utils.alternate_yield([self._text, self._param],
                                                         tag.param.split('$'), text, language_code))
 

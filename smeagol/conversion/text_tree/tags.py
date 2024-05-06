@@ -62,7 +62,7 @@ class Tags:
             self.closing_tags.sort(key=self._rank)
 
     def _rank(self, tag):
-        tag, _lang = utils.try_split(tag)
+        tag, _lang = utils.try_split(tag, '@')
         return self.rank.get(tag, 0)
 
     @property
