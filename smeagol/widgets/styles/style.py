@@ -196,7 +196,7 @@ class Style(Tag):
 
     @property
     def off_key(self):
-        return self.get('off-key', '<Return>' if self.block else '')
+        return self.get('off-key', '')
 
     @property
     def ime(self):

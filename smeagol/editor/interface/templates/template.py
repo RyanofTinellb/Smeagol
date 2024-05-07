@@ -75,14 +75,17 @@ class Template:
         if not isinstance(text, str):
             raise ValueError(
                 f'{obj.name} must have child of type <str> not of Node {text.name}')
+        print('sdas', obj.first_child)
         obj.first_child = ''.join(utils.alternate_yield([self._text, self._param],
                                                         tag.param.split('$'), text, language_code))
+        print('asrat', obj.first_child)
 
     @staticmethod
     def _text(text, *_args):
         return text
 
     def _param(self, param, text, language_code):
+        print('sdf', text, language_code)
         url = param.startswith('url')
         if url:
             param = re.search(r'url\((.*?)\)', param).group(1)
@@ -97,7 +100,7 @@ class Template:
                 value = self._lookup(arg, text, language_code)
             case _other:
                 raise ValueError(f'Parameter {param} does not exist')
-        return utils.url_form(value) if url else utils.sell_caps(value) if upper else value
+        return utils.url_form(value) if url else utils.buy_caps(value) if upper else value
 
     def _lookup(self, arg, text, language_code):
         if not language_code:
@@ -171,7 +174,7 @@ class Template:
             case 'contents':
                 return self.contents(components)
             case 'name':
-                return utils.sell_caps(self.templates.page.name)
+                return utils.buy_caps(self.templates.page.name)
             case 'year':
                 return str(dt.now().year)
             case other:

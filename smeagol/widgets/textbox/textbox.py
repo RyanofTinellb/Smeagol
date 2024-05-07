@@ -116,6 +116,15 @@ class Textbox(ClipboardTextbox):
         if keysym == 'BackSpace':
             self._history = self._history[:-1]
             return None
+        if keysym == 'space':
+            self._deactivate_styles('space')
+            self.input_method_editor(key)
+            return 'break'
+        if keysym == 'Return':
+            self._deactivate_styles('Return')
+            self._deactivate_styles('space')
+            self.write('\n')
+            return 'break'
         if key and event.num == '??':
             if not self.match_brackets(key):
                 try:
@@ -123,10 +132,6 @@ class Textbox(ClipboardTextbox):
                     self.write(key, tk.SEL)
                 except tk.TclError:
                     self.input_method_editor(key)
-            return 'break'
-        if keysym == 'Return':
-            spaces = re.sub(r'( *).*', r'\1', self.get(*CURRLINE))
-            self.insert(spaces, INSERT)
             return 'break'
         return None
 
@@ -200,7 +205,7 @@ class Textbox(ClipboardTextbox):
     def commands(self):
         return [
             ('<Control-MouseWheel>', self.modify_fontsize),
-            ('<Return>', self.indent),
+            # ('<Return>', self.indent),
             ('<KeyPress>', self.insert_characters),
             (('<KeyRelease>', '<ButtonRelease>'), self._key_released),
             (('<Tab>', '<Control-]>'), self.insert_tabs),

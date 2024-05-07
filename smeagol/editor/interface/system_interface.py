@@ -169,7 +169,7 @@ class SystemInterface:
     def save_search_data(self):
         data = self.site.analysis()
         filename = self.assets.searchindex
-        fs.save_json(data, filename)
+        fs.save_json(data, filename, indent=2)
 
     def save_wordlist(self):
         data = self.site.serialisation()

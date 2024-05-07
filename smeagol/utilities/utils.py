@@ -162,11 +162,11 @@ def page_initial(name, markdown=None):
     return re.findall(r"\w", name)[0]
 
 
-def sell_caps(text):
+def buy_caps(text):
     return re.sub(r'\$(.)', lambda match: match.group(1).upper(), text.replace('.', ' '))
 
 
-def buy_caps(text):
+def sell_caps(text):
     return ''.join(letter if letter.lower() == letter else f'${letter.lower()}' for letter in text)
 
 

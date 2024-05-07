@@ -77,6 +77,7 @@ class StyledTextbox(BaseTextbox):
             self._configure_default_style()
         if menu:
             menu.delete(0, menu.index('end'))
+        self.off_keys.clear()
         for style in self.styles:
             self._configure_tag(style)
             var = self.styles_menu.setdefault(style.name, tk.IntVar())
@@ -105,7 +106,6 @@ class StyledTextbox(BaseTextbox):
         if (off_key := style.off_key):
             self.off_keys.setdefault(off_key, []).append(
                 self.style_deactivater(style))
-            self.bind(off_key, self.deactivate_styles)
 
     def _configure_language_tags(self, style):
         for code in self.languages:
@@ -129,13 +129,8 @@ class StyledTextbox(BaseTextbox):
             return 'break'
         return command
 
-    def deactivate_styles(self, event):
-        self._deactivate_styles(event.keysym)
-        if event.keysym == 'Return':
-            self._deactivate_styles('space')
-
     def _deactivate_styles(self, key):
-        for command in self.off_keys.get(f'<{key}>', []):
+        for command in self.off_keys.get(f'{key}', []):
             command()
 
     def style_deactivater(self, style: Style):

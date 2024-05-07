@@ -38,7 +38,7 @@ class Manager(tk.Frame):
     def set_window_size(self, top):
         top.state('normal')
         w = w_pos = int(top.winfo_screenwidth() / 2)
-        h = top.winfo_screenheight() - 50
+        h = top.winfo_screenheight() - 100
         h_pos = 0
         top.geometry(f'{w}x{h}+{w_pos}+{h_pos}')
 
