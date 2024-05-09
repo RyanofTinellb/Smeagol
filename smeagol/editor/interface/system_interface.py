@@ -119,6 +119,7 @@ class SystemInterface:
             fs.save_yaml(self.config, self.filename)
 
     def save_site(self):
+        print(self.assets.source)
         fs.save_yaml(self._site_data, self.assets.source)
 
     def open_entry_in_browser(self, entry):
@@ -172,7 +173,7 @@ class SystemInterface:
         fs.save_json(data, filename, indent=2)
 
     def save_wordlist(self):
-        data = self.site.serialisation()
+        data = sorted(self.site.serialisation(), key=lambda x: x['t'])
         filename = self.assets.wordlist
         fs.save_json(data, filename, indent=2)
 

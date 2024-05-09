@@ -63,29 +63,26 @@ class Template:
         if isinstance(obj, str):
             return self.string(obj, components)
         tag = self.styles[obj.name]
-        self.replace_param(obj, tag)
         components = components.new(tag)
+        if tag.param:
+            return self.replace_param(obj, components, tag)
         return self.types(tag.type)(obj, components, tag)
 
-    def replace_param(self, obj, tag):
-        if not tag.param:
-            return
+    def replace_param(self, obj, components, tag):
         text = obj.first_child
         language_code = tag.language_code if tag.language else None
         if not isinstance(text, str):
             raise ValueError(
                 f'{obj.name} must have child of type <str> not of Node {text.name}')
-        print('sdas', obj.first_child)
         obj.first_child = ''.join(utils.alternate_yield([self._text, self._param],
                                                         tag.param.split('$'), text, language_code))
-        print('asrat', obj.first_child)
+        return self.types(tag.type)(obj, components, tag)
 
     @staticmethod
     def _text(text, *_args):
         return text
 
     def _param(self, param, text, language_code):
-        print('sdf', text, language_code)
         url = param.startswith('url')
         if url:
             param = re.search(r'url\((.*?)\)', param).group(1)
@@ -110,6 +107,27 @@ class Template:
             return item.get(text, '')
         except AttributeError:
             return item or ''
+
+    def data(self, obj: Node, components: Components, *_tag):
+        match obj.first_child:
+            case 'contents':
+                return self.contents(components)
+            case 'name':
+                return utils.buy_caps(self.templates.page.name)
+            case 'year':
+                return str(dt.now().year)
+            case 'root':
+                return utils.buy_caps(self.templates.page.root.name)
+            case other:
+                return self._data(other)
+
+    def _data(self, obj: str):
+        function, parameter = utils.try_split(obj, '|')
+        match function:
+            case 'date':
+                return utils.format_date(self.templates.page.date, parameter)
+            case _other:
+                return obj
 
     def types(self, type_):
         match type_:
@@ -168,25 +186,6 @@ class Template:
             self.started.update()
         text = cells(text.replace('//', '<br>') + end)
         return f'{tag.open}{text}{tag.close}'
-
-    def data(self, obj: Node, components: Components, *_tag):
-        match obj.first_child:
-            case 'contents':
-                return self.contents(components)
-            case 'name':
-                return utils.buy_caps(self.templates.page.name)
-            case 'year':
-                return str(dt.now().year)
-            case other:
-                return self._data(other)
-
-    def _data(self, obj: str):
-        function, parameter = utils.try_split(obj, '|')
-        match function:
-            case 'date':
-                return utils.format_date(self.templates.page.date, parameter)
-            case _other:
-                return obj
 
     def contents(self, components: Components):
         text = self.templates.page.text

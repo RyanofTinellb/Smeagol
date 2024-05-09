@@ -1,4 +1,3 @@
-from itertools import chain
 from typing import Self
 
 from smeagol.site.directory import Directory
@@ -58,25 +57,25 @@ class Node:
         index = sisters.index(self._find)
         sisters.pop(index)
 
-    def sister(self, index):
-        location = self.location
-        if not location:  # at the root node
-            raise IndexError('No such sister')
-        children = self.new(location[:-1]).children
-        if len(children) > location[-1] + index >= 0:
-            location[-1] += index
-            return self.new(location)
-        raise IndexError('No such sister')
+    # def sister(self, index):
+    #     location = self.location
+    #     if not location:  # at the root node
+    #         raise IndexError('No such sister')
+    #     children = self.new(location[:-1]).children
+    #     if len(children) > location[-1] + index >= 0:
+    #         location[-1] += index
+    #         return self.new(location)
+    #     raise IndexError('No such sister')
 
-    def next(self, _seen_children=False):
-        if not _seen_children and self.has_children:
-            return self.new(self.location + [0])
-        if _seen_children and self.is_root:
-            raise IndexError('No more nodes!')
-        try:
-            return self.next_sister
-        except IndexError:
-            return self.new(self.location[:-1]).next(_seen_children=True)
+    # def next(self, _seen_children=False):
+    #     if not _seen_children and self.has_children:
+    #         return self.new(self.location + [0])
+    #     if _seen_children and self.is_root:
+    #         raise IndexError('No more nodes!')
+    #     try:
+    #         return self.next_sister
+    #     except IndexError:
+    #         return self.new(self.location[:-1]).next(_seen_children=True)
 
     def __getitem__(self, values: list[str] | list[int]):
         return self.new(values)
@@ -87,10 +86,10 @@ class Node:
                 value = self.names[-1]
             case 'level':
                 value = len(self.location)
-            case 'previous_sister':
-                value = self.sister(-1)
-            case 'next_sister':
-                value = self.sister(1)
+            # case 'previous_sister':
+            #     value = self.sister(-1)
+            # case 'next_sister':
+            #     value = self.sister(1)
             case 'children':
                 value = [self.new(self.names + [child])
                          for child in self.directory[self.location].children]
@@ -104,18 +103,18 @@ class Node:
                 value = not self.has_children
             case 'is_root':
                 value = self.level == 1
-            case 'successor':
-                value = self.next()
-            case 'predecessor':
-                value = self.previous()
+            # case 'successor':
+            #     value = self.next()
+            # case 'predecessor':
+            #     value = self.previous()
             case 'root':
                 value = self.new([])
-            case 'parent':
-                value = self.new(self.location[:-1])
-            case 'matriarch':
-                value = self.ancestor(1)
-            case 'youngest_descendant':
-                value = self._youngest_descendant()
+            # case 'parent':
+            #     value = self.new(self.location[:-1])
+            # case 'matriarch':
+            #     value = self.ancestor(1)
+            # case 'youngest_descendant':
+            #     value = self._youngest_descendant()
             case _default:
                 try:
                     value = super().__getattr__(attr)
@@ -125,111 +124,111 @@ class Node:
                         f"'{name}' object has no attribute '{attr}'") from e
         return value
 
-    def ancestor(self, level):
-        return self.new(self.location[:level])
+    # def ancestor(self, level):
+    #     return self.new(self.location[:level])
 
-    def previous(self):
-        try:
-            return self.previous_sister.youngest_descendant
-        except IndexError as e:
-            location = self.location[:]
-            if location:
-                location.pop()
-                return self.new(location)
-            raise IndexError('No more nodes') from e
+    # def previous(self):
+    #     try:
+    #         return self.previous_sister.youngest_descendant
+    #     except IndexError as e:
+    #         location = self.location[:]
+    #         if location:
+    #             location.pop()
+    #             return self.new(location)
+    #         raise IndexError('No more nodes') from e
 
-    def _youngest_descendant(self, node=None):
-        node = node or self.new()
-        children = node.num_children
-        if children:
-            location = node.location[:] + [children - 1]
-            return self._youngest_descendant(self.new(location))
-        return node
+    # def _youngest_descendant(self, node=None):
+    #     node = node or self.new()
+    #     children = node.num_children
+    #     if children:
+    #         location = node.location[:] + [children - 1]
+    #         return self._youngest_descendant(self.new(location))
+    #     return node
 
-    def _distance(self, destination):
-        source, destination = [x.location for x in (self, destination)]
-        try:
-            dist = [i != j for i, j in
-                    zip(source, destination)].index(True)
-            return len(source) - dist
-        except ValueError:
-            return min(list(map(len, [source, destination])))
+    # def _distance(self, destination):
+    #     source, destination = [x.location for x in (self, destination)]
+    #     try:
+    #         dist = [i != j for i, j in
+    #                 zip(source, destination)].index(True)
+    #         return len(source) - dist
+    #     except ValueError:
+    #         return min(list(map(len, [source, destination])))
 
-    @property
-    def ancestors(self):
-        for i in range(self.level - 1):
-            yield self.new(self.location[:i + 1])
+    # @property
+    # def ancestors(self):
+    #     for i in range(self.level - 1):
+    #         yield self.new(self.location[:i + 1])
 
-    @property
-    def lineage(self):
-        if not self.is_root:
-            yield self.root
-        for ancestor in self.ancestors:
-            yield ancestor
-        yield self.new()
+    # @property
+    # def lineage(self):
+    #     if not self.is_root:
+    #         yield self.root
+    #     for ancestor in self.ancestors:
+    #         yield ancestor
+    #     yield self.new()
 
-    def unique_lineage(self, other):
-        superset, subset = [set(location.lineage)
-                            for location in (self, other)]
+    # def unique_lineage(self, other):
+    #     superset, subset = [set(location.lineage)
+    #                         for location in (self, other)]
 
-        for ancestor in sorted(superset - subset, key=lambda node: node.level):
-            yield ancestor
-        if self.has_children:
-            yield self.new(None)
+    #     for ancestor in sorted(superset - subset, key=lambda node: node.level):
+    #         yield ancestor
+    #     if self.has_children:
+    #         yield self.new(None)
 
-    @property
-    def matriarchs(self):
-        for i, _child in enumerate(self.root.children):
-            yield self.new([i])
+    # @property
+    # def matriarchs(self):
+    #     for i, _child in enumerate(self.root.children):
+    #         yield self.new([i])
 
-    @property
-    def sisters(self):
-        if len(self.location) == 0:
-            return
-        location = self.location[:-1]
-        for child in range(self.new(location).num_children):
-            yield self.new(location + [child])
+    # @property
+    # def sisters(self):
+    #     if len(self.location) == 0:
+    #         return
+    #     location = self.location[:-1]
+    #     for child in range(self.new(location).num_children):
+    #         yield self.new(location + [child])
 
-    @property
-    def aunts(self):
-        for ancestor in self.ancestors:
-            for sister in ancestor.sisters:
-                yield self.new(sister.location)
+    # @property
+    # def aunts(self):
+    #     for ancestor in self.ancestors:
+    #         for sister in ancestor.sisters:
+    #             yield self.new(sister.location)
 
-    @property
-    def daughters(self):
-        for child in range(self.num_children):
-            yield self.new(self.location + [child])
+    # @property
+    # def daughters(self):
+    #     for child in range(self.num_children):
+    #         yield self.new(self.location + [child])
 
-    @property
-    def eldest_daughter(self):
-        if self.has_children:
-            return self.new(self.location + [0])
-        try:
-            return getattr(super(), 'eldest_daughter')
-        except AttributeError as e:
-            raise IndexError from e
+    # @property
+    # def eldest_daughter(self):
+    #     if self.has_children:
+    #         return self.new(self.location + [0])
+    #     try:
+    #         return getattr(super(), 'eldest_daughter')
+    #     except AttributeError as e:
+    #         raise IndexError from e
 
-    @property
-    def youngest_daughter(self):
-        if self.has_children:
-            return self.new(self.location + [self.num_children - 1])
-        return getattr(super(), 'youngest_daughter')
+    # @property
+    # def youngest_daughter(self):
+    #     if self.has_children:
+    #         return self.new(self.location + [self.num_children - 1])
+    #     return getattr(super(), 'youngest_daughter')
 
-    @property
-    def descendants(self):
-        if not self.has_children:
-            return
-        node = self.eldest_daughter
-        while node.level > self.level:
-            yield node
-            try:
-                node = node.next()
-            except IndexError:
-                return
+    # @property
+    # def descendants(self):
+    #     if not self.has_children:
+    #         return
+    #     node = self.eldest_daughter
+    #     while node.level > self.level:
+    #         yield node
+    #         try:
+    #             node = node.next()
+    #         except IndexError:
+    #             return
 
-    @staticmethod
-    def reunion(*groups):
-        relatives = sorted(set(chain(*groups)), key=lambda n: n.location)
-        for relative in relatives:
-            yield relative
+    # @staticmethod
+    # def reunion(*groups):
+    #     relatives = sorted(set(chain(*groups)), key=lambda n: n.location)
+    #     for relative in relatives:
+    #         yield relative
