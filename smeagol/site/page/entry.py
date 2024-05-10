@@ -1,11 +1,11 @@
 from datetime import datetime as dt
 
 from smeagol.utilities import utils
-from smeagol.site.page.node import Node
+from smeagol.site.page.relation import Relation
 from smeagol.conversion.text_tree.text_tree import TextTree
 
 
-class Entry(Node):
+class Entry(Relation):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._texttree = None

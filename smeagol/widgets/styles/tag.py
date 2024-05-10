@@ -22,6 +22,10 @@ types:
         complete -- eg: <!doctype html>
             open: '<name '
             close: '>'
+        anchor: -- eg: <a href="blah.html">Text</a>
+            open: <a href="
+            pipe: ">
+            close: </a>
         span -- eg: <span class="ipa">
             open: <span class="name">
             close: </span>
@@ -35,10 +39,12 @@ types:
             close: </name>
             start: ' '
             end: ' '
-        heading -- eg: <h2>stuff</h2> -- does not surround lines with tags,
+        heading -- eg: <h2 id="stuff">stuff</h2> -- does not surround lines with tags,
                                         increases heading level if necessary
-            open: <name+d>
+            open: <name+d id="
+            pipe: ">
             close: </name+d>
+            param: $url(text)$|$text$
             start: ' '
             end: ' '
 
@@ -98,10 +104,12 @@ class Tag:
 
     def defaults(self, attr):
         match attr:
-            case 'type' | 'key' | 'language' | 'repeat' | 'param':
+            case 'type' | 'key' | 'language' | 'repeat':
                 value = ''
+            case 'param':
+                value = 'id="$url(text)$|$text$' if self.type == 'heading' else ''
             case 'pipe':
-                value = '|'
+                value = '">' if self.type in ('anchor', 'heading') else '|'
             case 'block':
                 value = self.type in {
                     'block', 'line', 'div', 'heading', 'table'}
@@ -114,7 +122,7 @@ class Tag:
             case 'end':
                 value = self._end
             case 'rank':
-                value = 100 if self.block else 0
+                value = 100 if self.block else -50 if self.type == 'anchor' else 0
             case _default:
                 try:
                     value = super().__getattr__(attr)
@@ -134,6 +142,10 @@ class Tag:
                 return f'<span class="{self.name}"{lang}>'
             case 'div':
                 return f'<div class="{self.name}"{lang}>'
+            case 'anchor':
+                return '<a href="'
+            case 'heading':
+                return f'<{self.name}'
             case _other:
                 return f'<{self.name}{lang}>'
 
@@ -146,6 +158,8 @@ class Tag:
                 return '</span>'
             case 'div':
                 return '</div>'
+            case 'anchor':
+                return '</a>'
             case _other:
                 return f'</{self.name}>'
 

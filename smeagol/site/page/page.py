@@ -40,14 +40,19 @@ class Page(Entry):
         return names
 
     def link_to(self, other):
+        fragment = ''
         with utils.ignored(AttributeError):
             other = other.link
+        with utils.ignored(AttributeError):
+            other, fragment = utils.try_split(other, '#')
+            other = other.split('/')
         link = self.link
         if link == other:
             return ''
         utils.remove_common_prefix(link, other)
+        hash_ = '#' if fragment else ''
         other[-1], ext = utils.try_split(other[-1], '.', 'html')
-        return (len(link)-1) * '../' + '/'.join(other) + '.' + ext
+        return (len(link)-1) * '../' + '/'.join(other) + '.' + ext + hash_ + fragment
 
     @property
     def url(self):

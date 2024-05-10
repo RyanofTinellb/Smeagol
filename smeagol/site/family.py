@@ -86,19 +86,16 @@ def previous_entry(directory, names):
     obj = recurse(directory, names)
     try:
         index = get_index(obj, name) - 1
-    except ValueError:
-        return youngest_grandchild(directory, [name])
+    except ValueError: # previous from root
+        index = -1
+        names = [name]
     if index:
-        return _youngest_grandchild(obj[index])
-    return names
+        youngest_grandchild(obj[index], names)
+    return names # first child goes to parent
 
 
-def youngest_grandchild(directory, names):
-    obj = recurse(directory, names)
-    return _youngest_grandchild(obj)
-
-
-def _youngest_grandchild(obj):
+def youngest_grandchild(obj, names):
+    names.append(get_name(obj))
     if len(obj) == 1:
-        return obj
-    return _youngest_grandchild(obj[-1])
+        return
+    youngest_grandchild(obj[-1], names)

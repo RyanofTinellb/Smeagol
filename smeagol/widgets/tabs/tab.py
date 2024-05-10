@@ -28,7 +28,9 @@ class Tab(tk.Frame):
     def _commands(self):
         return [
             ('<Control-s>', self.save_entry),
-            ('<Control-S>', self.save_entries)
+            ('<Control-S>', self.save_entries),
+            ('<Control-Prior>', self.previous_entry),
+            ('<Control-Next>', self.next_entry)
         ]
 
     def save_entry(self, _event=None):
@@ -43,6 +45,12 @@ class Tab(tk.Frame):
         for percentage in self.interface.save_entries():
             print(f'{percentage}% complete')
         self.interface.save_special_files()
+
+    def previous_entry(self, _event=None):
+        self.entry = self.entry.previous_page()
+
+    def next_entry(self, _event=None):
+        self.entry = self.entry.next_page()
 
     @property
     def entry(self):

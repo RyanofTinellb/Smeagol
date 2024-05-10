@@ -4,7 +4,8 @@ from datetime import datetime as dt
 from typing import Self
 
 from smeagol.utilities import utils
-from smeagol.utilities.types import Node, Styles, Tag, TemplateStore, TextTree
+from smeagol.utilities.types import Styles, Tag, TemplateStore, TextTree
+from smeagol.conversion.text_tree.node import Node
 
 # pylint: disable=R0903
 
@@ -23,6 +24,10 @@ class Components:
             tag.end or self.end,
             self.wholepage
         )
+
+
+def _text(text, *_args):
+    return text
 
 
 def cells(text):
@@ -70,36 +75,52 @@ class Template:
 
     def replace_param(self, obj, components, tag):
         text = obj.first_child
-        language_code = tag.language_code if tag.language else None
+        _, language_code = (utils.try_split(
+            obj.name, '@')) if tag.language else (None, None)
         if not isinstance(text, str):
             raise ValueError(
                 f'{obj.name} must have child of type <str> not of Node {text.name}')
-        obj.first_child = ''.join(utils.alternate_yield([self._text, self._param],
-                                                        tag.param.split('$'), text, language_code))
+        obj = Node()
+        obj.add(''.join(utils.alternate_yield([_text, self._param],
+                                              tag.param.split('$'), text, language_code)))
         return self.types(tag.type)(obj, components, tag)
 
-    @staticmethod
-    def _text(text, *_args):
-        return text
-
     def _param(self, param, text, language_code):
-        url = param.startswith('url')
-        if url:
-            param = re.search(r'url\((.*?)\)', param).group(1)
-        upper = param.startswith('upper')
-        if upper:
-            param = re.search(r'upper\((.*?)\)', param).group(1)
+        url, param = self._extract('url', param)
+        upper, param = self._extract('upper', param)
         param, arg = utils.try_split(param, ':')
         match param:
             case 'text':
                 value = text
             case 'lookup':
                 value = self._lookup(arg, text, language_code)
+            case 'link':
+                value = self._link(arg, text, language_code)
             case _other:
                 raise ValueError(f'Parameter {param} does not exist')
         return utils.url_form(value) if url else utils.buy_caps(value) if upper else value
 
+    def _extract(self, tag, param):
+        if param.startswith(tag):
+            return True, re.search(fr'{tag}\((.*?)\)', param).group(1)
+        return False, param
+
+    def _link(self, arg, text, language_code):
+        arg, data = utils.try_split(arg, ':')
+        match arg:
+            case 'next':
+                page = self.templates.page.next_page()
+            case 'previous':
+                page = self.templates.page.previous_page()
+            case 'lookup':
+                page = self._lookup(data, text, language_code)
+            case other:
+                raise NotImplementedError(
+                    f'function {other} has not been implemented')
+        return self.templates.page.link_to(page)
+
     def _lookup(self, arg, text, language_code):
+        text = text.lower().replace(' ', '')
         if not language_code:
             return self.templates.links.get(arg, {}).get(text, '')
         item = self.templates.links.get(arg, {}).get(language_code)
