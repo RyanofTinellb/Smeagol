@@ -80,10 +80,13 @@ class Template:
         if not isinstance(text, str):
             raise ValueError(
                 f'{obj.name} must have child of type <str> not of Node {text.name}')
-        obj = Node()
-        obj.add(''.join(utils.alternate_yield([_text, self._param],
-                                              tag.param.split('$'), text, language_code)))
-        return self.types(tag.type)(obj, components, tag)
+        node = Node()
+        try:
+            node.add(''.join(utils.alternate_yield([_text, self._param],
+                                                   tag.param.split('$'), text, language_code)))
+        except IndexError:  # usually a broken link
+            return self._html(obj.other_child, components, tag)
+        return self.types(tag.type)(node, components, tag)
 
     def _param(self, param, text, language_code):
         url, param = self._extract('url', param)
@@ -164,9 +167,14 @@ class Template:
                 function = self.heading
             case 'link':
                 function = self.link
+            case 'error':
+                function = self.error
             case _other:
                 function = self.span
         return function
+
+    def error(self, obj, components, tag):
+        return ''.join([self._html(elt, components, tag) for elt in obj])
 
     def block(self, obj: Node, components: Components, tag: Tag):
         end = ''

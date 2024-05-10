@@ -67,8 +67,8 @@ def next_entry(directory, names, already: bool = False):
 def sibling(directory, names):
     try:
         return _next_entry(directory, names)
-    except ValueError:
-        return [get_name(directory)]
+    except ValueError as e:
+        raise IndexError('No more nodes!') from e
 
 
 def _next_entry(directory, names):
@@ -86,9 +86,8 @@ def previous_entry(directory, names):
     obj = recurse(directory, names)
     try:
         index = get_index(obj, name) - 1
-    except ValueError: # previous from root
-        index = -1
-        names = [name]
+    except ValueError as e:
+        raise IndexError('No more nodes') from e
     if index:
         youngest_grandchild(obj[index], names)
     return names # first child goes to parent

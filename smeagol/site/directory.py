@@ -29,7 +29,7 @@ class Directory:
         return self._rec(self.directory)
 
     def _rec(self, obj, names=None):
-        names = *(names or ()), obj[0]
+        names = [*(names or []), obj[0]]
         yield names
         for elt in obj[1:]:
             yield from self._rec(elt, names)

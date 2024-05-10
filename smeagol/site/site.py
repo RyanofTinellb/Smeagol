@@ -44,7 +44,7 @@ class Site(Page):
             self.directory.add(page.names)
 
     def new(self, values: list[str] | list[int] = None) -> Page:
-        values = values or []
+        values = values or [self.entries.name]
         with utils.ignored(TypeError):
             values = self.directory[values].names
         return Page(self.directory, self.entries, values[:])

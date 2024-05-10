@@ -41,7 +41,7 @@ class Node:
     def new(self, values: list[str] | list[int] = None) -> Self:
         values = values or []
         with ignored(TypeError):
-            values = self.directory[values].names # values are integers
+            values = self.directory[values].names  # values are integers
         return type(self)(self.directory, self.entries, values[:])
 
     def __getitem__(self, values: list[str] | list[int]):
@@ -52,7 +52,7 @@ class Node:
             case 'name':
                 value = self.names[-1]
             case 'level':
-                value = len(self.location)
+                value = max(0, len(self.names)-2)
             case 'kids':
                 value = self.data.children
             case 'num_children':
@@ -62,7 +62,7 @@ class Node:
             case 'is_leaf':
                 value = not self.has_children
             case 'is_root':
-                value = self.level == 1
+                value = self.level == 0
             case 'root':
                 value = self.new([])
             case _default:

@@ -48,9 +48,9 @@ class Node:
     def first_child(self):
         return self.children[0]
 
-    @first_child.setter
-    def first_child(self, value):
-        self.children[0] = value
+    @property
+    def other_child(self):
+        return self.children[-1]
 
     def __str__(self):
         return f'{self.open_tag}{self.middle_text}{self.close_tag}'

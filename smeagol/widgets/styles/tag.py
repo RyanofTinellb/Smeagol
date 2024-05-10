@@ -52,6 +52,8 @@ types:
             open: <div class="name">
             close: </div>
     replacement:
+        error -- eg: <error><a href="http://www.tinellb.com">↑ Back to Main</a></error>
+                            -- should only be displayed if an expected error occurred.
         table -- eg: <table>Entire Table</table> -- uses Markdown formatting (or similar)
         data -- eg: <entry_data>name</entry_data> -- child is passed to entry to get information
         template -- eg: <template>copyright</template> -- child is passed to Template Store
