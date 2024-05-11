@@ -35,11 +35,22 @@ class Node:
             self._data = self.entries[self.names]
         return self._data
 
+    def __hash__(self):
+        return hash('/'.join(self.names))
+
+    def __eq__(self, other):
+        return self.names == other.names
+
     def __repr__(self):
         return f'Node: names = {self.names}'
 
+    @property
+    def hierarchy(self):
+        for names in self.directory:
+            yield self.new(names)
+
     def new(self, values: list[str] | list[int] = None) -> Self:
-        values = values or []
+        values = values or [self.entries.name]
         with ignored(TypeError):
             values = self.directory[values].names  # values are integers
         return type(self)(self.directory, self.entries, values[:])

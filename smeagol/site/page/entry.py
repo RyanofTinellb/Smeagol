@@ -13,9 +13,6 @@ class Entry(Relation):
     def __str__(self):
         return '\n'.join(self._text)
 
-    def __hash__(self):
-        return hash(tuple(self.location))
-
     def __getattr__(self, attr):
         match attr:
             case 'script' | 'id':

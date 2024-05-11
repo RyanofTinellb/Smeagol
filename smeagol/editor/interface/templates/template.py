@@ -57,19 +57,20 @@ class Template:
         self.styles = styles
         self.templates = templates
         self.started = self.templates.started
+        self.level = -1
         self.components = components or Components()
 
     @property
     def html(self):
         return ''.join([self._html(elt, self.components) for elt in self.text])
 
-    def _html(self, obj, components=None, tag=None):
+    def _html(self, obj, components=None):
         components = components or Components()
         if isinstance(obj, str):
             return self.string(obj, components)
         tag = self.styles[obj.name]
         components = components.new(tag)
-        if tag.param:
+        if tag.param and tag.type != 'toc':
             return self.replace_param(obj, components, tag)
         return self.types(tag.type)(obj, components, tag)
 
@@ -85,7 +86,7 @@ class Template:
             node.add(''.join(utils.alternate_yield([_text, self._param],
                                                    tag.param.split('$'), text, language_code)))
         except IndexError:  # usually a broken link
-            return self._html(obj.other_child, components, tag)
+            return self._html(obj.other_child, components)
         return self.types(tag.type)(node, components, tag)
 
     def _param(self, param, text, language_code):
@@ -169,16 +170,44 @@ class Template:
                 function = self.link
             case 'error':
                 function = self.error
+            case 'toc':
+                function = self.toc
             case _other:
                 function = self.span
         return function
 
-    def error(self, obj, components, tag):
-        return ''.join([self._html(elt, components, tag) for elt in obj])
+    def toc(self, obj, _components, tag):
+        self.level = -1
+        open_tags = []
+        output = ''
+        page = self.templates.page
+        family = page.reunion(obj.first_child.split('-'))
+        for entry in self.templates.page.hierarchy:
+            if entry in family:
+                for _ in range(max(0, self.level - entry.level)):
+                    with utils.ignored(IndexError):
+                        output += open_tags.pop()
+                num = max(0, entry.level - self.level) if self.level > -1 else 1
+                for _ in range(num):
+                    output += tag.open
+                    open_tags.append(tag.close)
+                self.level = entry.level
+                output += tag.start
+                if entry == page:
+                    output += entry.name
+                else:
+                    output += tag.param.replace('$link$', page.link_to(entry)
+                                                ).replace('$name$', entry.name)
+                output += tag.end
+        output += ''.join(reversed(open_tags))
+        return output
+
+    def error(self, obj, components, _tag):
+        return ''.join([self._html(elt, components) for elt in obj])
 
     def block(self, obj: Node, components: Components, tag: Tag):
         end = ''
-        text = ''.join([self._html(elt, components, tag) for elt in obj])
+        text = ''.join([self._html(elt, components) for elt in obj])
         if self.started:
             end = self.started.tag  # + '!block!'
             self.started.update()
@@ -189,7 +218,7 @@ class Template:
         if not self.started:
             start = components.start  # + '!span!'
             self.started.update(components.end)
-        text = ''.join([self._html(elt, components, tag) for elt in obj])
+        text = ''.join([self._html(elt, components) for elt in obj])
         return f'{start}{tag.open}{text}{tag.close}'
 
     def template(self, obj: Node, components: Components, *_args):
@@ -209,7 +238,7 @@ class Template:
     def table(self, obj: Node, components: Components, tag: Tag):
         end = ''
         components = Components('<tr>|', '|', '|</tr>', components.wholepage)
-        text = ''.join([self._html(elt, components, tag) for elt in obj])
+        text = ''.join([self._html(elt, components) for elt in obj])
         if self.started:
             end = self.started.tag  # + '!table!'
             self.started.update()

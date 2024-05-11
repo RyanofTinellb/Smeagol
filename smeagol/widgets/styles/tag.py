@@ -59,6 +59,8 @@ types:
         template -- eg: <template>copyright</template> -- child is passed to Template Store
         link -- eg: <internal-link>data, stylesheets, style.css</internal-link>
                                     -- child and entry are passed to Linker to get information
+        toc-<<family>> -- eg: <toc>Table of Contents / List of Links</toc> -- family
+                                    is replaced by a list of groups to include
         repeat -- eg: <repeat><data>contents</data></repeat> -- used for wholepages,
                                         repeats children once for each entry
 """
@@ -124,7 +126,7 @@ class Tag:
             case 'end':
                 value = self._end
             case 'rank':
-                value = 100 if self.block else -50 if self.type == 'anchor' else 0
+                value = self._rank
             case _default:
                 try:
                     value = super().__getattr__(attr)
@@ -132,6 +134,16 @@ class Tag:
                     raise AttributeError(
                         f"'{type(self).__name__}' object has no attribute '{attr}'") from e
         return value
+
+    @property
+    def _rank(self):
+        if self.block:
+            return 100
+        if self.type == 'anchor':
+            return -50
+        if self.type.startswith('toc-'):
+            return -50
+        return 0
 
     @property
     def _open(self):

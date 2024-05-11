@@ -1,5 +1,5 @@
 '''
-Functions that take in a directory list, and a list of names, and 
+Functions that take in a directory list, and a list of names, and
 spit back its family as lists of strings. This list of strings can
 then be fed into Nodes to get them as Node/Entry/Page.
 '''
@@ -50,9 +50,23 @@ def generation(directory: list[list[str]], names: list[str], number: int):
 
 def siblings(directory, names):
     names = parent(names)
+    if not names:
+        return
     obj = recurse(directory, names)
     yield from generator(obj, names)
 
+
+def descendants(directory, names):
+    obj = recurse(directory, names)
+    for elt in obj[1:]:
+        yield from _rec(elt, names)
+
+
+def _rec(obj, names=None):
+    names = [*(names or []), obj[0]]
+    yield names
+    for elt in obj[1:]:
+        yield from _rec(elt, names)
 
 def next_entry(directory, names, already: bool = False):
     if already:
