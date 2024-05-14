@@ -3,7 +3,7 @@ from smeagol.utilities import utils
 
 
 class Entries:
-    def __init__(self, entries: Optional[dict[dict]] | Self):
+    def __init__(self, entries: Optional[dict[dict]] | Self = None):
         self.entries = entries
         with utils.ignored(AttributeError):
             self.entries = self.entries.entries
@@ -23,6 +23,13 @@ class Entries:
         for name in names:
             obj = obj.setdefault('children', {}).setdefault(name, {})
 
+    def remove(self, names: list[str]):
+        name = names.pop()
+        parent = self[names].entries['children']
+        if parent[name].get('children') or parent[name].get('text'):
+            raise IndexError(f'Unable to remove non-empty entry {name}')
+        parent.pop(name, None)
+
     @property
     def root(self):
         return self.entries
@@ -36,7 +43,7 @@ class Entries:
         self.entries[name] = value
 
     def get(self, attr, default=None):
-        return self.entries.get(attr, default)
+        return self.entries.setdefault(attr, default)
 
     @property
     def children(self):

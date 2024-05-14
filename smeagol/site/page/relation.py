@@ -2,8 +2,10 @@ from smeagol.site.page.node import Node
 from smeagol.site import family
 from smeagol.utilities import utils
 
+
 def skip(names):
     return len(names) == 2
+
 
 class Relation(Node):
     # @property
@@ -35,12 +37,12 @@ class Relation(Node):
 
     def descendants(self):
         for descendant in family.descendants(*self._directory()):
-            yield self.new(descendant)
+            if not skip(descendant):
+                yield self.new(descendant)
 
     def children(self):
         for child in family.children(*self._directory()):
             if skip(child):
-                print('Skipping', child.name)
                 yield from self._skipchildren(child)
                 return
             yield self.new(child)
@@ -49,11 +51,23 @@ class Relation(Node):
         for child in family.children(*self._directory(relative)):
             yield self.new(child)
 
+    def lineage(self):
+        for ancestor in family.lineage(self.names):
+            if not skip(ancestor):
+                yield self.new(ancestor)
+
+    def heirs(self):
+        for heir in family.descendants(*self._directory()):
+            if len(heir) <= 4 and not skip(heir):
+                yield self.new(heir)
+
     @property
     def groups(self):
         return {
             'matriarchs': self.matriarchs,
             'siblings': self.siblings,
             'descendants': self.descendants,
-            'children': self.children
+            'children': self.children,
+            'lineage': self.lineage,
+            'heirs': self.heirs
         }

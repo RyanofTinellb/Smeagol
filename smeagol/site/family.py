@@ -33,6 +33,13 @@ def parent(names) -> list[str]:
     return names[:-1]
 
 
+def lineage(names):
+    names = names.copy()
+    while len(names) > 1:
+        yield names
+        names.pop()
+
+
 def children(directory, names) -> list[str]:
     obj = recurse(directory, names)
     yield from generator(obj, names)
@@ -67,6 +74,7 @@ def _rec(obj, names=None):
     yield names
     for elt in obj[1:]:
         yield from _rec(elt, names)
+
 
 def next_entry(directory, names, already: bool = False):
     if already:
@@ -104,7 +112,7 @@ def previous_entry(directory, names):
         raise IndexError('No more nodes') from e
     if index:
         youngest_grandchild(obj[index], names)
-    return names # first child goes to parent
+    return names  # first child goes to parent
 
 
 def youngest_grandchild(obj, names):

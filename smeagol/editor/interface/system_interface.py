@@ -1,4 +1,5 @@
 import os
+import re
 
 from smeagol.editor.interface import assets
 from smeagol.editor.interface.templates.template_store import TemplateStore
@@ -118,9 +119,9 @@ class SystemInterface:
         if self.filename:
             fs.save_yaml(self.config, self.filename)
 
-    def save_site(self):
-        print(self.assets.source)
-        fs.save_yaml(self._site_data, self.assets.source)
+    def save_site(self, filename=None):
+        filename = filename or self.assets.source
+        fs.save_yaml(self._site_data, filename)
 
     def open_entry_in_browser(self, entry):
         fs.open_in_browser(self.port, entry.url)
@@ -148,8 +149,6 @@ class SystemInterface:
         return filename
 
     def save_special_files(self):
-        if not self.template_store.page:
-            return
         self.save_searchfile()
         self.save_search404_file()
         self.save_search_data()
@@ -157,9 +156,18 @@ class SystemInterface:
             self.save_wordlist()
 
     def save_searchfile(self):
-        html = self.template_store.search.html
         filename = self.locations.search
+        page = self._page(filename)
+        self.template_store.set_data(page)
+        html = self.template_store.search.html
         fs.save_string(html, filename)
+
+    def _page(self, filename: str):
+        name = os.path.relpath(filename, self.locations.directory)
+        name, _ext = os.path.splitext(name)
+        name = re.split(r'[/\\]+', name)
+        name = [self.site.name, *name]
+        return self.site.new(name)
 
     def save_search404_file(self):
         html = self.template_store.page404.html

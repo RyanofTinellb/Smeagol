@@ -57,7 +57,7 @@ class Template:
         self.styles = styles
         self.templates = templates
         self.started = self.templates.started
-        self.level = -1
+        self._level = -1
         self.components = components or Components()
 
     @property
@@ -177,21 +177,24 @@ class Template:
         return function
 
     def toc(self, obj, _components, tag):
-        self.level = -1
+        self._level = -1
         open_tags = []
         output = ''
         page = self.templates.page
-        family = page.reunion(obj.first_child.split('-'))
+        try:
+            family = page.reunion(obj.first_child.split('-'))
+        except ValueError:
+            family = page.root.reunion(obj.first_child.split('-'))
         for entry in self.templates.page.hierarchy:
             if entry in family:
-                for _ in range(max(0, self.level - entry.level)):
+                for _ in range(max(0, self._level - entry.level)):
                     with utils.ignored(IndexError):
                         output += open_tags.pop()
-                num = max(0, entry.level - self.level) if self.level > -1 else 1
+                num = max(0, entry.level - self._level) if self._level > -1 else 1
                 for _ in range(num):
                     output += tag.open
                     open_tags.append(tag.close)
-                self.level = entry.level
+                self._level = entry.level
                 output += tag.start
                 if entry == page:
                     output += entry.name

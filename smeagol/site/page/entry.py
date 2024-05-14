@@ -64,10 +64,10 @@ class Entry(Relation):
 
     @property
     def date(self):
-        date = self.data.get('date')
         try:
+            date = self.data.get('date')
             return dt.strptime(date, '%Y-%m-%d')
-        except TypeError:
+        except (TypeError, KeyError):
             return dt.now()
 
     def update_date(self, value=None):

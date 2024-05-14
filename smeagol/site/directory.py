@@ -15,13 +15,13 @@ def get_index(obj, name):
 
 
 class Directory:
-    def __init__(self, directory: Optional[list[list] | Self],
+    def __init__(self, directory: Optional[list[list] | Self] = None,
                  names: list[str] = None,
                  subdirectory: bool = False):
-        self.directory = directory or []
+        self.names = names or ['']
+        self.directory = directory or [self.names[0]]
         with utils.ignored(AttributeError):
             self.directory = self.directory.directory
-        self.names = names or []
         if subdirectory:
             self.names.append(self.name)
 
@@ -67,6 +67,17 @@ class Directory:
                 obj.append([name])
                 index = len(obj) - 1
             obj = obj[index]
+
+    def remove(self, names):
+        obj = self.directory
+        name = names.pop()
+        for entry in names[1:]:
+            index = get_index(obj, entry)
+            obj = obj[index]
+        index = get_index(obj, name)
+        if len(obj[index]) != 1:
+            raise IndexError(f'Unable to remove non-empty subdirectory {name}')
+        obj.pop(get_index(obj, name))
 
     def pprint(self) -> None:
         self._pprint(self.directory)

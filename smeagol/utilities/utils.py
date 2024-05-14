@@ -102,6 +102,23 @@ def recurse(obj, names):
     return obj
 
 
+def link(one, other):
+    fragment = ''
+    with ignored(AttributeError):
+        other = other.link
+    with ignored(AttributeError):
+        other, fragment = try_split(other, '#')
+        other = other.split('/')
+    with ignored(AttributeError):
+        one = one.link
+    if one == other:
+        return ''
+    remove_common_prefix(one, other)
+    hash_ = '#' if fragment else ''
+    other[-1], ext = try_split(other[-1], '.', 'html')
+    return (len(one)-1) * '../' + '/'.join(other) + '.' + ext + hash_ + fragment
+
+
 def groupby(obj, fn):
     obj = sorted(obj, key=fn)
     return itertools.groupby(obj, fn)

@@ -59,6 +59,6 @@ class TemplateStore:
     def items(self):
         return self.templates.items
 
-    def set_data(self, page: Page, styles: Styles):
-        self.page = page
-        self.styles = styles
+    def set_data(self, page: Page = None, styles: Styles = None):
+        self.page = page or self.page
+        self.styles = styles or self.styles
