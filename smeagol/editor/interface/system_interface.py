@@ -12,7 +12,7 @@ from smeagol.widgets.styles.styles import Styles
 class SystemInterface:
     def __init__(self, filename='', server=True):
         self.filename = filename
-        self.styles = None
+        self.styles = self.files = None
         config = self.load_config(filename) if filename else {}
         self.setup(config)
         self.site = self.open_site()
@@ -28,6 +28,8 @@ class SystemInterface:
                 value = self.config.setdefault('site', {})
             case '_entries':
                 value = self.config.setdefault('entries', [[]])
+            case '_files':
+                value = self.config.get('files', '')
             case 'assets' | 'locations' | 'templates':
                 value = getattr(assets, attr.title())(
                     self.config.get(attr, {}))
@@ -64,6 +66,13 @@ class SystemInterface:
     def setup(self, config):
         self.config = config
         self.open_styles()
+        self.open_files()
+    
+    def open_files(self):
+        self.files = fs.load_yaml(self._files)
+
+    def copy_all(self):
+        fs.copy_all(self.files)
 
     @property
     def entries(self) -> list[Entry]:
@@ -137,7 +146,9 @@ class SystemInterface:
             self.save_entry(entry)
         yield 100
 
-    def save_entry(self, entry):
+    def save_entry(self, entry, copy_all=False):
+        if copy_all:
+            self.copy_all()
         self.template_store.set_data(entry, self.styles)
         try:
             html = self.template_store.main.html

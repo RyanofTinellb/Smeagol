@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import shutil
 import socket
 import tkinter.filedialog as fd
 import webbrowser as web
@@ -31,6 +32,12 @@ def save_json(obj, filename, indent=None):
 def _save_json(obj, filename, indent=None):
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(obj, f, ensure_ascii=False, indent=indent)
+
+
+def copy_all(files: dict):
+    for src, dests in files.items():
+        for dest in dests:
+            shutil.copy(src, dest)
 
 
 def save_string(string, filename):

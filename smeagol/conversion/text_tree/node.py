@@ -30,13 +30,15 @@ class Node:
             if not isinstance(child, str):
                 yield child
 
-    def stringify(self):
-        return ''.join([self._strings(child) for child in self.children])
+    def stringify(self, skip=None):
+        return ''.join([self._strings(child, skip) for child in self.children])
 
-    def _strings(self, child):
+    def _strings(self, child, skip=None):
         if isinstance(child, str):
             return child
-        return child.stringify()
+        if child.name and child.name == skip:
+            return ''
+        return child.stringify(skip)
 
     def __iter__(self):
         return iter(self.children)

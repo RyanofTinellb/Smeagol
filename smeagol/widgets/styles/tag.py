@@ -44,7 +44,7 @@ types:
             open: <name+d id="
             pipe: ">
             close: </name+d>
-            param: $url(text)$|$text$
+            param: $url(text)$|$node$
             start: ' '
             end: ' '
 
@@ -111,7 +111,7 @@ class Tag:
             case 'type' | 'key' | 'language' | 'repeat':
                 value = ''
             case 'param':
-                value = 'id="$url(text)$|$text$' if self.type == 'heading' else ''
+                value = ' id="$url(text)$|$node$' if self.type == 'heading' else ''
             case 'pipe':
                 value = '">' if self.type in ('anchor', 'heading') else '|'
             case 'block':

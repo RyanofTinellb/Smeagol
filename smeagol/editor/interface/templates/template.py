@@ -75,25 +75,25 @@ class Template:
         return self.types(tag.type)(obj, components, tag)
 
     def replace_param(self, obj, components, tag):
-        text = obj.first_child
         _, language_code = (utils.try_split(
             obj.name, '@')) if tag.language else (None, None)
-        if not isinstance(text, str):
-            raise ValueError(
-                f'{obj.name} must have child of type <str> not of Node {text.name}')
         node = Node()
+        options = [obj, components, language_code]
         try:
             node.add(''.join(utils.alternate_yield([_text, self._param],
-                                                   tag.param.split('$'), text, language_code)))
+                                                   tag.param.split('$'), *options)))
         except IndexError:  # usually a broken link
             return self._html(obj.other_child, components)
         return self.types(tag.type)(node, components, tag)
 
-    def _param(self, param, text, language_code):
+    def _param(self, param, obj, components, language_code):
+        text = obj.stringify(skip='error')
         url, param = self._extract('url', param)
         upper, param = self._extract('upper', param)
         param, arg = utils.try_split(param, ':')
         match param:
+            case 'node':
+                value = ''.join([self._html(elt, components) for elt in obj])
             case 'text':
                 value = text
             case 'lookup':
@@ -190,7 +190,8 @@ class Template:
                 for _ in range(max(0, self._level - entry.level)):
                     with utils.ignored(IndexError):
                         output += open_tags.pop()
-                num = max(0, entry.level - self._level) if self._level > -1 else 1
+                num = max(0, entry.level -
+                          self._level) if self._level > -1 else 1
                 for _ in range(num):
                     output += tag.open
                     open_tags.append(tag.close)
@@ -245,7 +246,7 @@ class Template:
         if self.started:
             end = self.started.tag  # + '!table!'
             self.started.update()
-        text = cells(text.replace('//', '<br>') + end)
+        text = cells(text + end)
         return f'{tag.open}{text}{tag.close}'
 
     def contents(self, components: Components):
