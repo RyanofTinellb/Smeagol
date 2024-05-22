@@ -62,7 +62,7 @@ class Evolver:
 
     def evolve(self, word):
         output = [str(word)]
-        for i, replacement in enumerate(self.replacements):
+        for replacement in self.replacements:
             evolution = self.evolution(word, replacement)
             output += [evolution]
         return output
@@ -210,15 +210,16 @@ class HighToDemoticLulani:
 
     def nasal_assimilation(self, regex):
         other = regex.group(1)
-        return dict(
-            p='m', b='m', m='m',
-            t='n', d='n', n='n',
-            c='N', j='N', N='N',
-            k='q', g='q', q='q'
-        )[other] + other
+        return {
+            'p': 'm', 'b': 'm', 'm': 'm',
+            't': 'n', 'd': 'n', 'n': 'n',
+            'c': 'N', 'j': 'N', 'N': 'N',
+            'k': 'q', 'g': 'q', 'q': 'q'
+        }[other] + other
 
     def protect_cluster(self, regex):
-        return '{0}\'{1}'.format(*regex.group(0))
+        first, second = regex.group(0)
+        return f'{first}\'{second}'.format(*regex.group(0))
 
     def setup_stresses(self, stresses):
         return [(re.compile(pattern.replace(

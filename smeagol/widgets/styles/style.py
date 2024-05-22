@@ -1,18 +1,7 @@
-import re
-import json
-from contextlib import contextmanager
-import tkinter as Tk
-from tkinter.font import Font
-from ... import utils
-
-'''
+"""
 properties:
-    name (str) => name
-    key (str) => key
-    start (str) => start
-    end (str) => end
-    size (int) => font.size
     font (str) => font.family
+    size (int|str) => font.size
     bold (bool) => font.weight
     italics (bool) => font.slant
     underline (bool) => font.underline
@@ -20,182 +9,195 @@ properties:
     offset (str): superscript / subscript / baseline => paragraph.offset
     colour (str) => paragraph.foreground
     background (str) => paragraph.background
-    border (str) => paragraph.relief
+    border (bool) => paragraph.relief, paragraph.borderwidth
     justification (str) => paragraph.justify
-    left, right, indent (int) => paragraph.{lmargin1, lmargin2, rmargin}
-    top, bottom, line_spacing (int) => paragraph.{spacing1, spacing2, spacing3}
-'''
+    unit (str): centimetres, inches, pixels, points, millimetres
+    left, right, indent (Number) => paragraph.{lmargin1, lmargin2, rmargin}
+    top, bottom, line_spacing (Number) => paragraph.{spacing1, spacing2, spacing3}
+"""
 
-DEFAULTS = dict(name='default', key='', start='', end='', font='Calibri', size=12,
-                bold=False, italics=False, underline=False, strikethrough=False,
-                offset='baseline', colour='black', background='white', border=False,
-                justification='left', unit='cm', indent=0.0, line_spacing=0.0,
-                left=0.0, right=0.0, top=0.0, bottom=0.0,
-                language=False, hyperlink=False, block='')
+from tkinter.font import Font
+from typing import Self
 
-defaults = DEFAULTS.copy()
-
-attrs = ('key', 'start', 'end', 'font', 'size', 'bold', 'italics', 'underline', 'strikethrough',
-         'offset', 'colour', 'background', 'border', 'justification', 'unit', 'left', 'right',
-         'top', 'bottom', 'indent', 'line_spacing', 'language', 'hyperlink', 'block')
+from smeagol.utilities import utils
+from smeagol.utilities.defaults import default
+from smeagol.widgets.styles.tag import Tag
 
 
-def _int_part(_dict, key):
-    value = _dict.get(key, 0)
-    try:
-        return int(value)
-    except ValueError:
-        try:
-            return int(re.sub(r'\D', '', value))
-        except ValueError:
-            return 0
-
-
-class Style:
-    def __init__(self, **style):
-        self.changed = Tk.BooleanVar()
-        if style['name'] == 'default':
-            for attr, value in style.items():
-                if attr == 'size':
-                    value = self._size(value)
-                setattr(self, attr, value)
-                defaults[attr] = value
-        else:
-            for attr, value in style.items():
-                setattr(self, attr, value)
-
-    def __getattr__(self, attr):
-        if attr == 'paragraph':
-            super().__setattr__(attr, {})
-            return getattr(self, attr)
-        elif attr == '_font':
-            super().__setattr__(attr, self.default_font)
-            return getattr(self, attr)
-        elif attr == 'rounding':
-            return int if self.unit[0] in 'mp' else float
-        elif attr == 'defaults':
-            return defaults
-        elif attr == 'Font':
-            return Font(**self._font)
-        else:
-            return defaults[attr]
-
-    def __setattr__(self, attr, value):
-        if attr != 'changed':
-            self.changed.set(True)
-        if attr in ('left', 'right', 'top', 'bottom', 'line_spacing', 'indent'):
-            value = self.rounding(value)
-        super().__setattr__(attr, value)
-        if attr == 'font':
-            self._font['family'] = value
-        elif attr == 'size':
-            size = self._size(value)
-            self._font['size'] = size
-            super().__setattr__('size', size)
-        elif attr == 'bold':
-            self._font['weight'] = 'bold' if value else 'normal'
-        elif attr == 'italics':
-            self._font['slant'] = 'italic' if value else 'roman'
-        elif attr == 'underline':
-            self._font['underline'] = value
-        elif attr == 'strikethrough':
-            self._font['overstrike'] = value
-        elif attr == 'background':
-            self.paragraph['background'] = value
-        elif attr == 'colour':
-            self.paragraph['foreground'] = value
-        elif attr == 'border':
-            self.paragraph['relief'] = 'ridge' if value else 'flat'
-            self.paragraph['borderwidth'] = 2 if value else 0
-        elif attr == 'justification':
-            value = 'center' if value == 'centre' else value
-            self.paragraph['justify'] = value
-        elif attr == 'offset':
-            self._font['size'], self.paragraph['offset'] = self._offset(value)
-        elif attr == 'top':
-            self.paragraph['spacing1'] = self.add_unit(value)
-        elif attr == 'bottom':
-            self.paragraph['spacing3'] = self.add_unit(value)
-        elif attr == 'left':
-            self.paragraph['lmargin1'], self.paragraph['lmargin2'] = self._left(
-                value)
-        elif attr == 'right':
-            self.paragraph['rmargin'] = self.add_unit(value)
-        elif attr == 'indent':
-            self.paragraph['lmargin1'] = self.add_unit(self.left + value)
-        elif attr == 'line_spacing':
-            self.paragraph['spacing2'] = self.add_unit(value)
-        elif attr == 'unit':
-            self._change_units(value)
-
-    def trace_add(self, mode, fn):
-        self.changed.trace_add(mode, fn)
-
-    def add_unit(self, value):
-        return f'{value}{self.unit[0]}'
-
-    def _change_units(self, value):
-        unit = value[0]
-        if unit in 'cpim':
-            rounding = float if unit in 'ci' else int
-            attrs = 'left', 'right', 'top', 'bottom', 'line_spacing', 'indent'
-            for attr in attrs:
-                value = getattr(self, attr)
-                setattr(self, attr, rounding(value))
-        else:
-            raise AttributeError(
-                f'unit "{value}" is not a valid unit for {type(self).__name__} object')
-
-    def _size(self, value):
-        if isinstance(value, str):
-            return max(int(value) + defaults['size'], 1)
-        else:
-            return value
-
-    def _offset(self, value):
-        basesize = self.size
-        if value == 'baseline':
-            return basesize, 0
-        size = basesize * 2 // 3
-        if value == 'superscript':
-            offset = basesize - size
-        elif value == 'subscript':
-            offset = (size - basesize) // 2
-        return size, offset
-
-    def _left(self, value):
-        left1 = self.add_unit(value + self.indent)
-        left2 = self.add_unit(value)
-        return left1, left2
-
-    def copy(self):
-        return Style(name=self.name, **self.style.copy())
-
-    def items(self, attrs=attrs):
-        for attr in attrs:
-            yield attr, getattr(self, attr)
-
-    def unique_items(self, attrs=attrs, defaults=defaults):
-        for attr in attrs:
-            value = getattr(self, attr)
-            if self.name == 'default':
-                if value != DEFAULTS[attr]:
-                    yield attr, value
-            else:
-                if value != defaults[attr]:
-                    yield attr, value
+class Style(Tag):
+    def __init__(self, name, tags: dict = None, default_style: Self = None):
+        tags = tags or {}
+        self.props = tags.pop('props', {})
+        super().__init__(name, tags)
+        self.default_style = default_style or {}
+        if self._is_default:
+            self._unchanged = self.props.copy()
 
     @property
-    def style(self, defaults=defaults):
-        return dict(self.unique_items(defaults=defaults))
+    def style(self):
+        return {'props': self.props, 'tags': self.tags}
+
+    def __getitem__(self, attr):
+        try:
+            return self.props.get(attr)
+        except KeyError as e:
+            raise KeyError(
+                f"'{type(self).__name__}' object has no item '{attr}'") from e
+
+    def __setitem__(self, attr, value):
+        self.props.setdefault(attr, value)
+
+    def get(self, attr, default_value):
+        match attr:
+            case 'props' | 'tags':
+                return self.style[attr]
+            case _else:
+                try:
+                    return self.props[attr]
+                except KeyError:
+                    return default_value
+
+    @property
+    def has_font(self):
+        for attr in ('font', 'size', 'bold', 'italics', 'underline', 'strikeout'):
+            with utils.ignored(KeyError):
+                return self.props[attr]
+        return None
+
+    @property
+    def font(self):
+        return utils.filter_nonzero({
+            'family': self._family,
+            'size': self._size,
+            'weight': self._bold,
+            'slant': self._italics,
+            'underline': self['underline'],
+            'overstrike': self['strikeout'],
+        })
+
+    @property
+    def _bold(self):
+        return 'bold' if self['bold'] else None
+
+    @property
+    def _italics(self):
+        return 'italic' if self['italics'] else None
+
+    @property
+    def paragraph(self):
+        return utils.filter_nonzero({
+            'justify': self._justify,
+            'offset': self._offset,
+            **self.textbox_settings,
+            **self._border,
+            **self._units(self._margins),
+        })
+
+    @property
+    def textbox_settings(self):
+        return {
+            'font': self.create_font(),
+            'foreground': self['colour'],
+            'background': self['background'],
+            **self._units(self._spacing),
+        }
+
+    def create_font(self):
+        if not self.font:
+            return None
+        try:
+            return Font(**self.font)
+        except RuntimeError:
+            return self.font
+
+    @property
+    def _margins(self):
+        return utils.filter_nonzero({
+            'lmargin1': self.get('left', 0) + self.get('indent', 0),
+            'lmargin2': self['left'],
+            'rmargin': self['right'],
+        })
+
+    @property
+    def _spacing(self):
+        return {
+            'spacing1': self['top'],
+            'spacing2': self['line_spacing'],
+            'spacing3': self['bottom'],
+        }
+
+    def _units(self, obj):
+        return {k: self._unit(v) for k, v in obj.items()}
+
+    def _unit(self, value):
+        unit = self['unit']
+        return f'{value}{unit[0]}' if self['unit'] else value
+
+    @property
+    def _border(self):
+        if self['border']:
+            return {'relief': 'ridge', 'borderwidth': 4}
+        return {}
+
+    @property
+    def _justify(self):
+        justify = self['justification']
+        return 'center' if justify == 'centre' else justify
+
+    @property
+    def _is_default(self):
+        return self.name == 'default'
+
+    @property
+    def default_size(self):
+        if self._is_default:
+            return self.props.get('size', default.font['size'])
+        try:
+            return self.default_style.default_size
+        except AttributeError:
+            return self.props.get('size', default.font['size'])
+
+    @default_size.setter
+    def default_size(self, value):
+        if self._is_default:
+            self.props['size'] = value
+        else:
+            self.default_style.default_size = value
+
+    def reset_size(self):
+        self.default_size = self._unchanged['size']
 
     @property
     def default_font(self):
-        return dict(family=defaults['font'], size=defaults['size'],
-                    weight='bold' if defaults['bold'] else 'normal',
-                    slant='italic' if defaults['italics'] else 'roman',
-                    underline=defaults['underline'], overstrike=defaults['strikethrough'])
+        return self.default_style.get('props', {}).get('font', default.font['font'])
 
     @property
-    def Font(self):
-        return Font(**self._font)
+    def _size(self):
+        size = self['size'] or 100
+        offset = self['offset']
+        if not self._is_default:
+            size = max(int(size * self.default_size / 100), 1)
+        if offset and offset.endswith('script'):
+            return size * 2 // 3
+        return size if self.has_font else 0
+
+    @property
+    def _family(self):
+        family = self['font'] or self.default_font
+        return family if self.has_font else ''
+
+    @property
+    def _offset(self):
+        offset = self['offset']
+        if not offset or offset == 'baseline':
+            return None
+        size = self['size'] or self.default_size
+        return (size // 3) if offset == 'superscript' else (-3 * size // 2)
+
+    @property
+    def off_key(self):
+        return self.get('off-key', '')
+
+    @property
+    def ime(self):
+        return self['ime']

@@ -1,79 +1,128 @@
-import json
+import tkinter as tk
 
-from ... import utils
-from . import Style
-from ...conversion import Tagger
+from smeagol.utilities import utils
+from smeagol.widgets.styles.style import Style
 
 
-class Styles(Tagger):
-    def __init__(self, styles=None):
-        self.load(styles)
+class Styles:
+    def __init__(self, styles, imes=None):
+        self.default = None
+        self.language_code = None
+        self._current = set()
+        self.styles = {name: self.create_style(name, style)
+                       for name, style in styles.items()}
+        self.ranks = {name: style.rank for name, style in self.styles.items()}
+        self.imes = imes or {}
 
-    def setup(self, styles=None):
-        styles = styles or {}
-        with utils.ignored(TypeError):
-            styles = json.loads(styles)
-        tagger = dict(default=Style(name='default'))
-        if isinstance(styles, self.__class__):
-            tagger.update({n: s.copy() for n, s in styles.styles.items()})
-        else:
-            tagger.update({n: Style(name=n, **s) for n, s in styles.items()})
-        return tagger
+    @property
+    def current(self):
+        return list(self._current)
 
-    def load(self, styles=None):
-        self.styles = self.setup(styles)
+    def create_style(self, name='', style=None):
+        style = style or {}
+        if self.default:
+            return Style(name, style, default_style=self.default)
+        # if style.get('tags', {}).get('type') == 'default':
+        self.default = Style(name, style)
+        return self.default
 
     def __contains__(self, item):
         return item in self.styles
 
     def __iter__(self):
-        return iter(self.styles.values())
+        return iter(sorted(self.styles.values(), key=lambda s: s.name))
 
     def __getitem__(self, name):
-        return self.styles[name]
+        name, language = utils.try_split(name, '@')
+        try:
+            style = self.styles[name]
+        except KeyError:
+            print(f'Style {name} is not defined.')
+            self.styles[name] = Style(name, default_style=self.default)
+            style = self.styles[name]
+        style.language_code = language
+        return style
 
     def __setitem__(self, name, value):
         self.styles[name] = value
 
-    def copy(self):
-        return Styles(self)
-
-    @property
-    def names(self):
-        return list(self.keys())
-
-    @property
-    def keys(self):
-        return self.styles.keys
-
-    @property
-    def values(self):
-        return self._items.values
-
-    @property
-    def items(self):
-        return self._items.items
-
-    @property
-    def _items(self):
-        return {n: s.style for n, s in self.styles.items()}
-
-    def update(self, styles):
-        self.styles = styles.styles
+    def __getattr__(self, attr):
+        match attr:
+            case 'copy':
+                value = type(self)(self)
+            case 'names':
+                value = list(self.keys())
+            case 'keys':
+                value = self.styles.keys
+            case 'values':
+                value = self._items.values
+            case 'items':
+                value = self._items.items
+            case '_items':
+                value = {n: s.style for n, s in self.styles.items()}
+            case _not_found:
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError as e:
+                    raise AttributeError(
+                        f'{type(self).__name__} object has no attribute {attr}') from e
+        return value
 
     def add(self, style):
+        ''' used by styles editor '''
         try:
             self.styles.setdefault(style.name, style)
         except AttributeError:
-            style = style.split('-')
-            name = style[0]
-            language = len(style) > 1
-            style = Style(name=style[0], language=language)
+            print(f'using this for {style}')
+            name, _ = utils.try_split(style, '@')
+            style = Style(name)
             self.styles.setdefault(name, style)
         return style
 
     def remove(self, style):
+        ''' used by styles editor '''
         try:
             del self.styles[style]
         except KeyError:
             self.styles = {n: s for n, s in self.styles.items() if s != style}
+
+    def activate(self, style: str, menu_vars: list[tk.IntVar] = None):
+        menu_vars = menu_vars or {}
+        if style == 'sel':
+            return
+        name, code = utils.try_split(style, '@')
+        if code:
+            self.language_code = code
+        menu_vars.setdefault(name, tk.IntVar()).set(1)
+        self._current.add(style)
+
+    def deactivate(self, style: str,  menu_vars: list[tk.IntVar] = None):
+        menu_vars = menu_vars or {}
+        name, _code = utils.try_split(style, '@')
+        menu_vars.setdefault(name, tk.IntVar()).set(0)
+        self._current.discard(style)
+
+    def toggle(self, style: str):
+        (self.deactivate if self.on(style) else self.activate)(style)
+        return self.on(style) # True iff style has just been activated
+
+    def on(self, style):
+        return style in self._current
+
+    def clear(self, menu_vars: list[tk.IntVar] = None):
+        menu_vars = menu_vars or {}
+        self._current.clear()
+        for var in menu_vars.values():
+            var.set(0)
+
+    def update(self, styles: list[str], menu_vars: list[tk.IntVar] = None):
+        menu_vars = menu_vars or {}
+        self.clear(menu_vars)
+        for style in styles:
+            self.activate(style, menu_vars)
+
+    def modify_fontsize(self, amount):
+        self.default.default_size += amount
+
+    def reset_fontsize(self):
+        self.default.reset_size()

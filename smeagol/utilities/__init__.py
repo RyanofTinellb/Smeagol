@@ -1,1 +1,0 @@
-from .randomwords import RandomWords

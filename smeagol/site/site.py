@@ -1,177 +1,107 @@
-import json
-import os
-import re
-
-from .. import errors, utils, filesystem as fs
-from ..conversion import Markdown, Translator
-from .files import Files
-from .page import Page
-from .templates import Templates
+from smeagol.site.page.page import Page
+from smeagol.utilities import utils
 
 
-class Site:
-    def __init__(self, directory=None, name=None, files=None):
-        self.directory = directory
-        self.name = name
-        self.files = files or {}
-        self.tree = self.load_site()
-        self.setup_templates()
-    
-    def setup_templates(self):
-        templates = (
-            (self.template_file, 'template', errors.TemplateFileNotFound),
-            (self.wholepage_template, 'wholepage',
-                errors.WholepageTemplateFileNotFound),
-            (self.search_template, 'search', errors.SearchTemplateFileNotFound),
-            (self.search_template404, 'search404',
-                errors.Search404TemplateFileNotFound)
-        )
-        for name, text in Templates(templates, self.sections).items():
-            setattr(self, name, text)
-    
-    def refresh_tree(self):
-        self.tree = self.load_site()
+class Site(Page):
+    def __init__(self, *args, **kwargs):
+        self.serialisation_format = kwargs.pop('serialisation_format', {})
+        self.serialiser = self._serialiser(self.serialisation_format)
+        super().__init__(*args, **kwargs)
+        self.current = self.root
+        self._analysis.update({
+            'urls': [],
+            'pages': []
+        })
+        self._wordlist = []
+        self._serial = {'t': '', 'l': '', 'p': '', 'd': ''}
 
-    def load_site(self, source=''):
-        self.source = source or self.source
-        if self.source:
-            try:
-                return fs.load(self.source)
-            except FileNotFoundError:
-                raise errors.SourceFileNotFound(f"No such file or directory: '{self.source}'")
-        else:
-            return {}
-    
     def __getattr__(self, attr):
-        if attr == 'files':
-            return None
+        match attr:
+            case 'urls' | 'pages':
+                return self._analysis[attr]
         try:
-            return getattr(self.files, attr)
-        except AttributeError:
-            return getattr(super(), attr)
-
-    def __setattr__(self, attr, value):
-        if attr == 'files':
-            value = Files(value) if isinstance(value, dict) else value
-            super().__setattr__(attr, value)
-        else:
-            try:
-                setattr(self.files, attr, value)
-            except AttributeError:
-                super().__setattr__(attr, value)
+            return super().__getattr__(attr)
+        except AttributeError as e:
+            name = type(self).__name__
+            raise AttributeError(
+                f"'{name}' object has no attribute '{attr}'") from e
 
     def __iter__(self):
-        return self.iterator
+        for names in self.entries:
+            yield self.new(names)
+
+    def __len__(self):
+        return sum(1 for page in self)
 
     @property
-    def iterator(self):
-        node = self.root
-        while True:
-            yield node
-            try:
-                node = node.next()
-            except IndexError:
-                return
+    def hierarchy(self):
+        for names in self.directory:
+            yield self.new(names)
 
-    def __getitem__(self, entry):
-        page = Page(self.tree, [])
-        count = 0
-        try:
-            while page.name != entry != count:
-                page = page.successor
-                count += 1
-        except IndexError:
-            raise (KeyError if type(entry) in (list, str) else IndexError)(entry)
-        return page
+    def add_entry(self, page: Page):
+        self.entries.add(page.names)
+        with utils.ignored(IndexError):
+            self.directory.add(page.names)
+
+    def new(self, values: list[str] | list[int] = None) -> Page:
+        values = values or [self.entries.name]
+        with utils.ignored(TypeError):
+            values = self.directory[values].names
+        return Page(self.directory, self.entries, values[:])
 
     @property
     def root(self):
-        return self[0]
+        return self.new()
 
-    def refresh_flatnames(self):
-        for page in self:
-            page.refresh_flatname()
-
-    def remove_flatnames(self):
-        for page in self:
-            page.flatname = ''
-
-    def publish(self, page=None):
-        pages = [page] or self
-        for page in pages:
-            try:
-                yield page.publish(template=self.template)
-            except Exception as err:
-                yield err, page.link
-
-    @property
-    def source_info(self):
-        return dict(obj=self.tree, filename=self.source)
-
-    def update_searchindex(self):
-        fs.save(self.analysis, self.search_index)
-    
-    @utils.asynca
-    def save_wholepage(self):
-        contents = map(lambda x: x.wholepage, self)
-        contents = '\n'.join(filter(None, contents))
-        
-        root = self.root
-        root.update_date()
-        
-        page = root.html(self.wholepage)
-        page = page.replace('{whole-contents}', contents)
-        page = re.sub(r'<li class="normal">(.*?)</li>',
-                        r'<li><a href="index.html">\1</a></li>', page)
-        fs.saves(page, self.wholepage_file)
-
-    @utils.asynca
-    def save_search_pages(self):
-        for template in (
-                (self.search, self.search_page),
-                (self.search404, self.search_page404)):
-            self._search(*template)
-
-    def _search(self, template, filename):
-        page = re.sub('{(.*?): (.*?)}', self.root.section_replace, template)
-        page = re.sub(
-            r'<li class="normal">(.*?)</li>',
-            r'<li><a href="index.html">\1</a></li>',
-            page
-        )
-        if filename is self.search_page404:
-            page = re.sub(r'(href|src)="/*', r'\1="/', page)
-        fs.saves(page, filename)
-    
-    def replace_all(self, old, new):
-        for page in self:
-            page.replace(old, new)
-        
-    def regex_replace_all(self, pattern, repl):
-        for page in self:
-            page.regex_replace(pattern, repl)
-
-    @property
+    # @property
     def analysis(self):
-        words = {}
-        sentences = []
-        urls = []
-        names = []
-        for page_number, entry in enumerate(self):
-            base = len(sentences)
-            analysis = entry.analysis
-            new_words = analysis['words']
-            sentences += analysis['sentences']
-            urls.append(entry.link)
-            names.append(utils.buyCaps(entry.name))
-            for word, line_numbers in new_words.items():
-                line_numbers = utils.increment(line_numbers, by=base)
-                locations = {str(page_number): line_numbers}
-                try:
-                    words[word].update(locations)
-                except KeyError:
-                    words[word] = locations
-        return dict(terms=words,
-                    sentences=sentences,
-                    urls=urls,
-                    names=names)
+        for obj in self._analysis.values():
+            obj.clear()
+        self.lines.clear()
+        for entry_number, entry in enumerate(self):
+            base = len(self.lines)
+            analysis = entry.analysis()
+            self.urls.append(entry.url)
+            self.pages.append(entry.name)
+            self.lines.extend(entry.lines)
+            self._add_terms(analysis, base, entry_number)
+        return self._analysis
+
+    def _add_terms(self, analysis, base, entry_number):
+        for term, line_numbers in analysis['terms'].items():
+            line_numbers = utils.increment(line_numbers, by=base)
+            locations = {str(entry_number): sorted(line_numbers)}
+            self.terms.setdefault(term, {}).update(locations)
+
+    # @property
+    def serialisation(self):
+        if not self.serialisation_format:
+            return []
+        self._wordlist.clear()
+        for entry in self:
+            self._serial['t'] = utils.buy_caps(entry.name)
+            self._serialise(entry.text)
+        return self._wordlist
+
+    def _serialise(self, node):
+        for child in node.nodes():
+            self.serialiser.get(child.name, self._serialise)(child)
+
+    def _language(self, node):
+        self._serial['l'] = node.stringify()
+
+    def _pos(self, node):
+        self._serial['p'] = node.stringify()
+
+    def _definition(self, node):
+        self._serial['d'] = utils.buy_caps(node.stringify())
+        self._wordlist.append(self._serial.copy())
+
+    def _serialiser(self, serial):
+        if not serial:
+            return []
+        return {
+            serial['language']: self._language,
+            serial['part of speech']: self._pos,
+            serial['definition']: self._definition
+        }
