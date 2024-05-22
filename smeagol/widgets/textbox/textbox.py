@@ -18,9 +18,6 @@ SEL_LINE = 'sel.first linestart', 'sel.last lineend+1c'
 NO_SELECTION = INSERT, INSERT
 USER_MARK = 'usermark'
 
-BRACKETS = {'[': ']', '<': '>', '{': '}',
-            '"': '"', '(': ')', '‘': '’', '“': '”'}
-
 
 class Textbox(ClipboardTextbox):
     def __init__(self, parent=None):
@@ -126,25 +123,13 @@ class Textbox(ClipboardTextbox):
             self.write('\n')
             return 'break'
         if key and event.num == '??':
-            if not self.match_brackets(key):
-                try:
-                    self.delete(*SELECTION)
-                    self.write(key, tk.SEL)
-                except tk.TclError:
-                    self.input_method_editor(key)
+            try:
+                self.delete(*SELECTION)
+                self.write(key, tk.SEL)
+            except tk.TclError:
+                self.input_method_editor(key)
             return 'break'
         return None
-
-    def match_brackets(self, key):
-        if key in BRACKETS:
-            try:
-                self.write(key, tk.SEL_FIRST)
-                self.write(BRACKETS[key], tk.SEL_LAST)
-            except tk.TclError:
-                self.write(key + BRACKETS[key])
-                self.move_mark(INSERT, -1)
-            return True
-        return False
 
     def insert_tabs(self, _event=None):
         self.write(LINESTART, ' ' * 4)

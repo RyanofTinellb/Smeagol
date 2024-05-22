@@ -30,7 +30,7 @@ class Manager(tk.Frame):
     def create_layout(self):
         top = self.winfo_toplevel()
         self.set_window_size(top)
-        top['menu'] = self.menu
+        top['menu'] = self.menu()
         self.sidebar = Sidebar(self).pack(side=tk.LEFT)
         self.textframe().pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
         self.pack()
@@ -42,7 +42,6 @@ class Manager(tk.Frame):
         h_pos = 0
         top.geometry(f'{w}x{h}+{w_pos}+{h_pos}')
 
-    @property
     def menu(self):
         menubar = tk.Menu(self.parent)
         menubar.add_cascade(label='Styles', menu=self.styles_menu)

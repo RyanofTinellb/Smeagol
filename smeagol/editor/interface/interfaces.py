@@ -18,6 +18,12 @@ class Interfaces:
             interface.save()
             interface.save_special_files()
 
+    def save_all_entries(self):
+        for interface in self.interfaces.values():
+            for percentage in interface.save_entries():
+                print(f'{percentage}% complete')
+            interface.save_special_files()
+
     @property
     def blank(self):
         return Interface()

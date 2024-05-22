@@ -108,7 +108,7 @@ class Tag:
 
     def defaults(self, attr):
         match attr:
-            case 'type' | 'key' | 'language' | 'repeat':
+            case 'type' | 'key' | 'language' | 'repeat' | 'keep_tags':
                 value = ''
             case 'param':
                 value = ' id="$url(text)$|$node$' if self.type == 'heading' else ''
@@ -141,6 +141,8 @@ class Tag:
             return 100
         if self.type == 'anchor':
             return -50
+        if self.type == 'template':
+            return -100
         if self.type.startswith('toc-'):
             return -50
         return 0
@@ -192,5 +194,5 @@ class Tag:
         return {
             'type', 'key', 'language', 'block',
             'open', 'close', 'start', 'end',
-            'pipe', 'repeat', 'template'
+            'pipe', 'repeat', 'template', 'keep_tags'
         }

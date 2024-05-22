@@ -12,7 +12,7 @@ class TemplateStore:
         self.started = utils.Flag()
         self.page = self.styles = None
         self._filenames = templates or Templates()
-        self.links = links or {}
+        self.links = links
         self._cache = {'sections': {}}
 
     def __getattr__(self, attr):

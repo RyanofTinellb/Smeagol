@@ -23,6 +23,9 @@ class Sidebar(tk.Frame):
             self._row += 1
         tk.Label(self, height=1000).grid(row=self._row, column=0)
 
+    def go_to_headings(self):
+        self.headings_frame.select_last()
+
     @property
     def language_selector(self):
         return self.displays['language_code']

@@ -34,9 +34,14 @@ class BaseTabs(ttk.Notebook):
             ('<Control-t>', self.create),
             ('<Control-T>', self.reopen),
             ('<Control-w>', self.close),
+            ('<Alt-d>', self.go_to_headings),
             ('<Enter>', self.update_displays),
             ('<Control-Alt-R>', self.reload_from_files)
         ])
+
+    def go_to_headings(self, _event=None):
+        self.displays.go_to_headings()
+        return 'break'
 
     def reload_from_files(self, _event=None):
         self.reload_styles()
@@ -81,10 +86,12 @@ class BaseTabs(ttk.Notebook):
 
     def create(self, _event=None):
         interface = self.interface
+        entry = self.entry
         self.new()
         self.interface = interface
-        self.entry = interface.site
+        self.entry = entry
         self.update_displays()
+        self.go_to_headings()
         return 'break'
 
     def change(self, _event):

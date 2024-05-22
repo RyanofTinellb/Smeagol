@@ -49,7 +49,7 @@ def save_string(string, filename):
 def save_yaml(obj, filename):
     makedirs(filename)
     with open(filename, 'w', encoding='utf-8') as f:
-        yaml.dump(obj, f, sort_keys=False, allow_unicode=True)
+        yaml.dump(obj, f, allow_unicode=True, width=5000)
 
 
 def jsonify(obj):
@@ -138,6 +138,9 @@ def open_source():
                'title': 'Open Source Data File',
                'defaultextension': '.src'}
     return fd.askopenfilename(**options)
+
+def open_folder():
+    return fd.askdirectory()
 
 
 def open_smeagol():

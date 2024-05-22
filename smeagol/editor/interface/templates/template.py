@@ -126,12 +126,12 @@ class Template:
     def _lookup(self, arg, text, language_code):
         text = text.lower().replace(' ', '')
         if not language_code:
-            return self.templates.links.get(arg, {}).get(text, '')
-        item = self.templates.links.get(arg, {}).get(language_code)
-        try:
-            return item.get(text, '')
-        except AttributeError:
-            return item or ''
+            item = self.templates.links.get(arg, {}).get(text, '')
+        else:
+            item = self.templates.links.get(arg, {}).get(language_code)
+            with utils.ignored(AttributeError):
+                item = item.get(text, '')
+        return item
 
     def data(self, obj: Node, components: Components, *_tag):
         match obj.first_child:

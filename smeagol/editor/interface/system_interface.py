@@ -67,7 +67,7 @@ class SystemInterface:
         self.config = config
         self.open_styles()
         self.open_files()
-    
+
     def open_files(self):
         self.files = fs.load_yaml(self._files)
 
@@ -160,11 +160,14 @@ class SystemInterface:
         return filename
 
     def save_special_files(self):
-        self.save_searchfile()
-        self.save_search404_file()
-        self.save_search_data()
-        if self.serialisation_format:
-            self.save_wordlist()
+        try:
+            self.save_searchfile()
+            self.save_search404_file()
+            self.save_search_data()
+            if self.serialisation_format:
+                self.save_wordlist()
+        except ValueError as e:
+            raise ValueError(f'Error saving special files of {self.filename}') from e
 
     def save_searchfile(self):
         filename = self.locations.search
@@ -200,4 +203,4 @@ class SystemInterface:
         fs.close_servers()
 
     def reopen_template_store(self):
-        self.template_store = TemplateStore(self.templates)
+        self.template_store = TemplateStore(self.templates, self.links)

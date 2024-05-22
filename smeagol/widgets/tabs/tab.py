@@ -33,6 +33,9 @@ class Tab(tk.Frame):
             ('<Control-Next>', self.next_entry)
         ]
 
+    def go_to_headings(self, _event=None):
+        self.notebook.go_to_headings()
+
     def save_entry(self, _event=None):
         self.entry.text = self.textbox.text
         self.entry.update_date()

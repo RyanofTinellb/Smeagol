@@ -17,16 +17,19 @@ class Tabs(BaseTabs):
             self.interfaces[interface].entries = [
                 tab.entry for tab in tab_group if tab.is_open]
         self.interfaces.save_all()
+    
+    def save_all_entries(self):
+        self.interfaces.save_all_entries()
 
     @property
     def headings(self):
         return self.displays.headings
 
-    def open_sites(self, filenames=None):
+    def open_sites(self, filenames=None, new_tab=False):
         if not filenames:
             # self.open_blank()
             return
-        for i, filename in enumerate(filenames):
+        for i, filename in enumerate(filenames, start=new_tab):
             self.open_site(filename, i)
 
     def open_site(self, filename, new_tab=True):

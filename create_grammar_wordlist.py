@@ -13,9 +13,13 @@ class Creator:
         self.language = None
         self.site = self.interface.site
         self.newfile = newfile
-        self.link_list = {'x-tlb-hl': {}, 'x-tlb-dl': {}}
+        self.link_list = self.setup_list()
         for entry in self.site:
             self.serialise(entry)
+
+    def setup_list(self):
+        return fs.load_yaml(self.newfile,
+                            default_obj={'x-tlb-hl': {}, 'x-tlb-dl': {}})
 
     def serialise(self, entry):
         self.language = self.set_language(entry.name)
@@ -42,6 +46,8 @@ class Creator:
         self.link_list.setdefault(self.language, {})[key] = value
 
     def save(self):
+        for lang, obj in self.link_list.items():
+            self.link_list[lang] = dict(sorted(obj.items()))
         fs.save_yaml(self.link_list, self.newfile)
 
 
