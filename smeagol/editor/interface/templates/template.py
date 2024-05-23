@@ -84,6 +84,8 @@ class Template:
                                                    tag.param.split('$'), *options)))
         except IndexError:  # usually a broken link
             return self._html(obj.other_child, components)
+        except TypeError as e:
+            raise TypeError(obj, tag.param) from e
         return self.types(tag.type)(node, components, tag)
 
     def _param(self, param, obj, components, language_code):
@@ -128,7 +130,7 @@ class Template:
         if not language_code:
             item = self.templates.links.get(arg, {}).get(text, '')
         else:
-            item = self.templates.links.get(arg, {}).get(language_code)
+            item = self.templates.links.get(arg, {}).get(language_code, {})
             with utils.ignored(AttributeError):
                 item = item.get(text, '')
         return item

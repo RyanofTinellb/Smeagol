@@ -42,7 +42,7 @@ class Page(Entry):
 
     def link_to(self, other):
         return utils.link(self, other)
-    
+
     def link_from(self, other):
         return utils.link(other, self)
 

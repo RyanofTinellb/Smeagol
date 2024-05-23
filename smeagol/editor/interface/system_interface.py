@@ -152,7 +152,7 @@ class SystemInterface:
         self.template_store.set_data(entry, self.styles)
         try:
             html = self.template_store.main.html
-        except (ValueError, IndexError) as e:
+        except (ValueError, IndexError, TypeError) as e:
             raise type(e)(f'Incorrect formatting in entry {entry.name}') from e
         filename = os.path.join(
             self.locations.directory, entry.url)

@@ -2,34 +2,28 @@ c:\users\ryan\desktop\tinellb.ttf:
   - C:\Users\Ryan\TinellbianLanguages\toplevel\data\assets\tinellb.ttf
   - C:\Users\Ryan\TinellbianLanguages\grammar\data\assets\tinellb.ttf
   - C:\Users\Ryan\TinellbianLanguages\encyclopedia\data\assets\tinellb.ttf
-  - C:\Users\Ryan\TinellbianLanguages\writings\data\assets\tinellb.ttf
   - C:\Users\Ryan\TinellbianLanguages\coelacanth\data\assets\tinellb.ttf
   - C:\Users\Ryan\TinellbianLanguages\dictionary\data\assets\tinellb.ttf
 C:\Users\Ryan\TinellbianLanguages\toplevel\data\stylesheets\basic_style.css:
   - C:\Users\Ryan\TinellbianLanguages\grammar\data\stylesheets\basic_style.css
   - C:\Users\Ryan\TinellbianLanguages\encyclopedia\data\stylesheets\basic_style.css
-  - C:\Users\Ryan\TinellbianLanguages\writings\data\stylesheets\basic_style.css
   - C:\Users\Ryan\TinellbianLanguages\coelacanth\data\stylesheets\basic_style.css
   - C:\Users\Ryan\TinellbianLanguages\dictionary\data\stylesheets\basic_style.css
 C:\Users\Ryan\TinellbianLanguages\toplevel\data\scripts\search.js:
   - C:\Users\Ryan\TinellbianLanguages\grammar\data\scripts\search.js
   - C:\Users\Ryan\TinellbianLanguages\encyclopedia\data\scripts\search.js
-  - C:\Users\Ryan\TinellbianLanguages\writings\data\scripts\search.js
   - C:\Users\Ryan\TinellbianLanguages\coelacanth\data\scripts\search.js
 C:\Users\Ryan\TinellbianLanguages\toplevel\data\scripts\404search.js:
   - C:\Users\Ryan\TinellbianLanguages\grammar\data\scripts\404search.js
   - C:\Users\Ryan\TinellbianLanguages\encyclopedia\data\scripts\404search.js
-  - C:\Users\Ryan\TinellbianLanguages\writings\data\scripts\404search.js
   - C:\Users\Ryan\TinellbianLanguages\coelacanth\data\scripts\404search.js
 C:\Users\Ryan\TinellbianLanguages\toplevel\data\assets\favicon.png:
   - C:\Users\Ryan\TinellbianLanguages\grammar\data\assets\favicon.png
   - C:\Users\Ryan\TinellbianLanguages\encyclopedia\data\assets\favicon.png
-  - C:\Users\Ryan\TinellbianLanguages\writings\data\assets\favicon.png
   - C:\Users\Ryan\TinellbianLanguages\coelacanth\data\assets\favicon.png
   - C:\Users\Ryan\TinellbianLanguages\dictionary\data\assets\favicon.png
 C:\Users\Ryan\TinellbianLanguages\toplevel\data\scripts\searchterms.js:
  - C:\Users\Ryan\TinellbianLanguages\grammar\data\scripts\searchterms.js
  - C:\Users\Ryan\TinellbianLanguages\encyclopedia\data\scripts\searchterms.js
- - C:\Users\Ryan\TinellbianLanguages\writings\data\scripts\searchterms.js
  - C:\Users\Ryan\TinellbianLanguages\coelacanth\data\scripts\searchterms.js
  - C:\Users\Ryan\TinellbianLanguages\dictionary\data\scripts\searchterms.js

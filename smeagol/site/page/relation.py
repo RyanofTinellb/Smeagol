@@ -14,10 +14,16 @@ class Relation(Node):
         return [self.directory.directory, names.copy()]
 
     def next_page(self):
-        return self.new(family.next_entry(*self._directory()))
+        node = family.next_entry(*self._directory())
+        while skip(node):
+            node = family.next_entry(*self._directory(node))
+        return self.new(node)
 
     def previous_page(self):
-        return self.new(family.previous_entry(*self._directory()))
+        node = family.previous_entry(*self._directory())
+        while skip(node):
+            node = family.previous_entry(*self._directory(node))
+        return self.new(node)
 
     def reunion(self, groups):
         k = set()
