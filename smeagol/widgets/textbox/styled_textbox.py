@@ -152,6 +152,7 @@ class StyledTextbox(BaseTextbox):
     def _select_ime(self, ime: dict, code: str, activated: bool):
         self.ime = self.styles.imes.get(ime, {}).get(
             code, {}) if activated else self.default_ime
+        self.ime = self.ime or self.default_ime
 
     def _add_style(self, name):
         self.styles.activate(name)

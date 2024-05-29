@@ -43,6 +43,11 @@ class Site(Page):
         with utils.ignored(IndexError):
             self.directory.add(page.names)
 
+    def remove_entry(self, page: Page):
+        self.entries.remove(page.names.copy())
+        with utils.ignored(IndexError):
+            self.directory.remove(page.names.copy())
+
     def new(self, values: list[str] | list[int] = None) -> Page:
         values = values or [self.entries.name]
         with utils.ignored(TypeError):

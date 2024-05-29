@@ -93,6 +93,8 @@ class Styles:
         name, code = utils.try_split(style, '@')
         if code:
             self.language_code = code
+        if code == 'None' or code is None:
+            raise ZeroDivisionError('Language code was ', code, type(code))
         menu_vars.setdefault(name, tk.IntVar()).set(1)
         self._current.add(style)
 

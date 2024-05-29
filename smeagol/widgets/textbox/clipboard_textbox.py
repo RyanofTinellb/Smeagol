@@ -51,7 +51,7 @@ class ClipboardTextbox(StyledTextbox):
 
     def copy_text(self, _event=None):
         with utils.ignored(tk.TclError):
-            self._copy(SELECTION)
+            self._copy()
         return "break"
 
     def _copy(self, borders=SELECTION, clip=True):
@@ -66,7 +66,8 @@ class ClipboardTextbox(StyledTextbox):
 
     def cut_text(self, _event=None):
         with utils.ignored(tk.TclError):
-            self._cut(SELECTION)
+            self._copy()
+            self._cut()
         return "break"
 
     def _cut(self, borders=SELECTION, clip=True):

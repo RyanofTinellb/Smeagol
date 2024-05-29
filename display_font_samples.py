@@ -10,5 +10,5 @@ for f in sorted(font.families()):
         tag = f.replace(' ', '')
         s.tag_config(tag, font=font.Font(family=f, size=40))
         s.insert(tk.END, f + '      ', )
-        s.insert(tk.END, 'ℓγqgντяф\n', tag)
+        s.insert(tk.END, 'νv\n', tag)
 t.mainloop()

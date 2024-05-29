@@ -39,9 +39,11 @@ class Tab(tk.Frame):
     def save_entry(self, _event=None):
         self.entry.text = self.textbox.text
         self.entry.update_date()
+        filename, saved = self.interface.save_entry(self.entry, True)
+        # saved? = file saved rather than deleted
+        message = 'Saving' if saved else 'Deleting'
+        print(f'{message} {filename}')
         self.interface.save_site()
-        filename = self.interface.save_entry(self.entry, True)
-        print(f'Saving {filename}')
         return 'break'
 
     def save_entries(self, _event=None):

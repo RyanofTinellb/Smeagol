@@ -17,7 +17,7 @@ class Tabs(BaseTabs):
             self.interfaces[interface].entries = [
                 tab.entry for tab in tab_group if tab.is_open]
         self.interfaces.save_all()
-    
+
     def save_all_entries(self):
         self.interfaces.save_all_entries()
 

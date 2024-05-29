@@ -5,6 +5,7 @@ from smeagol.editor.interface import assets
 from smeagol.editor.interface.templates.template_store import TemplateStore
 from smeagol.site.site import Site
 from smeagol.utilities import filesystem as fs
+from smeagol.utilities import utils
 from smeagol.utilities.types import Entry
 from smeagol.widgets.styles.styles import Styles
 
@@ -149,15 +150,18 @@ class SystemInterface:
     def save_entry(self, entry, copy_all=False):
         if copy_all:
             self.copy_all()
+        filename = os.path.join(
+            self.locations.directory, entry.url)
+        with utils.ignored(IndexError):
+            self.site.remove_entry(entry)
+            return (filename, False)
         self.template_store.set_data(entry, self.styles)
         try:
             html = self.template_store.main.html
         except (ValueError, IndexError, TypeError) as e:
             raise type(e)(f'Incorrect formatting in entry {entry.name}') from e
-        filename = os.path.join(
-            self.locations.directory, entry.url)
         fs.save_string(html, filename)
-        return filename
+        return (filename, True)
 
     def save_special_files(self):
         try:
@@ -192,12 +196,12 @@ class SystemInterface:
     def save_search_data(self):
         data = self.site.analysis()
         filename = self.assets.searchindex
-        fs.save_json(data, filename, indent=2)
+        fs.save_json(data, filename)
 
     def save_wordlist(self):
         data = sorted(self.site.serialisation(), key=lambda x: x['t'])
         filename = self.assets.wordlist
-        fs.save_json(data, filename, indent=2)
+        fs.save_json(data, filename)
 
     def close_servers(self):
         fs.close_servers()

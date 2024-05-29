@@ -36,7 +36,7 @@ class BaseTabs(ttk.Notebook):
             ('<Control-w>', self.close),
             ('<Alt-d>', self.go_to_headings),
             ('<Enter>', self.update_displays),
-            ('<Control-Alt-R>', self.reload_from_files)
+            ('<F5>', self.reload_from_files)
         ])
 
     def go_to_headings(self, _event=None):
