@@ -49,6 +49,7 @@ class Tab(tk.Frame):
     def save_entries(self, _event=None):
         for percentage in self.interface.save_entries():
             print(f'{percentage}% complete')
+        self.interface.save_site()
         self.interface.save_special_files()
 
     def previous_entry(self, _event=None):

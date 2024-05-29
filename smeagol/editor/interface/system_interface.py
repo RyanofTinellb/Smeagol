@@ -140,11 +140,13 @@ class SystemInterface:
     def save_entries(self):
         total = len(self.site)
         percent = each = 5
-        for i, entry in enumerate(self.site):
+        for i, entry in enumerate(reversed(list(self.site))):
             if 100*i/total >= percent:
                 yield 100*i // total
                 percent += each
-            self.save_entry(entry)
+            filename, saved = self.save_entry(entry)
+            if not saved:
+                print(f'Deleting {filename}')
         yield 100
 
     def save_entry(self, entry, copy_all=False):
@@ -171,7 +173,8 @@ class SystemInterface:
             if self.serialisation_format:
                 self.save_wordlist()
         except ValueError as e:
-            raise ValueError(f'Error saving special files of {self.filename}') from e
+            raise ValueError(f'Error saving special files of {
+                             self.filename}') from e
 
     def save_searchfile(self):
         filename = self.locations.search
