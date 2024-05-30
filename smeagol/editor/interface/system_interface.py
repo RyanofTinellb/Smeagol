@@ -156,6 +156,7 @@ class SystemInterface:
             self.locations.directory, entry.url)
         with utils.ignored(IndexError):
             self.site.remove_entry(entry)
+            fs.delete_html(filename)
             return (filename, False)
         self.template_store.set_data(entry, self.styles)
         try:

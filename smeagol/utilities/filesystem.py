@@ -1,5 +1,6 @@
 import json
 import os
+import pathlib
 import random
 import shutil
 import socket
@@ -47,6 +48,8 @@ def save_string(string, filename):
 
 
 def save_yaml(obj, filename):
+    if not obj or not filename:
+        return
     makedirs(filename)
     with open(filename, 'w', encoding='utf-8') as f:
         yaml.dump(obj, f, allow_unicode=True, width=5000)
@@ -86,7 +89,11 @@ def load_string(filename):
 def load_yaml(filename, default_obj=None):
     if not filename:
         return default_obj or {}
-    return _load_yaml(filename)
+    try:
+        return _load_yaml(filename)
+    except FileNotFoundError:
+        save_yaml(default_obj, filename)
+        return default_obj
 
 
 def _load_yaml(filename):
@@ -161,6 +168,12 @@ def walk(root: str, condition: callable):
     return [os.path.join(root, filename) for root, _, files in os.walk(root)
             for filename in files if condition(filename)]
 
+
+def delete_html(filename):
+    with ignored(FileNotFoundError):
+        pathlib.Path.unlink(filename)
+    with ignored(OSError):
+        pathlib.Path.rmdir(os.path.dirname(filename))
 
 def find_by_type(root: str, ext: str):
     return walk(root, isfiletype(ext))
