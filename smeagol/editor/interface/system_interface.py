@@ -19,9 +19,14 @@ class SystemInterface:
         self.site = self.open_site()
         self.links = self.open_link_files(self._links)
         self.template_store = TemplateStore(self.templates, self.links)
+        self.start_server(server)
+
+    def start_server(self, server):
+        page404location = self.locations.page404
+        page404 = fs.load_string(page404location) if page404location else ''
         if server:
             self.port, self.handler = fs.start_server(
-                port=self.port, directory=self.locations.directory)
+                port=self.port, page404=page404, directory=self.locations.directory)
 
     def __getattr__(self, attr):
         match attr:

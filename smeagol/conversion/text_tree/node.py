@@ -29,6 +29,7 @@ class Node:
         for child in self.children:
             if not isinstance(child, str):
                 yield child
+                yield from child.nodes()
 
     def stringify(self, skip=None):
         return ''.join([self._strings(child, skip) for child in self.children])

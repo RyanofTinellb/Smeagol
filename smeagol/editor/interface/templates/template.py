@@ -134,7 +134,7 @@ class Template:
             with utils.ignored(AttributeError):
                 item = item.get(text, '')
         if not item:
-            print('This didn’t work!', arg, text, language_code, self.templates.links)
+            print('This didn’t work!', arg, text, language_code)
         return item
 
     def data(self, obj: Node, components: Components, *_tag):

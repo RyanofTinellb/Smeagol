@@ -90,12 +90,13 @@ class BaseTabs(ttk.Notebook):
         self.new()
         self.interface = interface
         self.entry = entry
-        self.update_displays()
+        # self.update_displays()
         self.go_to_headings()
         return 'break'
 
     def change(self, _event):
         self.update_displays()
+        # self.go_to_headings()
 
     def close(self, event):
         try:

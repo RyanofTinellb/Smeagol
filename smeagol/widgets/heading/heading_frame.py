@@ -56,3 +56,4 @@ class HeadingFrame(tk.Frame):
 
     def select_last(self):
         self._headings[-1].focus_set()
+        self._headings[-1].selection_range(0, 'end')
