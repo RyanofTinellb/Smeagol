@@ -63,6 +63,11 @@ def siblings(directory, names):
     yield from generator(obj, names)
 
 
+def aunts(directory, names):
+    for ancestor in lineage(names):
+        yield from siblings(directory, ancestor)
+
+
 def descendants(directory, names):
     obj = recurse(directory, names)
     for elt in obj[1:]:

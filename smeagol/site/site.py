@@ -13,7 +13,7 @@ class Site(Page):
             'pages': []
         })
         self._wordlist = []
-        self._serial = {'t': '', 'l': '', 'p': '', 'd': ''}
+        self._serial = {'t': '', 'l': '', 'p': '', 'd': '', 'n': ''}
 
     def __getattr__(self, attr):
         match attr:
@@ -94,9 +94,13 @@ class Site(Page):
 
     def _language(self, node):
         self._serial['l'] = node.stringify()
+        self._serial['n'] = ''
 
     def _pos(self, node):
         self._serial['p'] = node.stringify()
+
+    def _native_script(self, node):
+        self._serial['n'] = node.stringify()
 
     def _definition(self, node):
         self._serial['d'] = utils.buy_caps(node.stringify())
@@ -108,5 +112,6 @@ class Site(Page):
         return {
             serial['language']: self._language,
             serial['part of speech']: self._pos,
-            serial['definition']: self._definition
+            serial['definition']: self._definition,
+            serial['native script']: self._native_script
         }

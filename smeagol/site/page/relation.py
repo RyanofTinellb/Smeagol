@@ -62,6 +62,11 @@ class Relation(Node):
             if not skip(ancestor):
                 yield self.new(ancestor)
 
+    def aunts(self):
+        for aunt in family.aunts(*self._directory()):
+            if not skip(aunt):
+                yield self.new(aunt)
+
     def heirs(self):
         for heir in family.descendants(*self._directory()):
             if len(heir) <= 4 and not skip(heir):
@@ -75,5 +80,6 @@ class Relation(Node):
             'descendants': self.descendants,
             'children': self.children,
             'lineage': self.lineage,
-            'heirs': self.heirs
+            'heirs': self.heirs,
+            'aunts': self.aunts
         }
