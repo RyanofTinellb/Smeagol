@@ -85,6 +85,11 @@ def load_string(filename):
     with open(filename, encoding='utf-8') as f:
         return f.read()
 
+def readlines(filename):
+    text = load_string(filename)
+    for line in text.splitlines():
+        yield line
+
 
 def load_yaml(filename, default_obj=None):
     if not filename:
@@ -222,8 +227,11 @@ def start_server(port=None, directory=None, page404=''):
             port += 1
 
 
-def open_in_browser(port, link=''):
-    web.open_new_tab(os.path.join(f'http://localhost:{port}', link))
+def open_in_browser(port, link='', local=True):
+    if local:
+        web.open_new_tab(os.path.join(f'http://localhost:{port}', link))
+    else:
+        web.open_new_tab(link)
 
 
 def close_servers():
