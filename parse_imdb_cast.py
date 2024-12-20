@@ -2,6 +2,15 @@ import re
 import os
 from smeagol.utilities import filesystem as fs
 
+'''var table = document.getElementsByClassName('cast_list')[0].children[0];
+i = 0
+for (var child of table.children) {
+    if (child.children[0].className == 'primary_photo') {
+        child.getElementsByClassName('character')[0].getElementsByClassName('toggle-episodes')[0].onclick();
+        i++;
+    }
+}
+console.log(i)'''
 
 def parse(filename, result):
     k = reformat(fs.load_string(filename))
