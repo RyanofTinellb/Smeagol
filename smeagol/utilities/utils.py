@@ -103,6 +103,8 @@ def recurse(obj, names):
 
 
 def link(one, other):
+    if isinstance(other, str):
+        return other
     fragment = ''
     with ignored(AttributeError):
         other = other.link
