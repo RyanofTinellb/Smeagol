@@ -5,37 +5,51 @@ from smeagol.utilities import filesystem as fs
 
 def parse(filename, result):
     k = reformat(fs.load_string(filename))
-    # fs.save_yaml(k, os.path.join('c:/users/ryan/desktop/imdb', os.path.basename(filename)))
-    link = ''
+    # print(os.path.join('c:/users/ryan/desktop/imdb', os.path.basename(filename).replace('.html', '.yml')))
+    # fs.save_yaml(k, os.path.join('c:/users/ryan/desktop/imdb', os.path.basename(filename).replace('.html', '.yml')))
+    media = os.path.basename(filename).replace('.html', '')
     mode = None
-    maindict = {}
-    for n in k:
-        if n == 'tr':
-            subdict = {'media': os.path.basename(filename)[:-5]}
-        elif n == '/tr':
-            try:
-                subdict['char'] = ' / '.join(subdict['char'])
-                maindict.setdefault('chars', []).append(subdict)
-            except KeyError:
-                pass
+    for line in k:
+        if 'class="primary_photo"' in line:
+            mode = 'photo'
+        elif mode == 'photo' and line.startswith('a href='):
+            nm = re.sub(r'a href="/name/(nm\d+).*', r'\1', line)
+        elif mode == 'photo' and line.startswith('img '):
+            name, pic = re.sub(r'img .*? title="(.*?)" src="(.*?)".*', r'\1>\2', line).split('>')
+            actor = result.setdefault(nm, {'name': name, 'pic': pic})
             mode = None
-        elif n.startswith('td'):
-            mode = re.sub(r'td class="(.*?)"', r'\1', n)
-        elif n.startswith('img '):
-            maindict = result.setdefault(link, {})
-            maindict['name'], maindict['pic'] = re.sub(
-                r'.*?title="(.*?)" src="(.*?)".*', r'\1>\2', n).split('>')
-        elif (mode == "character" and n and not n.startswith('/')
-                and not n.startswith('(') and not n.startswith('a href')):
-            subdict.setdefault('char', []).append(n)
-        elif mode == 'primary_photo' and n.startswith('a href='):
-            link = re.sub(r'a href="(.*?)(\?.*?)*".*', r'\1', n)
+        elif 'class="character"' in line:
+            mode = 'character'
+        elif mode == 'character' and not line.startswith('a href='):
+            mode = None
+            actor.setdefault('chars', []).append({'char': line, 'media': media})
+
 
 def parse_television(filename, result):
     k = reformat(fs.load_string(filename))
-    print(k)
-    fs.save_yaml(k, os.path.join('c:/users/ryan/desktop/imdb', os.path.basename(filename)))
-    return k, result
+    basename = os.path.basename(filename)
+    media = basename.replace('.html', '')
+    nm = ''
+    pic = ''
+    actor = {}
+    mode = None
+    for line in k:
+        if line.startswith('a href='):
+            nm = re.sub(r'a href="/name/(nm\d+)/.*', r'\1', line)
+        elif line.startswith('img'):
+            pic = re.sub(r'img src=".*" data-src-x2="(.*?)".*', r'\1', line)
+        elif line == 'h4':
+            mode = 'actor'
+        elif mode == 'actor':
+            actor = result.setdefault(nm, {'name': line, 'pic': pic})
+            mode = None
+        elif line == 'p class="h4 unbold"':
+            mode = 'char'
+        elif mode == 'char':
+            char = re.sub(r'\(.*?\)', '', line)
+            actor.setdefault('chars', []).append({'char': char, 'media': media})
+            mode = None
+
 
 def reformat(k):
     k = k.replace('\n', '').replace('&nbsp', ' ')
@@ -52,12 +66,13 @@ def reject(string):
 
 
 def main(root):
-    print('running')
     filenames = fs.find_by_type(root, '.html')
     result = {}
     for filename in filenames:
-        fn = parse_television if os.path.basename(filename).startswith('TV ') else parse
+        print(filename)
+        fn = parse_television if '\\TV\\' in filename else parse
         fn(filename, result)
+    print(len(result))
     fs.save_yaml(result, 'c:/users/ryan/desktop/imdb cast.yml')
     dups = ''
     for name in result.values():
@@ -66,19 +81,11 @@ def main(root):
             for char in name['chars']:
                 sett.setdefault(char['char'], char['media'])
             if len(sett) > 1:
-                dups += name['name'] + '\n'
+                dups += '$' + name['name'] + '\n'
                 for (char, media) in sett.items():
-                    dups += 2 * ' ' + char + ' - ' + media + '\n'
+                    dups += 3 * ' ' + char + ' - ' + media + '\n'
     fs.save_string(dups, 'c:/users/ryan/desktop/dups.txt')
 
 
 ROOT = 'C:/Users/Ryan/OneDrive/Documents/IMDb'
-# filename = 'C:/Users/Ryan/OneDrive/Documents/useful/films.txt'
-# for i, line in enumerate(fs.readlines(filename)):
-#     print(str(9 - i) + '. ', line)
-#     fs.save_string('', os.path.join(root, line + '.html'))
-#     os.startfile(os.path.join(root, line + '.html'))
-#     fs.open_in_browser(None, 'https://www.imdb.com/find/?q=' + line, False)
-#     main()
-#     input('?> ')
 main(ROOT)

@@ -102,9 +102,13 @@ class Site(Page):
     def _native_script(self, node):
         self._serial['n'] = node.stringify()
 
+    def _pronunciation(self, node):
+        self._serial['r'] = node.stringify().strip('/')
+        
     def _definition(self, node):
         self._serial['d'] = utils.buy_caps(node.stringify())
         self._wordlist.append(self._serial.copy())
+    
 
     def _serialiser(self, serial):
         if not serial:
@@ -113,5 +117,6 @@ class Site(Page):
             serial['language']: self._language,
             serial['part of speech']: self._pos,
             serial['definition']: self._definition,
-            serial['native script']: self._native_script
+            serial['native script']: self._native_script,
+            serial['pronunciation']: self._pronunciation
         }
