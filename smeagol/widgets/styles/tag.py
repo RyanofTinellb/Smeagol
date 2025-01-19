@@ -37,16 +37,16 @@ types:
         line -- eg: <title>stuff</title> -- does not surround lines with tags
             open: <name>
             close: </name>
-            start: ' '
-            end: ' '
+            start: ''
+            end: ''
         heading -- eg: <h2 id="stuff">stuff</h2> -- does not surround lines with tags,
                                         increases heading level if necessary
             open: <name+d id="
             pipe: ">
             close: </name+d>
             param: $url(text)$|$node$
-            start: ' '
-            end: ' '
+            start: ''
+            end: ''
 
         div -- eg: <div class="flex">
             open: <div class="name">
@@ -181,7 +181,7 @@ class Tag:
 
     @property
     def _line_end(self):
-        return ' ' if self.type in ('line', 'heading') else ''
+        return '' if self.type in ('line', 'heading') else None
 
     def __setattr__(self, attr, value):
         if attr in self.attrs:

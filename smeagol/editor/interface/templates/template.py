@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 from datetime import datetime as dt
-from typing import Self
+from typing import Self, Optional
 
 from smeagol.utilities import utils
 from smeagol.utilities.types import Styles, Tag, TemplateStore, TextTree
@@ -12,16 +12,16 @@ from smeagol.conversion.text_tree.node import Node
 
 @dataclass
 class Components:
-    start: str = ''
-    pipe: str = ''
-    end: str = ''
+    start: Optional[str] = None
+    pipe: Optional[str] = ''
+    end: Optional[str] = None
     wholepage: bool = False
 
     def new(self, tag: Tag) -> Self:
         return type(self)(
-            tag.start or self.start,
+            tag.start if tag.start is not None else tag.start or self.start,
             tag.pipe,
-            tag.end or self.end,
+            tag.end if tag.end is not None else tag.end or self.end,
             self.wholepage
         )
 
@@ -200,13 +200,13 @@ class Template:
                     output += tag.open
                     open_tags.append(tag.close)
                 self._level = entry.level
-                output += tag.start
+                output += tag.start or ''
                 if entry == page:
                     output += entry.name
                 else:
                     output += tag.param.replace('$link$', page.link_to(entry)
                                                 ).replace('$name$', entry.name)
-                output += tag.end
+                output += tag.end or ''
         output += ''.join(reversed(open_tags))
         return output
 
@@ -224,8 +224,8 @@ class Template:
     def span(self, obj: Node, components: Components, tag: Tag):
         start = ''
         if not self.started:
-            start = components.start  # + '!span!'
-            self.started.update(components.end)
+            start = components.start or '' # + '!span!'
+            self.started.update(components.end or '')
         text = ''.join([self._html(elt, components) for elt in obj])
         return f'{start}{tag.open}{text}{tag.close}'
 
@@ -268,7 +268,7 @@ class Template:
     def string(self, text: str, components: Components):
         start = end = para = ''
         if not self.started:
-            start = components.start  # + '!string!'
+            start = components.start or '' # + '!string!'
             self.started.update(components.end)
         text = text.replace('|', components.pipe)
         if text.endswith('\n') and self.started:
