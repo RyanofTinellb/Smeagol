@@ -62,7 +62,8 @@ class Template:
 
     @property
     def html(self):
-        return ''.join([self._html(elt, self.components) for elt in self.text])
+        html = ''.join([self._html(elt, self.components) for elt in self.text])
+        return re.sub(fr'<a href="{self.templates.page.name}\.html.*?">(.*?)</a>', r'<span class="self-link">\1</span>', html)
 
     def _html(self, obj, components=None):
         components = components or Components()
@@ -224,7 +225,7 @@ class Template:
     def span(self, obj: Node, components: Components, tag: Tag):
         start = ''
         if not self.started:
-            start = components.start or '' # + '!span!'
+            start = components.start or ''  # + '!span!'
             self.started.update(components.end or '')
         text = ''.join([self._html(elt, components) for elt in obj])
         return f'{start}{tag.open}{text}{tag.close}'
@@ -268,7 +269,7 @@ class Template:
     def string(self, text: str, components: Components):
         start = end = para = ''
         if not self.started:
-            start = components.start or '' # + '!string!'
+            start = components.start or ''  # + '!string!'
             self.started.update(components.end)
         text = text.replace('|', components.pipe)
         if text.endswith('\n') and self.started:

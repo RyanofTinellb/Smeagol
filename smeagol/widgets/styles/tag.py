@@ -137,6 +137,8 @@ class Tag:
 
     @property
     def _rank(self):
+        if self.type in ('table', 'heading'):
+            return 50
         if self.block:
             return 100
         if self.type == 'anchor':

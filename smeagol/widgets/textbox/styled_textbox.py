@@ -78,7 +78,7 @@ class StyledTextbox(BaseTextbox):
         if menu:
             menu.delete(0, menu.index('end'))
         self.off_keys.clear()
-        for style in self.styles:
+        for style in sorted(self.styles, key=lambda x: (x.rank, x.name)):
             self._configure_tag(style)
             var = self.styles_menu.setdefault(style.name, tk.IntVar())
             self._configure_styles_menu(menu, style, var)
@@ -86,7 +86,8 @@ class StyledTextbox(BaseTextbox):
     def _configure_styles_menu(self, menu, style, var):
         if not menu:
             return
-        menu.add_checkbutton(label=style.name,
+        key = ('ctrl-' + style.key + ': ' if style.key else '').replace('KeyPress-', '').replace('Alt-', 'alt-')
+        menu.add_checkbutton(label=key + style.name,
                              variable=var,
                              command=self.style_changer(style))
 

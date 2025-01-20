@@ -38,7 +38,10 @@ def _save_json(obj, filename, indent=None):
 def copy_all(files: dict):
     for src, dests in files.items():
         for dest in dests:
-            shutil.copy(src, dest)
+            try:
+                shutil.copy(src, dest)
+            except FileNotFoundError:
+                print('Warning! Unable to save ' + src)
 
 
 def save_string(string, filename):
