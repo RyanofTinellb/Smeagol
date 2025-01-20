@@ -95,4 +95,4 @@ class Tags:
         self.current = self.current.parent
 
     def text(self, text: str):
-        self.current.add(text)
+        self.current.add(text.replace('<', '&lt;').replace('>', '&gt;'))

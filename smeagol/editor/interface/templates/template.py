@@ -261,7 +261,7 @@ class Template:
         try:
             return template.html
         except KeyError as e:
-            raise KeyError(f'Text {text} has no tag') from e
+            raise KeyError(f'Unable to generate html from entry <{self.templates.page.name}>') from e
 
     def link(self, obj: Node, *_args):
         return self.templates.page.link_to(obj.first_child.split('/'))
