@@ -19,9 +19,9 @@ class Components:
 
     def new(self, tag: Tag) -> Self:
         return type(self)(
-            tag.start if tag.start is not None else tag.start or self.start,
+            tag.start if tag.start is not None else self.start,
             tag.pipe,
-            tag.end if tag.end is not None else tag.end or self.end,
+            tag.end if tag.end is not None else self.end,
             self.wholepage
         )
 
@@ -198,8 +198,12 @@ class Template:
                 num = max(0, entry.level -
                           self._level) if self._level > -1 else 1
                 for _ in range(num):
-                    output += tag.open
-                    open_tags.append(tag.close)
+                    if open_tags:
+                        output += tag.start + tag.open
+                        open_tags += [tag.end, tag.close]
+                    else:
+                        output += tag.open
+                        open_tags = [tag.close]
                 self._level = entry.level
                 output += tag.start or ''
                 if entry == page:
@@ -261,7 +265,8 @@ class Template:
         try:
             return template.html
         except KeyError as e:
-            raise KeyError(f'Unable to generate html from entry <{self.templates.page.name}>') from e
+            raise KeyError(f'Unable to generate html from entry <{
+                           self.templates.page.name}>') from e
 
     def link(self, obj: Node, *_args):
         return self.templates.page.link_to(obj.first_child.split('/'))
