@@ -26,6 +26,7 @@ class ClipboardTextbox(StyledTextbox):
     def write(self, text="", position=INSERT, tags: Optional[list] = None):
         current = self.styles.current if self.styles else ''
         tags = tags or current
+        text = text.replace('&lt;', '<').replace('&gt;', '>')
         super().insert(position, text, tags)
 
     def remove(self, start=START, end=END):

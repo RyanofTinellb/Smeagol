@@ -19,9 +19,9 @@ class Components:
 
     def new(self, tag: Tag) -> Self:
         return type(self)(
-            tag.start if tag.start is not None else tag.start or self.start,
+            tag.start if tag.start is not None else self.start,
             tag.pipe,
-            tag.end if tag.end is not None else tag.end or self.end,
+            tag.end if tag.end is not None else self.end,
             self.wholepage
         )
 
@@ -62,7 +62,8 @@ class Template:
 
     @property
     def html(self):
-        return ''.join([self._html(elt, self.components) for elt in self.text])
+        html = ''.join([self._html(elt, self.components) for elt in self.text])
+        return re.sub(fr'<a href="{self.templates.page.name}\.html.*?">(.*?)</a>', r'<span class="self-link">\1</span>', html)
 
     def _html(self, obj, components=None):
         components = components or Components()
@@ -197,8 +198,12 @@ class Template:
                 num = max(0, entry.level -
                           self._level) if self._level > -1 else 1
                 for _ in range(num):
-                    output += tag.open
-                    open_tags.append(tag.close)
+                    if open_tags:
+                        output += tag.start + tag.open
+                        open_tags += [tag.end, tag.close]
+                    else:
+                        output += tag.open
+                        open_tags = [tag.close]
                 self._level = entry.level
                 output += tag.start or ''
                 if entry == page:
@@ -224,7 +229,7 @@ class Template:
     def span(self, obj: Node, components: Components, tag: Tag):
         start = ''
         if not self.started:
-            start = components.start or '' # + '!span!'
+            start = components.start or ''  # + '!span!'
             self.started.update(components.end or '')
         text = ''.join([self._html(elt, components) for elt in obj])
         return f'{start}{tag.open}{text}{tag.close}'
@@ -260,7 +265,8 @@ class Template:
         try:
             return template.html
         except KeyError as e:
-            raise KeyError(f'Text {text} has no tag') from e
+            raise KeyError(f'Unable to generate html from entry <{
+                           self.templates.page.name}>') from e
 
     def link(self, obj: Node, *_args):
         return self.templates.page.link_to(obj.first_child.split('/'))
@@ -268,7 +274,7 @@ class Template:
     def string(self, text: str, components: Components):
         start = end = para = ''
         if not self.started:
-            start = components.start or '' # + '!string!'
+            start = components.start or ''  # + '!string!'
             self.started.update(components.end)
         text = text.replace('|', components.pipe)
         if text.endswith('\n') and self.started:

@@ -155,8 +155,7 @@ class SystemInterface:
         yield 100
 
     def save_entry(self, entry, copy_all=False):
-        if copy_all:
-            self.copy_all()
+     
         filename = os.path.join(
             self.locations.directory, entry.url)
         with utils.ignored(IndexError):
@@ -169,6 +168,8 @@ class SystemInterface:
         except (ValueError, IndexError, TypeError) as e:
             raise type(e)(f'Incorrect formatting in entry {entry.name}') from e
         fs.save_string(html, filename)
+        if copy_all:
+            self.copy_all()
         return (filename, True)
 
     def save_special_files(self):
