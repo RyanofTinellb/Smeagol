@@ -73,18 +73,16 @@ def main(root):
         fn = parse_television if '\\TV\\' in filename else parse
         fn(filename, result)
     print(len(result))
-    fs.save_yaml(result, 'c:/users/ryan/desktop/imdb cast.yml')
-    dups = ''
+    fs.save_yaml(result, 'c:/users/ryan/onedrive/desktop/imdb cast.yml')
+    dups = []
     for name in result.values():
         if len(name.get('chars', [])) > 1:
             sett = {}
             for char in name['chars']:
                 sett.setdefault(char['char'], char['media'])
             if len(sett) > 1:
-                dups += '$' + name['name'] + '\n'
-                for (char, media) in sett.items():
-                    dups += 3 * ' ' + char + ' - ' + media + '\n'
-    fs.save_string(dups, 'c:/users/ryan/desktop/dups.txt')
+                dups.append([name['name'], sett])
+    fs.save_yaml(dups, 'c:/users/ryan/onedrive/desktop/dups.yml')
 
 
 ROOT = 'C:/Users/Ryan/OneDrive/Documents/IMDb'
