@@ -9,17 +9,18 @@ from smeagol.widgets.textbox.textbox import Textbox
 
 
 class Tab(tk.Frame):
-    def __init__(self, parent, commands: list[tuple]):
+    def __init__(self, parent, commands: list[tuple], clipboard):
         super().__init__(parent)
         self.notebook = parent
         self.notebook.add(self)
         self.notebook.select(self)
+        self.clipboard = clipboard
         self.commands = self._commands + commands
         self.textbox = self._textbox()
         self.is_open = True
 
     def _textbox(self):
-        textbox = Textbox(self)
+        textbox = Textbox(self.clipboard, self)
         textbox.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
         utils.bind_all(textbox, self.commands)
         return textbox

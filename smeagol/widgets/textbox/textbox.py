@@ -20,8 +20,8 @@ USER_MARK = 'usermark'
 
 
 class Textbox(ClipboardTextbox):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, clipboard, parent=None):
+        super().__init__(clipboard, parent)
         self.displays.update({
             'wordcount': tk.IntVar()})
         self.add_commands(self.commands)

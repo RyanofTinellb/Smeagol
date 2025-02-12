@@ -17,6 +17,7 @@ class BaseTabs(ttk.Notebook):
         self.change_title = title
         utils.bind_all(self, self.commands)
         self.textbox_commands = textbox_commands + self._textbox_commands
+        self.clipboard = utils.Clipboard()
         self.interfaces = Interfaces()
         self.closed = []
         self.new()
@@ -80,7 +81,7 @@ class BaseTabs(ttk.Notebook):
         self.current.entry = entry
 
     def new(self, _event=None):
-        Tab(self, self.textbox_commands)
+        Tab(self, self.textbox_commands, self.clipboard)
         self.update_displays()
         return 'break'
 

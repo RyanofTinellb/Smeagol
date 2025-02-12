@@ -29,6 +29,10 @@ types:
         span -- eg: <span class="ipa">
             open: <span class="name">
             close: </span>
+        blank -- eg: some_text
+            open: ''
+            close: ''
+            pipe: |
     block-level:
                 ++ Will end line tags before closing. ++
         block -- eg: <html>\n\n</html> -- typically uses starts and ends to surround lines
@@ -155,17 +159,20 @@ class Tag:
                 if self.language and self.language_code else '')
         match self.type:
             case 'complete':
-                return f'<{self.name}{lang} '
+                value = f'<{self.name}{lang} '
             case 'span':
-                return f'<span class="{self.name}"{lang}>'
+                value = f'<span class="{self.name}"{lang}>'
             case 'div':
-                return f'<div class="{self.name}"{lang}>'
+                value = f'<div class="{self.name}"{lang}>'
             case 'anchor':
-                return '<a href="'
+                value = '<a href="'
             case 'heading':
-                return f'<{self.name}'
+                value = f'<{self.name}'
+            case 'blank':
+                value = ''
             case _other:
-                return f'<{self.name}{lang}>'
+                value = f'<{self.name}{lang}>'
+        return value
 
     @property
     def _close(self):
@@ -178,6 +185,8 @@ class Tag:
                 return '</div>'
             case 'anchor':
                 return '</a>'
+            case 'blank':
+                return ''
             case _other:
                 return f'</{self.name}>'
 

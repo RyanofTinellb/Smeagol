@@ -14,6 +14,9 @@ USER_MARK = "usermark"
 
 
 class ClipboardTextbox(StyledTextbox):
+    def __init__(self, clipboard, parent):
+        super().__init__(parent)
+        self.clipboard = clipboard
 
     def overwrite(self, text, start=START, end=END):
         self.delete(start, end)
@@ -57,12 +60,15 @@ class ClipboardTextbox(StyledTextbox):
 
     def _copy(self, borders=SELECTION, clip=True):
         """@error: raise TclError if no text is selected"""
-        text = "\x08" + json.dumps(
+        formatted_text = "\x08" + json.dumps(
             self.formatted_get(*borders), ensure_ascii=False
         ).replace("],", "],\n")
+        text = self.get(*borders)
         if clip:
             self.clipboard_clear()
             self.clipboard_append(text)
+            self.clipboard.text = formatted_text
+            self.clipboard.compare = text
         return text
 
     def cut_text(self, _event=None):
@@ -97,16 +103,25 @@ class ClipboardTextbox(StyledTextbox):
 
         # Possible origins:
         #     passed in argument
-        #     clipboard
+        #     system clipboard
+        #     self.clipboard
         # """
-        self.delete(*borders)
-        self.mark_set(INSERT, location)
         try:
-            text = text if text is not None else self.clipboard_get()
+            text = text or self._select_clipboard()
         except tk.TclError:
             return
+        if not text:
+            return
+        self.delete(*borders)
+        self.mark_set(INSERT, location)
         if not isinstance(text, list):
             self._insert_string(text)
+
+    def _select_clipboard(self):
+        clipboard = self.clipboard_get()
+        if clipboard == self.clipboard.compare:
+            return self.clipboard.text
+        return clipboard
 
     def _insert_tuples(self, text):
         for elt in text:

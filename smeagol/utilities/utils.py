@@ -251,6 +251,10 @@ class DateFormatter:
 def format_date(date, str_format):
     return str(DateFormatter(date, str_format))
 
+@dataclass
+class Clipboard:
+    text: str = ''
+    compare: str = ''
 
 @dataclass
 class Flag:
