@@ -51,7 +51,16 @@ types:
             param: $url(text)$|$node$
             start: ''
             end: ''
-
+        ol
+            open: <ol>
+            close: </ol>
+            start: <li>
+            end: </li>
+        ul
+            open: <ul>
+            close: <ul>
+            start: <li>
+            end: </li>
         div -- eg: <div class="flex">
             open: <div class="name">
             close: </div>
@@ -120,15 +129,15 @@ class Tag:
                 value = '">' if self.type in ('anchor', 'heading') else '|'
             case 'block':
                 value = self.type in {
-                    'block', 'line', 'div', 'heading', 'table'}
+                    'block', 'line', 'div', 'heading', 'table', 'ol', 'ul'}
             case 'open':
                 value = self._open
             case 'close':
                 value = self._close
-            case 'start' | 'end':
-                value = self._line_end
+            case 'start':
+                value = self._line_start
             case 'end':
-                value = self._end
+                value = self._line_end
             case 'rank':
                 value = self._rank
             case _default:
@@ -160,16 +169,16 @@ class Tag:
         match self.type:
             case 'complete':
                 value = f'<{self.name}{lang} '
-            case 'span':
-                value = f'<span class="{self.name}"{lang}>'
-            case 'div':
-                value = f'<div class="{self.name}"{lang}>'
+            case 'span' | 'div':
+                value = f'<{self.type} class="{self.name}"{lang}>'
             case 'anchor':
                 value = '<a href="'
             case 'heading':
                 value = f'<{self.name}'
             case 'blank':
                 value = ''
+            case 'table' | 'ol' | 'ul':
+                value = f'<{self.type}>'
             case _other:
                 value = f'<{self.name}{lang}>'
         return value
@@ -179,10 +188,8 @@ class Tag:
         match self.type:
             case 'complete':
                 return '>'
-            case 'span':
-                return '</span>'
-            case 'div':
-                return '</div>'
+            case 'span' | 'div' | 'table' | 'ol' | 'ul':
+                return f'</{self.type}>'
             case 'anchor':
                 return '</a>'
             case 'blank':
@@ -191,8 +198,24 @@ class Tag:
                 return f'</{self.name}>'
 
     @property
+    def _line_start(self):
+        match self.type:
+            case 'line' | 'heading':
+                return ''
+            case 'ol' | 'ul':
+                return '<li>'
+            case _other:
+                return None
+
+    @property
     def _line_end(self):
-        return '' if self.type in ('line', 'heading') else None
+        match self.type:
+            case 'line' | 'heading':
+                return ''
+            case 'ol' | 'ul':
+                return '</li>'
+            case _other:
+                return None
 
     def __setattr__(self, attr, value):
         if attr in self.attrs:

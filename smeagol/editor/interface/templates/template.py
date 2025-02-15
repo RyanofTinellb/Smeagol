@@ -73,7 +73,7 @@ class Template:
         components = components.new(tag)
         if tag.param and tag.type != 'toc':
             return self.replace_param(obj, components, tag)
-        return self.types(tag.type)(obj, components, tag)
+        return self.types(tag)(obj, components, tag)
 
     def replace_param(self, obj, components, tag):
         _, language_code = (utils.try_split(
@@ -87,7 +87,7 @@ class Template:
             return self._html(obj.other_child, components)
         except TypeError as e:
             raise TypeError(obj, tag.param) from e
-        return self.types(tag.type)(node, components, tag)
+        return self.types(tag)(node, components, tag)
 
     def _param(self, param, obj, components, language_code):
         text = obj.stringify(skip='error')
@@ -159,10 +159,8 @@ class Template:
             case _other:
                 return obj
 
-    def types(self, type_):
-        match type_:
-            case 'block' | 'line' | 'div':
-                function = self.block
+    def types(self, tag):
+        match tag.type:
             case 'table':
                 function = self.table
             case 'data':
@@ -178,7 +176,7 @@ class Template:
             case 'toc':
                 function = self.toc
             case _other:
-                function = self.span
+                function = self.block if tag.block else self.span
         return function
 
     def toc(self, obj, _components, tag):
