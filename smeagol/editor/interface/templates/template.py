@@ -198,7 +198,7 @@ class Template:
                 for _ in range(num):
                     if open_tags:
                         output += tag.start + tag.open
-                        open_tags += [tag.end, tag.close]
+                        open_tags += [tag.close + tag.end]
                     else:
                         output += tag.open
                         open_tags = [tag.close]
