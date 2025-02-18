@@ -8,7 +8,6 @@ class Assets(SubsetDict):
     @property
     def _valid_attrs(self):
         return (
-            'samples',
             'wordlist',
             'searchindex',
             'source'

@@ -31,8 +31,6 @@ class Interface(SystemInterface):
     def setup(self, config):
         super().setup(config)
         self.languages = self.load_from_config('languages', {})
-        samples = self.assets.samples
-        self.randomwords = utilities.RandomWords(samples=samples)
 
     def change_language(self, language):
         self.randomwords.select(language)
