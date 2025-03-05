@@ -10,6 +10,7 @@ properties:
     key (str): the keyboard shortcut used in the Sméagol editor for this tag,
             not including the `CTRL-` key.
         e.g.: 'f' -> `CTRL-f`.
+    rank: controls nesting of tags, where smaller or more negative ranks are nested within higher ranks.
 
 types:
     default:

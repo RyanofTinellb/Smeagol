@@ -63,7 +63,8 @@ class Template:
     @property
     def html(self):
         html = ''.join([self._html(elt, self.components) for elt in self.text])
-        return re.sub(fr'<a href="{self.templates.page.name}\.html.*?">(.*?)</a>', r'<span class="self-link">\1</span>', html)
+        return re.sub(fr'<a href="{self.templates.page.name}\.html.*?">(.*?)</a>',
+                      r'<span class="self-link">\1</span>', html)
 
     def _html(self, obj, components=None):
         components = components or Components()
