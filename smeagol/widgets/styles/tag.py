@@ -1,4 +1,10 @@
 """
+naming:
+    div | span:
+        class#id
+    others:
+        type|class#id
+
 properties:
     open (str): the opening tag <tag>.
     close (str): the closing tag </tag>.
@@ -10,7 +16,8 @@ properties:
     key (str): the keyboard shortcut used in the Sméagol editor for this tag,
             not including the `CTRL-` key.
         e.g.: 'f' -> `CTRL-f`.
-    rank: controls nesting of tags, where smaller or more negative ranks are nested within higher ranks.
+    rank: controls nesting of tags, where smaller or more negative ranks are nested
+            within higher ranks.
 
 types:
     default:
@@ -96,11 +103,25 @@ def increment_closer(string, level):
         return str(min(6, level))
     return re.sub(r'(\d)', inc, string)
 
+# <div class="Hey" id="banana">
+# hey|banana
+
+# <details class="foo" id="bar">
+# details!foo|baz
+
+def decode(type_, name):
+    name, id_ = utils.try_split(name, '#')
+    name, class_ = utils.try_split(name, '|')
+    if type_ in ['div', 'span']:
+        class_ = name
+        name = type_
+    return name, class_, id_
+
 
 class Tag:
     def __init__(self, name, tags=None, **_):
-        self.name = name
         self.tags = tags or {}
+        self.name, self.class_, self.id_ = decode(self.type, name)
         self.language_code = ''
 
     def incremented_copy(self, level):
@@ -167,30 +188,27 @@ class Tag:
     def _open(self):
         lang = (f' lang="{self.language_code}"'
                 if self.language and self.language_code else '')
+        name = self.name
+        class_ = f' class="{self.class_}"' if self.class_ else ''
+        id_ = f' id="{self.id_}"' if self.id_ else ''
         match self.type:
-            case 'complete':
-                value = f'<{self.name}{lang} '
-            case 'span' | 'div':
-                value = f'<{self.type} class="{self.name}"{lang}>'
-            case 'anchor':
-                value = '<a href="'
-            case 'heading':
-                value = f'<{self.name}'
             case 'blank':
-                value = ''
-            case 'table' | 'ol' | 'ul':
-                value = f'<{self.type}>'
-            case _other:
-                value = f'<{self.name}{lang}>'
-        return value
+                return ''
+            case 'anchor':
+                return '<a href="'
+            case 'complete':
+                end = ' '
+            case 'heading':
+                end = ''
+            case _default:
+                end = '>'
+        return f'<{name}{class_}{id_}{lang}{end}'
 
     @property
     def _close(self):
         match self.type:
             case 'complete':
                 return '>'
-            case 'span' | 'div' | 'table' | 'ol' | 'ul':
-                return f'</{self.type}>'
             case 'anchor':
                 return '</a>'
             case 'blank':
