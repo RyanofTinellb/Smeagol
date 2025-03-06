@@ -110,18 +110,19 @@ def increment_closer(string, level):
 # details!foo|baz
 
 def decode(type_, name):
-    name, id_ = utils.try_split(name, '#')
-    name, class_ = utils.try_split(name, '|')
+    elt_, id_ = utils.try_split(name, '#')
+    elt_, class_ = utils.try_split(name, '|')
     if type_ in ['div', 'span']:
-        class_ = name
-        name = type_
-    return name, class_, id_
+        class_ = elt_
+        elt_ = type_
+    return elt_, class_, id_
 
 
 class Tag:
     def __init__(self, name, tags=None, **_):
         self.tags = tags or {}
-        self.name, self.class_, self.id_ = decode(self.type, name)
+        self.name = name
+        self.elt_, self.class_, self.id_ = decode(self.type, name)
         self.language_code = ''
 
     def incremented_copy(self, level):
@@ -188,7 +189,7 @@ class Tag:
     def _open(self):
         lang = (f' lang="{self.language_code}"'
                 if self.language and self.language_code else '')
-        name = self.name
+        elt_ = self.elt_
         class_ = f' class="{self.class_}"' if self.class_ else ''
         id_ = f' id="{self.id_}"' if self.id_ else ''
         match self.type:
@@ -202,7 +203,7 @@ class Tag:
                 end = ''
             case _default:
                 end = '>'
-        return f'<{name}{class_}{id_}{lang}{end}'
+        return f'<{elt_}{class_}{id_}{lang}{end}'
 
     @property
     def _close(self):
@@ -214,7 +215,7 @@ class Tag:
             case 'blank':
                 return ''
             case _other:
-                return f'</{self.name}>'
+                return f'</{self.elt_}>'
 
     @property
     def _line_start(self):

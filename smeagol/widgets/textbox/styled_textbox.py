@@ -86,7 +86,8 @@ class StyledTextbox(BaseTextbox):
     def _configure_styles_menu(self, menu, style, var):
         if not menu:
             return
-        key = ('ctrl+' + style.key if style.key else '').replace('KeyPress-', '').replace('Alt-', 'alt+')
+        key = ('ctrl+' + style.key if style.key else '').replace('KeyPress-', ''
+                                                                 ).replace('Alt-', 'alt+')
         menu.add_checkbutton(label=style.name + 10 * ' ' + key,
                              variable=var,
                              command=self.style_changer(style))
