@@ -22,6 +22,7 @@ class Interfaces:
         for name, interface in self.interfaces.items():
             print()
             print(f'Saving from {name}:')
+            interface.save_site()
             for percentage in interface.save_entries():
                 print(f'{percentage}% complete')
             interface.save_special_files()

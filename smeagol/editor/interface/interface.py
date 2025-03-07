@@ -1,5 +1,4 @@
 from smeagol.editor.interface.system_interface import SystemInterface
-from smeagol.utilities import api as utilities
 
 
 class Interface(SystemInterface):
