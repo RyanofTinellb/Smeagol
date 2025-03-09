@@ -63,7 +63,6 @@ class Tabs(BaseTabs):
             raise IndexError(f'Bad formatting in {entry.name}') from e
 
     def previous_entry(self, event):
-        print('giraffe')
         entry = event.widget.level
         with utils.ignored(IndexError):
             self.displays.headings = entry.previous_sister.names
@@ -85,7 +84,6 @@ class Tabs(BaseTabs):
                 self.displays.headings[:event.widget.level + 1]))
         except IndexError:
             self.textbox.focus_set()
-            self.textbox.see('insert')
         heading = self.displays.add_heading()
         if heading:
             heading.focus_set()

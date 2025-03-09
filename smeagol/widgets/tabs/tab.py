@@ -40,6 +40,7 @@ class Tab(tk.Frame):
     def save_entry(self, _event=None):
         self.entry.text = self.textbox.text
         self.entry.update_date()
+        self.entry.position = self.textbox.index('insert')
         self.interface.save_site()
         filename, saved = self.interface.save_entry(self.entry, True)
         # saved? = file saved rather than deleted
@@ -68,6 +69,9 @@ class Tab(tk.Frame):
         self._entry = entry
         self.name = self.entry.name
         self.textbox.text = self._entry.text
+        self.textbox.mark_set('insert', self.entry.position)
+        self.textbox.see('insert')
+        self.textbox.focus_set()    
 
     @property
     def interface(self):
