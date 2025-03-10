@@ -46,15 +46,17 @@ class BaseTabs(ttk.Notebook):
 
     def reload_from_files(self, _event=None):
         self.reload_styles()
-        self.reload_templates()
+        self.reload_assets()
 
     def reload_styles(self, _event=None):
         self.interface.open_styles()
         self.textbox.styles = self.interface.styles
         self.textbox.configure_tags()
+        self.textbox.clear_styles_menu()
 
-    def reload_templates(self, _event=None):
-        self.interface.reopen_template_store()
+    def reload_assets(self, _event=None):
+        # reloads links and template_store
+        self.interface.open_assets()
 
     @property
     def current(self):

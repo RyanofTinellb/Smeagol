@@ -60,20 +60,31 @@ class StyledTextbox(BaseTextbox):
         return 'break'
 
     def get_styles_from_cursor(self, event=None):
-        offset = '-1c' if not event or event.keysym == 'Alt-Left' else ''
-        print(self._get_styles_from_cursor)
+        offset = '-1c' if not event or event.keysym == 'g' else ''
         self._get_styles_from_cursor(offset)
+        return 'break'
 
     def _get_styles_from_cursor(self, offset=''):
+        mark = 'sel.last' if self.tag_ranges('sel') else tk.INSERT
         if not self.styles:
             return
         self.configure_tags()
-        self.styles.update(self.tag_names(tk.INSERT + offset), self.styles_menu)
+        self.styles.update(self._get_tags(mark, offset), self.styles_menu)
+        self.update_displays()
+
+    def _get_tags(self, mark, offset):
+        if not (self.index(mark).endswith('.0') and offset):
+            return self.tag_names(mark + offset)
+        tags = self.tag_names(mark)
+        return [tag for tag in tags if self.styles[tag].block]
 
     def update_style_display(self):
         current = style_names(self.styles.current) if self.styles else ''
         self.style.set('\n'.join(current))
         self.language_code.set(self.styles.language_code)
+
+    def clear_styles_menu(self):
+        self.styles.clear(self.styles_menu)
 
     def configure_tags(self, menu=None):
         if self.styles is None:

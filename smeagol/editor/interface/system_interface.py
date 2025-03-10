@@ -13,12 +13,11 @@ from smeagol.widgets.styles.styles import Styles
 class SystemInterface:
     def __init__(self, filename='', server=True):
         self.filename = filename
-        self.styles = self.files = None
+        self.styles = self.files = self.links = self.template_store = None
         config = self.load_config(filename) if filename else {}
         self.setup(config)
         self.site = self.open_site()
-        self.links = self.open_link_files(self._links)
-        self.template_store = TemplateStore(self.templates, self.links)
+        self.open_assets()
         self.start_server(server)
 
     def start_server(self, server):
@@ -155,7 +154,6 @@ class SystemInterface:
         yield 100
 
     def save_entry(self, entry, copy_all=False):
-     
         filename = os.path.join(
             self.locations.directory, entry.url)
         with utils.ignored(IndexError):
@@ -180,8 +178,8 @@ class SystemInterface:
             if self.serialisation_format:
                 self.save_wordlist()
         except ValueError as e:
-            raise ValueError(f'Error saving special files of {
-                             self.filename}') from e
+            message = f'Error saving special files of {self.filename}'
+            raise ValueError(message) from e
 
     def save_searchfile(self):
         filename = self.locations.search
@@ -216,5 +214,6 @@ class SystemInterface:
     def close_servers(self):
         fs.close_servers()
 
-    def reopen_template_store(self):
+    def open_assets(self):
+        self.links = self.open_link_files(self._links)
         self.template_store = TemplateStore(self.templates, self.links)

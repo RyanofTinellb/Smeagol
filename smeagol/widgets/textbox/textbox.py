@@ -67,16 +67,17 @@ class Textbox(ClipboardTextbox):
         return ['Prior', 'Next', 'Left', 'Right', 'Down', 'Up', 'Home', 'End']
 
     @property
-    def _get_styles_from_cursor(self):
+    def _get_styles_from_cursor_buttons(self):
         return self._clear_history + ['BackSpace']
 
     def _key_released(self, event):
         if (event.keysym in self._clear_history or
                 event.type == tk.EventType.ButtonRelease):
             self._history = ''
-        if (event.keysym in self._get_styles_from_cursor or
+        if (event.keysym in self._get_styles_from_cursor_buttons or
                 event.type == tk.EventType.ButtonRelease):
             self.get_styles_from_cursor()
+            return
         self.update_displays()
 
     def input_method_editor(self, key):
@@ -108,6 +109,9 @@ class Textbox(ClipboardTextbox):
         keysym = event.keysym
         # code = event.keycode
         if keysym.startswith('Control_'):
+            self.edit_modified(False)
+            return None
+        if keysym.startswith('Alt_'):
             self.edit_modified(False)
             return None
         if keysym == 'BackSpace':
@@ -203,6 +207,6 @@ class Textbox(ClipboardTextbox):
             ('<Control-x>', self.cut_text),
             ('<Control-BackSpace>', self.backspace_word),
             ('<Control-Delete>', self.delete_word),
-            (('<Alt-Left>', '<Alt-Right>'), self.get_styles_from_cursor),
+            (('<Alt-g>', '<Alt-h>'), self.get_styles_from_cursor),
             (('<Control-Up>', '<Control-Down>'), self.move_line)
         ]

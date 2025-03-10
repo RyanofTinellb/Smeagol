@@ -71,7 +71,8 @@ class Tab(tk.Frame):
         self.textbox.text = self._entry.text
         self.textbox.mark_set('insert', self.entry.position)
         self.textbox.see('insert')
-        self.textbox.focus_set()    
+        self.textbox.focus_set()
+        self.textbox.get_styles_from_cursor()
 
     @property
     def interface(self):
