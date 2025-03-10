@@ -203,5 +203,6 @@ class Textbox(ClipboardTextbox):
             ('<Control-x>', self.cut_text),
             ('<Control-BackSpace>', self.backspace_word),
             ('<Control-Delete>', self.delete_word),
+            (('<Alt-Left>', '<Alt-Right>'), self.get_styles_from_cursor),
             (('<Control-Up>', '<Control-Down>'), self.move_line)
         ]

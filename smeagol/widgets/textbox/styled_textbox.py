@@ -59,11 +59,16 @@ class StyledTextbox(BaseTextbox):
         self.configure_tags()
         return 'break'
 
-    def get_styles_from_cursor(self, _event=None):
+    def get_styles_from_cursor(self, event=None):
+        offset = '-1c' if not event or event.keysym == 'Alt-Left' else ''
+        print(self._get_styles_from_cursor)
+        self._get_styles_from_cursor(offset)
+
+    def _get_styles_from_cursor(self, offset=''):
         if not self.styles:
             return
         self.configure_tags()
-        self.styles.update(self.tag_names(tk.INSERT + '-1c'), self.styles_menu)
+        self.styles.update(self.tag_names(tk.INSERT + offset), self.styles_menu)
 
     def update_style_display(self):
         current = style_names(self.styles.current) if self.styles else ''
@@ -118,7 +123,6 @@ class StyledTextbox(BaseTextbox):
             name = style.name
             language = style.language
             ime = style.ime
-            # self.focus_set()
             code = f'{self.styles.language_code}' if language else ''
             at = '@' if code else ''
             name = f'{name}{at}{code}'
@@ -140,7 +144,6 @@ class StyledTextbox(BaseTextbox):
             name = style.name
             language = style.language
             ime = style.ime
-            # self.focus_set()
             code = f'{self.styles.language_code}' if language else ''
             at = '@' if code else ''
             name = f'{name}{at}{code}'
