@@ -76,7 +76,7 @@ class Textbox(ClipboardTextbox):
             self._history = ''
         if (event.keysym in self._get_styles_from_cursor_buttons or
                 event.type == tk.EventType.ButtonRelease):
-            self.get_styles_from_cursor()
+            self.get_styles_from_cursor(event)
             return
         self.update_displays()
 

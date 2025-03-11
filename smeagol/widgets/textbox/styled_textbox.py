@@ -60,28 +60,52 @@ class StyledTextbox(BaseTextbox):
         return 'break'
 
     def get_styles_from_cursor(self, event=None):
-        offset = '-1c' if not event or event.keysym == 'g' else ''
-        self._get_styles_from_cursor(offset)
+        offset = '' if event and event.keysym == 'h' else '-1c'
+        override = event and event.keysym in 'hg'
+        self._get_styles_from_cursor(offset, override)
         return 'break'
 
-    def _get_styles_from_cursor(self, offset=''):
+    def _get_styles_from_cursor(self, offset='', override: bool = False):
         mark = 'sel.last' if self.tag_ranges('sel') else tk.INSERT
         if not self.styles:
             return
         self.configure_tags()
-        self.styles.update(self._get_tags(mark, offset), self.styles_menu)
+        tags = self._get_tags(mark, offset, override)
+        self.ime = self.invoke_ime(tags)
+        self.styles.update(tags, self.styles_menu)
         self.update_displays()
 
-    def _get_tags(self, mark, offset):
-        if not (self.index(mark).endswith('.0') and offset):
+    def _get_tags(self, mark, offset, override: bool):
+        if override or not self.index(mark).endswith('.0'):
             return self.tag_names(mark + offset)
         tags = self.tag_names(mark)
-        return [tag for tag in tags if self.styles[tag].block]
+        return list(filter(lambda tag: self.styles[tag].block, tags))
+
+    def invoke_ime(self, tags):
+        tags = list(filter(lambda tag: self.styles[tag].ime, tags))
+        if not tags:
+            return self.default_ime
+        tag = self.styles[tags[0]]
+        self._invoke_ime(tag)
+        return self._invoke_ime(tag)
+
+    def _invoke_ime(self, style: Style, activated: bool = True):
+        if not (style and activated):
+            return self.default_ime
+        code = self.styles.language_code if style.language else ''
+        ime = self.styles.imes.get(style.ime, {}).get(code, {})
+        return ime
 
     def update_style_display(self):
-        current = style_names(self.styles.current) if self.styles else ''
+        current = map(self._add_symbols, style_names(
+            self.styles.current)) if self.styles else ''
         self.style.set('\n'.join(current))
         self.language_code.set(self.styles.language_code)
+
+    def _add_symbols(self, tag):
+        tag += '*' if self.styles[tag].ime else ''
+        tag += '†' if self.styles[tag].language else ''
+        return tag
 
     def clear_styles_menu(self):
         self.styles.clear(self.styles_menu)
@@ -133,12 +157,11 @@ class StyledTextbox(BaseTextbox):
         def command(_event=None, style=style):
             name = style.name
             language = style.language
-            ime = style.ime
-            code = f'{self.styles.language_code}' if language else ''
+            code = self.styles.language_code if language else ''
             at = '@' if code else ''
             name = f'{name}{at}{code}'
             on = self.styles.toggle(name)
-            self._select_ime(ime, code, on)
+            self.ime = self._invoke_ime(style, on)
             with utils.ignored(tk.TclError):
                 (self.tag_add if self.styles.on(name)
                  else self.tag_remove)(name, *SELECTION)
@@ -154,21 +177,15 @@ class StyledTextbox(BaseTextbox):
         def command(_event=None, style=style):
             name = style.name
             language = style.language
-            ime = style.ime
-            code = f'{self.styles.language_code}' if language else ''
+            code = self.styles.language_code if language else ''
             at = '@' if code else ''
             name = f'{name}{at}{code}'
             self.styles.deactivate(name)
-            self._select_ime(ime, code, False)
+            self._invoke_ime(style, False)
             with utils.ignored(tk.TclError):
                 (self.tag_remove)(name, *SELECTION)
             self.update_displays()
         return command
-
-    def _select_ime(self, ime: dict, code: str, activated: bool):
-        self.ime = self.styles.imes.get(ime, {}).get(
-            code, {}) if activated else self.default_ime
-        self.ime = self.ime or self.default_ime
 
     def _add_style(self, name):
         self.styles.activate(name)

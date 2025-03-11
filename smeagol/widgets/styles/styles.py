@@ -3,7 +3,6 @@ import tkinter as tk
 from smeagol.utilities import utils
 from smeagol.widgets.styles.style import Style
 
-
 class Styles:
     def __init__(self, styles, imes=None):
         self.default = None
@@ -34,6 +33,7 @@ class Styles:
 
     def __getitem__(self, name):
         name, language = utils.try_split(name, '@')
+        name = name.strip('*†')
         try:
             style = self.styles[name]
         except KeyError:
