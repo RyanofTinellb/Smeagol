@@ -195,9 +195,5 @@ class Style(Tag):
         return (size // 3) if offset == 'superscript' else (-3 * size // 2)
 
     @property
-    def off_key(self):
-        return self.get('off-key', '')
-
-    @property
     def ime(self):
         return self['ime']

@@ -5,11 +5,10 @@ from smeagol.widgets.styles.style import Style
 
 class Styles:
     def __init__(self, styles, imes=None):
-        self.default = None
         self.language_code = None
         self._current = set()
-        self.styles = {name: self.create_style(name, style)
-                       for name, style in styles.items()}
+        self.default = Style('default', styles.pop('default', {}))
+        self.styles = self.create_styles(styles)
         self.ranks = {name: style.rank for name, style in self.styles.items()}
         self.imes = imes or {}
 
@@ -19,11 +18,13 @@ class Styles:
 
     def create_style(self, name='', style=None):
         style = style or {}
-        if self.default:
-            return Style(name, style, default_style=self.default)
-        # if style.get('tags', {}).get('type') == 'default':
-        self.default = Style(name, style)
-        return self.default
+        return Style(name, style, default_style=self.default)
+
+    def create_styles(self, styles):
+        styles = {name: self.create_style(name, style)
+                       for name, style in styles.items()}
+        styles['default'] = self.default
+        return styles
 
     def __contains__(self, item):
         return item in self.styles
