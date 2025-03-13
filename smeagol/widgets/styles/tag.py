@@ -13,12 +13,18 @@ properties:
     pipe (str): what to replace the pipe "|" character with within an element marked with this tag.
     language (str): a template where '%l' will be replaced with the appropriate language code.
         e.g.: ' lang="x-tlb-%l"'
+    ---------
+    key (str): [see below <keys: on>]
+    ----
+    off-key (str): [see below <keys: off>]
+    ----
     keys (dict[str]):
         on (str): the keyboard shortcut used in the Sméagol editor for this tag,
                 not including the `CTRL-` key.
                     e.g.: 'f' -> `CTRL-f`.
         off (str): the keyboard activity that deactivates a style, usually `Return`
             or `space`. If `space`, then the Return key will also perform this.
+    ---------
     rank: controls nesting of tags, where smaller or more negative ranks are nested
             within higher ranks.
 
@@ -106,6 +112,7 @@ def increment_closer(string, level):
         return str(min(6, level))
     return re.sub(r'(\d)', inc, string)
 
+
 def decode(type_, name):
     elt_, id_ = utils.try_split(name, '#')
     elt_, class_ = utils.try_split(name, '|')
@@ -138,13 +145,14 @@ class Tag:
             except AttributeError as e:
                 raise AttributeError(f"{type(self).__name__} "
                                      f"'{self.name}' has no attribute '{attr}'") from e
+
     @property
     def key(self):
-        return self.tags.get('keys', {}).get('on', '')
+        return self.tags.get('key') or self.tags.get('keys', {}).get('on', '')
 
     @property
     def off_key(self):
-        return self.tags.get('keys', {}).get('off', '')
+        return self.tags.get('off-key') or self.tags.get('keys', {}).get('off', '')
 
     def defaults(self, attr):
         match attr:
