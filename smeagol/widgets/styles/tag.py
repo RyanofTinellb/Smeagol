@@ -97,7 +97,7 @@ types:
 import re
 
 from smeagol.utilities import utils
-
+from smeagol.widgets.styles.hierarchy import Hierarchy
 
 def increment_opener(string, level):
     def inc(match, level=level):
@@ -125,6 +125,7 @@ def decode(type_, name):
 class Tag:
     def __init__(self, name, tags=None, **_):
         self.tags = tags or {}
+        self.hierarchy = Hierarchy(self.tags.pop('hierarchy', {}))
         self.name = name
         self.elt_, self.class_, self.id_ = decode(self.type, name)
         self.language_code = ''

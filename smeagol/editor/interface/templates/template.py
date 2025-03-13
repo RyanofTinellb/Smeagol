@@ -57,12 +57,14 @@ class Template:
         self.styles = styles
         self.templates = templates
         self.started = self.templates.started
+        self.hierarchy = []
         self._level = -1
         self.components = components or Components()
 
     @property
     def html(self):
         html = ''.join([self._html(elt, self.components) for elt in self.text])
+        html += ''.join(reversed(self.hierarchy))
         return re.sub(fr'<a href="{self.templates.page.name}\.html.*?">(.*?)</a>',
                       r'<span class="self-link">\1</span>', html)
 
@@ -71,6 +73,23 @@ class Template:
         if isinstance(obj, str):
             return self.string(obj, components)
         tag = self.styles[obj.name]
+        return self.section(obj, components, tag)
+
+    def section(self, obj, components, tag):
+        composition = self.compose(obj, components, tag)
+        new_rank = tag.hierarchy.rank
+        if not new_rank:
+            return composition
+        difference = new_rank - len(self.hierarchy)
+        self.hierarchy += [''] * difference
+        prequel = ''
+        while len(self.hierarchy) > new_rank:
+            prequel += self.hierarchy.pop()
+        prequel += tag.hierarchy.start
+        self.hierarchy.append(tag.hierarchy.end)
+        return ''.join([prequel, composition])
+
+    def compose(self, obj, components, tag):
         components = components.new(tag)
         if tag.param and tag.type != 'toc':
             return self.replace_param(obj, components, tag)
