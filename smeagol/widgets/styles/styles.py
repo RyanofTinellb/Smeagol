@@ -38,9 +38,7 @@ class Styles:
         try:
             style = self.styles[name]
         except KeyError:
-            print(f'Style {name} is not defined.')
-            self.styles[name] = Style(name, default_style=self.default)
-            style = self.styles[name]
+            raise KeyError(f'Style {name} is not defined.')
         style.language_code = language
         return style
 

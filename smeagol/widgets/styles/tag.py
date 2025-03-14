@@ -149,7 +149,10 @@ class Tag:
 
     @property
     def key(self):
-        return self.tags.get('key') or self.tags.get('keys', {}).get('on', '')
+        key = self.tags.get('key') or self.tags.get('keys', {}).get('on', '')
+        if isinstance(key, int):
+            return f'KeyPress-{key}'
+        return key
 
     @property
     def off_key(self):
