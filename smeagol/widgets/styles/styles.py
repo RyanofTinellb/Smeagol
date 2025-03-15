@@ -37,8 +37,8 @@ class Styles:
         name = name.strip('*†')
         try:
             style = self.styles[name]
-        except KeyError:
-            raise KeyError(f'Style {name} is not defined.')
+        except KeyError as e:
+            raise KeyError(f'Style {name} is not defined.') from e
         style.language_code = language
         return style
 

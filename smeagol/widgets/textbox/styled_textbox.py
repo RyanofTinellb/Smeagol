@@ -70,7 +70,7 @@ class StyledTextbox(BaseTextbox):
         if not self.styles:
             return
         self.configure_tags()
-        tags = self._get_tags(mark, offset, override)
+        tags = [tag for tag in self._get_tags(mark, offset, override) if tag != 'sel']
         self.ime = self.invoke_ime(tags)
         self.styles.update(tags, self.styles_menu)
         self.update_displays()

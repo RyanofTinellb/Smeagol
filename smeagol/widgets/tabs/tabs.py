@@ -79,6 +79,9 @@ class Tabs(BaseTabs):
         return 'break'
 
     def load_entry(self, event):
+        if not event.widget.get():
+            self.textbox.focus_set()
+            return
         try:
             self.open_entry(entry=self.entry.new(
                 self.displays.headings[:event.widget.level + 1]))

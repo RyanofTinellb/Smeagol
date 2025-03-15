@@ -6,6 +6,7 @@ import shutil
 import socket
 import tkinter.filedialog as fd
 import webbrowser as web
+from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler
 from socketserver import TCPServer as Server
 from threading import Thread
@@ -88,6 +89,7 @@ def load_string(filename):
     with open(filename, encoding='utf-8') as f:
         return f.read()
 
+
 def readlines(filename):
     text = load_string(filename)
     for line in text.splitlines():
@@ -154,6 +156,7 @@ def open_source():
                'defaultextension': '.src'}
     return fd.askopenfilename(**options)
 
+
 def open_folder():
     return fd.askdirectory()
 
@@ -182,6 +185,7 @@ def delete_html(filename):
         pathlib.Path.unlink(filename)
     with ignored(OSError):
         pathlib.Path.rmdir(os.path.dirname(filename))
+
 
 def find_by_type(root: str, ext: str):
     return walk(root, isfiletype(ext))
@@ -215,6 +219,18 @@ def start_server(port=None, directory=None, page404=''):
     class Handler(SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=directory, **kwargs)
+
+        def do_GET(self):
+            with ignored(ConnectionAbortedError):
+                super().do_GET()
+
+        def log_request(self, code='-', size='-'):
+            if isinstance(code, HTTPStatus):
+                code = code.value
+            if code not in [200, 304]:
+                self.log_message('"%s" %s %s',
+                                self.requestline, str(code), str(size))
+
 
     page404 = page404 or default.page404
     port = port or random.randint(20000, 60000)

@@ -115,7 +115,8 @@ def link(one, other):
         return ''
     hash_ = '#' if fragment else ''
     other[-1], ext = try_split(other[-1], '.', 'html')
-    return '/' + '/'.join(other) + '.' + ext + hash_ + fragment
+    open_slash = '' if other[0].startswith('http') else '/'
+    return open_slash + '/'.join(other) + '.' + ext + hash_ + fragment
 
 
 def groupby(obj, fn):
