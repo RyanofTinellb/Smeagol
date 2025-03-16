@@ -48,5 +48,5 @@ class RandomWords:
 
 
 creator = RandomWords()
-for j in range(15):
+for j in range(25):
     print(creator.word)

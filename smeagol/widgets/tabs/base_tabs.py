@@ -99,6 +99,7 @@ class BaseTabs(ttk.Notebook):
 
     def change(self, _event):
         self.update_displays()
+        self.textbox.get_styles_from_cursor()
         # self.go_to_headings()
 
     def close(self, event):
