@@ -8,8 +8,6 @@ class Interfaces:
 
     def __getitem__(self, name):
         name = re.sub(r'\\+|/+', '/', name)
-        for k in self.interfaces:
-            print(k)
         try:
             return self.interfaces[name]
         except KeyError:

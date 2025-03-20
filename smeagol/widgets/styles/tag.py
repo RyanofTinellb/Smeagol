@@ -115,7 +115,7 @@ def increment_closer(string, level):
 
 def decode(type_, name):
     elt_, id_ = utils.try_split(name, '#')
-    elt_, class_ = utils.try_split(name, '|')
+    elt_, class_ = utils.try_split(elt_, '|')
     if type_ in ['div', 'span']:
         class_ = elt_
         elt_ = type_

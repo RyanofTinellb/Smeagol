@@ -43,6 +43,7 @@ class TemplateStore:
         template = fs.load_yaml(filename)
         styles = Styles(template.get('styles', {}))
         text = TextTree(template.get('text', []), styles.ranks)
+        self._filenames.update(template.get('templates', {}))
         return Template(text, styles, self)
 
     def __getitem__(self, key):

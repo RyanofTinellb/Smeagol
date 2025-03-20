@@ -17,6 +17,10 @@ class Templates(SubsetDict):
             sections = self.sections
             sections[attr] = value
             self.sections = sections
+    
+    def update(self, other: dict):
+        for k, v in other.items():
+            self.__setattr__(k, v)
 
     def copy(self):
         copy = super().copy()
