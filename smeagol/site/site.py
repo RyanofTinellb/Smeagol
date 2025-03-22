@@ -104,11 +104,10 @@ class Site(Page):
 
     def _pronunciation(self, node):
         self._serial['r'] = node.stringify().strip('/')
-        
+
     def _definition(self, node):
         self._serial['d'] = utils.buy_caps(node.stringify())
         self._wordlist.append(self._serial.copy())
-    
 
     def _serialiser(self, serial):
         if not serial:

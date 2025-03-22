@@ -109,12 +109,18 @@ class BaseTabs(ttk.Notebook):
             source = None if current == self.select() else current
         except tk.TclError:
             source = None
-        if self.index('end') - len(self.closed) <= 1:
+        if len(self.interface_tabs) <= 1:
             return 'break'
         self._close(self.select())
         self.select(source)
         self.update_displays()
         return 'break'
+
+    @property
+    def interface_tabs(self):
+        tabs = [self.nametowidget(tab) for tab in self.tabs()]
+        return [tab for tab in tabs if tab.interface == self.interface
+                and tab.is_open]
 
     def _close(self, tab):
         self.nametowidget(tab).close()
