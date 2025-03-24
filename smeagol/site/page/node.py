@@ -28,6 +28,11 @@ class Node:
             return obj[place]
         except TypeError as e:
             raise KeyError(f'{obj.name} has no child {place}') from e
+        
+        
+    def __iter__(self):
+        for names in self.entries:
+            yield self.new(names)
 
     @property
     def data(self) -> dict:

@@ -187,13 +187,16 @@ class Template:
         return function
     
     def repeat(self, obj, components, _tag):
-        output = []
-        for entry in self.templates.page.hierarchy:
-            if entry.level == 1:
-                continue
-            self.templates.set_data(entry)
-            output.append(''.join([self._html(elt, components) for elt in obj]))
-        return ''.join(output)
+        try:
+            return ''.join([self._repeat(entry, obj, components) for entry in self.templates.page.hierarchy])
+        except KeyError:
+            return ''.join([self._repeat(entry, obj, components) for entry in self.templates.page])
+
+    def _repeat(self, entry, obj, components):
+        if entry.level == 1:
+            return ''
+        self.templates.set_data(entry, self.templates.entry_styles)
+        return ''.join([self._html(elt, components) for elt in obj])
 
     def toc(self, obj, _components, tag):
         self._level = -1

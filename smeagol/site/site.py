@@ -26,10 +26,6 @@ class Site(Page):
             raise AttributeError(
                 f"'{name}' object has no attribute '{attr}'") from e
 
-    def __iter__(self):
-        for names in self.entries:
-            yield self.new(names)
-
     def __len__(self):
         return sum(1 for page in self)
 
