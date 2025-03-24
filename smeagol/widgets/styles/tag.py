@@ -131,6 +131,8 @@ class Tag:
         self.language_code = ''
 
     def incremented_copy(self, level):
+        if level > 1:
+            level -= 1
         open_ = increment_opener(self.open, level)
         close = increment_closer(self.close, level)
         tags = self.tags.copy()
@@ -160,7 +162,7 @@ class Tag:
 
     def defaults(self, attr):
         match attr:
-            case 'type' | 'language' | 'repeat' | 'keep_tags':
+            case 'type' | 'language' | 'repeat' | 'keep_tags' | 'sep':
                 value = ''
             case 'param':
                 value = ' id="$url(text)$|$node$' if self.type == 'heading' else ''
@@ -235,6 +237,10 @@ class Tag:
 
     @property
     def _line_start(self):
+        if self.sep == ' ':
+            return self.sep
+        if self.sep:
+            return f'<{self.sep}>'
         match self.type:
             case 'line' | 'heading':
                 return ''
@@ -245,6 +251,10 @@ class Tag:
 
     @property
     def _line_end(self):
+        if self.sep == ' ':
+            return self.sep
+        if self.sep:
+            return f'</{self.sep}>'
         match self.type:
             case 'line' | 'heading':
                 return ''

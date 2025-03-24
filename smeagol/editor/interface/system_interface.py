@@ -173,6 +173,7 @@ class SystemInterface:
     def save_special_files(self):
         try:
             self.save_searchfile()
+            self.save_wholepage()
             self.save_search404_file()
             self.save_search_data()
             if self.serialisation_format:
@@ -180,6 +181,13 @@ class SystemInterface:
         except ValueError as e:
             message = f'Error saving special files of {self.filename}'
             raise ValueError(message) from e
+        
+    def save_wholepage(self):
+        filename = self.locations.wholepage
+        page = self._page(filename)
+        self.template_store.set_data(page)
+        html = self.template_store.wholepage.html
+        fs.save_string(html, filename)
 
     def save_searchfile(self):
         filename = self.locations.search
@@ -216,4 +224,4 @@ class SystemInterface:
 
     def open_assets(self):
         self.links = self.open_link_files(self._links)
-        self.template_store = TemplateStore(self.templates, self.links)
+        self.template_store = TemplateStore(self.templates, self.links, self.styles)

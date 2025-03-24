@@ -54,7 +54,7 @@ class Template:
     def __init__(self, text: TextTree, styles: Styles,
                  templates: TemplateStore, components: Components = None):
         self.text = text
-        self.styles = styles
+        self.styles = styles or templates.default_styles
         self.templates = templates
         self.started = self.templates.started
         self.hierarchy = []
@@ -180,24 +180,20 @@ class Template:
                 return obj
 
     def types(self, tag):
-        match tag.type:
-            case 'table':
-                function = self.table
-            case 'data':
-                function = self.data
-            case 'template':
-                function = self.template
-            case 'heading':
-                function = self.heading
-            case 'link':
-                function = self.link
-            case 'error':
-                function = self.error
-            case 'toc':
-                function = self.toc
-            case _other:
-                function = self.block if tag.block else self.span
+        try:
+            function = getattr(self, tag.type)
+        except AttributeError:
+            function = self.block if tag.block else self.span
         return function
+    
+    def repeat(self, obj, components, _tag):
+        output = []
+        for entry in self.templates.page.hierarchy:
+            if entry.level == 1:
+                continue
+            self.templates.set_data(entry)
+            output.append(''.join([self._html(elt, components) for elt in obj]))
+        return ''.join(output)
 
     def toc(self, obj, _components, tag):
         self._level = -1

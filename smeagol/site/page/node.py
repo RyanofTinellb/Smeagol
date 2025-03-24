@@ -63,7 +63,7 @@ class Node:
             case 'name':
                 value = self.names[-1]
             case 'level':
-                value = max(0, len(self.names)-2)
+                value = max(0, len(self.names)-1)
             case 'kids':
                 value = self.data.children
             case 'num_children':
