@@ -116,9 +116,11 @@ def increment_closer(string, level):
 def decode(type_, name):
     elt_, id_ = utils.try_split(name, '#')
     elt_, class_ = utils.try_split(elt_, '|')
-    if type_ in ['div', 'span']:
+    if type_ in ['div', 'span', 'ul', 'ol']:
         class_ = elt_
         elt_ = type_
+    if elt_ == class_:
+        class_ = ''
     return elt_, class_, id_
 
 
@@ -162,7 +164,7 @@ class Tag:
 
     def defaults(self, attr):
         match attr:
-            case 'type' | 'language' | 'repeat' | 'keep_tags' | 'sep':
+            case 'type' | 'language' | 'repeat' | 'keep_tags' | 'sep' | 'prequel' | 'sequel':
                 value = ''
             case 'param':
                 value = ' id="$url(text)$|$node$' if self.type == 'heading' else ''
@@ -172,9 +174,9 @@ class Tag:
                 value = self.type in {
                     'block', 'line', 'div', 'heading', 'table', 'ol', 'ul'}
             case 'open':
-                value = self._open
+                value = self.prequel + self._open
             case 'close':
-                value = self._close
+                value = self._close + self.sequel
             case 'start':
                 value = self._line_start
             case 'end':
@@ -274,5 +276,6 @@ class Tag:
         return {
             'type', 'key', 'language', 'block',
             'open', 'close', 'start', 'end',
+            'prequel', 'sequel',
             'pipe', 'repeat', 'template', 'keep_tags'
         }
