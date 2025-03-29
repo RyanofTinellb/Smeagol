@@ -69,12 +69,12 @@ types:
             start: ''
             end: ''
         ol
-            open: <ol>
+            open: <ol class="name">
             close: </ol>
             start: <li>
             end: </li>
         ul
-            open: <ul>
+            open: <ul class="name">
             close: <ul>
             start: <li>
             end: </li>
