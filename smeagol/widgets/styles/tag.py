@@ -86,6 +86,7 @@ types:
                             -- should only be displayed if an expected error occurred.
         table -- eg: <table>Entire Table</table> -- uses Markdown formatting (or similar)
         data -- eg: <entry_data>name</entry_data> -- child is passed to entry to get information
+        page -- eg: <content>here</content> -- accesses main page template from Template Store
         template -- eg: <template>copyright</template> -- child is passed to Template Store
         link -- eg: <internal-link>data, stylesheets, style.css</internal-link>
                                     -- child and entry are passed to Linker to get information
@@ -98,6 +99,7 @@ import re
 
 from smeagol.utilities import utils
 from smeagol.widgets.styles.hierarchy import Hierarchy
+
 
 def increment_opener(string, level):
     def inc(match, level=level):
@@ -126,7 +128,7 @@ def decode(type_, name):
 
 class Tag:
     def __init__(self, name, tags=None, **_):
-        self.tags = tags or {}
+        self.tags = {'type': tags} if isinstance(tags, str) else (tags or {})
         self.hierarchy = Hierarchy(self.tags.pop('hierarchy', {}))
         self.name = name
         self.elt_, self.class_, self.id_ = decode(self.type, name)

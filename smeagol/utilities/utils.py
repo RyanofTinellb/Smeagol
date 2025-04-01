@@ -170,15 +170,6 @@ def remove_common_prefix(*lists):
         del lst[:index]
 
 
-def page_initial(name, markdown=None):
-    """Returns the first letter of a word, i.e.: the folder of the Dictionary
-    in which that word would appear
-    @error: IndexError if the text only contains punctuation"""
-    if markdown:
-        name = markdown.to_markdown(name)
-    return re.findall(r"\w", name)[0]
-
-
 def buy_caps(text):
     return re.sub(r'\$(.)', lambda match: match.group(1).upper(), text.replace('.', ' '))
 
