@@ -72,7 +72,10 @@ class Template:
         components = components or Components()
         if isinstance(obj, str):
             return self.string(obj, components)
-        tag = self.styles[obj.name]
+        try:
+            tag = self.styles[obj.name]
+        except KeyError as e:
+            raise KeyError(f'Tag {obj.name} does not exist') from e
         return self.section(obj, components, tag)
 
     def section(self, obj, components, tag):
@@ -103,7 +106,7 @@ class Template:
         try:
             node.add(''.join(utils.alternate_yield([_text, self._param],
                                                    tag.param.split('$'), *options)))
-        except IndexError:  # usually a broken link
+        except (IndexError, ValueError):  # usually a broken link
             return self._html(obj.other_child, components)
         except TypeError as e:
             raise TypeError(obj, tag.param) from e
@@ -185,7 +188,7 @@ class Template:
         except AttributeError:
             function = self.block if tag.block else self.span
         return function
-    
+
     def repeat(self, obj, components, _tag):
         try:
             return ''.join([self._repeat(entry, obj, components) for entry in self.templates.page.hierarchy])
@@ -258,7 +261,7 @@ class Template:
         try:
             return template.html
         except KeyError as e:
-            raise KeyError(f'Template {name} has no tag') from e
+            raise KeyError(f'Template {name} is missing a tag') from e
 
     def heading(self, obj: Node, components: Components, tag: Tag):
         level = components.wholepage and self.templates.page.level
