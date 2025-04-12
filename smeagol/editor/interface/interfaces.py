@@ -26,8 +26,11 @@ class Interfaces:
             print(f'Saving from {name}:')
             interface.save_site()
             for percentage in interface.save_entries():
+                if percentage >= 100:
+                    continue
                 print(f'{percentage}% complete')
             interface.save_special_files()
+            print('100% complete')
 
     @property
     def blank(self):

@@ -295,7 +295,6 @@ class Template:
         title = self.templates.page.title
         styles = self.templates.styles
         template = type(self)(text, title, styles, self.templates, components)
-        print(title, template)
         try:
             return template.html
         except KeyError as e:
