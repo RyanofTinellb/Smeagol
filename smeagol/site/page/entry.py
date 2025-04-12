@@ -15,7 +15,7 @@ class Entry(Relation):
 
     def __getattr__(self, attr):
         match attr:
-            case 'script' | 'id':
+            case 'script' | 'id' | 'title':
                 return self.data.get(attr, '')
             case 'position':
                 return self.data.get(attr, '1.0')
@@ -29,7 +29,7 @@ class Entry(Relation):
 
     def __setattr__(self, attr, value):
         match attr:
-            case 'position' | 'script' | 'id':
+            case 'position' | 'script' | 'id' | 'title':
                 self._conditional_set(attr, value)
             case _default:
                 super().__setattr__(attr, value)

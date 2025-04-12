@@ -1,8 +1,8 @@
 from smeagol.editor.interface.interface import Interface
 from smeagol.utilities import filesystem as fs
 from smeagol.utilities import utils
-FILENAME = r'C:\Users\Ryan\TinellbianLanguages\grammar\data\grammar.smg'
-NEWFILE = r'C:\Users\Ryan\TinellbianLanguages\grammar\data\assets\internal-links.glk'
+FILENAME = r'c:\users\ryan\tinellbianlanguages\grammar\data\grammar.smg'
+NEWFILE = r'c:\users\ryan\tinellbianlanguages\grammar\data\assets\internal-links.glk'
 
 
 class Creator:

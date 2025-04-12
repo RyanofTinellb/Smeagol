@@ -102,21 +102,17 @@ def recurse(obj, names):
     return obj
 
 
-def link(one, other):
+def link(page):
     fragment = ''
     with ignored(AttributeError):
-        other = other.link
+        page = page.link
     with ignored(AttributeError):
-        other, fragment = try_split(other, '#')
-        other = other.split('/')
-    with ignored(AttributeError):
-        one = one.link
-    if one == other:
-        return ''
+        page, fragment = try_split(page, '#')
+        page = page.split('/')
     hash_ = '#' if fragment else ''
-    other[-1], ext = try_split(other[-1], '.', 'html')
-    open_slash = '' if other[0].startswith('http') else '/'
-    return open_slash + '/'.join(other) + '.' + ext + hash_ + fragment
+    page[-1], ext = try_split(page[-1], '.', 'html')
+    open_slash = '' if page[0].startswith('http') else '/'
+    return open_slash + '/'.join(page) + '.' + ext + hash_ + fragment
 
 
 def groupby(obj, fn):

@@ -40,12 +40,6 @@ class Page(Entry):
                 names += ['index']
         return names
 
-    def link_to(self, other):
-        return utils.link(self, other)
-
-    def link_from(self, other):
-        return utils.link(other, self)
-
     @property
     def url(self):
         return os.path.join(*self.link) + '.html'

@@ -67,7 +67,7 @@ class Editor(Manager):
 
     def quit(self):
         super().quit()
-        print('Closing Servers...')
         self.tabs.save_all()
+        print('Closing Servers...')
         fs.close_servers()
         print('Servers closed. Enjoy the rest of your day.')

@@ -4,7 +4,7 @@ from smeagol.utilities.api import SubsetDict
 class Templates(SubsetDict):
     def __getattr__(self, attr):
         value = super().__getattr__(attr)
-        if attr == 'sections':
+        if attr in ['sections', 'special']:
             return value or {}
         return value
 
@@ -17,10 +17,10 @@ class Templates(SubsetDict):
             sections = self.sections
             sections[attr] = value
             self.sections = sections
-    
+
     def update(self, other: dict):
         for k, v in other.items():
-            self.__setattr__(k, v)
+            setattr(self, k, v)
 
     def copy(self):
         copy = super().copy()
@@ -31,8 +31,10 @@ class Templates(SubsetDict):
     def _valid_attrs(self):
         return (
             'main',
+            'entry',
             'search',
             'page404',
             'wholepage',
-            'sections'
+            'sections',
+            'special'
         )
