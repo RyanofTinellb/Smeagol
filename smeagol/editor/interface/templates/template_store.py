@@ -26,9 +26,6 @@ class TemplateStore:
         self.links = links
         self._cache = {'sections': {}, 'special': {}}
 
-# for (item, html) in self.template_store.special_files
-
-    # @property
     def special_files(self, site):
         for item in self._filenames.special:
             contents = self._get_from('special', item)
