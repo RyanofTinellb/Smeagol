@@ -158,11 +158,10 @@ class SystemInterface:
             self.locations.directory, entry.url)
         with utils.ignored(IndexError):
             self.site.remove_entry(entry)
-            fs.delete_html(filename)
+            fs.delete_file(filename)
             return (filename, False)
-        self.template_store.set_data(entry, self.styles)
         try:
-            html = self.template_store.main.html
+            html = self.template_store.html(entry)
         except (ValueError, IndexError, TypeError) as e:
             raise type(e)(f'Incorrect formatting in entry {entry.name}') from e
         fs.save_string(html, filename)
@@ -171,30 +170,20 @@ class SystemInterface:
         return (filename, True)
 
     def save_special_files(self):
+        for (item, html) in self.template_store.special_files(self.site):
+            try:
+                fs.save_string(html, self.locations[item])
+                print(f'Saved {self.locations[item]}')
+            except KeyError as e:
+                message = f'Error saving {item} for {self.filename}'
+                raise ValueError(message) from e
         try:
-            self.save_searchfile()
-            self.save_wholepage()
-            self.save_search404_file()
             self.save_search_data()
             if self.serialisation_format:
                 self.save_wordlist()
         except ValueError as e:
             message = f'Error saving special files of {self.filename}'
             raise ValueError(message) from e
-        
-    def save_wholepage(self):
-        filename = self.locations.wholepage
-        page = self._page(filename)
-        self.template_store.set_data(page)
-        html = self.template_store.wholepage.html
-        fs.save_string(html, filename)
-
-    def save_searchfile(self):
-        filename = self.locations.search
-        page = self._page(filename)
-        self.template_store.set_data(page)
-        html = self.template_store.search.html
-        fs.save_string(html, filename)
 
     def _page(self, filename: str):
         name = os.path.relpath(filename, self.locations.directory)
@@ -202,12 +191,6 @@ class SystemInterface:
         name = re.split(r'[/\\]+', name)
         name = [self.site.name, *name]
         return self.site.new(name)
-
-    def save_search404_file(self):
-        html = self.template_store.page404.html
-        self.handler.error_message_format = html
-        filename = self.locations.page404
-        fs.save_string(html, filename)
 
     def save_search_data(self):
         data = self.site.analysis()
@@ -224,4 +207,5 @@ class SystemInterface:
 
     def open_assets(self):
         self.links = self.open_link_files(self._links)
-        self.template_store = TemplateStore(self.templates, self.links, self.styles)
+        self.template_store = TemplateStore(
+            self.templates, self.links, self.styles)

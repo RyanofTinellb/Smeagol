@@ -50,6 +50,9 @@ types:
             open: ''
             close: ''
             pipe: |
+        label -- eg: <label for="search">
+            open: <label for="wordsearch">
+            close: </label>
     block-level:
                 ++ Will end line tags before closing. ++
         block -- eg: <html>\n\n</html> -- typically uses starts and ends to surround lines
@@ -118,7 +121,7 @@ def increment_closer(string, level):
 def decode(type_, name):
     elt_, id_ = utils.try_split(name, '#')
     elt_, class_ = utils.try_split(elt_, '|')
-    if type_ in ['div', 'span', 'ul', 'ol']:
+    if type_ in ['div', 'span', 'ul', 'ol', 'label']:
         class_ = elt_
         elt_ = type_
     if elt_ == class_:
@@ -214,17 +217,18 @@ class Tag:
         elt_ = self.elt_
         class_ = f' class="{self.class_}"' if self.class_ else ''
         id_ = f' id="{self.id_}"' if self.id_ else ''
+        end = '>'
         match self.type:
             case 'blank':
                 return ''
             case 'anchor':
                 return '<a href="'
+            case 'label':
+                class_ = f' for="{self.class_}"'
             case 'complete':
                 end = ' '
             case 'heading':
                 end = ''
-            case _default:
-                end = '>'
         return f'<{elt_}{class_}{id_}{lang}{end}'
 
     @property

@@ -18,7 +18,7 @@ class SubsetDict:
         for attr in self._valid_attrs:
             self.values[attr] = getattr(updates, attr)
 
-    def __getattr__(self, attr):
+    def _get(self, attr):
         if not self._valid(attr):
             name = type(self).__name__
             raise AttributeError(f"'{name}' object has no attribute '{attr}'")
@@ -26,6 +26,12 @@ class SubsetDict:
             return self.values[attr]
         except KeyError:
             return ''
+
+    def __getitem__(self, attr):
+        return self._get(attr)
+
+    def __getattr__(self, attr):
+        return self._get(attr)
 
     def __setattr__(self, attr, value):
         if attr == 'values':

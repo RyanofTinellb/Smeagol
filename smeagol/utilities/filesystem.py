@@ -180,7 +180,7 @@ def walk(root: str, condition: callable):
             for filename in files if condition(filename)]
 
 
-def delete_html(filename):
+def delete_file(filename):
     with ignored(FileNotFoundError):
         pathlib.Path.unlink(filename)
     with ignored(OSError):

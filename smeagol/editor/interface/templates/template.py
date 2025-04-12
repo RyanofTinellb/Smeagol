@@ -51,10 +51,11 @@ def cell(text, index, final):
 
 
 class Template:
-    def __init__(self, text: TextTree, styles: Styles,
+    def __init__(self, text: TextTree, title: TextTree, styles: Styles,
                  templates: TemplateStore, components: Components = None):
         self.text = text
-        self.styles = styles or templates.default_styles
+        self.title = title
+        self.styles = styles or templates.styles
         self.templates = templates
         self.started = self.templates.started
         self.hierarchy = []
@@ -147,7 +148,7 @@ class Template:
             case other:
                 raise NotImplementedError(
                     f'function {other} has not been implemented')
-        return self.templates.page.link_to(page)
+        return utils.link(page)
 
     def _lookup(self, arg, text, language_code):
         text = text.lower().replace(' ', '')
@@ -161,6 +162,7 @@ class Template:
             print('This didn’t work!', arg, text, language_code)
         return item
 
+    #pylint: disable=R0911
     def data(self, obj: Node, components: Components, *_tag):
         match obj.first_child:
             case 'contents':
@@ -169,8 +171,12 @@ class Template:
                 return utils.buy_caps(self.templates.page.name)
             case 'year':
                 return str(dt.now().year)
+            case 'entry-title':
+                return self.templates.entry_title
+            case 'title':
+                return ''.join([self._html(elt, self.components) for elt in self.templates.title])
             case 'root':
-                return utils.buy_caps(self.templates.page.root.name)
+                return self.templates.page.root.name
             case other:
                 return self._data(other)
 
@@ -191,14 +197,15 @@ class Template:
 
     def repeat(self, obj, components, _tag):
         try:
-            return ''.join([self._repeat(entry, obj, components) for entry in self.templates.page.hierarchy])
+            return ''.join([self._repeat(entry, obj, components)
+                            for entry in self.templates.page.hierarchy])
         except KeyError:
             return ''.join([self._repeat(entry, obj, components) for entry in self.templates.page])
 
     def _repeat(self, entry, obj, components):
         if entry.level == 1:
             return ''
-        self.templates.set_data(entry, self.templates.entry_styles)
+        self.templates.page = entry
         return ''.join([self._html(elt, components) for elt in obj])
 
     def toc(self, obj, _components, tag):
@@ -210,6 +217,8 @@ class Template:
             family = page.reunion(obj.first_child.split('-'))
         except ValueError:
             family = page.root.reunion(obj.first_child.split('-'))
+        except IndexError: # page is a dictionary entry
+            return ''
         for entry in self.templates.page.hierarchy:
             if entry in family:
                 for _ in range(max(0, self._level - entry.level)):
@@ -229,7 +238,7 @@ class Template:
                 if entry == page:
                     output += entry.name
                 else:
-                    output += tag.param.replace('$link$', page.link_to(entry)
+                    output += tag.param.replace('$link$', utils.link(entry)
                                                 ).replace('$name$', entry.name)
                 output += tag.end or ''
         output += ''.join(reversed(open_tags))
@@ -255,8 +264,11 @@ class Template:
         return f'{start}{tag.open}{text}{tag.close}'
 
     def template(self, obj: Node, components: Components, *_args):
-        name = obj.first_child
-        template = self.templates[name]
+        name = obj.first_child.lower().replace(' ', '')
+        try:
+            template = self.templates[name]
+        except KeyError:
+            return ''
         template.components = components
         try:
             return template.html
@@ -280,8 +292,9 @@ class Template:
 
     def contents(self, components: Components):
         text = self.templates.page.text
+        title = self.templates.page.title
         styles = self.templates.styles
-        template = type(self)(text, styles, self.templates, components)
+        template = type(self)(text, title, styles, self.templates, components)
         try:
             return template.html
         except KeyError as e:
@@ -289,7 +302,7 @@ class Template:
                            self.templates.page.name}>') from e
 
     def link(self, obj: Node, *_args):
-        return self.templates.page.link_to(obj.first_child.split('/'))
+        return utils.link(obj.first_child.split('/'))
 
     def string(self, text: str, components: Components):
         start = end = para = ''
