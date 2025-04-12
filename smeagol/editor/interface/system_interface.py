@@ -173,7 +173,6 @@ class SystemInterface:
         for (item, html) in self.template_store.special_files(self.site):
             try:
                 fs.save_string(html, self.locations[item])
-                print(f'Saved {self.locations[item]}')
             except KeyError as e:
                 message = f'Error saving {item} for {self.filename}'
                 raise ValueError(message) from e

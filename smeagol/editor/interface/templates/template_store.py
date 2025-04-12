@@ -8,14 +8,18 @@ from smeagol.utilities import utils
 from smeagol.utilities.types import Entry
 from smeagol.widgets.styles.styles import Styles
 
+
 @dataclass
 class Contents:
     page: Template = None
     contents: Entry = None
 
-    def update(self, page, contents):
-        self.page = page
-        self.contents = contents
+    def update(self, page=None, contents=None):
+        if page:
+            self.page = page
+        if contents:
+            self.contents = contents
+
 
 class TemplateStore:
     def __init__(self, templates: Templates = None, links: dict = None, styles=None):
@@ -54,6 +58,14 @@ class TemplateStore:
                     raise AttributeError(
                         f"'{name}' object has no attribute '{attr}'") from e
 
+    def __setattr__(self, attr, value):
+        match attr:
+            case 'page':
+                self._contents.update(page=value)
+            case _default:
+                super().__setattr__(attr, value)
+
+
     def _cached(self, attr):
         try:
             return self._cache[attr]
@@ -85,6 +97,9 @@ class TemplateStore:
         except KeyError:
             template = self._load(getattr(self._filenames, name)[item])
             return self._cache[name].setdefault(item, template)
+
+    def update(self, page):
+        self._contents.update(page)
 
     def html(self, entry):
         self._contents.update(entry, self.entry)
