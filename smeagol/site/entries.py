@@ -8,6 +8,9 @@ class Entries:
         with utils.ignored(AttributeError):
             self.entries = self.entries.entries
 
+    def pop(self, attr):
+        self.entries.pop(attr, None)
+
     def __iter__(self):
         return self._rec(self.entries)
 

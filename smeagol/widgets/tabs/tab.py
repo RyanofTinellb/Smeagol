@@ -39,6 +39,7 @@ class Tab(tk.Frame):
 
     def save_entry(self, _event=None):
         self.entry.text = self.textbox.text
+        self.entry.title = self.textbox.title
         self.entry.update_date()
         self.entry.position = self.textbox.index('insert')
         self.interface.save_site()
@@ -68,7 +69,8 @@ class Tab(tk.Frame):
     def entry(self, entry):
         self._entry = entry
         self.name = self.entry.name
-        self.textbox.text = self._entry.text
+        self.textbox.title = entry.title or utils.default_title(entry)
+        self.textbox.text = entry.text
         self.textbox.mark_set('insert', self.entry.position)
         self.textbox.see('insert')
         self.textbox.focus_set()

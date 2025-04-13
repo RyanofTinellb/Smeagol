@@ -27,6 +27,14 @@ class Sidebar(tk.Frame):
         self.headings_frame.select_last()
 
     @property
+    def title_display(self):
+        return self.displays['title']
+
+    @title_display.setter
+    def title_display(self, value):
+        self.displays.update({'title': value})
+
+    @property
     def language_selector(self):
         return self.displays['language_code']
 

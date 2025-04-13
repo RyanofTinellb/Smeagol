@@ -8,7 +8,7 @@ class Manager(tk.Frame):
     '''Manages widgets for Editor'''
 
     def __init__(self, parent=None):
-        self.tabs = None
+        self.tabs = self.title_display = None
         super().__init__(parent)
         self.parent = self.master
         self.styles_menu = tk.Menu(self.parent, tearoff=0)
@@ -65,6 +65,9 @@ class Manager(tk.Frame):
     # @property
     def textframe(self):
         frame = tk.Frame(self.parent)
+        title_display = tk.Entry(frame)
+        title_display.pack(side=tk.TOP, fill=tk.BOTH)
+        self.sidebar.title_display = title_display
         options = {"side": tk.TOP, "expand": True, "fill": tk.BOTH}
         self.tabs = Tabs(frame, self.textbox_commands,
                          self.sidebar, self.parent.title)

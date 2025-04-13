@@ -36,7 +36,7 @@ class Entry(Relation):
 
     def _conditional_set(self, attr, value):
         if not value:
-            return self.data.pop(attr, None)
+            return self.data.pop(attr)
         self.data[attr] = value
         return None
 
