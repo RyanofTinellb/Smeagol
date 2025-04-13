@@ -171,6 +171,8 @@ class SystemInterface:
 
     def save_special_files(self):
         for (item, html) in self.template_store.special_files(self.site):
+            if item == 'search404':
+                self.handler.error_message_format = html
             try:
                 fs.save_string(html, self.locations[item])
             except KeyError as e:

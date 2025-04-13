@@ -34,7 +34,10 @@ class TemplateStore:
         for item in self._filenames.special:
             contents = self._get_from('special', item)
             self._contents.update(site, contents)
-            yield item, self.main.html
+            try:
+                yield item, self.main.html
+            except KeyError as e:
+                raise KeyError(f'Unable to save {item}') from e
 
     def __getattr__(self, attr):
         match attr:
