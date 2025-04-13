@@ -4,7 +4,6 @@ import json
 from smeagol.utilities.types import TextTree, Node
 from smeagol.utilities import utils
 from smeagol.widgets.textbox.styled_textbox import StyledTextbox
-from smeagol.utilities import filesystem as fs
 
 INSERT = "insert"
 SELECTION = "sel.first", "sel.last"
@@ -122,10 +121,6 @@ class ClipboardTextbox(StyledTextbox):
         clipboard = self.clipboard_get()
         if clipboard == self.clipboard.compare:
             return self.clipboard.text
-        diff = filter(lambda x: x[0] != x[1], zip(
-            *map(lambda y: y.splitlines(), [clipboard, self.clipboard.compare])))
-        for line in diff:
-            print(line[0][:20])
         return clipboard
 
     def _insert_tuples(self, text):
