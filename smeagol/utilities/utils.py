@@ -216,7 +216,8 @@ def _grammar_title(entry, root):
 
 
 def _language_name(entry):
-    return ' '.join(reversed(entry.names[2:4]))
+    language = ' '.join(reversed(entry.names[2:4]))
+    return language.replace('Proto ', 'Proto-')
 
 
 class DateFormatter:

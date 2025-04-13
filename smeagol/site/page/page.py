@@ -49,7 +49,7 @@ class Page(Entry):
         return self.names[-1]
 
     def analysis(self):
-        punctuation = r'[#*‘“”_= ….,?!:;。$()/[\]\xa0\|]'
+        punctuation = r'[#*‘“”"_= ….,?!:;+。$()/[\]\xa0\|\u200a-]'
         self.terms.clear()
         for number, line in enumerate(self.sentences):
             self.lines.append(line)
