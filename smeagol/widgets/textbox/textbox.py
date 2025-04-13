@@ -23,7 +23,8 @@ class Textbox(ClipboardTextbox):
     def __init__(self, clipboard, parent=None):
         super().__init__(clipboard, parent)
         self.displays.update({
-            'wordcount': tk.IntVar()})
+            'wordcount': tk.IntVar(),
+            'title': tk.StringVar()})
         self.add_commands(self.commands)
         self._history = ''
 
@@ -31,6 +32,8 @@ class Textbox(ClipboardTextbox):
         match attr:
             case 'plaintext':
                 return self.read()
+            case 'title':
+                return self.displays[attr].get()
             case _other:
                 try:
                     return self.displays[attr]
@@ -43,6 +46,8 @@ class Textbox(ClipboardTextbox):
                 self.reset()
                 self._paste(borders=ALL, text=value)
                 self.update_displays()
+            case 'title':
+                self.displays[attr].set(value)
             case _default:
                 super().__setattr__(attr, value)
 

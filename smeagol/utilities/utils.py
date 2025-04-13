@@ -193,6 +193,32 @@ def reorder(lst, obj):
                 obj[itm] = t
 
 
+def default_title(entry):
+    root = entry.root.name
+    match root:
+        case 'A Grammar of the Tinellbian Languages':
+            return _grammar_title(entry, root)
+        case _default:
+            return f'{entry.name} - {root}'
+
+
+def _grammar_title(entry, root):
+    match entry.level:
+        case 0:
+            return root
+        case 1 | 2:
+            name = entry.name
+        case 3:
+            name = _language_name(entry)
+        case _other:
+            name = f'{_language_name(entry)} {entry.name}'
+    return f'{name} - {root}'
+
+
+def _language_name(entry):
+    return ' '.join(reversed(entry.names[2:4]))
+
+
 class DateFormatter:
     def __init__(self, date, str_format):
         self.date = date
@@ -237,10 +263,12 @@ class DateFormatter:
 def format_date(date, str_format):
     return str(DateFormatter(date, str_format))
 
+
 @dataclass
 class Clipboard:
     text: str = ''
     compare: str = ''
+
 
 @dataclass
 class Flag:
