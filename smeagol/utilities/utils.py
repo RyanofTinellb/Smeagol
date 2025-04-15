@@ -198,9 +198,16 @@ def default_title(entry):
     match root:
         case 'A Grammar of the Tinellbian Languages':
             return _grammar_title(entry, root)
+        case 'The Coelacanth Quartet':
+            return _story_title(entry)
         case _default:
             return f'{entry.name} - {root}'
 
+def _story_title(entry):
+    names = entry.names.copy()
+    with ignored(IndexError):
+        names.pop(1)
+    return ' < '.join(reversed(names))
 
 def _grammar_title(entry, root):
     match entry.level:
