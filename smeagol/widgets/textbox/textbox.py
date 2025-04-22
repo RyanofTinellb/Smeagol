@@ -68,19 +68,13 @@ class Textbox(ClipboardTextbox):
         self.update_style_display()
 
     @property
-    def _clear_history(self):
+    def _cursor_buttons(self):
         return ['Prior', 'Next', 'Left', 'Right', 'Down', 'Up', 'Home', 'End']
 
-    @property
-    def _get_styles_from_cursor_buttons(self):
-        return self._clear_history + ['BackSpace']
-
     def _key_released(self, event):
-        if (event.keysym in self._clear_history or
+        if (event.keysym in self._cursor_buttons or
                 event.type == tk.EventType.ButtonRelease):
             self._history = ''
-        if (event.keysym in self._get_styles_from_cursor_buttons or
-                event.type == tk.EventType.ButtonRelease):
             self.get_styles_from_cursor(event)
             return
         self.update_displays()

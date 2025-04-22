@@ -50,6 +50,7 @@ class BaseTabs(ttk.Notebook):
 
     def reload_styles(self, _event=None):
         self.interface.open_styles()
+        self.interface.styles.language_code = self.textbox.styles.language_code
         self.textbox.styles = self.interface.styles
         self.textbox.configure_tags()
         self.textbox.clear_styles_menu()
