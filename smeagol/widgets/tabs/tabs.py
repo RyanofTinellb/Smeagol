@@ -62,20 +62,16 @@ class Tabs(BaseTabs):
         except IndexError as e:
             raise IndexError(f'Bad formatting in {entry.name}') from e
 
-    def previous_entry(self, event):
-        entry = event.widget.level
+    def previous_sister(self, event):
+        entry = self.entry[self.displays.headings[:event.widget.level + 1]]
         with utils.ignored(IndexError):
-            self.displays.headings = entry.previous_sister.names
+            self.displays.headings = entry.previous_sister().names
         return 'break'
 
-    def next_entry(self, event):
+    def next_sister(self, event):
         entry = self.entry[self.displays.headings[:event.widget.level + 1]]
-        try:
-            entry = entry.next_sister
-        except IndexError:
-            with utils.ignored(IndexError):
-                entry = entry.eldest_daughter
-        self.displays.headings = entry.names
+        with utils.ignored(IndexError):
+            self.displays.headings = entry.next_sister().names
         return 'break'
 
     def load_entry(self, event):
@@ -98,8 +94,8 @@ class Tabs(BaseTabs):
     @property
     def headings_commands(self):
         return [
-            ('<Prior>', self.previous_entry),
-            ('<Next>', self.next_entry),
+            ('<Prior>', self.previous_sister),
+            ('<Next>', self.next_sister),
             ('<Return>', self.load_entry),
         ]
 

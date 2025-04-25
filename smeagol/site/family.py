@@ -99,13 +99,27 @@ def sibling(directory, names):
 
 
 def _next_entry(directory, names):
-    name = names.pop()
-    obj = recurse(directory, names)
-    index = get_index(obj, name)
     try:
-        return [*names, get_name(obj[index+1])]
+        return next_sister(directory, names)
     except IndexError:
         return next_entry(directory, names, True)
+
+
+def sister(directory, names, offset):
+    name = names.pop()
+    obj = recurse(directory, names)
+    index = (get_index(obj, name) if name else 0) + offset
+    if 0 < index < len(obj):
+        return [*names, get_name(obj[index])]
+    raise IndexError(f'No such sister {index}')
+
+
+def next_sister(directory, names):
+    return sister(directory, names, +1)
+
+
+def previous_sister(directory, names):
+    return sister(directory, names, -1)
 
 
 def previous_entry(directory, names):

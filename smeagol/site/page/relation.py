@@ -25,6 +25,12 @@ class Relation(Node):
             node = family.previous_entry(*self._directory(node))
         return self.new(node)
 
+    def next_sister(self):
+        return self.new(family.next_sister(*self._directory()))
+
+    def previous_sister(self):
+        return self.new(family.previous_sister(*self._directory()))
+
     def reunion(self, groups):
         k = set()
         for group in groups:
