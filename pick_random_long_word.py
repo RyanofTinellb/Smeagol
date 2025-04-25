@@ -4,7 +4,7 @@ import random
 filename = 'c:/users/ryan/tinellbianlanguages/dictionary/data/assets/wordlist.json'
 
 def custFil(elt):
-    return elt['l'] == 'High Lulani' and 'derived' not in elt['p'] and len(elt['t']) > 5
+    return elt['l'] == 'High Lulani' and 'derived' not in elt['p'] and len(elt['t'].replace('-', '')) > 5
 
 text = fs.load_json(filename)
 text = list(filter(custFil, text))

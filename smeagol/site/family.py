@@ -108,7 +108,10 @@ def _next_entry(directory, names):
 def sister(directory, names, offset):
     name = names.pop()
     obj = recurse(directory, names)
-    index = (get_index(obj, name) if name else 0) + offset
+    try:
+        index = get_index(obj, name) + offset
+    except ValueError:
+        index = offset
     if 0 < index < len(obj):
         return [*names, get_name(obj[index])]
     raise IndexError(f'No such sister {index}')
