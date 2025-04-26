@@ -56,7 +56,7 @@ def save_yaml(obj, filename):
         return
     makedirs(filename)
     with open(filename, 'w', encoding='utf-8') as f:
-        yaml.dump(obj, f, allow_unicode=True, width=5000)
+        yaml.dump(obj, f, allow_unicode=True, width=5000, sort_keys=False)
 
 
 def jsonify(obj):
