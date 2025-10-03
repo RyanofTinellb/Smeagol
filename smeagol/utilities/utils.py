@@ -174,11 +174,6 @@ def sell_caps(text):
     return ''.join(letter if letter.lower() == letter else f'${letter.lower()}' for letter in text)
 
 
-def bind_all(obj, commands):
-    for command in commands:
-        obj.bind(*command)
-
-
 def reorder(lst, obj):
     """reorder a dictionary's key based on a given list"""
     if isinstance(obj, list):
@@ -203,11 +198,13 @@ def default_title(entry):
         case _default:
             return f'{entry.name} - {root}'
 
+
 def _story_title(entry):
     names = entry.names.copy()
     with ignored(IndexError):
         names.pop(1)
     return ' < '.join(reversed(names))
+
 
 def _grammar_title(entry, root):
     match entry.level:

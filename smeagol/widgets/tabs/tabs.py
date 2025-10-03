@@ -1,11 +1,13 @@
 from smeagol.utilities import utils
 from smeagol.widgets.tabs.base_tabs import BaseTabs
+from smeagol.editor.interface.interfaces import Interfaces
 from smeagol.utilities.types import Page
 
 
 class Tabs(BaseTabs):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.interfaces = Interfaces()
         self.displays.headings_frame.commands = self.headings_commands
         self.displays.language_selector.commands = self.language_commands
 
@@ -45,9 +47,10 @@ class Tabs(BaseTabs):
             raise TypeError(f'Unable to load from {filename}') from e
 
     def open_entry(self, interface=None, entry: Page = None, new_tab=False):
+        interface = interface or self.interface
         if new_tab:
             self.new()
-        self.current.interface = interface or self.interface
+        self.interface = interface
         try:
             self.current.entry = entry
         except (KeyError, IndexError):
@@ -91,6 +94,22 @@ class Tabs(BaseTabs):
         self.interface.styles.language_code = self.displays.language_selector.get()
         self.textbox.focus_set()
 
+    def follow_link(self, link):
+        link = link.split('#')[0].split('/')
+        if not link[0]:
+            if link[-1].endswith('.html'):
+                link[-1] = link[-1].removesuffix('.html')
+            if link[-1].lower() == 'index':
+                link.pop()
+            link[0] = self.entry.root.name
+            self.open_entry(entry=self.entry.new(link), new_tab=True)
+
+    @property
+    def _textbox_commands(self):
+        return super()._textbox_commands + [
+            ('<<FollowLink>>', self.follow_link)
+        ]
+    
     @property
     def headings_commands(self):
         return [

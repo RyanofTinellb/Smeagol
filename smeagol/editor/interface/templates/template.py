@@ -25,11 +25,6 @@ class Components:
             self.wholepage
         )
 
-
-def _text(text, *_args):
-    return text
-
-
 def cells(text):
     segments = text.split('|')
     final = len(segments) - 1
@@ -93,76 +88,26 @@ class Template:
         self.hierarchy.append(tag.hierarchy.end)
         return ''.join([prequel, composition])
 
-    def compose(self, obj, components, tag):
-        components = components.new(tag)
-        if tag.param and tag.type != 'toc':
-            return self.replace_param(obj, components, tag)
-        return self.types(tag)(obj, components, tag)
-
     def replace_param(self, obj, components, tag):
-        _, language_code = (utils.try_split(
-            obj.name, '@')) if tag.language else (None, None)
+        # _, language_code = (utils.try_split(
+        #     obj.name, '@')) if tag.language else (None, None)
         node = Node()
-        options = [obj, components, language_code]
+        items = [obj, components, self._html, self.templates.page]
         try:
-            node.add(''.join(utils.alternate_yield([_text, self._param],
-                                                   tag.param.split('$'), *options)))
+            node.add(tag.decode_param(items))
         except (IndexError, ValueError):  # usually a broken link
             return self._html(obj.other_child, components)
         except TypeError as e:
             raise TypeError(obj, tag.param) from e
         return self.types(tag)(node, components, tag)
 
-    def _param(self, param, obj, components, language_code):
-        text = obj.stringify(skip='error')
-        url, param = self._extract('url', param)
-        upper, param = self._extract('upper', param)
-        param, arg = utils.try_split(param, ':')
-        match param:
-            case 'node':
-                value = ''.join([self._html(elt, components) for elt in obj])
-            case 'text':
-                value = text
-            case 'lookup':
-                value = self._lookup(arg, text, language_code)
-            case 'link':
-                value = self._link(arg, text, language_code)
-            case _other:
-                raise ValueError(f'Parameter {param} does not exist')
-        return utils.url_form(value) if url else utils.buy_caps(value) if upper else value
+    def compose(self, obj, components, tag):
+        components = components.new(tag)
+        if tag.param and tag.type != 'toc':
+            return self.replace_param(obj, components, tag)
+        return self.types(tag)(obj, components, tag)
 
-    def _extract(self, tag, param):
-        if param.startswith(tag):
-            return True, re.search(fr'{tag}\((.*?)\)', param).group(1)
-        return False, param
-
-    def _link(self, arg, text, language_code):
-        arg, data = utils.try_split(arg, ':')
-        match arg:
-            case 'next':
-                page = self.templates.page.next_page()
-            case 'previous':
-                page = self.templates.page.previous_page()
-            case 'lookup':
-                page = self._lookup(data, text, language_code)
-            case other:
-                raise NotImplementedError(
-                    f'function {other} has not been implemented')
-        return utils.link(page)
-
-    def _lookup(self, arg, text, language_code):
-        text = text.lower().replace(' ', '')
-        if not language_code:
-            item = self.templates.links.get(arg, {}).get(text, '')
-        else:
-            item = self.templates.links.get(arg, {}).get(language_code, {})
-            with utils.ignored(AttributeError):
-                item = item.get(text, '')
-        if not item:
-            print('This didn’t work!', arg, text, language_code)
-        return item
-
-    #pylint: disable=R0911
+    # pylint: disable=R0911
     def data(self, obj: Node, components: Components, *_tag):
         match obj.first_child:
             case 'contents':
@@ -217,7 +162,7 @@ class Template:
             family = page.reunion(obj.first_child.split('-'))
         except ValueError:
             family = page.root.reunion(obj.first_child.split('-'))
-        except IndexError: # page is a dictionary entry
+        except IndexError:  # page is a dictionary entry
             return ''
         for entry in self.templates.page.hierarchy:
             if entry in family:

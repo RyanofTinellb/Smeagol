@@ -14,11 +14,38 @@ class SystemInterface:
     def __init__(self, filename='', server=True):
         self.filename = filename
         self.styles = self.files = self.links = self.template_store = None
-        config = self.load_config(filename) if filename else {}
-        self.setup(config)
-        self.site = self.open_site()
+        self.config = self.load_config(filename) if filename else {}
         self.open_assets()
+        self.open_site()
         self.start_server(server)
+
+    def load_config(self, filename):
+        try:
+            return fs.open_config(filename)
+        except AttributeError:
+            return {'assets': {'source': filename}}
+
+    def open_assets(self):
+        self.links = self.open_link_files(self._links)
+        self.open_styles()
+        self.template_store = TemplateStore(self.templates, self.styles)
+        self.files = fs.load_yaml(self._files)
+
+    def open_site(self):
+        self._site_data = fs.load_yaml(self.assets.source)
+        self.site = Site(**self._site_data,
+                    serialisation_format=self.serialisation_format)
+
+    def open_styles(self):
+        styles = self.load_from_config('styles')
+        imes = {name: fs.load_yaml(filename)
+                for name, filename in self._imes.items()}
+        try:
+            self.styles = Styles(styles, imes, self.links)
+        except AttributeError as e:
+            filename = self.config.get('styles', '')
+            raise AttributeError(f'{filename} is badly formatted. '
+                                 'Please make a note of it.') from e
 
     def start_server(self, server):
         page404location = self.locations.page404
@@ -61,20 +88,7 @@ class SystemInterface:
     @port.setter
     def port(self, value):
         self.config['port'] = value
-
-    def load_config(self, filename):
-        try:
-            return self._load_config_file(filename)
-        except AttributeError:
-            return self._create_config(filename)
-
-    def setup(self, config):
-        self.config = config
-        self.open_styles()
-        self.open_files()
-
-    def open_files(self):
-        self.files = fs.load_yaml(self._files)
+        
 
     def copy_all(self):
         fs.copy_all(self.files)
@@ -103,31 +117,8 @@ class SystemInterface:
     def add_entry_to_site(self, entry):
         self.site.add_entry(entry)
 
-    def open_styles(self):
-        styles = self.load_from_config('styles')
-        imes = {name: fs.load_yaml(filename)
-                for name, filename in self._imes.items()}
-        try:
-            self.styles = Styles(styles, imes)
-        except AttributeError as e:
-            filename = self.config.get('styles', '')
-            raise AttributeError(f'{filename} is badly formatted. '
-                                 'Please make a note of it.') from e
-
     def load_from_config(self, attr, default_obj=None):
         return fs.load_yaml(self.config.get(attr, ''), default_obj)
-
-    def open_site(self):
-        self._site_data = fs.load_yaml(self.assets.source)
-        return Site(**self._site_data,
-                    serialisation_format=self.serialisation_format)
-
-    @staticmethod
-    def _load_config_file(filename):
-        if filename.endswith('.smg'):
-            return fs.load_yaml(filename)
-        raise AttributeError('File type is Sméagol Source File. '
-                             'Creating Sméagol Configuration File...')
 
     def save_config(self):
         if self.filename:
@@ -205,8 +196,3 @@ class SystemInterface:
 
     def close_servers(self):
         fs.close_servers()
-
-    def open_assets(self):
-        self.links = self.open_link_files(self._links)
-        self.template_store = TemplateStore(
-            self.templates, self.links, self.styles)

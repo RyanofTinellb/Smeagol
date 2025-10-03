@@ -22,7 +22,7 @@ class Tab(tk.Frame):
     def _textbox(self):
         textbox = Textbox(self.clipboard, self)
         textbox.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
-        utils.bind_all(textbox, self.commands)
+        textbox.add_commands(self.commands)
         return textbox
 
     @property

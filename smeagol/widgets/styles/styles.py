@@ -4,27 +4,30 @@ from smeagol.utilities import utils
 from smeagol.widgets.styles.style import Style
 
 class Styles:
-    def __init__(self, styles, imes=None):
+    def __init__(self, styles, imes=None, links: dict = None):
         self.language_code = None
         self._current = set()
         self.default = Style('default', styles.pop('default', {}))
-        self.styles = self.create_styles(styles)
+        self.create_styles(styles, links)
         self.ranks = {name: style.rank for name, style in self.styles.items()}
         self.imes = imes or {}
+
+    def create_styles(self, styles, links):
+        styles = {name: self.create_style(name, style, links)
+                       for name, style in styles.items()}
+        styles['default'] = self.default
+        self.styles = styles
+        self.links = links
+        return styles
+
+    def create_style(self, name='', style=None, links=None):
+        style = style or {}
+        links = links or {}
+        return Style(name, style, default_style=self.default, links=links)
 
     @property
     def current(self):
         return list(self._current)
-
-    def create_style(self, name='', style=None):
-        style = style or {}
-        return Style(name, style, default_style=self.default)
-
-    def create_styles(self, styles):
-        styles = {name: self.create_style(name, style)
-                       for name, style in styles.items()}
-        styles['default'] = self.default
-        return styles
 
     def __contains__(self, item):
         return item in self.styles

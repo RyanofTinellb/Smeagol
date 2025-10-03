@@ -167,6 +167,11 @@ def open_smeagol():
                'defaultextension': '.smg'}
     return fd.askopenfilename(**options)
 
+def open_config(filename):
+    if filename.endswith('.smg'):
+        return load_yaml(filename)
+    raise AttributeError('File type is Sméagol Source File. '
+                         'Creating Sméagol Configuration File...')
 
 def save_smeagol():
     options = {'filetypes': [('Sméagol File', '*.smg')],

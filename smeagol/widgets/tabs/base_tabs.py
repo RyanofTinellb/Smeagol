@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 
-from smeagol.editor.interface.interfaces import Interfaces
 from smeagol.utilities import utils
 from smeagol.utilities.types import Sidebar
 from smeagol.widgets.tabs.tab import Tab
@@ -15,12 +14,19 @@ class BaseTabs(ttk.Notebook):
         self.styles_menu = None
         self.displays = displays
         self.change_title = title
-        utils.bind_all(self, self.commands)
+        self.add_commands(self.commands)
         self.textbox_commands = textbox_commands + self._textbox_commands
         self.clipboard = utils.Clipboard()
-        self.interfaces = Interfaces()
         self.closed = []
         self.new()
+
+    def add_commands(self, commands):
+        for keys, command in commands:
+            if isinstance(keys, str):
+                self.bind(keys, command)
+            else:
+                for key in keys:
+                    self.bind(key, command)
 
     @property
     def commands(self):

@@ -11,6 +11,20 @@ class BaseTextbox(Text):
         super().grid(*args, **kwargs)
         return self
 
+    def add_commands(self, commands):
+        for keys, command in commands:
+            if isinstance(keys, str):
+                self.bind(keys, command)
+            else:
+                for key in keys:
+                    self.bind(key, command)
+
+    def bind(self, key, command):
+        if key == '<<FollowLink>>':
+            self._link_follower = command
+            return
+        super().bind(key, command)
+
     @property
     def formatted_text(self):
         return self.formatted_get()

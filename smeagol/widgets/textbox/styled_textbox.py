@@ -20,14 +20,14 @@ def style_name(style: str):
 
 
 class StyledTextbox(BaseTextbox):
-    def __init__(self, parent=None, styles: Styles = None, languages: dict = None):
+    def __init__(self, parent=None):
         self.default_ime = {}
         self.ime = {}
         self.off_keys = {}
         super().__init__(parent, height=1, width=1, wrap=tk.WORD, undo=True)
-        self.styles = styles
+        self._styles = None
         self.styles_menu: dict[str, tk.IntVar] = {}
-        self.languages = languages or {}
+        self.languages = {}
         self.displays = {'style': tk.StringVar(),
                          'language_code': tk.StringVar()}
 
@@ -44,6 +44,14 @@ class StyledTextbox(BaseTextbox):
     @property
     def text(self):
         return TextTree(self.formatted_text, self.styles.ranks)
+
+    @property
+    def styles(self):
+        return self._styles
+
+    @styles.setter
+    def styles(self, value):
+        self._styles = value
 
     def modify_fontsize(self, event):
         sign = 1 if event.delta > 0 else -1
@@ -95,7 +103,7 @@ class StyledTextbox(BaseTextbox):
             return self.default_ime
         code = self.styles.language_code if style.language else ''
         ime = self.styles.imes.get(style.ime, {}).get(code, {})
-        return ime
+        return ime or self.ime
 
     def update_style_display(self):
         current = map(self._add_symbols, style_names(
@@ -121,12 +129,12 @@ class StyledTextbox(BaseTextbox):
         self.off_keys.clear()
         for style in self.styles:
             self._configure_tag(style)
-            var = self.styles_menu.setdefault(style.name, tk.IntVar())
-            self._configure_styles_menu(menu, style, var)
+            self._configure_styles_menu(menu, style)
 
-    def _configure_styles_menu(self, menu, style, var):
+    def _configure_styles_menu(self, menu, style):
         if not menu:
             return
+        var = self.styles_menu.setdefault(style.name, tk.IntVar())
         key = ('ctrl+' + style.key if style.key else '').replace('KeyPress-', ''
                                                                  ).replace('Alt-', 'alt+')
         menu.add_checkbutton(label=style.name + 10 * ' ' + key,
@@ -140,10 +148,20 @@ class StyledTextbox(BaseTextbox):
             self.config(**default.textbox_settings)
             self.default_ime = self.styles.imes.get(default.ime, {})
 
+    def anchor_bind(self, name, style):
+        def follow_link(event, follower=self._link_follower, name=name, param=style.param):
+            text = self.get(*self.tag_prevrange(name, tk.CURRENT + '+1c'))
+            _, style.language_code = (utils.try_split(
+                name, '@')) if style.language else (None, None)
+            follower(style.decode_link(text, middle_mouse=True))
+        self.tag_bind(name, '<2>', follow_link)
+
     def _configure_tag(self, style):
         self.tag_config(style.name, **style.paragraph)
         if style.language:
             self._configure_language_tags(style)
+        if style.link:
+            self.anchor_bind(style.name, style)
         if (key := style.key):
             self.bind(f'<Control-{key}>', self.style_changer(style))
         if (off_key := style.off_key):
@@ -152,6 +170,8 @@ class StyledTextbox(BaseTextbox):
 
     def _configure_language_tags(self, style):
         for code in self.languages:
+            if style.type == "anchor":
+                self.anchor_bind(f'{style.name}@{code}', style)
             self.tag_config(f'{style.name}@{code}', **style.paragraph)
 
     def style_changer(self, style: Style):

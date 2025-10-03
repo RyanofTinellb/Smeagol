@@ -51,14 +51,6 @@ class Textbox(ClipboardTextbox):
             case _default:
                 super().__setattr__(attr, value)
 
-    def add_commands(self, commands):
-        for keys, command in commands:
-            if isinstance(keys, str):
-                self.bind(keys, command)
-            else:
-                for key in keys:
-                    self.bind(key, command)
-
     def reset(self):
         self.edit_modified(False)
         self.styles.clear()

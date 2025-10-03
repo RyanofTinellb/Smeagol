@@ -20,15 +20,11 @@ class Interface(SystemInterface):
                     raise AttributeError(
                         f"'{name}' object has no attribute '{attr}'") from e
 
-    @staticmethod
-    def _create_config(filename):
-        return {'assets': {'source': filename}}
-
     def save(self):  # alias for use by (e.g.) Editor
         self.save_config()
 
-    def setup(self, config):
-        super().setup(config)
+    def open_assets(self):
+        super().open_assets()
         self.languages = self.load_from_config('languages', {})
 
     def change_language(self, language):

@@ -13,6 +13,8 @@ properties:
     pipe (str): what to replace the pipe "|" character with within an element marked with this tag.
     language (str): a template where '%l' will be replaced with the appropriate language code.
         e.g.: ' lang="x-tlb-%l"'
+    param (str): text to be replaced by selected text or modifications thereof.
+    category (str): determines where to look up text if param contains "lookup".
     ---------
     key (str): [see below <keys: on>]
     ----
@@ -129,24 +131,31 @@ def decode(type_, name):
     return elt_, class_, id_
 
 
+def _text(text, *_args, **_kwargs):
+    return text
+
+
+def _dictionary(text):
+    return utils.sell_caps(text).replace(' ', '.')
+
+
+def _grammar(text):
+    return text.replace(' ', '').lower()
+
+
 class Tag:
-    def __init__(self, name, tags=None, **_):
+    def __init__(self, name, tags=None, links: dict = None, copy=False):
         self.tags = {'type': tags} if isinstance(tags, str) else (tags or {})
         self.hierarchy = Hierarchy(self.tags.pop('hierarchy', {}))
         self.name = name
         self.elt_, self.class_, self.id_ = decode(self.type, name)
         self.language_code = ''
-
-    def incremented_copy(self, level):
-        if level > 1:
-            level -= 1
-        open_ = increment_opener(self.open, level)
-        close = increment_closer(self.close, level)
-        tags = self.tags.copy()
-        tags.update({'open': open_, 'close': close})
-        return type(self)(self.name, tags)
+        self.links = links if copy else links[self.category] if self.category else ''
 
     def __getattr__(self, attr):
+        if attr in ('category', 'link'):
+            with utils.ignored(AttributeError):
+                return self.tags.get('param', {}).get(attr, '')
         try:
             return self.tags[attr]
         except KeyError:
@@ -156,23 +165,10 @@ class Tag:
                 raise AttributeError(f"{type(self).__name__} "
                                      f"'{self.name}' has no attribute '{attr}'") from e
 
-    @property
-    def key(self):
-        key = self.tags.get('key') or self.tags.get('keys', {}).get('on', '')
-        if isinstance(key, int):
-            return f'KeyPress-{key}'
-        return key
-
-    @property
-    def off_key(self):
-        return self.tags.get('off-key') or self.tags.get('keys', {}).get('off', '')
-
     def defaults(self, attr):
         match attr:
-            case 'type' | 'language' | 'repeat' | 'keep_tags' | 'sep' | 'prequel' | 'sequel':
+            case 'type' | 'language' | 'repeat' | 'keep_tags' | 'sep' | 'prequel' | 'sequel' | 'category':
                 value = ''
-            case 'param':
-                value = ' id="$url(text)$|$node$' if self.type == 'heading' else ''
             case 'pipe':
                 value = '">' if self.type in ('anchor', 'heading') else '|'
             case 'block':
@@ -196,6 +192,38 @@ class Tag:
                         f"'{type(self).__name__}' object has no attribute '{attr}'") from e
         return value
 
+    def incremented_copy(self, level):
+        if level > 1:
+            level -= 1
+        open_ = increment_opener(self.open, level)
+        close = increment_closer(self.close, level)
+        tags = self.tags.copy()
+        tags.update({'open': open_, 'close': close})
+        return type(self)(self.name, tags, self.links, copy=True)
+
+    @property
+    def key(self):
+        key = self.tags.get('key') or self.tags.get('keys', {}).get('on', '')
+        if isinstance(key, int):
+            return f'KeyPress-{key}'
+        return key
+
+    @property
+    def off_key(self):
+        return self.tags.get('off-key') or self.tags.get('keys', {}).get('off', '')
+
+    @property
+    def param(self):
+        default = ' id="$link$|$node$' if self.type == 'heading' else ''
+        param = self.tags.get('param', default)
+        return param if isinstance(param, str) else param.get('string', default)
+    
+    @property
+    def link(self):
+        default = '$grammar(text)$' if self.type == 'heading' else ''
+        param = self.tags.get('param', {})
+        return default if isinstance(param, str) else param.get('link', default)
+    
     @property
     def _rank(self):
         if self.type in ('table', 'heading'):
@@ -285,3 +313,52 @@ class Tag:
             'prequel', 'sequel',
             'pipe', 'repeat', 'template', 'keep_tags'
         }
+
+    def decode_param(self, options):
+        return ''.join(utils.alternate_yield([_text, self._decode], self.param.split('$'), *options))
+
+    def decode_link(self, text, middle_mouse=False):
+        return ''.join(utils.alternate_yield([_text, self._decode], self.link.split('$'), text, middle_mouse=middle_mouse))
+
+    def _string_replace(self, options, string):
+        options = [options] if isinstance(options, str) else options
+        return ''.join(utils.alternate_yield(
+            [_text, self._decode_param], string.split('$'), *options))
+
+    def _decode(self, param, obj, components=None, html=None, page=None, middle_mouse=False):
+        text = obj if isinstance(obj, str) else obj.stringify(skip='error')
+        dictionary, param = self._extract('dictionary', param)
+        grammar, param = self._extract('grammar', param)
+        param, arg = utils.try_split(param, ':')
+        match param:
+            case 'node':
+                value = ''.join([html(elt, components)
+                                for elt in obj]) if html and components else ''
+            case 'text':
+                value = text
+            case 'lookup':
+                value = self.lookup(text)
+            case 'link':
+                value = self.decode_link(text, middle_mouse)
+            case 'next':
+                value = utils.link(page.next_page())
+            case 'previous':
+                value = utils.link(page.previous_page())
+            case _other:
+                raise ValueError(f'Parameter {param} does not exist')
+        fn = _dictionary if dictionary else _text if middle_mouse or not grammar else _grammar
+        return fn(value)
+
+    def lookup(self, text):
+        text = text.lower().replace(' ', '')
+        if not self.language:
+            return self.links.get(text, '')
+        item = self.links.get(self.language_code, {})
+        with utils.ignored(AttributeError):
+            item = item.get(text, '')
+        return item
+
+    def _extract(self, tag, param):
+        if param.startswith(tag):
+            return True, re.search(fr'{tag}\((.*?)\)', param).group(1)
+        return False, param

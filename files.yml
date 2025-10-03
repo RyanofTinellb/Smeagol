@@ -1,36 +1,36 @@
 c:\users\ryan\onedrive\desktop\tinellb.ttf:
-  - c:\users\ryan\tinellbianlanguages\toplevel\data\assets\tinellb.ttf
+  - c:\users\ryan\tinellbianlanguages\www\data\assets\tinellb.ttf
   - c:\users\ryan\tinellbianlanguages\grammar\data\assets\tinellb.ttf
   - c:\users\ryan\tinellbianlanguages\encyclopedia\data\assets\tinellb.ttf
-  - c:\users\ryan\tinellbianlanguages\coelacanth\data\assets\tinellb.ttf
+  - c:\users\ryan\tinellbianlanguages\thecoelacanthquartet\data\assets\tinellb.ttf
   - c:\users\ryan\tinellbianlanguages\dictionary\data\assets\tinellb.ttf
-c:\users\ryan\tinellbianlanguages\toplevel\data\stylesheets\basic_style.css:
+c:\users\ryan\tinellbianlanguages\www\data\stylesheets\basic_style.css:
   - c:\users\ryan\tinellbianlanguages\grammar\data\stylesheets\basic_style.css
   - c:\users\ryan\tinellbianlanguages\encyclopedia\data\stylesheets\basic_style.css
-  - c:\users\ryan\tinellbianlanguages\coelacanth\data\stylesheets\basic_style.css
+  - c:\users\ryan\tinellbianlanguages\thecoelacanthquartet\data\stylesheets\basic_style.css
   - c:\users\ryan\tinellbianlanguages\dictionary\data\stylesheets\basic_style.css
-c:\users\ryan\tinellbianlanguages\toplevel\data\scripts\parse_href.js:
+c:\users\ryan\tinellbianlanguages\www\data\scripts\parse_href.js:
   - c:\users\ryan\tinellbianlanguages\grammar\data\scripts\parse_href.js
   - c:\users\ryan\tinellbianlanguages\encyclopedia\data\scripts\parse_href.js
-  - c:\users\ryan\tinellbianlanguages\coelacanth\data\scripts\parse_href.js
+  - c:\users\ryan\tinellbianlanguages\thecoelacanthquartet\data\scripts\parse_href.js
   - c:\users\ryan\tinellbianlanguages\dictionary\data\scripts\parse_href.js
-c:\users\ryan\tinellbianlanguages\toplevel\data\scripts\localise_links.js:
+c:\users\ryan\tinellbianlanguages\www\data\scripts\localise_links.js:
   - c:\users\ryan\tinellbianlanguages\grammar\data\scripts\localise_links.js
   - c:\users\ryan\tinellbianlanguages\encyclopedia\data\scripts\localise_links.js
-  - c:\users\ryan\tinellbianlanguages\coelacanth\data\scripts\localise_links.js
+  - c:\users\ryan\tinellbianlanguages\thecoelacanthquartet\data\scripts\localise_links.js
   - c:\users\ryan\tinellbianlanguages\dictionary\data\scripts\localise_links.js
-c:\users\ryan\tinellbianlanguages\toplevel\data\scripts\search.js:
+c:\users\ryan\tinellbianlanguages\www\data\scripts\search.js:
   - c:\users\ryan\tinellbianlanguages\grammar\data\scripts\search.js
   - c:\users\ryan\tinellbianlanguages\encyclopedia\data\scripts\search.js
-  - c:\users\ryan\tinellbianlanguages\coelacanth\data\scripts\search.js
+  - c:\users\ryan\tinellbianlanguages\thecoelacanthquartet\data\scripts\search.js
   - c:\users\ryan\tinellbianlanguages\dictionary\data\scripts\search.js
-c:\users\ryan\tinellbianlanguages\toplevel\data\assets\favicon.png:
+c:\users\ryan\tinellbianlanguages\www\data\assets\favicon.png:
   - c:\users\ryan\tinellbianlanguages\grammar\data\assets\favicon.png
   - c:\users\ryan\tinellbianlanguages\encyclopedia\data\assets\favicon.png
-  - c:\users\ryan\tinellbianlanguages\coelacanth\data\assets\favicon.png
+  - c:\users\ryan\tinellbianlanguages\thecoelacanthquartet\data\assets\favicon.png
   - c:\users\ryan\tinellbianlanguages\dictionary\data\assets\favicon.png
-c:\users\ryan\tinellbianlanguages\toplevel\data\scripts\searchterms.js:
+c:\users\ryan\tinellbianlanguages\www\data\scripts\searchterms.js:
  - c:\users\ryan\tinellbianlanguages\grammar\data\scripts\searchterms.js
  - c:\users\ryan\tinellbianlanguages\encyclopedia\data\scripts\searchterms.js
- - c:\users\ryan\tinellbianlanguages\coelacanth\data\scripts\searchterms.js
+ - c:\users\ryan\tinellbianlanguages\thecoelacanthquartet\data\scripts\searchterms.js
  - c:\users\ryan\tinellbianlanguages\dictionary\data\scripts\searchterms.js

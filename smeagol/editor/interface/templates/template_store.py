@@ -22,12 +22,11 @@ class Contents:
 
 
 class TemplateStore:
-    def __init__(self, templates: Templates = None, links: dict = None, styles=None):
+    def __init__(self, templates: Templates = None, styles=None):
         self.started = utils.Flag()
         self.styles = styles
         self._contents = Contents()
         self._filenames = templates or Templates()
-        self.links = links
         self._cache = {'sections': {}, 'special': {}}
 
     def special_files(self, site):
@@ -80,7 +79,7 @@ class TemplateStore:
         template = fs.load_yaml(filename)
         if not template:
             raise IOError(f'{filename} not found')
-        styles = Styles(template.get('styles', {}))
+        styles = Styles(template.get('styles', {}), links=self.styles.links)
         text = TextTree(template.get('text', []), styles.ranks)
         title = TextTree(template.get('title', []), styles.ranks)
         self._filenames.update(template.get('templates', {}))
