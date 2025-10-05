@@ -216,6 +216,8 @@ class Template:
             return ''
         template.components = components
         try:
+            if name == 'mini-nav':
+                pass # break
             return template.html
         except KeyError as e:
             raise KeyError(f'Template {name} is missing a tag') from e

@@ -202,7 +202,7 @@ class StyledTextbox(BaseTextbox):
             at = '@' if code else ''
             name = f'{name}{at}{code}'
             self.styles.deactivate(name)
-            self._invoke_ime(style, False)
+            self.ime = self._invoke_ime(style, False)
             with utils.ignored(tk.TclError):
                 (self.tag_remove)(name, *SELECTION)
             self.update_displays()
