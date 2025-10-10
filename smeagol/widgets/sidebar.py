@@ -54,7 +54,7 @@ class Sidebar(tk.Frame):
     def headings(self, names):
         self.headings_frame.headings = names
 
-    def update(self, displays: Optional[dict[Variable]] = None):
+    def update(self, displays: dict[str, Variable]):
         for name, obj in self.displays.items():
             with ignored(KeyError):
                 variable = displays[name]

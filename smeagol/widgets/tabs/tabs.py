@@ -2,6 +2,7 @@ from smeagol.utilities import utils
 from smeagol.widgets.tabs.base_tabs import BaseTabs
 from smeagol.editor.interface.interfaces import Interfaces
 from smeagol.utilities.types import Page
+from typing import Optional
 
 
 class Tabs(BaseTabs):
@@ -32,7 +33,7 @@ class Tabs(BaseTabs):
             # self.open_blank()
             return
         for i, filename in enumerate(filenames, start=new_tab):
-            self.open_site(filename, i)
+            self.open_site(filename, bool(i))
 
     def open_site(self, filename, new_tab=True):
         interface = self.interfaces[filename]
@@ -46,8 +47,9 @@ class Tabs(BaseTabs):
         except TypeError as e:
             raise TypeError(f'Unable to load from {filename}') from e
 
-    def open_entry(self, interface=None, entry: Page = None, new_tab=False):
+    def open_entry(self, interface=None, entry: Optional[Page] = None, new_tab=False, switch_tab=True):
         interface = interface or self.interface
+        current = self.current
         if new_tab:
             self.new()
         self.interface = interface
@@ -57,6 +59,8 @@ class Tabs(BaseTabs):
             self.add_new(entry)
         self.update_displays()
         self.interface.add_entry_to_config(entry)
+        if not switch_tab:
+            self.select(current)
 
     def add_new(self, entry):
         self.current.interface.add_entry_to_site(entry)
@@ -102,7 +106,7 @@ class Tabs(BaseTabs):
             if link[-1].lower() == 'index':
                 link.pop()
             link[0] = self.entry.root.name
-            self.open_entry(entry=self.entry.new(link), new_tab=True)
+            self.open_entry(entry=self.entry.new(link), new_tab=True, switch_tab=False)
 
     @property
     def _textbox_commands(self):
