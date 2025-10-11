@@ -93,7 +93,7 @@ class Site(Page):
         self._serial['n'] = ''
 
     def _pos(self, node):
-        self._serial['p'] = node.stringify()
+        self._serial['p'] = node.stringify(skip='derivation')
 
     def _native_script(self, node):
         self._serial['n'] = node.stringify()

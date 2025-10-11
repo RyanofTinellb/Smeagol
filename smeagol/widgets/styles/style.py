@@ -139,7 +139,7 @@ class Style(Tag):
     @property
     def _border(self):
         if self['border']:
-            return {'relief': 'ridge', 'borderwidth': 4}
+            return {'relief': 'groove', 'borderwidth': 4}
         return {}
 
     @property

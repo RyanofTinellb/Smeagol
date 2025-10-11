@@ -166,21 +166,6 @@ class Textbox(ClipboardTextbox):
         self.delete(INSERT, INSERT + correction)
         return 'break'
 
-    def move_line(self, event):
-        self.insert('\n', END)  # ensures last line can be moved normally
-        if self.compare(END, '==', INSERT):  # ensures last line can be...
-            self.mark_set(INSERT, f'{END}-1c')  # ...moved from the last char.
-        location = PREV_LINE if event.keysym == 'Up' else NEXT_LINE
-        try:
-            text = self._cut(SEL_LINE, False)
-            self._paste(location, NO_SELECTION, text)
-        except tk.TclError:
-            text = self._cut(CURRLINE, False)
-            self._paste(location, NO_SELECTION, text)
-        self.mark_set(INSERT, USER_MARK)
-        self.delete(f'{END}-1c')  # removes helper newline
-        return 'break'
-
     @property
     def commands(self):
         return [
@@ -198,6 +183,5 @@ class Textbox(ClipboardTextbox):
             ('<Control-x>', self.cut_text),
             ('<Control-BackSpace>', self.backspace_word),
             ('<Control-Delete>', self.delete_word),
-            (('<Alt-g>', '<Alt-h>'), self.get_styles_from_cursor),
-            (('<Control-Up>', '<Control-Down>'), self.move_line)
+            (('<Alt-g>', '<Alt-h>'), self.get_styles_from_cursor)
         ]
