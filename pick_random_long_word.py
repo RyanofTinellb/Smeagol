@@ -9,7 +9,7 @@ def custFil(elt):
 
 text = fs.load_json(filename)
 text = list(filter(custFil, text))
-print(len(list((elt['t'] + ' - ' + elt['d'].split(';')[0] for elt in text if 'element' in elt['p']))))
-print(len(list((elt['t'] + ' - ' + elt['d'].split(';')[0] for elt in text if 'element' not in elt['p']))))
+print(len(list((elt['t'] + ' - ' + elt['d'].split(';')[0] for elt in text if 'element' in elt['p']))), 'elements')
+print(len(list((elt['t'] + ' - ' + elt['d'].split(';')[0] for elt in text if 'element' not in elt['p']))), 'others')
 choice = random.choice(text)
 print('1/' + str(len(text)) + ': ' + choice['t'] + ' - ' + choice['d'].split(';')[0])
