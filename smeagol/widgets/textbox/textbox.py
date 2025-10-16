@@ -109,7 +109,7 @@ class Textbox(ClipboardTextbox):
             self._history = self._history[:-1]
             return None
         if keysym == 'space':
-            if event.state != 12:
+            if not (event.state & 4): # CTRL key
                 self._deactivate_styles('space')
             self.input_method_editor(key)
             return 'break'
