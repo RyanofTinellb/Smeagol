@@ -114,6 +114,7 @@ class StyledTextbox(BaseTextbox):
     def _add_symbols(self, tag):
         tag += '*' if self.styles[tag].ime else ''
         tag += '†' if self.styles[tag].language else ''
+        tag += '>' if self.styles[tag].link else ''
         return tag
 
     def clear_styles_menu(self):

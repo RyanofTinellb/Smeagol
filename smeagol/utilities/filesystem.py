@@ -13,6 +13,7 @@ from threading import Thread
 from typing import Optional
 
 import yaml
+from yaml.scanner import ScannerError
 from smeagol.utilities.defaults import default
 from smeagol.utilities.utils import ignored
 
@@ -114,7 +115,7 @@ def _load_yaml(filename):
 def _safe_load_yaml(file, filename):
     try:
         return yaml.safe_load(file)
-    except (TypeError, AttributeError, ValueError) as e:
+    except (TypeError, AttributeError, ValueError, ScannerError) as e:
         raise type(e)(
             f'{filename} is not a yml file, or is malformed') from e
 

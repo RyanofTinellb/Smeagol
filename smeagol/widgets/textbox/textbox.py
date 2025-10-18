@@ -22,6 +22,7 @@ USER_MARK = 'usermark'
 class Textbox(ClipboardTextbox):
     def __init__(self, clipboard, parent=None):
         super().__init__(clipboard, parent)
+        self.parent = parent
         self.displays.update({
             'wordcount': tk.IntVar(),
             'title': tk.StringVar()})
@@ -100,13 +101,13 @@ class Textbox(ClipboardTextbox):
         keysym = event.keysym
         # code = event.keycode
         if keysym.startswith('Control_'):
-            self.edit_modified(False)
             return None
         if keysym.startswith('Alt_'):
-            self.edit_modified(False)
             return None
+        self.parent.show_edited()
         if keysym == 'BackSpace':
             self._history = self._history[:-1]
+            self.get_styles_from_cursor(event)
             return None
         if keysym == 'space':
             if not (event.state & 4): # CTRL key

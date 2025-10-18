@@ -1,5 +1,6 @@
 import os
 import re
+import random
 
 from smeagol.editor.interface import assets
 from smeagol.editor.interface.templates.template_store import TemplateStore
@@ -9,6 +10,9 @@ from smeagol.utilities import utils
 from smeagol.utilities.types import Entry
 from smeagol.widgets.styles.styles import Styles
 
+def custFil(elt):
+    # return elt['l'] == 'High Lulani' and elt['t'].endswith('ju')
+    return elt['l'] == 'High Lulani' and 'derived' not in elt['p'] and 'proper' not in elt['p'] and len(elt['t'].replace('-', '')) > 5 and ' ' not in elt['t']
 
 class SystemInterface:
     def __init__(self, filename='', server=True):
@@ -193,6 +197,12 @@ class SystemInterface:
         data = sorted(self.site.serialisation(), key=lambda x: x['t'])
         filename = self.assets.wordlist
         fs.save_json(data, filename)
+
+        text = list(filter(custFil, data))
+        print(len(list((elt['t'] + ' - ' + elt['d'].split(';')[0] for elt in text if 'element' in elt['p']))), 'elements')
+        print(len(list((elt['t'] + ' - ' + elt['d'].split(';')[0] for elt in text if 'element' not in elt['p']))), 'others')
+        choice = random.choice(text)
+        print('1/' + str(len(text)) + ': ' + choice['t'] + ' - ' + choice['d'].split(';')[0])
 
     def close_servers(self):
         fs.close_servers()

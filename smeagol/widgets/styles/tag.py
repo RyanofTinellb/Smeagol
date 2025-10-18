@@ -214,15 +214,14 @@ class Tag:
 
     @property
     def param(self):
-        default = ' id="$link$|$node$' if self.type == 'heading' else ''
+        default = ' id="$grammar(text)$|$node$' if self.type == 'heading' else ''
         param = self.tags.get('param', default)
         return param if isinstance(param, str) else param.get('string', default)
     
     @property
     def link(self):
-        default = '$grammar(text)$' if self.type == 'heading' else ''
         param = self.tags.get('param', {})
-        return default if isinstance(param, str) else param.get('link', default)
+        return '' if isinstance(param, str) else param.get('link', '')
     
     @property
     def _rank(self):

@@ -1,4 +1,5 @@
 import re
+from yaml.scanner import ScannerError
 from smeagol.editor.interface.interface import Interface
 
 
@@ -11,7 +12,10 @@ class Interfaces:
         try:
             return self.interfaces[name]
         except KeyError:
-            interface = Interface(name)
+            try:
+                interface = Interface(name)
+            except ScannerError:
+                return None
             self.interfaces[name] = interface
             return interface
 
@@ -25,10 +29,10 @@ class Interfaces:
             print()
             print(f'Saving from {name}:')
             interface.save_site()
-            for percentage in interface.save_entries():
-                if percentage >= 100:
-                    continue
-                print(f'{percentage}% complete')
+            # for percentage in interface.save_entries():
+            #     if percentage >= 100:
+            #         continue
+            #     print(f'{percentage}% complete')
             interface.save_special_files()
             print('100% complete')
 

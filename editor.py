@@ -17,6 +17,7 @@ from smeagol.utilities import utils
 
 
 def main():
+    root = os.getcwd()
     utils.clear_screen()
     filenames = None
     with utils.ignored(IndexError):

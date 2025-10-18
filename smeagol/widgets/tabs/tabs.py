@@ -37,6 +37,8 @@ class Tabs(BaseTabs):
 
     def open_site(self, filename, new_tab=True):
         interface = self.interfaces[filename]
+        if not interface:
+            return
         for i, entry in enumerate(interface.entries):
             self._open_site(interface, entry, new_tab + i, filename)
 

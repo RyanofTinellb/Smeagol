@@ -31,7 +31,7 @@ class Tab(tk.Frame):
             ('<Control-s>', self.save_entry),
             ('<Control-S>', self.save_entries),
             ('<Control-Prior>', self.previous_entry),
-            ('<Control-Next>', self.next_entry)
+            ('<Control-Next>', self.next_entry),
         ]
 
     def go_to_headings(self, _event=None):
@@ -46,6 +46,7 @@ class Tab(tk.Frame):
         filename, saved = self.interface.save_entry(self.entry, True)
         # saved? = file saved rather than deleted
         message = 'Saving' if saved else 'Deleting'
+        self.unshow_edited()
         print(f'{message} {filename}')
         return 'break'
 
@@ -96,6 +97,12 @@ class Tab(tk.Frame):
     def name(self, name):
         self._name = name
         self.notebook.tab(self, text=name)
+    
+    def show_edited(self):
+        self.notebook.tab(self, text=self._name + '*')
+    
+    def unshow_edited(self):
+        self.notebook.tab(self, text=self._name)
 
     def open(self):
         self.is_open = True
