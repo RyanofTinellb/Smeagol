@@ -30,6 +30,7 @@ class ClipboardTextbox(StyledTextbox):
         current = self.styles.current if self.styles else ''
         tags = tags or current
         text = text.replace('&lt;', '<').replace('&gt;', '>')
+        self.parent.show_edited()
         super().insert(position, text, tags)
 
     def remove(self, start=START, end=END):
@@ -75,6 +76,7 @@ class ClipboardTextbox(StyledTextbox):
         with utils.ignored(tk.TclError):
             self._copy()
             self._cut()
+            self.parent.show_edited()
         return "break"
 
     def _cut(self, borders=SELECTION, clip=True):
@@ -89,6 +91,7 @@ class ClipboardTextbox(StyledTextbox):
         except tk.TclError:
             self._paste(borders=NO_SELECTION)
         self.deselect_all()
+        self.parent.show_edited()
         return "break"
 
     def _paste(self, location=INSERT, borders=SELECTION, text=None):

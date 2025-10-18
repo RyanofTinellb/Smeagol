@@ -104,15 +104,16 @@ class Textbox(ClipboardTextbox):
             return None
         if keysym.startswith('Alt_'):
             return None
-        self.parent.show_edited()
         if keysym == 'BackSpace':
             self._history = self._history[:-1]
             self.get_styles_from_cursor(event)
+            self.parent.show_edited()
             return None
         if keysym == 'space':
             if not (event.state & 4): # CTRL key
                 self._deactivate_styles('space')
             self.input_method_editor(key)
+            self.parent.show_edited()
             return 'break'
         if keysym == 'Return':
             self._deactivate_styles('Return')

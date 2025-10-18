@@ -187,6 +187,8 @@ class StyledTextbox(BaseTextbox):
             with utils.ignored(tk.TclError):
                 (self.tag_add if self.styles.on(name)
                  else self.tag_remove)(name, *SELECTION)
+                self.parent.show_edited()
+                print('changing foe')
             self.update_displays()
             return 'break'
         return command
