@@ -7,6 +7,7 @@ from smeagol.editor.interface.templates.template_store import TemplateStore
 from smeagol.site.site import Site
 from smeagol.utilities import filesystem as fs
 from smeagol.utilities import utils
+from smeagol.utilities.tinellbian_sort import SerialNumberer
 from smeagol.utilities.types import Entry
 from smeagol.widgets.styles.styles import Styles
 
@@ -21,6 +22,7 @@ class SystemInterface:
         self.config = self.load_config(filename) if filename else {}
         self.open_assets()
         self.open_site()
+        self.serialer = SerialNumberer()
         self.start_server(server)
 
     def load_config(self, filename):
@@ -120,6 +122,7 @@ class SystemInterface:
 
     def add_entry_to_site(self, entry):
         self.site.add_entry(entry)
+        self.sort_dictionary()
 
     def load_from_config(self, attr, default_obj=None):
         return fs.load_yaml(self.config.get(attr, ''), default_obj)
@@ -163,6 +166,12 @@ class SystemInterface:
         if copy_all:
             self.copy_all()
         return (filename, True)
+    
+    def sort_dictionary(self):
+        with utils.ignored(KeyError):
+            lex = self.site.entries.entries['children']['The Tinellbian Languages Dictionary']['children']['lex']['children']
+            lex = dict(sorted(lex.items(), key=lambda x: [self.serialer.change(n) for n in x[0].split('.')]))
+            self.site.entries.entries['children']['The Tinellbian Languages Dictionary']['children']['lex']['children'] = lex
 
     def save_special_files(self):
         for (item, html) in self.template_store.special_files(self.site):
@@ -194,7 +203,7 @@ class SystemInterface:
         fs.save_json(data, filename)
 
     def save_wordlist(self):
-        data = sorted(self.site.serialisation(), key=lambda x: x['t'])
+        data = sorted(self.site.serialisation(), key=lambda x: [self.serialer.change(n) for n in utils.sell_caps(x['t']).replace(' ', '.').split('.')])
         filename = self.assets.wordlist
         fs.save_json(data, filename)
 
