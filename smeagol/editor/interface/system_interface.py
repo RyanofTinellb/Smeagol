@@ -206,12 +206,6 @@ class SystemInterface:
         data = sorted(self.site.serialisation(), key=lambda x: [self.serialer.change(n) for n in utils.sell_caps(x['t']).replace(' ', '.').split('.')])
         filename = self.assets.wordlist
         fs.save_json(data, filename)
-
-        text = list(filter(custFil, data))
-        print(len(list((elt['t'] + ' - ' + elt['d'].split(';')[0] for elt in text if 'element' in elt['p']))), 'elements')
-        print(len(list((elt['t'] + ' - ' + elt['d'].split(';')[0] for elt in text if 'element' not in elt['p']))), 'others')
-        choice = random.choice(text)
-        print('1/' + str(len(text)) + ': ' + choice['t'] + ' - ' + choice['d'].split(';')[0])
-
+        
     def close_servers(self):
         fs.close_servers()

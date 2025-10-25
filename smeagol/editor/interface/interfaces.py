@@ -29,7 +29,6 @@ class Interfaces:
             print()
             print(f'Saving from {name}:')
             interface.save_site()
-            # print('skipping all')
             for percentage in interface.save_entries():
                 if percentage >= 100:
                     continue
