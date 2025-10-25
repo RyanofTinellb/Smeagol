@@ -64,6 +64,8 @@ class SystemInterface:
         match attr:
             case 'site_info':
                 value = self.config.setdefault('site', {})
+            case 'url':
+                value = self.config.get('url', '')
             case '_entries':
                 value = self.config.setdefault('entries', [[]])
             case '_files':

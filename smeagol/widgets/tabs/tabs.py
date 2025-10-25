@@ -108,14 +108,21 @@ class Tabs(BaseTabs):
             if link[-1].lower() == 'index':
                 link.pop()
             link[0] = self.entry.root.name
-            self.open_entry(entry=self.entry.new(link), new_tab=True, switch_tab=False)
+            self.open_entry(entry=self.entry.new(link),
+                            new_tab=True, switch_tab=False)
+        interface = self.interfaces[link[2]]
+        if link[-1].lower() == 'index.html':
+            link.pop()
+        link[-1] = link[-1].removesuffix('.html')
+        link = [interface.site.root.name] + link[3:]
+        self.open_entry(interface=interface, entry=interface.find_entry(link), new_tab=True, switch_tab=False)
 
     @property
     def _textbox_commands(self):
         return super()._textbox_commands + [
             ('<<FollowLink>>', self.follow_link)
         ]
-    
+
     @property
     def headings_commands(self):
         return [

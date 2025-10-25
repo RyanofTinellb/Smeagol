@@ -12,6 +12,9 @@ class Interfaces:
         try:
             return self.interfaces[name]
         except KeyError:
+            for interface in self.interfaces.values():
+                if interface.url == name:
+                    return interface
             try:
                 interface = Interface(name)
             except ScannerError:
