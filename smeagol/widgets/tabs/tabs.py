@@ -102,18 +102,15 @@ class Tabs(BaseTabs):
 
     def follow_link(self, link):
         link = link.split('#')[0].split('/')
+        link[-1] = link[-1].removesuffix('.html')
+        if link[-1].lower() == 'index':
+            link.pop()
         if not link[0]:
-            if link[-1].endswith('.html'):
-                link[-1] = link[-1].removesuffix('.html')
-            if link[-1].lower() == 'index':
-                link.pop()
             link[0] = self.entry.root.name
             self.open_entry(entry=self.entry.new(link),
                             new_tab=True, switch_tab=False)
+            return
         interface = self.interfaces[link[2]]
-        if link[-1].lower() == 'index.html':
-            link.pop()
-        link[-1] = link[-1].removesuffix('.html')
         link = [interface.site.root.name] + link[3:]
         self.open_entry(interface=interface, entry=interface.find_entry(link), new_tab=True, switch_tab=False)
 

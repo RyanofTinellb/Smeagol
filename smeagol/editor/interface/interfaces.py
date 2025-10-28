@@ -1,5 +1,8 @@
 import re
+from tkinter.simpledialog import askstring
+
 from yaml.scanner import ScannerError
+
 from smeagol.editor.interface.interface import Interface
 
 
@@ -23,9 +26,11 @@ class Interfaces:
             return interface
 
     def save_all(self):
+        message = askstring('Git commit message', 'What did you do today?')
         for interface in self.interfaces.values():
             interface.save()
             interface.save_special_files()
+            interface.push_repo(message)
 
     def save_all_entries(self):
         for name, interface in self.interfaces.items():

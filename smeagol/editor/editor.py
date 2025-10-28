@@ -1,4 +1,7 @@
+import os.path
+
 from smeagol.utilities import filesystem as fs
+from smeagol.utilities import utils
 from smeagol.widgets.manager import Manager
 
 # pylint: disable=R0904

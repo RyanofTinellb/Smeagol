@@ -1,6 +1,9 @@
 import os
-import re
 import random
+import re
+
+from git import Repo
+from git.exc import GitCommandError, InvalidGitRepositoryError
 
 from smeagol.editor.interface import assets
 from smeagol.editor.interface.templates.template_store import TemplateStore
@@ -11,6 +14,7 @@ from smeagol.utilities.tinellbian_sort import SerialNumberer
 from smeagol.utilities.types import Entry
 from smeagol.widgets.styles.styles import Styles
 
+
 def custFil(elt):
     # return elt['l'] == 'High Lulani' and elt['t'].endswith('ju')
     return elt['l'] == 'High Lulani' and 'derived' not in elt['p'] and 'proper' not in elt['p'] and len(elt['t'].replace('-', '')) > 5 and ' ' not in elt['t']
@@ -19,11 +23,32 @@ class SystemInterface:
     def __init__(self, filename='', server=True):
         self.filename = filename
         self.styles = self.files = self.links = self.template_store = None
+        self.repo = self.create_repo(filename)
+        self.pull_repo()
         self.config = self.load_config(filename) if filename else {}
         self.open_assets()
         self.open_site()
         self.serialer = SerialNumberer()
         self.start_server(server)
+    
+    def create_repo(self, filename):
+        while filename and len(filename) > 2:
+            try:
+                return Repo(filename)
+            except InvalidGitRepositoryError:
+                filename = os.path.split(filename)[0].removesuffix('/')
+    
+    def pull_repo(self):
+        with utils.ignored(GitCommandError):
+            self.repo.remote(name='origin').pull()
+            print('Pulling', self.repo.index.path)
+    
+    def push_repo(self, message=None):
+        if message:
+            self.repo.index.add([d.a_path for d in self.repo.index.diff(None)])
+            self.repo.index.commit(message)
+            self.repo.remote(name='origin').push()
+            print('Pushing', self.repo.index.path)
 
     def load_config(self, filename):
         try:
@@ -208,6 +233,3 @@ class SystemInterface:
         data = sorted(self.site.serialisation(), key=lambda x: [self.serialer.change(n) for n in utils.sell_caps(x['t']).replace(' ', '.').split('.')])
         filename = self.assets.wordlist
         fs.save_json(data, filename)
-        
-    def close_servers(self):
-        fs.close_servers()
