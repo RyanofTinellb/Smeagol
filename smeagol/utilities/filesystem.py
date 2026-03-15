@@ -93,8 +93,7 @@ def load_string(filename):
 
 def readlines(filename):
     text = load_string(filename)
-    for line in text.splitlines():
-        yield line
+    yield from text.splitlines()
 
 
 def load_yaml(filename, default_obj=None):
@@ -120,23 +119,24 @@ def _safe_load_yaml(file, filename):
             f'{filename} is not a yml file, or is malformed') from e
 
 
-def change(filename, fn, newfilename=None):
+def change(filename, fn, newfilename=None, is_json=False):
     '''Run function `fn` on entire object in filename'''
+    loader = load_json if is_json else load_yaml
     newfilename = newfilename or filename
-    obj = load_yaml(filename)
-    fn(obj)
-    save_yaml(obj, newfilename)
+    save_string(fn(loader(filename)), newfilename)
 
 
-def update(filename: str, fn: callable, newfilename: Optional[str] = None):
+def update(filename: str, fn: callable, newfilename: Optional[str] = None, is_json=False):
     '''
     Run function `fn` on each element `elt` of an object `obj` in `filename`
     '''
+    loader, saver = (load_json, save_json) if is_json else (
+        load_yaml, save_yaml)
     newfilename = newfilename or filename
-    obj = load_yaml(filename)
+    obj = loader(filename)
     for elt in obj:
         fn(elt)
-    save_yaml(obj, newfilename)
+    saver(obj, newfilename)
 
 
 def updates(filename, fn, newfilename=None):
@@ -168,11 +168,13 @@ def open_smeagol():
                'defaultextension': '.smg'}
     return fd.askopenfilename(**options)
 
+
 def open_config(filename):
     if filename.endswith('.smg'):
         return load_yaml(filename)
     raise AttributeError('File type is Sméagol Source File. '
                          'Creating Sméagol Configuration File...')
+
 
 def save_smeagol():
     options = {'filetypes': [('Sméagol File', '*.smg')],
@@ -235,8 +237,7 @@ def start_server(port=None, directory=None, page404=''):
                 code = code.value
             if code not in [200, 304]:
                 self.log_message('"%s" %s %s',
-                                self.requestline, str(code), str(size))
-
+                                 self.requestline, str(code), str(size))
 
     page404 = page404 or default.page404
     port = port or random.randint(20000, 60000)
