@@ -195,6 +195,8 @@ def default_title(entry):
             return _grammar_title(entry, root)
         case 'The Coelacanth Quartet':
             return _story_title(entry)
+        case 'The Tinellbian Languages Dictionary':
+            return f'{buy_caps(entry.name)} - {root}'
         case _default:
             return f'{entry.name} - {root}'
 

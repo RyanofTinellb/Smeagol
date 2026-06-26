@@ -14,6 +14,7 @@ from typing import Optional
 
 import yaml
 from yaml.scanner import ScannerError
+
 from smeagol.utilities.defaults import default
 from smeagol.utilities.utils import ignored
 
@@ -128,15 +129,16 @@ def change(filename, fn, newfilename=None):
     save_yaml(obj, newfilename)
 
 
-def update(filename: str, fn: callable, newfilename: Optional[str] = None):
+def update(filename: str, fn: callable, newfilename: Optional[str] = None, json: bool = False):
     '''
     Run function `fn` on each element `elt` of an object `obj` in `filename`
     '''
+    loader, saver = (load_json, save_json) if json else (load_yaml, save_yaml)
     newfilename = newfilename or filename
-    obj = load_yaml(filename)
+    obj = loader(filename)
     for elt in obj:
-        fn(elt)
-    save_yaml(obj, newfilename)
+        elt = fn(elt)
+    saver(obj, newfilename)
 
 
 def updates(filename, fn, newfilename=None):

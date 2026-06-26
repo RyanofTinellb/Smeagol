@@ -45,7 +45,7 @@ class SystemInterface:
     
     def push_repo(self, message=None):
         if message:
-            self.repo.index.add([d.a_path for d in self.repo.index.diff(None)])
+            self.repo.git.add(all=True)
             self.repo.index.commit(message)
             self.repo.remote(name='origin').push()
             print('Pushing', self.repo.index.path)
