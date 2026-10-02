@@ -29,7 +29,8 @@ class Manager(tk.Frame):
 
     def create_layout(self):
         top = self.winfo_toplevel()
-        self.set_window_size(top)
+        top.state('zoomed')
+        # self.set_window_size(top)
         top['menu'] = self.menu()
         self.sidebar = Sidebar(self).pack(side=tk.LEFT)
         self.textframe().pack(side=tk.RIGHT, expand=True, fill=tk.BOTH)
