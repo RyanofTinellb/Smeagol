@@ -1,6 +1,7 @@
 from smeagol.editor.interface.interface import Interface
 from smeagol.utilities import filesystem as fs
 from smeagol.utilities import utils
+
 FILENAME = r'c:\users\ryan\tinellbianlanguages\encyclopedia\data\encyclopedia.smg'
 NEWFILE = r'c:\users\ryan\tinellbianlanguages\encyclopedia\data\assets\internal-links.glk'
 
@@ -27,7 +28,7 @@ class Creator:
         self._serialise(entry.text, link)
 
     def _serialise(self, obj, link):
-        for node in obj.nodes():
+        for node in obj.nodes:
             if self.interface.styles[node.name].type == 'heading':
                 url = str(node.first_child)
                 self.add(url, link + '#' + url)

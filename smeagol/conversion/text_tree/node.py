@@ -25,11 +25,12 @@ class Node:
     def add(self, child):
         self.children.append(child)
 
+    @property
     def nodes(self):
         for child in self.children:
             if not isinstance(child, str):
                 yield child
-                yield from child.nodes()
+                yield from child.nodes
 
     def stringify(self, skip=None):
         return ''.join([self._strings(child, skip) for child in self.children])

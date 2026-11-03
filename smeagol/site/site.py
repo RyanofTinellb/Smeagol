@@ -85,7 +85,7 @@ class Site(Page):
         return self._wordlist
 
     def _serialise(self, node):
-        for child in node.nodes():
+        for child in node.nodes:
             self.serialiser.get(child.name, self._serialise)(child)
 
     def _language(self, node):

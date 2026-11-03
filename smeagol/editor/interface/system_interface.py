@@ -23,8 +23,9 @@ class SystemInterface:
     def __init__(self, filename='', server=True):
         self.filename = filename
         self.styles = self.files = self.links = self.template_store = None
-        self.repo = self.create_repo(filename)
-        self.pull_repo()
+        if server:
+            self.repo = self.create_repo(filename)
+            self.pull_repo()
         self.config = self.load_config(filename) if filename else {}
         self.open_assets()
         self.open_site()

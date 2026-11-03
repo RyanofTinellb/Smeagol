@@ -27,8 +27,9 @@ class TextTree(Tags):
     def pprint(self):
         self.root.pprint()
 
+    @property
     def nodes(self):
-        yield from self.root.nodes()
+        yield from self.root.nodes
 
     def stringify(self):
         return self.root.stringify()
